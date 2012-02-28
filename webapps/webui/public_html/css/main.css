@@ -1,0 +1,1218 @@
+/*
+** MediaWiki 'monobook' style sheet for CSS2-capable browsers.
+** Copyright Gabriel Wicke - http://wikidev.net/
+** License: GPL (http://www.gnu.org/copyleft/gpl.html)
+**
+** Loosely based on http://www.positioniseverything.net/ordered-floats.html by Big John
+** and the Plone 2.0 styles, see http://plone.org/ (Alexander Limi,Joe Geldart & Tom Croucher,
+** Michael Zeltner and Geir Bækholt)
+** All you guys rock :)
+*/
+
+#content {
+    padding: 0 1em 1.5em 1em;
+    background: white;
+    color: black;
+    line-height: 1.5em;
+}
+/* the left column width is specified in class .portlet */
+
+/* Font size:
+** We take advantage of keyword scaling- browsers won't go below 9px
+** More at http://www.w3.org/2003/07/30-font-size
+** http://style.cleverchimp.com/font_size_intervals/altintervals.html
+*/
+
+body {
+/* tina update
+    font: x-small sans-serif;
+*/
+    font-family: Arial, Helvetica, sans-serif;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+}
+
+/* scale back up to a sane default */
+#globalWrapper {
+/* tina update
+    font-size: 127%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+*/
+}
+
+/* general styles */
+/*
+tina update UI
+a, .active {
+    text-decoration: none;
+    color: #336699;
+    background: none;
+    cursor: pointer;
+}
+a:hover, .active:hover {
+    text-decoration: underline;
+    color: #336699;
+}
+*/
+/*comments from tina: default link style*/
+a, .active:link {
+    font-size: 10px;
+    text-decoration: none;
+/*    color: #ffffff;*/
+}
+
+a:hover{
+    font-size: 12px;
+    font-weight: bold;
+/*    color: #ffffff;*/
+}
+
+img {
+    border: none;
+    vertical-align: middle;
+}
+p {
+    margin: .4em 0 .5em 0;
+    line-height: 1.5em;
+}
+p img {
+    margin: 0;
+}
+
+hr {
+    height: 1px;
+    color: #aaa;
+    background-color: #aaa;
+    border: 0;
+    margin: .2em 0 .2em 0;
+}
+/*
+tina update UI
+h1, h2, h3, h4, h5, h6 {
+    color: black;
+    background: none;
+    font-weight: bold;
+    margin: 0;
+    margin-bottom: .5em;
+    padding-top: .5em;
+    padding-bottom: .17em;
+    border-bottom: 1px solid #aaa;
+}
+
+h1 { font-size: 132%; }
+*/
+
+h1{
+    color: #ffffff;
+    bolder: 1px solid white;
+    font-weight: none;
+    margin-bottom: 0;
+    padding: 5px;
+}
+
+h2, h3, h4, h5, h6 {
+    color: black;
+    background: none;
+    font-weight: bold;
+    margin: 0;
+    margin-bottom: .5em;
+    padding-top: .5em;
+    padding-bottom: .17em;
+    border-bottom: 1px solid #aaa;
+}
+
+h1 { font-size: 100%; }
+
+
+h2 { font-size: 116%; }
+h2 {
+    border-bottom: 1px dashed #aaa;
+}
+
+
+
+h3, h4, h5, h6 {
+    border-bottom: none;
+}
+h3 { font-size: 100%; }
+h4 { font-size: 80%; }
+h5 { font-size: 80%; }
+h6 { font-size: 80%;  }
+
+ul {
+    line-height: 1.5em;
+    list-style-type: square;
+    margin: .3em 0 0 1.5em;
+    padding: 0;
+    list-style-image: url(bullet.gif);
+}
+ol {
+    line-height: 1.5em;
+    margin: .3em 0 0 3.2em;
+    padding: 0;
+    list-style-image: none;
+}
+li {
+    margin-bottom: .1em;
+}
+dt {
+    font-weight: bold;
+    margin-bottom: .1em;
+}
+dl {
+    margin-top: .2em;
+    margin-bottom: .5em;
+}
+dd {
+    line-height: 1.5em;
+    margin-left: 2em;
+    margin-bottom: .1em;
+}
+
+fieldset {
+    border: 1px solid #2f6fab;
+    margin: 1em 0 1em 0;
+    padding: 0 1em 1em;
+    line-height: 1.5em;
+}
+legend {
+    background: white;
+    padding: .5em;
+    font-size: 95%;
+}
+form {
+    border: none;
+    margin: 0;
+}
+
+/*
+textarea {
+    padding: .1em;
+}
+*/
+
+select {
+    vertical-align: top;
+}
+abbr, acronym, .explain {
+    border-bottom: 1px dotted black;
+    color: black;
+    background: none;
+    cursor: help;
+}
+q {
+    font-family: Times, "Times New Roman", serif;
+    font-style: italic;
+}
+/* disabled for now
+blockquote {
+    font-family: Times, "Times New Roman", serif;
+    font-style: italic;
+}*/
+code {
+    background-color: #f9f9f9;
+}
+pre {
+    padding: 1em;
+    border: 1px dashed #2f6fab;
+    color: black;
+    background-color: #f9f9f9;
+    line-height: 1.1em;
+}
+
+/*
+** the main content area
+*/
+
+/* Some space under the headers in the content area */
+/*
+tina update UI
+#content h1, #content h2 {
+    margin-bottom: .6em;
+}
+*/
+#content h3, #content h4, #content h5 {
+    margin-bottom: .3em;
+}
+
+
+/* emulate center */
+.center {
+    width: 100%;
+    text-align: center;
+}
+*.center * {
+    margin-left: auto;
+    margin-right: auto;
+}
+/* small for tables and similar */
+.small, .small * {
+    font-size: 94%;
+}
+table.small {
+    font-size: 100%;
+}
+
+/*
+** classes for special content elements like town boxes
+** intended to be referenced directly from the wiki src
+*/
+
+/*
+** User styles
+*/
+/* table standards */
+table.rimage {
+    float: right;
+    position: relative;
+    margin-left: 1em;
+    margin-bottom: 1em;
+    text-align: center;
+}
+div.townBox {
+    position: relative;
+    float: right;
+    background: white;
+    margin-left: 1em;
+    border: 1px solid gray;
+    padding: .3em;
+    width: 200px;
+    overflow: hidden;
+    clear: right;
+}
+div.townBox dl {
+    padding: 0;
+    margin: 0 0 .3em;
+    font-size: 96%;
+}
+div.townBox dl dt {
+    background: none;
+    margin: .4em 0 0;
+}
+div.townBox dl dd {
+    margin: .1em 0 0 1.1em;
+    background-color: #f3f3f3;
+}
+
+/*
+** edit views etc
+*/
+.special li {
+    line-height: 1.4em;
+    margin: 0;
+    padding: 0;
+}
+
+/*
+** Diff rendering
+*/
+table.diff, td.diff-otitle, td.diff-ntitle {
+    background-color: white;
+}
+td.diff-addedline {
+    background: #cfc;
+    font-size: smaller;
+}
+td.diff-deletedline {
+    background: #ffa;
+    font-size: smaller;
+}
+td.diff-context {
+    background: #eee;
+    font-size: smaller;
+}
+span.diffchange {
+    color: red;
+    font-weight: bold;
+}
+
+/*
+** keep the whitespace in front of the ^=, hides rule from konqueror
+** this is css3, the validator doesn't like it when validating as css2
+*/
+
+#content a[href ^="http://"],
+#content a[href ^="gopher://"],
+
+a.link-http {
+    background: url(external.png) center right no-repeat;
+    target-name: new; target-new: window; target-position: above;
+    padding-right: 13px;
+}
+a.whatever {target-name: new; target-new: window; target-position: above;}
+#content a[href ^="https://"],
+.link-https {
+    background: url(lock_icon.gif) center right no-repeat;
+    padding-right: 16px;
+}
+
+
+#content a[href ^="mailto:"],
+.link-mailto {
+    background: url(mail_icon.gif) center right no-repeat;
+    padding-right: 18px;
+}
+#content a[href ^="news://"] {
+    background: url(news_icon.png) center right no-repeat;
+    padding-right: 18px;
+}
+#content a[href ^="ftp://"],
+.link-ftp {
+    background: url(file_icon.gif) center right no-repeat;
+    padding-right: 18px;
+}
+#content a[href ^="irc://"],
+.link-irc {
+    background: url(discussionitem_icon.gif) center right no-repeat;
+    padding-right: 18px;
+}
+/*
+** Structural Elements
+*/
+
+/*
+** general portlet styles (elements in the quickbar)
+*/
+.portlet {
+    border: none;
+    margin: 0 0 .5em;
+    padding: 0;
+    float: none;
+    width: 11.6em;
+    overflow: hidden;
+}
+.portlet h4 {
+    font-size: 95%;
+    font-weight: normal;
+    white-space: nowrap;
+}
+.portlet h5 {
+    background: transparent;
+    padding: 0 1em 0 .5em;
+    display: inline;
+    height: 1em;
+    text-transform: lowercase;
+    font-size: 91%;
+    font-weight: normal;
+    white-space: nowrap;
+}
+.portlet h6 {
+    background: #ffae2e;
+    border: 1px solid #2f6fab;
+    border-style: solid solid none solid;
+    padding: 0 1em 0 1em;
+    text-transform: lowercase;
+    display: block;
+    font-size: 1em;
+    height: 1.2em;
+    font-weight: normal;
+    white-space: nowrap;
+}
+.pBody {
+    font-size: 95%;
+    color: black;
+}
+
+.portlet h1,
+.portlet h2,
+.portlet h3,
+.portlet h4 {
+    margin: 0;
+    padding: 0;
+}
+
+.portlet ul {
+    line-height: 1.5em;
+    list-style-type: square;
+    list-style-image: url(bullet.gif);
+    font-size: 95%;
+}
+.portlet li {
+    padding: 0;
+    margin: 0;
+}
+
+/*
+** Logo properties
+*/
+
+#p-logo {
+    z-index: 3;
+    position: absolute; /*needed to use z-index */
+    top: 0;
+    left: 0;
+    height: 155px;
+    width: 12em;
+    overflow: visible;
+}
+#p-logo h5 {
+    display: none;
+}
+#p-logo a,
+#p-logo a:hover {
+    display: block;
+    height: 155px;
+    width: 12.2em;
+    background-repeat: no-repeat;
+    background-position: 35% 50% !important;
+    text-decoration: none;
+}
+
+/*
+** the navigation portlet
+*/
+
+#p-navigation {
+    position: relative;
+    z-index: 3;
+}
+
+/*
+** Search portlet
+*/
+#p-search {
+    position: relative;
+    z-index: 3;
+}
+#p-search .pBody {
+    text-align: center;
+}
+input.searchButton {
+    margin-top: 1px;
+    font-size: 95%;
+}
+#searchGoButton {
+    padding-left: .5em;
+    padding-right: .5em;
+    font-weight: bold;
+}
+#searchInput {
+    width: 10.9em;
+    margin: 0;
+    font-size: 95%;
+}
+#p-search .pBody {
+    padding: .5em .4em .4em .4em;
+}
+
+.searchbox {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+/*
+** tina update level_1_links for new ui
+#level_1_links {
+	color:#fff;
+	font-size:13px;
+	letter-spacing:1px;
+	font-weight:bold;
+	padding-top:8px;
+	height:23px;
+	background:#003e69;
+	width:100%;
+}
+
+
+*/
+
+#level_1_links {
+	background:#ffffff;
+	width:100%;
+}
+
+#level_2_links {
+	color:#fff;
+	background:#5ab7e7;
+	height:15px;
+	width:100%;
+}
+
+/*
+** the remaining portlets
+*/
+#p-tbx,
+#p-lang {
+    position: relative;
+    z-index: 3;
+}
+
+/*
+** footer
+*/
+#footer {
+    border-top: 1px solid #fabd23;
+    border-bottom: 1px solid #fabd23;
+    margin: .6em 0 1em 0;
+    padding: .4em 0 1.2em 0;
+    text-align: center;
+    font-size: 90%;
+}
+#footer li {
+    display: inline;
+    margin: 0 1.3em;
+}
+/* hide from incapable browsers */
+head:first-child+body #footer li { white-space: nowrap; }
+#f-poweredbyico, #f-copyrightico {
+    margin: 0 8px;
+    position: relative;
+    top: -2px; /* Bump it up just a tad */
+}
+#f-poweredbyico {
+    float: right;
+    height: 1%;
+}
+#f-copyrightico {
+    float: left;
+    height: 1%;
+}
+
+/* js pref toc */
+#prefcontrol {
+    clear: both;
+    float: left;
+    margin-top: 1em;
+}
+div.prefsectiontip {
+    font-size: 95%;
+    margin-top: 1em;
+}
+fieldset.operaprefsection {
+    margin-left: 15em;
+}
+
+/*
+** IE/Mac fixes, hope to find a validating way to move this
+** to a separate stylesheet. This would work but doesn't validate:
+** @import("IEMacFixes.css");
+*/
+/* tabs: border on the a, not the div */
+* > html #p-cactions li { border: none; }
+* > html #p-cactions li a {
+    border: 1px solid #aaa;
+    border-bottom: none;
+}
+* > html #p-cactions li.selected a { border-color: #fabd23; }
+/* footer icons need a fixed width */
+* > html #f-poweredbyico,
+* > html #f-copyrightico { width: 88px; }
+* > html #content,
+* > html #content pre {
+    overflow-x: auto;
+    width: 100%;
+    padding-bottom: 25px;
+}
+
+/* more IE fixes */
+/* float/negative margin brokenness */
+* html #footer {margin-top: 0;}
+* html div.editsection { font-size: smaller; }
+
+/* Mac IE 5.0 fix; floated content turns invisible */
+* > html #column-one {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+* > html #footer {
+    margin-left: 13.2em;
+}
+.redirectText {
+    font-size: 150%;
+    margin: 5px;
+}
+
+.printfooter {
+    display: none;
+}
+
+.not-patrolled {
+    background-color: #ffa;
+}
+div.patrollink {
+    font-size: 75%;
+    text-align: right;
+}
+span.newpage, span.minor, span.searchmatch {
+    font-weight: bold;
+}
+span.unpatrolled {
+    font-weight: bold;
+    color: red;
+}
+
+span.searchmatch {
+    color: red;
+}
+.sharedUploadNotice {
+    font-style: italic;
+}
+
+span.updatedmarker {
+    color: black;
+    background-color: #0f0;
+}
+span.newpageletter {
+    font-weight: bold;
+    color: black;
+    background-color: yellow;
+}
+span.minoreditletter {
+    color: black;
+    background-color: #c5ffe6;
+}
+
+table.gallery {
+    border: 1px solid #ccc;
+    margin: 2px;
+    padding: 2px;
+    background-color: white;
+}
+
+table.gallery tr {
+    vertical-align: top;
+}
+
+table.gallery td {
+    vertical-align: top;
+    background-color: #f9f9f9;
+    border: solid 2px white;
+}
+
+div.gallerybox {
+    margin: 2px;
+    width:  150px;
+}
+
+div.gallerytext {
+    font-size: 94%;
+    padding: 2px 4px;
+}
+
+span.comment {
+	font-style: italic;
+}
+
+span.changedby {
+	font-size: 95%;
+}
+
+.previewnote {
+	text-align: center;
+	color: #cc0000;
+}
+.editExternally {
+	border: 1px solid gray;
+	background-color: #ffffff;
+	padding: 3px;
+	margin-top: 0.5em;
+	float: left;
+	font-size: small;
+	text-align: center;
+}
+.editExternallyHelp {
+	font-style: italic;
+	color: gray;
+}
+
+li span.deleted {
+	text-decoration: line-through;
+	color: #888;
+	font-style: italic;
+}
+
+.toggle {
+	margin-left: 2em;
+	text-indent: -2em;
+}
+
+/* Classes for EXIF data display */
+table.metadata {
+	font-size: 0.8em;
+	margin-left: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+table.metadata caption {
+	font-weight: bold;
+}
+
+table.metadata th {
+	font-weight: normal;
+}
+
+table.metadata td {
+	padding: 0.1em;
+}
+
+table.metadata {
+	border: none;
+	border-collapse: collapse;
+}
+
+table.metadata td, table.metadata th {
+	text-align: center;
+	border: 1px solid #000000;
+	padding-left: 0.1em;
+	padding-right: 0.1em;
+}
+
+table.metadata th {
+	background-color: #808080;
+}
+
+table.metadata td {
+	background-color: #fcfcfc;
+}
+
+/* @bug 1714 */
+input#wpSave, input#wpDiff {
+	margin-right: 0.33em;
+}
+
+
+/* Classes for article validation */
+
+table.revisionform_default {
+	border: 1px solid #000000;
+}
+
+table.revisionform_focus {
+	border: 1px solid #000000;
+	background-color:#00bbff;
+}
+
+tr.revision_tr_default {
+	background-color:#eeeeee;
+}
+
+tr.revision_tr_first {
+	background-color:#dddddd;
+}
+
+p.revision_saved {
+	color: green;
+	font-weight:bold;
+}
+
+#mw_trackbacks {
+	border: solid 1px #bbbbff;
+	background-color: #eeeeff;
+	padding: 0.2em;
+}
+
+
+/* Allmessages table */
+i
+#allmessagestable th {
+	background-color: #808080;
+}
+
+#allmessagestable tr.orig {
+	background-color: #ffe2e2;
+}
+
+#allmessagestable tr.new {
+	background-color: #e2ffe2;
+}
+
+#allmessagestable tr.def {
+	background-color: #f0f0ff;
+}
+
+.style1 {color: #336699}
+.style2 {color: #6699cc}
+.style3 {color: #999999}
+
+.img-block-override {
+	display: inline;
+}
+
+/* the linkbar tabs in the upper-right hand corner */
+
+.nav-tab {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: 14px;
+	font-weight: bold;
+	color: #ffffff;
+	text-decoration: none;
+	left: 1px;
+	right: 1px;
+	margin-left: 2px;
+
+}
+
+.nav-tab:hover {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: 14px;
+	font-weight: bold;
+	color: #ffffff;
+	text-decoration: underline;
+	left: 1px;
+	right: 1px;
+	margin-left: 2px;
+}
+
+
+/* linkbar stuff */
+/* tina update
+.link-level1 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 13px;
+	font-weight: bold;
+	color: #ffffff;
+	text-decoration: none;
+	padding-left: 5px;
+    padding-right: 5px;
+}
+
+.link-level1:hover {
+	color: #ffee30;
+}
+
+.link-level2 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #ffffff;
+	text-decoration: none;
+	margin-left: 4px;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+.link-level2:hover {
+	color: #ffee30;
+}
+*/
+.link-level1 {
+	font-size: 10px;
+	font-weight: normal;
+	color: #ffffff;
+	text-decoration: none;
+}
+.link-level1:visited {
+	font-family: Arial;
+	font-size: 10px;
+	color: #ffffff;
+	font-weight: normal;
+	text-decoration: none;
+
+}
+.link-level1:hover {
+	font-size: 10px;
+	color: #ffffff;
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+}
+.link-level1-active {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 13px;
+	font-weight: bold;
+	color: #ffffff;
+	text-decoration: none;
+	background: #336699;
+	margin-left: 4px;
+	padding-left: 5px;
+    padding-right: 5px;
+}
+.link-level1-active:hover {
+	color: #ffffff;
+}
+.link-level2 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+/*	color: #333333;*/
+	text-decoration: none;
+}
+.link-level2:hover {
+	font-weight: bold;
+	font-size: 12px;
+	color: #000000;
+        text-decoration: underline;
+}
+.link-level2-active {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #ffee30;
+	text-decoration: none;
+	margin-left: 4px;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+.link-level2-active:hover {
+	color: #ffee30;
+}
+.link-level2-active-connected {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #ffee30;
+	text-decoration: none;
+	left: 2px;
+	background: #999999;
+	padding-left: 5px;
+	padding-right: 5px;
+	border-bottom: 1px solid #999;
+}
+.link-level2-active-connected:hover {
+	color: #ffee30;
+}
+
+/* rotating corporate logos w/text */
+.text-rotating-logos {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	line-height: 13px;
+	font-weight: normal;
+	color: #999999;
+}
+
+/* rotating quotes (only on the homepage currently) */
+.text-quote {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	line-height: 14px;
+	font-weight: normal;
+	color: #000000;
+	left: 1px;
+}
+
+/* settings for linkbox1 "Get Involved With The FSG" */
+.text-default-header {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	font-size: 11px;
+	line-height: 13px;
+	color: #000000;
+	text-decoration: none;
+}
+.text-default-header:hover {
+	font-family: Arial, Helvetica, sans-serif;
+	font-weight: bold;
+	font-size: 11px;
+	line-height: 13px;
+	color: #666666;
+	text-decoration: underline;
+}
+
+/* used in the footer only */
+.legal-text {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	line-height: 1em;
+	font-weight: normal;
+	color: #666666;
+}
+
+.text-boxtop-reverse {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 13px;
+	line-height: 15px;
+	color: #ffffff;
+	font-weight: bold;
+}
+.text-header1 { /* big header */
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 18px;
+	font-weight: bold;
+}
+.text-header2 { /* slightly smaller header */
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	line-height: 16px;
+	color: #19334d;
+	font-weight: bold;
+}
+.text-header3 { /* even smaller header */
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 13px;
+	line-height: 15px;
+	color: #0d1927;
+	font-weight: bold;
+}
+
+.text-default {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 13px;
+	line-height: 15px;
+	font-weight: normal;
+/*	color: #336033; */
+	color: #333333;
+}
+/* XXX - this one's a problem... present on most pages, but should be switched to text-default */
+.text-news {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	line-height: 14px;
+	font-weight: normal;
+/*	color: #603333; */
+	color: #333333;
+}
+
+/* #toolbar { padding:0px; } */
+
+#toolbar { display: none; }
+
+/* wikitables */
+
+table.wikitable, table.wikitable-sep {
+  margin: 1em 1em 1em 0;
+  background: #f9f9f9;
+}
+
+table.wikitable {
+  border: 1px #aaaaaa solid;
+  border-collapse: collapse;
+}
+
+table.wikitable th, table.wikitable td {
+  border: 1px #aaaaaa solid;
+  padding: 0.2em 0.4em;
+}
+
+.indentwrap {
+	padding-left: 1.4em !important;
+	text-indent: -1em !important;
+}
+
+table.wikitable-sep th, table.wikitable-sep td {
+  border-bottom: 1px #aaaaaa solid;
+  border-right: 1px #aaaaaa solid;
+  padding: 0.2em 0.4em;
+}
+
+table.wikitable-sep th.btop, table.wikitable-sep td.btop {
+  border-top: 1px #aaaaaa solid;
+}
+
+table.wikitable-sep th.bleft, table.wikitable-sep td.bleft {
+  border-left: 1px #aaaaaa solid;
+}
+
+table.wikitable th.left {
+  background: #f2f2f2;
+  text-align: left;
+  padding-left: 0.4em;
+  padding-right: 0.4em;
+}
+
+table.wikitable th, table.wikitable-sep th {
+  background: #f2f2f2;
+  text-align: center;
+  padding-left: 0.4em;
+  padding-right: 0.4em;
+}
+
+table.progress-table {
+	table-layout: fixed;
+	border: solid 1px #aaaaaa;
+	border-collapse: collapse;
+	margin: 0;
+	cursor: move;
+}
+
+table.progress-table th, table.progress-table td  {
+	border: solid 1px #aaaaaa;
+	padding: 0.2em 0.4em;
+}
+
+/* Additional styles */
+
+table.main {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+table.main td, table.main th {
+	border: 1px solid black;
+	padding: 4px;
+	white-space: nowrap;
+}
+table.bartable {
+	margin: 0em 0em 0em 0;
+	border: 0;
+}
+table.bartable td {
+	border: 2px solid #5ab7e7;
+	background: #003e69;
+	padding: 0.2em;
+	color: #ffffff;
+}
+input[type=submit], input[type=reset], input[type=button] {
+	border: 1px solid black;
+	background: white;
+}
+tr.list_head {
+	background: #8080ff;
+	height: 2.0em;
+}
+tr.list_cat {
+	background: #b0b0ff;
+	height: 2.0em;
+}
+tr.list_subcat {
+	background: #d0d0f0;
+	height: 2.0em;
+}
+tr.list_item0 {
+	background: #e7e7e7;
+	height: 1.7em;
+	white-space: nowrap;
+}
+tr.list_item1 {
+	background: #ffffff;
+	height: 1.7em;
+	white-space: nowrap;
+}
+.clickable {
+	color: #00007f;
+	text-decoration: underline;
+    cursor: pointer;
+}
+
+.clickable:hover {
+	color: #ffffff;
+	text-decoration: underline;
+}
+
+
+.view_as_is {
+	display: none;
+}
+input[type=text], input[type=password], textarea {
+	font-family: monospace;
+	font-size: 1em;
+	border: 1px solid #cccccc;
+}
+
+td.dropdown_dis {
+	padding: 1px;
+}
+td.dropdown {
+	padding: 1px;
+	cursor: pointer;
+}
+td.dropdown:hover, td.dropdownh {
+	padding: 0px;
+	cursor: pointer;
+	border: solid 1px #8888ff;
+	background: url(arr_down.png) no-repeat right center;
+}
+tr.selectable {
+	cursor: pointer;
+}
+tr.selectable:hover {
+	cursor: pointer;
+	background-color: #ddffdd;
+}
+

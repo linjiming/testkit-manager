@@ -1,0 +1,14 @@
+Testkit is one testing execution environment, which is composed by testkit-manager and testkit-lite. testkit-manager represents a user interface front-end in browser, with the webUI interface, it manages the auto tests execution remotely, and provides unified webUI to help the manual tests execution.
+
+dependency:
+===========
+perl-XML-Simple, perl-XML-SAX, perl-JSON
+
+Startup:
+===========
+/opt/testkit/manager/webapps/bin/testkit_start.pl [port-number]
+
+Usage:
+===========
+1. install needed test packages in advance.
+2. Visit the testing page: http://<test-machine-name>:8890, using WebUI to manage your execution.

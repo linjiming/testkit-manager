@@ -1,0 +1,25 @@
+/*
+** IE5.0 Fix Stylesheet
+*/
+
+#column-one {
+    position: absolute;
+    overflow: visible;
+    top: 0;
+    left: 0;
+    z-index: 3;
+}
+#footer {
+    margin: 0 0 0 13.6em;
+}
+
+/* IE 5 & 5.5 interpret keyword sizes one off */
+body { font-size: xx-small; }
+/* 5.0 doesn't like the background icon for external links and user */
+.link-external,
+.external {
+    background: none;
+    padding: 0;
+}
+
+/*div{ border:1px solid Red !important;}*/

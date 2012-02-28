@@ -1,0 +1,40 @@
+/* 6.0 - only fixes */
+/* content area */ 
+/* workaround for various ie float bugs */
+#column-one {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 4;
+}
+#footer {
+    margin-left: 13.6em;
+    border-left: 1px solid #fabd23;
+}
+
+#portal-personaltools {
+    padding-bottom: 0.1em;
+}
+#bodyContent a.external {
+    background: url(external.png) center right no-repeat;
+    padding-right: 13px;
+}
+
+/* show the hand */
+#p-logo a,
+#p-logo a:hover {
+    cursor: pointer;
+}
+textarea {
+    width: 96%;
+}
+
+div.editsection {
+    position: relative;
+}
+/*{ border:1px solid Red !important;}*/
+
+input, textarea {
+	background-color: #FFFFFF;
+	border: 1px solid #909090;
+}

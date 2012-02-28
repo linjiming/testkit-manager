@@ -1,0 +1,114 @@
+.toclink {
+    font-weight: bold;
+}
+
+.errmsg {
+    background: #f9ffaa;
+    border: dashed 1px red;
+    color: red;
+    margin-bottom: 15px;
+    padding: 3pt;
+    padding-left: 15pt;
+    font-size: 120%;
+}
+
+table.info {
+    margin: 1em 1em 6pt 0;
+    background: #f9f9f9;
+    border: 1px #aaaaaa solid;
+    border-collapse: collapse;
+}
+table.info th, table.info td {
+    border: 1px #aaaaaa solid;
+    padding: 0.2em;
+    padding-left: 0.4em;
+    padding-right: 0.4em;
+}
+
+table.toc {
+    border-collapse: collapse;
+    background: #E6E6E6;
+}
+table.toc th, table.toc td {
+    border: 1px #FFFFFF solid;
+    padding: 0.2em;
+    padding-left: 0.4em;
+    padding-right: 0.4em;
+}
+
+table.info th, table.toc th {
+    background: #f2f2f2;
+    text-align: left;
+}
+table.info th.title {
+	background: #E5E5E5;
+}
+
+table.problem_table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+table.problem_table thead th {
+    background-color: #808080;
+}
+
+table.problem_table tr td {
+    border: 1px solid white;
+}
+
+td.pd, td.pdu { /* Problem details */
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+td.pdu {
+    width:100%;
+}
+
+.fw1 { width:12%; text-align: center; }
+.fw2 { width:25% }
+
+.ptl_gray       { background: #E6E6E6;}
+.ptl_gray:hover { background: #D6D6F0;}
+
+.ptl_green       { background: #CDFFCD;}
+.ptl_green:hover { background: #A0FFA0;}
+
+.ptl_yellow       { background: #FFFFCD;}
+.ptl_yellow:hover { background: #FFFF90;}
+
+.ptl_red       { background: #FFCDCD;}
+.ptl_red:hover { background: #FFA0A0;}
+
+.ptl_gray, .ptl_green, .ptl_yellow, .ptl_red { cursor: pointer }
+
+.ptd_gray, .ptd_green, .ptd_yellow, .ptd_red { 
+    padding: 1pt 16pt 5pt 16pt;
+    margin: 3pt 5pt 10pt 5pt;
+}
+.ptd_gray   { border-left: 5pt solid #D6D6F0 }
+.ptd_green  { border-left: 5pt solid #A0FFA0 }
+.ptd_yellow { border-left: 5pt solid #FFFF90 }
+.ptd_red    { border-left: 5pt solid #FFA0A0 }
+
+/* .ct classes are used by report comparer (jdiff.pl) */
+
+tr.ct {
+	cursor:pointer;
+}
+
+.ct_gray       { background: #E6E6E6;}
+tr.ct:hover td.ct_gray  { background: #D6D6F0;}
+
+.ct_green       { background: #CDFFCD;}
+tr.ct:hover td.ct_green { background: #A0FFA0;}
+
+.ct_yellow       { background: #FFFFCD;}
+tr.ct:hover td.ct_yellow { background: #FFFF90;}
+
+.ct_red       { background: #FFCDCD;}
+tr.ct:hover td.ct_red { background: #FFA0A0;}
+
+.ct_white       { background: ;}
+tr.ct:hover td.ct_white { background: #E5E5FF;}

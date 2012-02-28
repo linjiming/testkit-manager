@@ -1,0 +1,68 @@
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Distribution Checker's web-server configuration file                        #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+# To use, rename or copy this file to dc-server.conf, edit it and restart the
+# server.
+
+# AcceptConnections
+# Contains space-separated list of computer addresses that are allowed to
+# connect to this server.
+# Possible values:
+#	LOCAL                                         - Only local connections
+#	ALL                                           - Everyone is allowed
+#	IP-address (e.g. 192.168.0.1)                 - Specific IP address
+#	CIDR Network mask (e.g. 192.168.0.1/24)       - Subset of IP addresses
+#	Network mask (e.g. 192.168.0.1/255.255.255.0) - Same as above
+AcceptConnections = ALL
+
+# LogLevel
+# Specifies which events are logged.
+# Possible values:
+#	0 - log is disabled
+#	1 - requests, responses and error messages are logged
+#	2 - debug level (full HTTP headers are logged)
+LogLevel = 1
+
+# DirectoryIndex
+# List of resources to look for when the client requests a directory.
+DirectoryIndex = index.html index.htm tests_view.pl
+
+# ProxyServer
+# Proxy for external HTTP/FTP connections.
+# Format: [user[:password]@]host:port or empty string if proxy should not be used.
+ProxyServer = 
+
+# ProxyServerAuth
+# Authentication method for the proxy server.
+# Format: authtype[,notunnel]
+# Possible values:
+#   anyauth   - Automatically selected method
+#   basic     - Basic
+#   digest    - Digest
+#   ntlm      - NTLM
+#   negotiate - GSS-Negotiate
+# If "notunnel" is specified, only HTTP-like operations will be performed
+# instead of tunnelling by means of the HTTP CONNECT request.
+ProxyServerAuth = basic
+
+# HTTPProxyServer
+# Proxy for external HTTP connections. This option is only taken into account if
+# ProxyServer is not specified.
+# Format: host:port or empty string if proxy should not be used.
+HTTPProxyServer = 
+
+# HTTPProxyServerAuth
+# Authentication method for the HTTP proxy server. See ProxyServerAuth.
+HTTPProxyServerAuth = basic
+
+# FTPProxyServer
+# Proxy for external FTP connections. This option is only taken into account if
+# ProxyServer is not specified.
+# Format: host:port or empty string if proxy should not be used.
+FTPProxyServer = 
+
+# FTPProxyServerAuth
+# Authentication method for the FTP proxy server. See ProxyServerAuth.
+FTPProxyServerAuth = basic
+
