@@ -1,10 +1,8 @@
 testkit-manager TODO list:
 ======================================
-  - highlight selected tab ('VIEW TEST', 'SELECT TEST')
-  - highlight selected test cases in ('VIEW TEST', 'SELECT TEST') page
-  - enable selection on test suite/set/cases
-  - prompt confirming dialog when user removes a test profile
-  - On 'Test Report' page, show each test case result by clicking on test case name
-  - improve the performance issue
-  - Give more information in 'About' page
-  - update the icons
+  - add progress bar for EXECUTE and EXECUTE-MANUAL page
+  - add detailed result number for the tree view in the detailed report
+  - support new format of [spec] in the tree view of compliance from test type
+  - support update, install, and view package details functions in CUSTOM page
+  - support mail, export, and compare functions in REPORT page
+  - add page STATISTIC, HELP, and ABOUT

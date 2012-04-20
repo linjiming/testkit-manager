@@ -2,7 +2,7 @@ Testkit is one testing execution environment, which is composed by testkit-manag
 
 dependency:
 ===========
-perl-XML-Simple, perl-XML-SAX, perl-JSON
+testkit-lite perl-XML-SAX perl-XML-Simple perl-JSON perl-Digest-SHA
 
 Startup:
 ===========
@@ -11,4 +11,4 @@ Startup:
 Usage:
 ===========
 1. install needed test packages in advance.
-2. Visit the testing page: http://<test-machine-name>:8890, using WebUI to manage your execution.
+2. Visit the testing page: http://<test-machine-name>:8899, using WebUI to manage your execution.

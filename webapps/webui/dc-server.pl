@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Distribution Checker
+# Testkit
 # Web-server Module (dc-server.pl)
 #
 # Copyright (C) 2007-2009 The Linux Foundation. All rights reserved.
@@ -50,7 +50,7 @@ if (setsid() == -1) {
 # $SERVER_ROOT - path where the server script is located.
 my $SERVER_ROOT = abs_path($0);
 $SERVER_ROOT =~ s!/[^/]+$!!;
-print "server root = $SERVER_ROOT\n";
+
 # $DOCUMENT_ROOT - path to directory connected to http://localhost:<port>/
 # It's the 'public_html' subdirectory in the dc-server.pl script directory.
 my $DOCUMENT_ROOT = "$SERVER_ROOT/public_html";
@@ -65,7 +65,7 @@ if (open(INFO, $SERVER_ROOT.'/../utils/VERSION')) {
 	close(INFO);
 }
 
-$MTK_BRANCH = 'MeeGo' if (!$MTK_BRANCH);
+$MTK_BRANCH = 'Testkit' if (!$MTK_BRANCH);
 $MTK_VERSION = '' if ($MTK_VERSION !~ m/^\d/);    # Version should start with digit
 
 #my $APP_DATA = '/var/opt/'.(lc($MTK_BRANCH)).'/test/manager';                    # Directory where Distribution Checker's data are stored.
@@ -73,7 +73,7 @@ my $APP_DATA = $FindBin::Bin.'/../..';
 my $CONF_FILE = $FindBin::Bin.'/dc-server.conf.default';    # Location of the configuration file.
 
 my $port = shift;
-my $default_port = (($MTK_BRANCH eq 'MeeGo') ? 8890 : 8889);
+my $default_port = (($MTK_BRANCH eq 'Testkit') ? 8899 : 8898);
 if (!defined($port)) {
 	$port = $default_port;
 }
@@ -211,7 +211,7 @@ sub readConfFile($) {
 	%config = (
 		'AcceptConnections' => [],
 		'LogLevel' => 1,
-		'DirectoryIndex' => ['index.html', 'index.htm', 'tests_view.pl'],
+		'DirectoryIndex' => ['index.html', 'index.htm', 'index.pl'],
 		'ProxyServer' => '',
 		'ProxyServerAuth' => 'basic',
 		'HTTPProxyServer' => '',
@@ -418,7 +418,6 @@ my $server = new IO::Socket::INET(Proto => 'tcp',
                                   Listen => SOMAXCONN,
                                   Reuse => 1);
 unless ($server) {
-print "error!!!\n";
 	my $msg = "Could not create server socket on port '$port': $!";
 	flock(LOCKFILE, LOCK_UN);
 	close(LOCKFILE);
@@ -570,7 +569,6 @@ while(1) {      # Protection from exiting from accept() on SIGHUP
 						$request{'GET_ARGS'} = 'file='.substr($request{'URL'}, $get_pl_pos);
 						$request{'URL'} = substr($request{'URL'}, 0, $get_pl_pos);
 					}
-
 					my $localfile = $DOCUMENT_ROOT.$request{'URL'};
 					if (-f $localfile) {
 						my $buffer;

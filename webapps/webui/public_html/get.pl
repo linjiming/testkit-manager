@@ -61,12 +61,15 @@ if (($_GET{'file'} =~ m/[\/\\]\.\.+[\/\\]/) or
 my $directPath = $SERVER_PARAM{'APP_DATA'};
 $TestKitLogger::logger->log(message =>  "The SERVER_PARAM('APP_DATA'): $directPath");
 $directPath =~ s/webapps\/webui\/\.\.\/\.\.//g;
+$directPath_result = $directPath . "results";
 $directPath .= "log";
 $TestKitLogger::logger->log(message =>  "The $directPath: $directPath");
 if (($_GET{'file'} !~ m!^\Q$SERVER_PARAM{'APP_DATA'}\E/results/!) and
 	($_GET{'file'} !~ m!^\Q$SERVER_PARAM{'APP_DATA'}\E/log/!) and
 	($_GET{'file'} !~ m!^\Q$SERVER_PARAM{'APP_DATA'}\E/data/!) and
 	($_GET{'file'} !~ m!^\Q$APP_BIN\E/!) and 
+	($_GET{'file'} !~ m!^\Q$directPath_result\E/!) and 
+	($_GET{'file'} !~ m!^\Q/opt\E/!) and 
 	($_GET{'file'} !~ m!^\Q$directPath\E/!)) {
 	report_error('403 Forbidden', 'Access denied. Only specific directories can be accessed.');
 }

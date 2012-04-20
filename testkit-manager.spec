@@ -2,13 +2,13 @@
 
 Summary: Testkit Manager
 Name: testkit-manager
-Version: 1.0.0
+Version: 2.0.0
 Release: 1
 License: GPLv2
 Group: System/Libraries
 Source: %name-%version.tar.gz
 BuildRoot: %_tmppath/%name-%version-buildroot
-Requires: testkit-lite perl-XML-SAX perl-XML-Simple perl-JSON 
+Requires: testkit-lite perl-XML-SAX perl-XML-Simple perl-JSON perl-Digest-SHA
 
 %description
 

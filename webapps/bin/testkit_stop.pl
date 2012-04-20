@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Distribution Checker
+# Testkit
 # Web-Server Stop Module (dist-checker-stop.pl)
 #
 # Copyright (C) 2007-2009 The Linux Foundation. All rights reserved.
@@ -47,13 +47,14 @@ sub exec_sudo_cmd($$) {
 
 my $port = shift;
 my $sudo_cmd = shift;
+my $pwd_prompt = "    Please enter the root password when prompted.\n";
 
 my $ask_pwd = ($< != 0);
 my $dc_dir = abs_path($0);
 $dc_dir =~ s!/[^/]+/[^/]+$!!;
 my ($MTK_VERSION, $MTK_BRANCH);
 
-# Read the MeeGo Testkit branch name and version
+# Read the Testkit branch name and version
 if (open(INFO, $dc_dir.'/utils/VERSION')) {
 	if (defined(my $info = <INFO>)) {   # Read first line
 		$info =~ s/[\r\n]//g;
@@ -62,7 +63,7 @@ if (open(INFO, $dc_dir.'/utils/VERSION')) {
 	close(INFO);
 }
 
-$MTK_BRANCH = 'MeeGo' if (!$MTK_BRANCH);
+$MTK_BRANCH = 'Testkit' if (!$MTK_BRANCH);
 $MTK_VERSION = '' if ($MTK_VERSION !~ m/^\d/);    # Version should start with digit
 
 # Check if port was specified and set it if it was not
@@ -72,24 +73,27 @@ if ($port) {
 	}
 }
 else {
-	$port = (($MTK_BRANCH eq 'MeeGo') ? 8890 : 8889);
+	$port = (($MTK_BRANCH eq 'Testkit') ? 8899 : 8898);
 }
 
 # The same with sudo command
 if ($ask_pwd and !$sudo_cmd) {
-	#if (`lsb_release -ds 2>/dev/null` =~ m/ubuntu/i) {
-        if(`cat /etc/issue` =~ m/ubuntu/i) { 
+	if (`lsb_release -ds 2>/dev/null` =~ m/ubuntu/i) {
 		$sudo_cmd = 'sudo su -c';
+		$pwd_prompt = ''
 	}
 	else {
 		$sudo_cmd = 'su -c';
 	}
 }
 
-print "    Stopping the MeeGo Testkit's web-UI server on port '$port'.\n";
+print "    Stopping the Testkit's web-UI server on port '$port'.\n";
 if ($ask_pwd) {
 	print "    The command '$sudo_cmd' will be used to gain root access.\n";
 	print "    If you want to change this, run $0 <port> <sudo-command>\n\n";
+	if ($pwd_prompt) {
+		print $pwd_prompt;
+	}
 }
 else {
 	print "    If you want to change this, run $0 <port>\n\n";
@@ -114,10 +118,10 @@ if ($pid) {
 	exit $res >> 8;
 }
 elsif (`ps -A 2>/dev/null` =~ m/(dc|dtk)-server\.pl/) {
-	confirm("    It seems that another MeeGo Testkit or DTK Manager is running.\n    killall will be used to stop it.\n    Continue? ");
+	confirm("    It seems that another Testkit or DTK Manager is running.\n    killall will be used to stop it.\n    Continue? ");
 	my $res = exec_sudo_cmd('killall dc-server.pl dtk-server.pl', $sudo_cmd);
 	exit $res >> 8;
 }
 else {
-	die "    No running MeeGo Testkit was found.\n";
+	die "    No running Testkit was found.\n";
 }

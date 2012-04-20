@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-# Distribution Checker
+# Testkit
 # Web-Server Start Module (testkit_start.pl)
 #
 # Copyright (C) 2007-2009 The Linux Foundation. All rights reserved.
@@ -32,10 +32,12 @@
 use Fcntl ':flock';
 use File::Temp qw/tmpnam/;
 use Cwd qw(abs_path);
-use FindBin;
 
 my $machine = `uname -n`;
 $machine =~ s/[\r\n]//g;
+if ($machine eq "(none)"){
+	$machine = "empty";
+}
 
 my $port = shift;
 my $sudo_cmd = shift;
@@ -45,7 +47,7 @@ my $testkit = abs_path($0);
 $testkit =~ s!/[^/]+/[^/]+$!!;
 my ($MTK_VERSION, $MTK_BRANCH);
 
-# Read the MeeGo Testkit branch name and version
+# Read the Testkit branch name and version
 if (open(INFO, $testkit.'/utils/VERSION')) {
 	if (defined(my $info = <INFO>)) {   # Read first line
 		$info =~ s/[\r\n]//g;
@@ -54,7 +56,7 @@ if (open(INFO, $testkit.'/utils/VERSION')) {
 	close(INFO);
 }
 
-$MTK_BRANCH = 'MeeGo' if (!$MTK_BRANCH);
+$MTK_BRANCH = 'Testkit' if (!$MTK_BRANCH);
 $MTK_VERSION = '' if ($MTK_VERSION !~ m/^\d/);    # Version should start with digit
 my $app_data = '../../';
 
@@ -65,13 +67,12 @@ if ($port) {
 	}
 }
 else {
-	$port = (($MTK_BRANCH eq 'MeeGo') ? 8890 : 8889);
+	$port = (($MTK_BRANCH eq 'Testkit') ? 8899 : 8898);
 }
 
 # The same with sudo command
 if (!$sudo_cmd) {
-	#if (`lsb_release -ds 2>/dev/null` =~ m/ubuntu/i) {
-        if (`cat /etc/issue` =~ m/ubuntu/i) {
+	if (`lsb_release -ds 2>/dev/null` =~ m/ubuntu/i) {
 		$sudo_cmd = 'sudo su -c';
 	}
 	else {
@@ -79,7 +80,7 @@ if (!$sudo_cmd) {
 	}
 }
 
-print "    The port '$port' will be used by the MeeGo Testkit's web-UI server.\n";
+print "    The port '$port' will be used by the Testkit's web-UI server.\n";
 if ($ask_pwd) {
 	print "    The command '$sudo_cmd' will be used to gain root access.\n";
 	print "    If you want to change this, run $0 <port> <sudo-command>\n\n";
@@ -94,7 +95,7 @@ if (-f $LOCK_FILE) {
 		if (!flock(LOCKFILE, LOCK_EX | LOCK_NB)) {
 			my $pid = <LOCKFILE>;
 			$pid =~ s/^G:(\d+)$/$1/;
-			die "    Error: An instance of MeeGo Testkit is running on the port '$port' already! (PID: $pid.)\n\n    If you wish to use it, please open the URL http://$machine:$port/ in your browser.\n";
+			die "    Error: An instance of Testkit is running on the port '$port' already! (PID: $pid.)\n\n    If you wish to use it, please open the URL http://$machine:$port/ in your browser.\n";
 		}
 		else {
 			flock(LOCKFILE, LOCK_UN);
@@ -105,12 +106,11 @@ if (-f $LOCK_FILE) {
 
 my $web_server = "$testkit/webui/dc-server.pl";
 $web_server =~ s/\'/\'\\\'\'/g;
-#my $cmd = "mkdir -p '$app_data/results' >/dev/null 2>&1; mkdir -p '$app_data/log/server_log' >/dev/null 2>&1; '$web_server' $port &";
-#my $cmd = "'$web_server' $port &";
+#my $cmd = "mkdir -p '$app_data/results' >/dev/null 2>&1; mkdir -p '$app_data/log' >/dev/null 2>&1; '$web_server' $port &";
 my $cmd = "mkdir -p '$testkit/../tests' >/dev/null 2>&1; mkdir -p '$testkit/../profiles' >/dev/null 2>&1; mkdir -p '$testkit/../results' >/dev/null 2>&1; mkdir -p '$testkit/../log/server_log' >/dev/null 2>&1; '$web_server' $port &";
 if ($ask_pwd) {
-        my $root = $FindBin::Bin."../../";
-	$cmd = "$sudo_cmd 'export TESTKIT_ROOT=$root;$cmd'";
+	print "    Please enter the root password when prompted.\n";
+	$cmd = "$sudo_cmd '$cmd'";
 }
 my $res = system($cmd);
 sleep(1);

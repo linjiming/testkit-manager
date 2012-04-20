@@ -80,7 +80,7 @@ function startTestsPrepareGUI() {
 	exec_info.innerHTML = 'Preparing to run the tests&hellip;';
 	exec_status.innerHTML = '&nbsp;&nbsp;&nbsp;<img src="images/ajax_progress.gif" width="16" height="16" alt="" />';
 	cmdlog.innerHTML = '';
-	cmdlog.style.color = 'lightgreen';
+	cmdlog.style.color = 'black';
 	log_contents = '';
 	last_line = '';
 }
@@ -101,15 +101,16 @@ function startTests(profile_name) {
 		}
 	}
 	startTestsPrepareGUI();
-	//alert("RunTest.js: " + profile_name);
-	ajax_call_get('action=run_tests&profile=' + encodeURIComponent(profile_name));
+	// alert("RunTest.js: " + profile_name);
+	ajax_call_get('action=run_tests&profile='
+			+ encodeURIComponent(profile_name));
 }
 
 function startRefresh() {
 	exec_info.innerHTML = 'Tests are running &hellip;';
 	exec_status.innerHTML = '&nbsp;&nbsp;&nbsp;<img src="images/ajax_progress.gif" width="16" height="16" alt="" />';
 	cmdlog.innerHTML = '';
-	cmdlog.style.color = 'lightgreen';
+	cmdlog.style.color = 'black';
 	log_contents = '';
 	last_line = '';
 	ajax_call_get('action=get_test_log&start=0');
@@ -165,24 +166,35 @@ function updateCmdLog(txt) {
 function ajaxProcessResult(responseXML) {
 
 	var tid;
-	
+
 	/*
-	if (responseXML.getElementsByTagName('progress').length > 0) {
-		var progress_data = responseXML.getElementsByTagName('progress')[0];
-		var testsuites_data = progress_data.getElementsByTagName('testsuite');
+	 * if (responseXML.getElementsByTagName('progress').length > 0) { var
+	 * progress_data = responseXML.getElementsByTagName('progress')[0]; var
+	 * testsuites_data = progress_data.getElementsByTagName('testsuite');
+	 * 
+	 * var id = testsuites_data[0].getAttribute('id'); var status =
+	 * testsuites_data[0].getElementsByTagName('status')[0].childNodes[0].nodeValue;
+	 * var percent =
+	 * testsuites_data[0].getElementsByTagName('percent')[0].childNodes[0].nodeValue;
+	 * var progress_width = Math.round(percent * 1.0);
+	 * 
+	 * var percent_value = document.getElementById('percent');
+	 * percent_value.innerHTML = percent + '%'; var percent_bar =
+	 * document.getElementById('progress_bar'); percent_bar.style.width =
+	 * progress_width + '%'; }
+	 */
 
-		var id = testsuites_data[0].getAttribute('id');
-		var status = testsuites_data[0].getElementsByTagName('status')[0].childNodes[0].nodeValue;
-		var percent = testsuites_data[0].getElementsByTagName('percent')[0].childNodes[0].nodeValue;
-		var progress_width = Math.round(percent * 1.0);
-
-		var percent_value = document.getElementById('percent');
-		percent_value.innerHTML = percent + '%';
-		var percent_bar = document.getElementById('progress_bar');
-		percent_bar.style.width = progress_width + '%';
-
-	}*/
-
+	if (responseXML.getElementsByTagName('save_manual_redirect').length > 0) {
+		if (responseXML.getElementsByTagName('save_manual_refresh').length > 0) {
+			document.location = 'tests_execute_manual.pl?time='
+					+ responseXML.getElementsByTagName('save_manual_time')[0].childNodes[0].nodeValue;
+		}
+		if (responseXML.getElementsByTagName('save_manual_redirect_report').length > 0) {
+			document.location = 'tests_report.pl?time='
+					+ responseXML.getElementsByTagName('save_manual_time')[0].childNodes[0].nodeValue
+					+ '&detailed=1';
+		}
+	}
 	if (responseXML.getElementsByTagName('started').length > 0) {
 		setTimeout('startRefresh()', 100);
 	} else {
@@ -210,9 +222,16 @@ function ajaxProcessResult(responseXML) {
 				stopRefresh();
 			}
 			if (responseXML.getElementsByTagName('redirect').length > 0) {
-				stopRefresh();
-				document.location = 'tests_report.pl?details=' + responseXML
-						.getElementsByTagName('redirect')[0].childNodes[0].nodeValue + '&generate=1';
+				if (responseXML.getElementsByTagName('redirect_manual').length > 0) {
+					document.location = 'tests_execute_manual.pl?time='
+							+ responseXML.getElementsByTagName('redirect')[0].childNodes[0].nodeValue;
+				} else {
+					stopRefresh();
+					exec_info.innerHTML = 'Redirect to report page';
+					document.location = 'tests_report.pl?time='
+							+ responseXML.getElementsByTagName('redirect')[0].childNodes[0].nodeValue
+							+ '&detailed=1';
+				}
 			}
 		}
 	}
@@ -225,7 +244,7 @@ function stopRefresh() {
 	test_timer_var = null;
 	stopTestsPrepareGUI();
 	progress_table_present = false;
-	cmdlog.style.color = '#ffa0b0';
+	cmdlog.style.color = 'green';
 }
 
 function stopTestsPrepareGUI() {
@@ -245,4 +264,69 @@ function onAjaxError() {
 	stopTestsPrepareGUI();
 	exec_info.innerHTML = 'Nothing started';
 	exec_status.innerHTML = '';
+}
+
+function saveManual() {
+	var arr = new Array();
+	var transfer = "";
+	var time = document.getElementById('time').innerHTML;
+	transfer += time + "::::";
+	var page = document.all;
+	for ( var i = 0; i < page.length; i++) {
+		var temp_id = page[i].id;
+		if (temp_id.indexOf("radio__") >= 0) {
+			if (page[i].checked) {
+				var result = page[i].value;
+				var name_all = temp_id.split("__");
+				var package_temp = name_all[2].split(":");
+				var name_temp = name_all[3].split(":");
+				var package_name = package_temp[1];
+				var name = name_temp[1];
+				var testarea = document.getElementById('textarea__'
+						+ name_all[2] + "__" + name_all[3]);
+				var bugnumber = document.getElementById('bugnumber__'
+						+ name_all[2] + "__" + name_all[3]);
+				var transfer_temp = package_name + "__" + name + ":" + result
+						+ "__" + testarea.value + "__" + bugnumber.value;
+				arr.push(transfer_temp);
+			}
+		}
+	}
+	transfer += arr.join(":::");
+	ajax_call_get('action=save_manual&content=' + transfer);
+}
+
+function finishManual() {
+	var truthBeTold = window.confirm("Unsaved result will be lost. Continue?");
+	if (truthBeTold) {
+		var time = document.getElementById('time').innerHTML;
+		document.location = 'tests_report.pl?time=' + time + '&detailed=1';
+	}
+}
+
+function passAll() {
+	var result = document.getElementById("result").innerHTML;
+	var result_list = new Array();
+	result_list = result.split("::");
+	for ( var i = 0; i < result_list.length; i++) {
+		document.getElementById("pass__radio__" + result_list[i]).checked = true;
+	}
+}
+
+function failAll() {
+	var result = document.getElementById("result").innerHTML;
+	var result_list = new Array();
+	result_list = result.split("::");
+	for ( var i = 0; i < result_list.length; i++) {
+		document.getElementById("fail__radio__" + result_list[i]).checked = true;
+	}
+}
+
+function blockAll() {
+	var result = document.getElementById("result").innerHTML;
+	var result_list = new Array();
+	result_list = result.split("::");
+	for ( var i = 0; i < result_list.length; i++) {
+		document.getElementById("block__radio__" + result_list[i]).checked = true;
+	}
 }

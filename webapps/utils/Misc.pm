@@ -31,11 +31,14 @@ use Common;
 require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(
+ 
 	$globals $host_info
+	
 	&ask_for_password &backup_and_replace &myprint
 	&print_log &print_vlog &sendmail
 	&status_updated
 	&suggest_packages &missing_packages_message
+	
 	@all_warnings
 	&print_stderr
 );

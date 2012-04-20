@@ -20,3 +20,14 @@ testkit-manager 0.6.1:
 * Wed Jul 21 2010 Wei, Zhang <wei.z.zhang@intel.com> 1.0.0-1
   - for 1.0.0 release
 
+
+testkit-manager 2.0.0:
+===================
+* Mon Feb 13 2012 Wendong,Sui <weidongx.sun@intel.com> 2.0.0-1
+  - redesign UI and layout
+  - support submiting test results to QA report tool
+
+* Mon Mar 26 2012 Wendong,Sui <weidongx.sun@intel.com> 2.0.0
+  - support testkit-lite 2.1.0-2
+  - support save comment and bug number information for manual cases
+  - for 2.0.0 release
