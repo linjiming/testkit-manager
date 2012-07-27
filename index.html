@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Testkit-manager : " />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Testkit-manager</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/testkit/testkit-manager">View on GitHub</a>
+
+          <h1 id="project_title">Testkit-manager</h1>
+          <h2 id="project_tagline"></h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/testkit/testkit-manager/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/testkit/testkit-manager/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>Testkit Overview</h1>
+
+<p>Testkit is one testing execution framework, which is composed by <strong>Testkit-Manager</strong> and <strong>Testkit-Lite</strong>.</p>
+
+<ul>
+<li>
+<strong>Testkit-Manager</strong> represents a GUI front-end in browser. <strong>Testkit-Manager</strong> manages the auto test cases execution remotely, and it provides unified web UI to help manual tests execution.</li>
+<li>
+<strong>Testkit-Lite</strong> is the default core test runner driving test execution in <strong>Testkit-Manager</strong>. It also provides more comprehensive options for your testing in command line mode.</li>
+</ul><h1>How does Testkit work?</h1>
+
+<p><img src="https://github.com/testkit/testkit-manager/raw/master/doc/Testkit_Workflow1.png" alt="Image Alt"></p>
+
+<h1>Testkit Quick Start</h1>
+
+<p>1.Download and install Testkit-Manager to host machine</p>
+
+<pre><code>(1) Install dependency packages and testkit-manager package:
+
+a. If Host Machine is preinstalled Ubuntu (take ubuntu11.10 as an example), then
+
+        sudo apt-get install libxml-simple-perl
+
+        sudo apt-get install libdigest-sha-perl
+
+        sudo apt-get install libjson-perl
+
+        sudo apt-get install libio-pty-easy-perl
+
+        sudo apt-get install cpanminus
+
+        cpanm JSON
+
+        sudo apt-get install rpm
+
+        sudo rpm -ivh testkit-manager-x.x.x-x.noarch.rpm
+
+b. If host machine is preinstalled Fedora (take fedora17 as an example)
+
+        sudo yum install perl-libxml-perl
+
+        sudo yum install perl-App-cpanminus
+
+        sudo yum install perl-XML-Simple
+
+        sudo rpm -ivh testkit-manager-x.x.x-x.noarch.rpm --nodeps
+
+(2) Install sdb tool on host machine. The sdb tool can be got from Tizen SDK.
+
+    sudo cp &lt;somewhere&gt;/sdb /usr/bin
+
+    sudo chmod 755 /usr/bin/sdb
+</code></pre>
+
+<p>2.Ensure the Target Device is connected to host machine</p>
+
+<pre><code>    power on device
+
+    connect USB
+
+    use 'sdb devices' from the host to check if device is connected successfully
+</code></pre>
+
+<p>3.Launch Testkit-Manager</p>
+
+<pre><code>    sudo /opt/testkit/manager/webapps/bin/testkit_start.pl
+
+    Open web UI of Testkit-Manager in browser: http://&lt;test-machine-name&gt;:8899
+</code></pre>
+
+<p>4.Custom Test Plan</p>
+
+<p>On the page for customizing test plan, you can choose test packages. 
+The chosen test packages and Testkit-Lite packages will be automatically downloaded and installed to target device</p>
+
+<p>5.Once all the tests are executed, you can view the test results in your browser. 
+  You can continue to run the tests in Testkit-Manager.</p>
+
+<p><strong>Only use Testkit-Lite</strong></p>
+
+<p>You can use Testkit-Lite directly without Testkit-Manager.</p>
+
+<p><img src="https://github.com/testkit/testkit-manager/raw/master/doc/Testkit-Lite_Workflow1.png" alt="Image Alt"></p>
+
+<p>Please see details in README of testkit-lite.</p>
+
+<h1>Document</h1>
+
+<p>For more info about Testkit, please find Testkit-Lite and Testkit-Manager document at</p>
+
+<pre><code>https://github.com/testkit/testkit-lite/tree/master/doc
+
+https://github.com/testkit/testkit-manager/tree/master/doc
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Testkit-manager maintained by <a href="https://github.com/testkit">testkit</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
