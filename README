@@ -1,14 +1,63 @@
-Testkit is one testing execution environment, which is composed by testkit-manager and testkit-lite. testkit-manager represents a user interface front-end in browser, with the webUI interface, it manages the auto tests execution remotely, and provides unified webUI to help the manual tests execution.
+Testkit is a testing execution environment, which is composed by testkit-manager and testkit-lite.
+Testkit-manager represents a user interface front-end in browser, with a webUI interface.
+It manages the auto tests execution remotely, and provides unified webUI to help the manual tests execution.
 
 dependency:
 ===========
-testkit-lite perl-XML-SAX perl-XML-Simple perl-JSON perl-Digest-SHA
+perl-libxml-perl perl-App-cpanminus perl-XML-Simple
+
+
+Installation:
+===========
+Step 1: install dependence packages on host
+  Host (ubuntu11.10)
+    sudo apt-get install libxml-simple-perl
+    sudo apt-get install libdigest-sha-perl
+    sudo apt-get install libjson-perl
+    sudo apt-get install libio-pty-easy-perl
+    sudo apt-get install cpanminus
+    cpanm JSON
+    sudo apt-get install rpm
+
+  Host (fedora17)
+    sudo yum install perl-libxml-perl
+    sudo yum install perl-App-cpanminus
+    sudo yum install perl-XML-Simple
+
+Step 2: install testkit-manger on host
+  Host (ubuntu11.10)
+    rpm -ivh testkit-manager-x.x.x-x.i386.rpm --nodeps
+
+  Host (fedora17)
+    rpm -ivh testkit-manager-x.x.x-x.i386.rpm
+
+Step 3: install 'sdb' on host
+  sudo cp <somewhere>/sdb /usr/bin
+  sudo chmod 755 /usr/bin/sdb
+
+Step 4: connect device
+  power on device
+  connect USB
+  type command 'sdb devices' from the host to check if the device is really connected
+
+
+Configure Repository of Test Packages:
+========
+Edit configuration file '/opt/testkit/manager/CONF' to configure the repo address
+  This step is optional if you can access the default remote repo of test packages
+  If you want to use the test packages offline, you need download test packages in your host, and put the package path to this configure file as local repo address
+
 
 Startup:
 ===========
-/opt/testkit/manager/webapps/bin/testkit_start.pl [port-number]
+1. type command '/opt/testkit/manager/webapps/bin/testkit_start.pl' from the host
+2. open web page on browser: http://<test-machine-name>:8899
 
-Usage:
+
+Limitation:
 ===========
-1. install needed test packages in advance.
-2. Visit the testing page: http://<test-machine-name>:8899, using WebUI to manage your execution.
+1. only support devices that have 'sdb' communication module
+2. test result summary of total/pass/fail number on REPORT page is not accurate sometimes
+3. can¡¯t run both core and web api test packages in one test run
+4. when leave the execution page during test running, and then you go back, the page may not display profile info correctly
+5. repo URL doesn't support whitespace and other special characters

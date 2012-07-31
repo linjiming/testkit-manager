@@ -18,4 +18,4 @@
 #              Wei, Zhang <wei.z.zhang@intel.com>
 #
 
-SUBDIRS = bin ptyshell utils webui
+SUBDIRS = bin utils webui

@@ -58,20 +58,19 @@ my @type_item              = ();
 my @priority_item          = ();
 my @component_item         = ();
 
-my $testSuitesPath                   = "none";
-my $package_name_number              = 0;
-my $package_webapi_number       	 = 0;
-my $package_webapi_item_num_total	 = 0;
-my $count_num                        = 0;
-my $category_number                  = 0;
-my $test_suite_number                = 0;
-my $status_number                    = 0;
-my $priority_number                  = 0;
-my $type_number                      = 0;
-my $component_number                 = 0;
+my $testSuitesPath                = "none";
+my $package_name_number           = 0;
+my $package_webapi_number         = 0;
+my $package_webapi_item_num_total = 0;
+my $count_num                     = 0;
+my $category_number               = 0;
+my $test_suite_number             = 0;
+my $status_number                 = 0;
+my $priority_number               = 0;
+my $type_number                   = 0;
+my $component_number              = 0;
 
-my $test_definition_dir = "/usr/share/";
-my $result_dir_manager  = $FindBin::Bin . "/../../../results/";
+my $result_dir_manager = $FindBin::Bin . "/../../../results/";
 my %spec_list;
 
 my @filter_suite_value            = ();
@@ -84,13 +83,20 @@ my @filter_category_value         = ();
 my $case_count_total              = 0;
 my @one_package_case_count_total  = ();
 my @one_webapi_package_item_count = ();
+my $defination_dir                = $FindBin::Bin . "/../../../defination/";
+my $test_definition_dir           = $defination_dir;
+
+syncDefination();
 
 ScanPackages();
 CountPackages();
 CreateFilePath();
 AnalysisTestsXML();
-GetSelectItem();
-FilterCaseValue();
+
+if ( $package_name_number > 0 ) {
+	GetSelectItem();
+	FilterCaseValue();
+}
 
 for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
 	if ( $package_name[$count] =~ /webapi/ ) {
@@ -111,32 +117,32 @@ print <<DATA;
           background-color: #FAFAFA;
       }
       .ygtvrow {
-          height: 50px;
+          height: 30px;
           background-color: #FAFAFA;
       }
     </style>
 <div id="message"></div>
-<table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
+<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
   <tr>
     <td><form id="tests_custom" name="tests_custom" method="post" action="">
       <table width="100%" border="0" cellspacing="0" cellpadding="0">
      
 		 <tr>
-          <td><table width="100%" border="0" cellspacing="0" cellpadding="0" background="images/report_top_button_background.png">
+          <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
             <tr>
-               <td width="3%" align="left" height="50" nowrap="nowrap"><img id="package_bar_chart" src="images/package_bar_chart_selected.png" title="Package Chart" style="cursor:default" width="123" height="50" onclick=""/></td>
-               <td width="3%" align="left" height="50" nowrap="nowrap"><img id="package_tree_diagram" src="images/package_tree_diagram.png" title="Tree Diagram" style="cursor:pointer" width="123" height="50" onclick="javascript:onDrawTree();"/></td>
-               <td width="94%" align="left" height="50" nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" style="cursor:pointer" width="123" height="50" onclick="javascript:onDrawComponent();"/></td>                      
+               <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="package_bar_chart" src="images/package_bar_chart_selected.png" title="Package Chart" style="cursor:default" width="73" height="30"  onclick=""/></td>
+               <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="package_tree_diagram" src="images/package_tree_diagram.png" title="Tree Diagram (This diaram is generated only for webapi packages, the branches are extracted from [Spec] filed inside the tests.xml file)" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawTree();"/></td>
+               <td width="94%" align="left" height="30"  nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawComponent();"/></td>                      
             </tr>
           </table></td>
         </tr>
                
         <tr>
-          <td id="list_advanced"><table width="1280" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
+          <td id="list_advanced"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
             <tr>
               <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-					<td width="30%" height="50" align="left" class="custom_title">&nbsp;category:</td><td>
+					<td width="30%" height="30" ="50" align="left" class="custom_title">&nbsp;category:</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 DrawCategorySelect();
@@ -148,7 +154,7 @@ print <<DATA;
               </table></td>
               <td width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-					<td width="30%" height="50" align="left" class="custom_title">&nbsp;type:</td><td>
+					<td width="30%" height="30"  align="left" class="custom_title">&nbsp;type:</td><td>
                     <select name="select_type" align="20px" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 DrawTypeSelect();
@@ -163,7 +169,7 @@ print <<DATA;
             <tr>
               <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="50" align="left" class="custom_title">&nbsp;status:</td><td>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;status:</td><td>
                     <select name="select_status" align="20px" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 DrawStatusSelect();
@@ -175,7 +181,7 @@ print <<DATA;
               </table></td>
               <td width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="50" align="left" class="custom_title">&nbsp;priority:</td><td>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;priority:</td><td>
                     <select name="select_priority" align="20px" id="select_priority" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 DrawPrioritySelect();
@@ -190,7 +196,7 @@ print <<DATA;
             <tr>
               <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="50" align="left" class="custom_title">&nbsp;testsuite:</td><td>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;testsuite:</td><td>
                     <select name="select_testsuite" align="20px" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 DrawTestsuiteSelect();
@@ -201,7 +207,7 @@ print <<DATA;
                 </tr>
               </table></td>
               
-              <td id="select_package_disabled_td" width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td id="select_package_disabled_td" width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
                 <tr>
                   <td width="100%">&nbsp;</td>
                 </tr>
@@ -209,7 +215,7 @@ print <<DATA;
               
               <td id="select_package_td" width="50%" nowrap="nowrap" class="custom_list_type_bottom" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="50" align="left" class="custom_title">&nbsp;package:</td><td>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;package:</td><td>
                     <select name="select_package" align="20px" id="select_package" class="custom_select" style="width:70%" onchange="javascript:draw_package_tree();">
 DATA
 DrawPackageSelect();
@@ -228,7 +234,7 @@ DATA
 
 print <<DATA;
         <tr id="background_top" style="display:">
-	       <td><table width="100%" height="25" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">	
+	       <td><table width="100%" height="15" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
 		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
 	       </table></td>
 	     </tr>     
@@ -236,7 +242,7 @@ DATA
 
 print <<DATA;
         <tr id="no_webapi_attention_div" style="background-color:#E9F6FC;display:none">
-	       <td><table width="100%" height="200" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">	
+	       <td><table width="100%" height="120" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
 		        <td width="100%" align="middle" valign="middle" class="static_chart_select">
 		        No webapi packages !</td> 
 	       </table></td>
@@ -245,7 +251,7 @@ DATA
 
 print <<DATA;
         <tr id="no_pkg_attention_div" style="background-color:#E9F6FC;display:none">
-	       <td><table width="100%" height="200" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">	
+	       <td><table width="100%" height="120" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
 		        <td width="100%" align="middle" valign="middle" class="static_chart_select">
 		        No packages !</td> 
 	       </table></td>
@@ -262,28 +268,66 @@ for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
 	}
 	print <<DATA;
 	     <tr id="static_list_$package_name[$count]" style="display:">
-	       <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="none">	
-		        <td width="25%" height="50" align="right" class="static_list_packagename" >$package_name[$count]</td>
-		        <td width="3%" height="50" class="static_list_packagename">&nbsp;</td> 
-		        <td id="static_list_bar_td_$package_name[$count]" align="left" height="50" class="static_list_count_bar" ><span id="static_list_bar_$package_name[$count]"></span></td>
-		        <td width="1%" height="50" class="static_list_num">&nbsp;</td>  
-		        <td id="static_list_num_$package_name[$count]" align="left" height="50" class="static_list_num" ><span id="static_list_num_$package_name[$count]"></span></td> 
-		        <td width="12%" height="50" class="static_list_packagename">&nbsp;</td>      
+	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" style="table-layout:fixed">	
+		        <td width="25%" height="30"  align="right" class="static_list_packagename" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$package_name[$count]">$package_name[$count]</td>
+		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
+		        <td id="static_list_bar_td_$package_name[$count]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_bar_$package_name[$count]"></span></td>
+		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
+		        <td id="static_list_num_$package_name[$count]" align="left" height="30"  class="static_list_num" ><span id="static_list_num_$package_name[$count]"></span></td> 
+		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
 	       </table></td>
 	      </tr>
 DATA
 }
 
+print <<DATA;
+        <tr id="background_top1" style="display:">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
+		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+	       </table></td>
+	     </tr>  
+DATA
+
+print <<DATA;
+        <tr id="static_scale" style="display:">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
+	       		<td width="29%" align="right" class="static_list_scale_head"></td>
+		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="19%" class="static_list_scale_head"></td>
+	       </table></td>
+	     </tr>  
+DATA
+
+print <<DATA;
+        <tr id="static_scale_number" style="display:">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
+	       		<td width="28%" align="left" class="static_list_scale_num"></td>
+		        <td width="8%" id="static_scale_number0" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="9%" id="static_scale_number1" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="9%" id="static_scale_number2" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="9%" id="static_scale_number3" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="9%" id="static_scale_number4" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="9%" id="static_scale_number5" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="19%" id="static_scale_number6"class="static_list_scale_num"></td>
+	       </table></td>
+	     </tr>  
+DATA
+
 my $one_webapi_package_item_count = 0;
 for ( my $count = 0 ; $count < $package_webapi_number ; $count++ ) {
 	print <<DATA;
              <tr id="tree_area_$package_name_webapi[$count]" style="display:none">
-              	<td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0" rules="none">
+              	<td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" rules="all">
               	<tr>
-              		<td width="35%" class="static_list_packagename" ><img src="images/statistic_background_left.png"></td>
+              		<td width="21%" class="static_list_packagename" ><img src="images/statistic_background_left.png"></td>
                 	<td width="40%" align="left" valign="top" class="static_list_packagename" >
                   	<div id="tree_area_test_type_$package_name_webapi[$count]" style="display:"></div></td>
-                  	<td width="20%" align="right" valign="bottom" class="static_list_packagename" ><img src="images/statistic_background_right.png"></td>
+                  	<td width="12%" align="right" valign="bottom" class="static_list_packagename" ><img src="images/statistic_background_right.png"></td>
                  </tr>
                  </table></td>
                </tr>
@@ -314,6 +358,7 @@ DATA
 		# get spec list of a specific level
 		my @temp = split( "__", $spec_list{$i} );
 		foreach (@temp) {
+
 			# get item and its parent
 			my @temp_inside = split( "::", $_ );
 			my $item        = shift(@temp_inside);
@@ -373,7 +418,7 @@ DATA
 				$one_webapi_package_item_count );
 		}
 	}
-print <<DATA;
+	print <<DATA;
 		tree.draw();
 		tree.expandAll();
 		tree.collapseAll();
@@ -399,36 +444,76 @@ for ( my $count = 0 ; $count < @component ; $count++ ) {
 	}
 	print <<DATA;
 	     <tr id="static_list_component_$component[$count]" style="display:none">
-	       <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="none">	
-		        <td width="35%" height="50" align="right" class="static_list_packagename" >$component[$count]</td>
-		        <td width="3%" height="50" class="static_list_packagename">&nbsp;</td> 
-		        <td id="static_list_component_bar_td_$component[$count]" align="left" height="50" class="static_list_count_bar" ><span id="static_list_component_bar_$component[$count]"></span></td>
-		        <td width="1%" height="50" class="static_list_num">&nbsp;</td>  
-		        <td id="static_list_component_num_$component[$count]" align="left" height="50" class="static_list_num" ><span id="static_list_component_num_$component[$count]"></span></td> 
-		        <td width="12%" height="50" class="static_list_packagename">&nbsp;</td>      
+	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" style="table-layout:fixed">	
+		        <td width="35%" height="30"  align="right" class="static_list_packagename" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$component[$count]">$component[$count]</td>
+		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
+		        <td id="static_list_component_bar_td_$component[$count]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_component_bar_$component[$count]"></span></td>
+		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
+		        <td id="static_list_component_num_$component[$count]" align="left" height="30"  class="static_list_num" ><span id="static_list_component_num_$component[$count]"></span></td> 
+		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
 	       </table></td>
 	      </tr>
 DATA
 }
+
 print <<DATA;
-        <tr id="background_bottom" style="display:">
-	       <td><table width="100%" height="25" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">	
+        <tr id="background_top2" style="display:none">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
 		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
 	       </table></td>
 	     </tr>  
 DATA
-   
-if($package_name_number ne "0"){
+
 print <<DATA;
+        <tr id="static_scale_component" style="display:none">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
+	       		<td width="38%" align="right" class="static_list_scale_head"></td>
+		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="19%" class="static_list_scale_head"></td>
+	       </table></td>
+	     </tr>  
+DATA
+
+print <<DATA;
+        <tr id="static_scale_number_component" style="display:none">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
+	       		<td width="38%" align="left" class="static_list_scale_num"></td>
+		        <td width="6.5%" id="static_scale_number_component0" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="7.5%" id="static_scale_number_component1" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="7.5%" id="static_scale_number_component2" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="7.5%" id="static_scale_number_component3" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="7.5%" id="static_scale_number_component4" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="7.5%" id="static_scale_number_component5" align="left" valign="middle" class="static_list_scale_num"></td> 
+		        <td width="20%" id="static_scale_number_component6"class="static_list_scale_num"></td>
+	       </table></td>
+	     </tr>  
+DATA
+
+print <<DATA;
+        <tr id="background_bottom" style="display:">
+	       <td><table width="100%" height="25" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
+		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+	       </table></td>
+	     </tr>  
+DATA
+
+if ( $package_name_number ne "0" ) {
+	print <<DATA;
 	<script>
 	document.getElementById("no_pkg_attention_div").style.display = "none";
 	</script>   
 DATA
 }
-else{
-print <<DATA;
+else {
+	print <<DATA;
 	<script>
 	document.getElementById("no_pkg_attention_div").style.display = "";
+	document.getElementById("static_scale").style.display = "none";
 	document.getElementById("background_top").style.display = "none";
 	document.getElementById("background_bottom").style.display = "none";
 	</script>   
@@ -474,8 +559,7 @@ DATA
 print <<DATA;
 var package_name_webapi = new Array(
 DATA
-for ( $count_num = 0 ; $count_num < $package_webapi_number ; $count_num++ )
-{
+for ( $count_num = 0 ; $count_num < $package_webapi_number ; $count_num++ ) {
 	if ( $count_num == $package_webapi_number - 1 ) {
 		print '"' . $package_name_webapi[$count_num] . '"';
 	}
@@ -535,8 +619,7 @@ DATA
 print <<DATA;
 var one_webapi_package_item_count = new Array(
 DATA
-for ( $count_num = 0 ; $count_num < $package_webapi_number ; $count_num++ )
-{
+for ( $count_num = 0 ; $count_num < $package_webapi_number ; $count_num++ ) {
 	if ( $count_num == $package_webapi_number - 1 ) {
 		print '"' . $one_webapi_package_item_count[$count_num] . '"';
 	}
@@ -819,7 +902,13 @@ var bottom_id			= document.getElementById('background_bottom');
 var no_webapi_id		= document.getElementById('no_webapi_attention_div');
 var no_pkg_id		= document.getElementById('no_pkg_attention_div');
 var adv_value_package	= document.getElementById('select_package');
-var style;
+
+var background_top1_id = document.getElementById('background_top1');
+var static_scale_id = document.getElementById('static_scale');
+var static_scale_number_id = document.getElementById('static_scale_number');
+var background_top2_id = document.getElementById('background_top2');
+var static_scale_component_id = document.getElementById('static_scale_component');
+var static_scale_number_component_id = document.getElementById('static_scale_number_component');
 	
 function disabledSelectButton(){
 	sel_category_id.disabled	= true;
@@ -851,6 +940,15 @@ function static_component_display(style){
 	}
 }
 
+function static_scale_display(style1,style2){
+	background_top1_id.style.display = style1;
+	static_scale_id.style.display = style1;
+	static_scale_number_id.style.display = style1;
+	background_top2_id.style.display = style2;
+	static_scale_component_id.style.display = style2;
+	static_scale_number_component_id.style.display = style2;
+}
+
 function onDrawCylindrical(){
 	top_id.style.display		 = "";
 	bottom_id.style.display		 = "";
@@ -861,6 +959,7 @@ function onDrawCylindrical(){
 	chart_id.src				 = "images/package_bar_chart_selected.png";
 	tree_id.src					 = "images/package_tree_diagram.png";
 	component_id.src			 = "images/component_bar_chart.png";
+	static_scale_display("","none");
 
 	chart_id.style.cursor = "default";
 	chart_id.onclick = "";
@@ -877,6 +976,8 @@ function onDrawCylindrical(){
 	
 	if(package_name_number == 0){
 		no_pkg_id.style.display	= "";
+		static_scale_id.style.display = "none";
+		static_scale_component_id.style.display = "none";
 		top_id.style.display	= "none";
 		bottom_id.style.display	= "none";
 		disabledSelectButton();
@@ -885,6 +986,8 @@ function onDrawCylindrical(){
 	filter_case_item();	
 	static_tree_display("none");	
 	static_component_display("none");
+	
+
 	
 }
 
@@ -897,6 +1000,7 @@ function onDrawTree(){
 	tree_id.src					 = "images/package_tree_diagram_selected.png";
 	chart_id.src				 = "images/package_bar_chart.png";
 	component_id.src			 = "images/component_bar_chart.png";
+	static_scale_display("none","none");
 
 	tree_id.style.cursor = "default";
 	tree_id.onclick = "";
@@ -941,6 +1045,7 @@ function onDrawComponent(){
 	component_id.style.cursor	 = "default";
 	chart_id.style.cursor 		 = "pointer";
 	tree_id.style.cursor		 = "pointer";
+	static_scale_display("none","");
 	
 	component_id.onclick		 = "";
 	
@@ -953,6 +1058,8 @@ function onDrawComponent(){
 	
 	if(package_name_number == 0){
 		no_pkg_id.style.display	= "";
+		static_scale_id.style.display = "none";
+		static_scale_component_id.style.display = "none";
 		top_id.style.display	= "none";
 		bottom_id.style.display	= "none";
 		disabledSelectButton();
@@ -968,6 +1075,14 @@ function draw_package_tree(){
 	var tree_area_id = "tree_area_"+adv_value_package.value;
 	document.getElementById(tree_area_id).style.display = "";
 	filter_case_item();
+}
+
+function draw_static_scale(scale_id,count){
+	for(var j=0; j<7; j++){
+		var static_scale_id = scale_id+j;
+		var id = document.getElementById(static_scale_id);
+		id.innerHTML=j*count;
+	}
 }
 
 function filter_case_item(){
@@ -1094,24 +1209,110 @@ function filter_case_item(){
 			var pb = new YAHOO.widget.ProgressBar().render(static_list_bar[i]);
 			pb.set('minValue', 0);
 			pb.set('maxValue', package_case_count[i]);
-			if(max_case_count < 200){
-				pb.set('width', package_case_count[i]*3);
-				list_bar.width = package_case_count[i]*3;
+			
+			if(max_case_count >=0 && max_case_count <= 30){
+				pb.set('width', package_case_count[i]*13.5);
+				list_bar.width = package_case_count[i]*13.5;
+				draw_static_scale("static_scale_number",5);
 			}
-			else if(max_case_count > 200 && max_case_count<300){
-				pb.set('width', package_case_count[i]*2);
-				list_bar.width = package_case_count[i]*2;
+			else if(max_case_count > 30 && max_case_count <= 60){
+				pb.set('width', package_case_count[i]*6.8);
+				list_bar.width = package_case_count[i]*6.8;
+				draw_static_scale("static_scale_number",10);
 			}
-			else if(max_case_count >300 && max_case_count<400){
-				pb.set('width', package_case_count[i]*1.5);
-				list_bar.width = package_case_count[i]*1.5;
+			else if(max_case_count > 60 && max_case_count <= 120){
+				pb.set('width', package_case_count[i]*3.4);
+				list_bar.width = package_case_count[i]*3.4;
+				draw_static_scale("static_scale_number",20);
+			}
+			else if(max_case_count > 120 && max_case_count <= 180){
+				pb.set('width', package_case_count[i]*2.3);
+				list_bar.width = package_case_count[i]*2.3;
+				draw_static_scale("static_scale_number",30);
+			}
+			else if(max_case_count > 180 && max_case_count<= 300){
+				pb.set('width', package_case_count[i]*1.4);
+				list_bar.width = package_case_count[i]*1.4;
+				draw_static_scale("static_scale_number",50);
+			}
+			else if(max_case_count >300 && max_case_count<= 600){
+				if(package_case_count[i]*0.7 < 1){
+					pb.set('width', 1);
+					list_bar.width = 1;
+				}
+				else{
+					pb.set('width', package_case_count[i]*0.7);
+					list_bar.width = package_case_count[i]*0.7;
+					draw_static_scale("static_scale_number",100);
+				}
+			}
+			else if(max_case_count >600 && max_case_count<= 1200){	
+				if(package_case_count[i]*0.24 < 1){
+					pb.set('width', 1);
+					list_bar.width = 1;
+				}
+				else{
+					pb.set('width', package_case_count[i]*0.24);
+					list_bar.width = package_case_count[i]*0.24;
+					draw_static_scale("static_scale_number",200);
+				}
+			}
+			else if(max_case_count >1200 && max_case_count<= 2400){		
+				if(package_case_count[i]*0.18 < 1){
+					pb.set('width', 1);
+					list_bar.width = 1;
+				}
+				else{
+					pb.set('width', package_case_count[i]*0.18);
+					list_bar.width = package_case_count[i]*0.18;	
+					draw_static_scale("static_scale_number",400);	
+				}
+			}
+			else if(max_case_count >2400 && max_case_count<= 4800){
+				if(package_case_count[i]*0.09 < 1){
+					pb.set('width', 1);
+					list_bar.width = 1;
+				}
+				else{
+					pb.set('width', package_case_count[i]*0.09);
+					list_bar.width = package_case_count[i]*0.09;
+					draw_static_scale("static_scale_number",800);
+				}
+			}
+			else if(max_case_count >4800 && max_case_count<= 9600){
+				if(package_case_count[i]*0.042 < 1){
+					pb.set('width', 1);
+					list_bar.width = 1;
+				}
+				else{
+					pb.set('width', package_case_count[i]*0.042);
+				   	list_bar.width = package_case_count[i]*0.042;
+				   	draw_static_scale("static_scale_number",1600);	
+				}
+			}
+			else if(max_case_count >9600 && max_case_count<= 19200){
+				if(package_case_count[i]*0.021 < 1){
+					pb.set('width', 1);
+					list_bar.width = 1;
+				}
+				else{		
+					pb.set('width', package_case_count[i]*0.021);		
+					list_bar.width = package_case_count[i]*0.021;
+					draw_static_scale("static_scale_number",3200);
+				}
 			}
 			else{
-				pb.set('width', package_case_count[i]);
-				list_bar.width = package_case_count[i];
+				if(package_case_count[i]*0.012 <1){
+					pb.set('width', 1);
+					list_bar.width = 1;
+				}
+				else{
+					pb.set('width', package_case_count[i]*0.012);
+					list_bar.width = package_case_count[i]*0.012;
+				}
 			}
 
-			pb.set('height', 25);
+			pb.set('height', 15);
 			//case_number_before
 			pb.set('value', 0);
 		
@@ -1139,24 +1340,110 @@ function filter_case_item(){
 			pb.set('minValue', 0);
 			pb.set('maxValue', component_count[i]);
 
-			if(max_component_count < 200){
-				pb.set('width', component_count[i]*3);
-				list_component_bar.width = component_count[i]*3;
+			if(max_component_count >=0 && max_component_count <= 30){
+				pb.set('width', component_count[i]*11.4);
+				list_component_bar.width = component_count[i]*11.4;
+				draw_static_scale("static_scale_number_component",5);
 			}
-			else if(max_component_count > 200 && max_component_count<300){
-				pb.set('width', component_count[i]*2);
-				list_component_bar.width = component_count[i]*2;
+			else if(max_component_count > 30 && max_component_count<= 60){
+				pb.set('width', component_count[i]*5.64);
+				list_component_bar.width = component_count[i]*5.64;
+				draw_static_scale("static_scale_number_component",10);
 			}
-			else if(max_component_count > 300 && max_component_count <400){
-				pb.set('width', component_count[i]*1.5);
-				list_component_bar.width = component_count[i]*1.5;
+			else if(max_component_count > 60 && max_component_count <=120){
+				pb.set('width', component_count[i]*2.82);
+				list_component_bar.width = component_count[i]*2.82;
+				draw_static_scale("static_scale_number_component",20);
+			}			
+			else if(max_component_count > 120 && max_component_count <= 180){
+				pb.set('width', component_count[i]*1.86);
+				list_component_bar.width = component_count[i]*1.86;
+				draw_static_scale("static_scale_number_component",30);
+			}	
+			else if(max_component_count > 180 && max_component_count <= 300){
+				pb.set('width', component_count[i]*1.14);
+				list_component_bar.width = component_count[i]*1.14;
+				draw_static_scale("static_scale_number_component",50);
+			}	
+			else if(max_component_count > 300 && max_component_count <= 600){
+				if(component_count[i]*0.51 <1){
+					pb.set('width', 1);
+					list_component_bar.width = 1;
+				}
+				else{
+					pb.set('width', component_count[i]*0.51);
+					list_component_bar.width = component_count[i]*0.51;
+					draw_static_scale("static_scale_number_component",100);
+				}				
+			}	
+			else if(max_component_count > 600 && max_component_count <= 1200){
+				if(component_count[i]*0.27 <1){
+					pb.set('width', 1);
+					list_component_bar.width = 1;
+				}
+				else{
+					pb.set('width', component_count[i]*0.27);
+					list_component_bar.width = component_count[i]*0.27;
+					draw_static_scale("static_scale_number_component",200);
+				}
+			}			
+			else if(max_component_count > 1200 && max_component_count <= 2400){
+				if(component_count[i]*0.138 < 1){
+					pb.set('width', 1);
+					list_component_bar.width = 1;
+				}
+				else{
+					pb.set('width', component_count[i]*0.138);
+					list_component_bar.width = component_count[i]*0.138;
+					draw_static_scale("static_scale_number_component",400);
+				}
 			}
-			else{
-				pb.set('width', component_count[i]);
-				list_component_bar.width = component_count[i];
+			else if(max_component_count > 2400 && max_component_count <= 4800){
+				if(component_count[i]*0.072 < 1){
+					pb.set('width', 1);
+					list_component_bar.width = 1;
+				}
+				else{
+					pb.set('width', component_count[i]*0.072);
+					list_component_bar.width = component_count[i]*0.072;
+					draw_static_scale("static_scale_number_component",800);
+				}
 			}
 			
-			pb.set('height', 25);
+			else if(max_component_count > 4800 && max_component_count <= 9600){				
+				if(component_count[i]*0.042 <1){
+					pb.set('width', c1);
+					list_component_bar.width = 1;
+				}
+				else{
+					pb.set('width', component_count[i]*0.042);
+					list_component_bar.width = component_count[i]*0.042;
+					draw_static_scale("static_scale_number_component",1600);
+				}
+			}
+			else if(max_component_count > 9600 && max_component_count <= 19200){
+				if(component_count[i]*0.03 <1 ){
+					pb.set('width', 1);
+					list_component_bar.width = 1;
+				}
+				else{
+					pb.set('width', component_count[i]*0.03);
+					list_component_bar.width = component_count[i]*0.03;
+					draw_static_scale("static_scale_number_component",3200);
+				}
+			}
+			else{	
+				if(component_count[i]*0.024 < 1){
+					pb.set('width', 1);
+					list_component_bar.width = 1;
+				}
+				else{
+					pb.set('width', component_count[i]*0.024);
+					list_component_bar.width = component_count[i]*0.024;
+					draw_static_scale("static_scale_number_component",6400);
+				}
+			}
+			pb.set('height', 15);
 			//case_number_before
 			pb.set('value', 0);
 		
@@ -1198,7 +1485,7 @@ sub GetPackageName {
 }
 
 sub ScanPackages {
-	$testSuitesPath = "/usr/share/";
+	$testSuitesPath = $defination_dir;
 	find( \&GetPackageName, $testSuitesPath );
 }
 
@@ -1212,21 +1499,21 @@ sub CreateFilePath {
 	my $count = 0;
 	while ( $count < $package_name_number ) {
 		$testsxml[$count] =
-		  "/usr/share/" . $package_name[$count] . "/tests.xml";
+		  $defination_dir . $package_name[$count] . "/tests.xml";
 		$count++;
 	}
 }
 
 sub AnalysisTestsXML {
-	my $i                          = 0;
-	my $count                      = 0;
-	my $category_number_temp       = 0;
-	my $test_suite_number_temp     = 0;
+	my $i                      = 0;
+	my $count                  = 0;
+	my $category_number_temp   = 0;
+	my $test_suite_number_temp = 0;
 
-	my $status_number_temp         = 0;
-	my $priority_number_temp       = 0;
-	my $type_number_temp           = 0;
-	my $component_number_temp      = 0;
+	my $status_number_temp    = 0;
+	my $priority_number_temp  = 0;
+	my $type_number_temp      = 0;
+	my $component_number_temp = 0;
 	my $temp;
 
 	while ( $count < $package_name_number ) {
@@ -1291,7 +1578,7 @@ sub AnalysisTestsXML {
 					}
 				}
 			}
-			
+
 			if ( $_ =~ /status="(.*?)"/ ) {
 				$temp = $1;
 				if ( $status_number_temp == 0 ) {
@@ -1317,7 +1604,7 @@ sub AnalysisTestsXML {
 					}
 				}
 			}
-			if ( $_ =~ /type="(.*?)"/ ) {
+			if ( $_ =~ / type="(.*?)"/ ) {
 				$temp = $1;
 				if ( $type_number_temp == 0 ) {
 					push( @type, $temp );
@@ -1400,27 +1687,30 @@ sub AnalysisTestsXML {
 				}
 			}
 		}
-		push( @category_num,       $category_number_temp );
-		push( @test_suite_num,     $test_suite_number_temp );
+		if ( @category < 1 ) {
+			push( @category, "Any Category" );
+		}
+		push( @category_num,   $category_number_temp );
+		push( @test_suite_num, $test_suite_number_temp );
 
-		push( @status_num,         $status_number_temp );
-		push( @type_num,           $type_number_temp );
-		push( @priority_num,       $priority_number_temp );
-		push( @component_num,      $component_number_temp );
-		$category_number       += $category_number_temp;
-		$test_suite_number     += $test_suite_number_temp;
+		push( @status_num,    $status_number_temp );
+		push( @type_num,      $type_number_temp );
+		push( @priority_num,  $priority_number_temp );
+		push( @component_num, $component_number_temp );
+		$category_number   += $category_number_temp;
+		$test_suite_number += $test_suite_number_temp;
 
-		$status_number         += $status_number_temp;
-		$type_number           += $type_number_temp;
-		$priority_number       += $priority_number_temp;
-		$component_number      += $component_number_temp;
-		$category_number_temp       = 0;
-		$test_suite_number_temp     = 0;
+		$status_number    += $status_number_temp;
+		$type_number      += $type_number_temp;
+		$priority_number  += $priority_number_temp;
+		$component_number += $component_number_temp;
+		$category_number_temp   = 0;
+		$test_suite_number_temp = 0;
 
-		$status_number_temp         = 0;
-		$type_number_temp           = 0;
-		$priority_number_temp       = 0;
-		$component_number_temp      = 0;
+		$status_number_temp    = 0;
+		$type_number_temp      = 0;
+		$priority_number_temp  = 0;
+		$component_number_temp = 0;
 		$count++;
 	}
 }
@@ -1527,7 +1817,8 @@ sub FilterCaseValue {
 			if ( $_ =~ /suite.*name="(.*?)"/ ) {
 				$suite_value = $1;
 			}
-			if ( $_ =~ /testcase.*purpose="(.*?)".*type="(.*?)".*status="(.*?)".*component="(.*?)".*priority="(.*?)"/
+			if ( $_ =~
+/testcase.*purpose="(.*?)".*type="(.*?)".*status="(.*?)".*component="(.*?)".*priority="(.*?)"/
 			  )
 			{
 				$type_value      = $2;
@@ -1580,13 +1871,13 @@ sub DrawCategorySelect {
 	print <<DATA;
 		<option selected="selected">Any Category</option>
 DATA
-	if($package_name_number != $package_webapi_number){
+	if ( $package_name_number != $package_webapi_number ) {
 		for ( ; $count < @category_item ; $count++ ) {
-print <<DATA;
+			print <<DATA;
 		<option>$category_item[$count]</option>
 DATA
-		}	
-	}	
+		}
+	}
 }
 
 sub DrawTypeSelect {
@@ -1638,19 +1929,19 @@ DATA
 }
 
 sub DrawPackageSelect {
-	if(@package_name_webapi){
+	if (@package_name_webapi) {
 		my $count = 0;
 		for ( ; $count < @package_name_webapi ; $count++ ) {
-print <<DATA;
+			print <<DATA;
 		<option>$package_name_webapi[$count]</option>
 DATA
-		}	
+		}
 	}
-	else{
-print <<DATA;
+	else {
+		print <<DATA;
 		<option>No webapi package</option>
 DATA
-	}	
+	}
 }
 
 sub updateStaticSpecList {
@@ -1678,7 +1969,7 @@ sub updateSpecList_wanted {
 				$spec_name =~ s/\s\:/\:/;
 
 				my @spec_item = split( ":", $spec_name );
-				
+
 				# remove additional space
 				foreach (@spec_item) {
 					$_ =~ s/^\s*//;
@@ -1686,6 +1977,7 @@ sub updateSpecList_wanted {
 				}
 
 				for ( my $i = 0 ; $i < @spec_item ; $i++ ) {
+
 					# already got some specs at this level
 					if ( defined( $spec_list{ $i + 1 } ) ) {
 						my $spec_temp = $spec_list{ $i + 1 };
@@ -1731,13 +2023,14 @@ sub updateSpecList_wanted {
 							$spec_list{ $i + 1 } =
 							  $spec_item[$i] . "::" . $spec_item[$i];
 						}
-						else{
-							my $parent = join( ":", @spec_item[ 0 .. ( $i - 1 ) ] );
+						else {
+							my $parent =
+							  join( ":", @spec_item[ 0 .. ( $i - 1 ) ] );
 							$spec_list{ $i + 1 } =
 							  $spec_item[$i] . "::" . $parent;
 						}
 					}
-				} 
+				}
 			}
 		}
 	}

@@ -18,6 +18,6 @@
 #              Wei, Zhang <wei.z.zhang@intel.com>
 #
 
-SUBDIRS = webapps
+SUBDIRS = webapps doc
 defdir = /opt/testkit/manager
-dist_def_DATA = README LICENSE
+dist_def_DATA = README LICENSE CONF

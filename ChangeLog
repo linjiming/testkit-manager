@@ -20,7 +20,6 @@ testkit-manager 0.6.1:
 * Wed Jul 21 2010 Wei, Zhang <wei.z.zhang@intel.com> 1.0.0-1
   - for 1.0.0 release
 
-
 testkit-manager 2.0.0:
 ===================
 * Mon Feb 13 2012 Wendong,Sui <weidongx.sun@intel.com> 2.0.0-1
@@ -31,3 +30,30 @@ testkit-manager 2.0.0:
   - support testkit-lite 2.1.0-2
   - support save comment and bug number information for manual cases
   - for 2.0.0 release
+
+* Tue Jul 10 2012 Wendong,Sui <weidongx.sun@intel.com> 2.0.0
+  - support testkit-lite 2.2.0-1
+  - remove Ptyshell from the code tree
+  - change installation location from device to PC
+  - redesign communication module to support 'sdb'
+
+testkit-manager 2.2.0:
+===================
+* Thu Jul 12 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.0-1
+  - provides interface to install testkit-lite before execution
+  - keep host temporary repo be aligned with target device
+  - install and update package to target device through sdb
+  - write manual result back to the XML file, and update tar file before download
+
+* Thu Jul 18 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.0-2
+  - support core packages
+  - move repo from code to a configuration file
+  - remove package if it's not in the widget list
+  - add tip for disabled icons
+
+* Thu Jul 26 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.0-3
+  - disable install an update icon during the installation or updating progress
+  - add detailed error information during the installation or updating progress
+  - resize page to 60%
+  - add support for firefox
+  - update HELP page

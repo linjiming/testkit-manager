@@ -18,6 +18,5 @@
 #              Wei, Zhang <wei.z.zhang@intel.com>
 #
 
-noinst_ptyshell_PROGRAMS = ptyshell
-noinst_ptyshelldir = /opt/testkit/manager/webapps/ptyshell
-ptyshell_SOURCES = debug.c  helper.c  main.c  subshell.c  user.c  utmp.c
+testkitdocdir = /opt/testkit/manager/doc
+dist_testkitdoc_SCRIPTS = *.pdf

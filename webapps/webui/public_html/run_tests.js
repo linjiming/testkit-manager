@@ -189,6 +189,21 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('error_msg_text').innerHTML = "failed: Connection timed out";
 	}
 
+	if (responseXML.getElementsByTagName('no_package_update_or_install').length > 0) {
+		alert("No packages need to install or update!");
+		document.getElementById('update_package_list').disabled = false;
+		document.getElementById('select_arc').disabled = false;
+		document.getElementById('select_ver').disabled = false;
+		document.getElementById('sort_packages').onclick = function() {
+			return sortPackages();
+		}
+		document.getElementById('sort_packages').style.cursor = "pointer";
+		document.getElementById('button_adv').disabled = false;
+		document.getElementById('load_profile_button').disabled = false;
+		document.getElementById('delete_profile_button').disabled = false;
+
+	}
+
 	if (responseXML.getElementsByTagName('uninstall_package_name').length > 0) {
 		uninstall_pkg_name = responseXML
 				.getElementsByTagName('uninstall_package_name')[0].childNodes[0].nodeValue;
@@ -229,10 +244,15 @@ function ajaxProcessResult(responseXML) {
 			if (uninstall_pkg_name_arr[i].indexOf("-") >= 0) {
 				document.getElementById(id).style.display = "";
 				document.getElementById(pkg_name_id).innerHTML = uninstall_pkg_name_arr[i];
+				document.getElementById(pkg_name_id).title = uninstall_pkg_name_arr[i];
 				document.getElementById(pkg_ver_id).innerHTML = uninstall_pkg_version_arr[i];
 			}
 		}
 		// Update packages successfully!;
+	}
+	if (responseXML.getElementsByTagName('execute_profile_name').length > 0) {
+		tid = responseXML.getElementsByTagName('execute_profile_name')[0].childNodes[0].nodeValue;
+		document.location = 'tests_execute.pl?profile=' + tid;
 	}
 
 	if (responseXML.getElementsByTagName('save_profile_success').length > 0) {
@@ -268,7 +288,7 @@ function ajaxProcessResult(responseXML) {
 			}
 		}
 		if (load_flag == 0) {
-			alert("Missing packages as bellow to execute this profile:\n"
+			alert("The following packages from the profile are not installed:\n"
 					+ message_not_load);
 			document.getElementById('load_profile_button').disabled = false;
 		} else {
@@ -316,33 +336,61 @@ function ajaxProcessResult(responseXML) {
 		var advanced = arc + '*' + ver + '*' + category + '*' + pri + '*'
 				+ status + '*' + exe + '*' + testsuite + '*' + type + '*'
 				+ testset + '*' + com;
-
+		var webapi_flag = "0";
 		for ( var count = 0; count < pkg_num; count++) {
 			var checkbox_package_name_tmp = "checkbox_package_name" + count;
 			var checkbox_package_name = document
 					.getElementById(checkbox_package_name_tmp);
+			var temp = checkbox_package_name.name;
 			if (checkbox_package_name.checked) {
+				if (webapi_flag == "0") {
+					if (temp.indexOf('webapi') > 0) {
+						webapi_flag = "1";
+					} else {
+						webapi_flag = "2";
+					}
+				} else if (webapi_flag == "1") {
+					if (temp.indexOf('webapi') < 0) {
+						webapi_flag = "yes";
+					}
+				} else if (webapi_flag == "2") {
+					if (temp.indexOf('webapi') > 0) {
+						webapi_flag = "yes";
+					}
+				}
 				checkbox_value[count] = "select" + checkbox_package_name.name;
 			} else {
 				checkbox_value[count] = checkbox_package_name.name;
 			}
 		}
 		if (tid == "save") {
-			ajax_call_get('action=save_profile&save_profile_name='
-					+ edit_profile_name.value + '&checkbox='
-					+ checkbox_value.join("*") + '&advanced=' + advanced
-					+ "&auto_count=" + filter_auto_count_string
-					+ "&manual_count=" + filter_manual_count_string
-					+ "&pkg_flag=" + package_name_flag.join("*"));
+			if (webapi_flag == "yes") {
+				alert("Profile should not contain both webapi and non-webapi packages!");
+			} else {
+				if (confirm("Do you want to save this profile?")) {
+					ajax_call_get('action=save_profile&save_profile_name='
+							+ edit_profile_name.value + '&checkbox='
+							+ checkbox_value.join("*") + '&advanced='
+							+ advanced + "&auto_count="
+							+ filter_auto_count_string + "&manual_count="
+							+ filter_manual_count_string + "&pkg_flag="
+							+ package_name_flag.join("*"));
+				}
+			}
 		} else if ((tid != "save") && (tid.indexOf("save") == 0)) {
-			if (confirm("Profile: " + tid.slice(4)
-					+ " exists, do you want to overwirte it?")) {
-				ajax_call_get('action=save_profile&save_profile_name='
-						+ edit_profile_name.value + '&checkbox='
-						+ checkbox_value.join("*") + '&advanced=' + advanced
-						+ "&auto_count=" + filter_auto_count_string
-						+ "&manual_count=" + filter_manual_count_string
-						+ "&pkg_flag=" + package_name_flag.join("*"));
+			if (webapi_flag == "yes") {
+				alert("Profile should not contain both webapi and non-webapi packages!");
+			} else {
+				if (confirm("Profile: " + tid.slice(4)
+						+ " exists, do you want to overwirte it?")) {
+					ajax_call_get('action=save_profile&save_profile_name='
+							+ edit_profile_name.value + '&checkbox='
+							+ checkbox_value.join("*") + '&advanced='
+							+ advanced + "&auto_count="
+							+ filter_auto_count_string + "&manual_count="
+							+ filter_manual_count_string + "&pkg_flag="
+							+ package_name_flag.join("*"));
+				}
 			}
 		} else if (tid == "delete") {
 			ajax_call_get('action=delete_profile&delete_profile_name='
@@ -353,56 +401,78 @@ function ajaxProcessResult(responseXML) {
 	}
 	if (responseXML.getElementsByTagName('install_package_name').length > 0) {
 		tid = responseXML.getElementsByTagName('install_package_name')[0].childNodes[0].nodeValue;
+		var install_package_count = responseXML
+				.getElementsByTagName('install_package_count')[0].childNodes[0].nodeValue;
 		var install_pkg_name_id = "pn_"
+				+ responseXML.getElementsByTagName('install_package_count')[0].childNodes[0].nodeValue;
+		var install_pkg_case_cn_id = "cn_"
 				+ responseXML.getElementsByTagName('install_package_count')[0].childNodes[0].nodeValue;
 		var install_pkg_id = "install_pkg_"
 				+ responseXML.getElementsByTagName('install_package_count')[0].childNodes[0].nodeValue;
-		if (tid.indexOf("install_") == 0) {
+		if (tid.indexOf("SUCCESS_") == 0) {
+			var case_number = responseXML
+					.getElementsByTagName('case_number_temp')[0].childNodes[0].nodeValue;
 			document.getElementById(install_pkg_name_id).style.color = "#116795";
+			document.getElementById(install_pkg_case_cn_id).innerHTML = "&nbsp"
+					+ case_number;
 			document.getElementById(install_pkg_id).src = "images/operation_install_disable.png";
-			document.getElementById(install_pkg_id).height = "38";
-			document.getElementById(install_pkg_id).width = "38";
+			document.getElementById(install_pkg_id).height = "23";
+			document.getElementById(install_pkg_id).width = "23";
 			document.getElementById(install_pkg_id).hspace = "0";
 			document.getElementById(install_pkg_id).vspace = "0";
 			document.getElementById(install_pkg_id).style.cursor = "default";
-			document.getElementById(install_pkg_id).title = "";
 			document.getElementById(install_pkg_id).onclick = "";
 			// Install package successfully!
 		} else {
-			alert("Install package fail, please check the network!");
+			alert("Install package fail\n" + tid);
 			document.getElementById(install_pkg_id).src = "images/operation_install.png";
-			document.getElementById(install_pkg_id).height = "38";
-			document.getElementById(install_pkg_id).width = "38";
+			document.getElementById(install_pkg_id).style.cursor = "pointer";
+			document.getElementById(install_pkg_id).height = "23";
+			document.getElementById(install_pkg_id).width = "23";
 			document.getElementById(install_pkg_id).hspace = "0";
 			document.getElementById(install_pkg_id).vspace = "0";
+			document.getElementById(install_pkg_id).onclick = function(num) {
+				return function() {
+					installPackage(num);
+				};
+			}(install_package_count);
 		}
 	}
 
 	if (responseXML.getElementsByTagName('update_package_name').length > 0) {
 		tid = responseXML.getElementsByTagName('update_package_name')[0].childNodes[0].nodeValue;
+		var update_package_count = responseXML
+				.getElementsByTagName('update_package_count')[0].childNodes[0].nodeValue;
+		var flag = responseXML.getElementsByTagName('update_package_name_flag')[0].childNodes[0].nodeValue;
 		var version_latest = responseXML
 				.getElementsByTagName('update_package_latest_version')[0].childNodes[0].nodeValue;
-		if (tid.indexOf("update_") == 0) {
-			var version_id = "ver_" + tid.slice(7);
-			document.getElementById(tid).src = "images/operation_update_disable.png";
-			document.getElementById(tid).height = "38";
-			document.getElementById(tid).width = "38";
-			document.getElementById(tid).hspace = "0";
-			document.getElementById(tid).vspace = "0";
-			document.getElementById(tid).style.cursor = "default";
-			document.getElementById(tid).title = "";
-			document.getElementById(tid).onclick = "";
+		if (tid.indexOf("SUCCESS_") == 0) {
+			var version_id = "ver_" + flag;
+			update_pic_id = "update_" + flag;
+			document.getElementById(update_pic_id).src = "images/operation_update_disable.png";
+			document.getElementById(update_pic_id).height = "23";
+			document.getElementById(update_pic_id).width = "23";
+			document.getElementById(update_pic_id).hspace = "0";
+			document.getElementById(update_pic_id).vspace = "0";
+			document.getElementById(update_pic_id).style.cursor = "default";
+			document.getElementById(update_pic_id).onclick = "";
 			document.getElementById(version_id).innerHTML = version_latest;
 			// Update package successfully!
 		} else {
-			var version_id = "ver_" + tid;
-			alert('Update package fail, please check the network!');
-			update_pic_id = "update_" + tid;
+			var version_id = "ver_" + flag;
+			alert("Update package fail\n" + tid);
+			update_pic_id = "update_" + flag;
 			document.getElementById(update_pic_id).src = "images/operation_update.png";
-			document.getElementById(update_pic_id).height = "38";
-			document.getElementById(update_pic_id).width = "38";
+			document.getElementById(update_pic_id).style.cursor = "pointer";
+			document.getElementById(update_pic_id).height = "23";
+			document.getElementById(update_pic_id).width = "23";
 			document.getElementById(update_pic_id).hspace = "0";
 			document.getElementById(update_pic_id).vspace = "0";
+			document.getElementById(update_pic_id).onclick = function(num) {
+				return function() {
+					updatePackage(num);
+				};
+			}(update_package_count);
 			document.getElementById(version_id).innerHTML = version_latest;
 		}
 	}
@@ -410,11 +480,6 @@ function ajaxProcessResult(responseXML) {
 		if (responseXML.getElementsByTagName('save_manual_refresh').length > 0) {
 			document.location = 'tests_execute_manual.pl?time='
 					+ responseXML.getElementsByTagName('save_manual_time')[0].childNodes[0].nodeValue;
-		}
-		if (responseXML.getElementsByTagName('save_manual_redirect_report').length > 0) {
-			document.location = 'tests_report.pl?time='
-					+ responseXML.getElementsByTagName('save_manual_time')[0].childNodes[0].nodeValue
-					+ '&detailed=1';
 		}
 	}
 	if (responseXML.getElementsByTagName('started').length > 0) {
@@ -429,13 +494,12 @@ function ajaxProcessResult(responseXML) {
 			updateCmdLog(output);
 			for ( var i = 0; i < package_list.length; i++) {
 				var r, re;
-				re = new RegExp("parse the test xml: /usr/share/"
-						+ package_list[i] + "/tests.xml", "g");
+				re = new RegExp("execute suite: " + package_list[i], "g");
 				r = output.match(re);
 				if (r) {
 					global_package_name = package_list[i];
 					global_case_number = 0;
-					var page = document.all;
+					var page = document.getElementsByTagName("*");
 					for ( var i = 0; i < page.length; i++) {
 						var temp_id = page[i].id;
 						if (temp_id.indexOf("text_") >= 0) {
@@ -448,8 +512,20 @@ function ajaxProcessResult(responseXML) {
 							+ global_profile_name + '_' + global_package_name).style.color = "#137717";
 				}
 			}
+
+			// change color for multiple webapi cases
+			var r_mul, re_mul;
+			re_mul = new RegExp("testing now", "g");
+			r_mul = output.match(re_mul);
+			if (r_mul) {
+				document.getElementById('text_' + global_profile_name + '_all').style.color = "#137717";
+				document.getElementById('text_progress_' + global_profile_name
+						+ '_all').style.color = "#137717";
+				global_package_name = "all";
+			}
+
 			var r, re;
-			re = new RegExp("Cases", "g");
+			re = new RegExp("Case", "g");
 			r = output.match(re);
 			// leave for filter webapi
 			var r_webapi, re_webapi;
@@ -488,8 +564,8 @@ function ajaxProcessResult(responseXML) {
 								+ global_package_name);
 						pb.set('minValue', 0);
 						pb.set('maxValue', max_value);
-						pb.set('width', 150);
-						pb.set('height', 10);
+						pb.set('width', 90);
+						pb.set('height', 6);
 						pb.set('value', case_number_before);
 
 						pb.set('anim', true);
@@ -566,12 +642,14 @@ function installPackage(count) {
 	var install_pkg_count = "pn_" + count;
 	var install_pkg_pic = "install_pkg_" + count;
 	var pkg_name = document.getElementById(install_pkg_count);
-	if (confirm('Do you want to install' + pkg_name.innerHTML + "?")) {
+	if (confirm('Do you want to install ' + pkg_name.innerHTML + "?")) {
 		document.getElementById(install_pkg_pic).src = "images/ajax_progress.gif";
-		document.getElementById(install_pkg_pic).height = "18";
-		document.getElementById(install_pkg_pic).width = "18";
-		document.getElementById(install_pkg_pic).hspace = "10";
-		document.getElementById(install_pkg_pic).vspace = "10";
+		document.getElementById(install_pkg_pic).onclick = "";
+		document.getElementById(install_pkg_pic).style.cursor = "default";
+		document.getElementById(install_pkg_pic).height = "14";
+		document.getElementById(install_pkg_pic).width = "14";
+		document.getElementById(install_pkg_pic).hspace = "5";
+		document.getElementById(install_pkg_pic).vspace = "5";
 		ajax_call_get('action=install_package&package_name='
 				+ pkg_name.innerHTML + '&package_count=' + count);
 	}
@@ -581,7 +659,7 @@ function onUpdatePackages() {
 	document.getElementById('list_advanced').style.display = "none";
 	document.getElementById('select_arc').disabled = true;
 	document.getElementById('select_ver').disabled = true;
-	document.getElementById('sort_packages').href = "#";
+	document.getElementById('sort_packages').onclick = "";
 	document.getElementById('sort_packages').style.cursor = "default";
 	document.getElementById('button_adv').value = "Advanced";
 	document.getElementById('button_adv').disabled = true;
@@ -601,15 +679,87 @@ function onUpdatePackages() {
 function updatePackage(count) {
 	var update_pkg_count = "update_package_name_" + count;
 	var pkg_name = document.getElementById(update_pkg_count);
+	var package_name_id = "pn_" + pkg_name.value;
+	var package_name = document.getElementById(package_name_id).innerHTML;
 	var update_pkg_pic = "update_" + pkg_name.value;
-	if (confirm('Do you want to update ' + pkg_name.value + "?")) {
+	if (confirm('Do you want to update ' + package_name + "?")) {
 		document.getElementById(update_pkg_pic).src = "images/ajax_progress.gif";
-		document.getElementById(update_pkg_pic).height = "18";
-		document.getElementById(update_pkg_pic).width = "18";
-		document.getElementById(update_pkg_pic).hspace = "10";
-		document.getElementById(update_pkg_pic).vspace = "10";
-		ajax_call_get('action=update_package&package_name=' + pkg_name.value
-				+ '&package_count=' + count);
+		document.getElementById(update_pkg_pic).style.cursor = "default";
+		document.getElementById(update_pkg_pic).onclick = "";
+		document.getElementById(update_pkg_pic).height = "14";
+		document.getElementById(update_pkg_pic).width = "14";
+		document.getElementById(update_pkg_pic).hspace = "5";
+		document.getElementById(update_pkg_pic).vspace = "5";
+		ajax_call_get('action=update_package&package_name=' + package_name
+				+ '&flag=' + pkg_name.value + '&package_count=' + count);
+	}
+}
+
+function onExecute() {
+	var sel_arc = document.getElementById("select_arc");
+	var sel_ver = document.getElementById("select_ver");
+	var sel_category = document.getElementById("select_category");
+	var sel_pri = document.getElementById("select_pri");
+	var sel_status = document.getElementById("select_status");
+	var sel_exe = document.getElementById("select_exe");
+	var sel_testsuite = document.getElementById("select_testsuite");
+	var sel_type = document.getElementById("select_type");
+	var sel_testset = document.getElementById("select_testset");
+	var sel_com = document.getElementById("select_com");
+	var package_name_number = document.getElementById("package_name_number");
+
+	var checkbox_value = new Array();
+	var arc = sel_arc.value;
+	var ver = sel_ver.value;
+	var category = sel_category.value;
+	var pri = sel_pri.value;
+	var status = sel_status.value;
+	var exe = sel_exe.value;
+	var testsuite = sel_testsuite.value;
+	var type = sel_type.value;
+	var testset = sel_testset.value;
+	var com = sel_com.value;
+	var pkg_num = package_name_number.value;
+	var advanced = arc + '*' + ver + '*' + category + '*' + pri + '*' + status
+			+ '*' + exe + '*' + testsuite + '*' + type + '*' + testset + '*'
+			+ com;
+	var webapi_flag = "0";
+	for ( var count = 0; count < pkg_num; count++) {
+		var checkbox_package_name_tmp = "checkbox_package_name" + count;
+		var checkbox_package_name = document
+				.getElementById(checkbox_package_name_tmp);
+		var temp = checkbox_package_name.name;
+		if (checkbox_package_name.checked) {
+			if (webapi_flag == "0") {
+				if (temp.indexOf('webapi') > 0) {
+					webapi_flag = "1";
+				} else {
+					webapi_flag = "2";
+				}
+			} else if (webapi_flag == "1") {
+				if (temp.indexOf('webapi') < 0) {
+					webapi_flag = "yes";
+				}
+			} else if (webapi_flag == "2") {
+				if (temp.indexOf('webapi') > 0) {
+					webapi_flag = "yes";
+				}
+			}
+			checkbox_value[count] = "select" + checkbox_package_name.name;
+		} else {
+			checkbox_value[count] = checkbox_package_name.name;
+		}
+	}
+	if (webapi_flag == "yes") {
+		alert("Can not execute both webapi and non-webapi packages at the same time!");
+	} else {
+		if (confirm("Do you want to execute this profile?")) {
+			ajax_call_get('action=execute_profile&checkbox='
+					+ checkbox_value.join("*") + '&advanced=' + advanced
+					+ "&auto_count=" + filter_auto_count_string
+					+ "&manual_count=" + filter_manual_count_string
+					+ "&pkg_flag=" + package_name_flag.join("*"));
+		}
 	}
 }
 
@@ -667,23 +817,31 @@ function saveManual() {
 	var transfer = "";
 	var time = document.getElementById('time').innerHTML;
 	transfer += time + "::::";
-	var page = document.all;
+	var page = document.getElementsByTagName("*");
 	for ( var i = 0; i < page.length; i++) {
 		var temp_id = page[i].id;
 		if (temp_id.indexOf("radio__") >= 0) {
 			if (page[i].checked) {
 				var result = page[i].value;
 				var name_all = temp_id.split("__");
-				var package_temp = name_all[2].split(":");
-				var name_temp = name_all[3].split(":");
+				var case_type_temp = name_all[2].split(":");
+				var package_temp = name_all[3].split(":");
+				var name_temp = name_all[4].split(":");
+				var case_type = case_type_temp[1];
 				var package_name = package_temp[1];
 				var name = name_temp[1];
-				var testarea = document.getElementById('textarea__'
-						+ name_all[2] + "__" + name_all[3]);
-				var bugnumber = document.getElementById('bugnumber__'
-						+ name_all[2] + "__" + name_all[3]);
-				var transfer_temp = package_name + "__" + name + ":" + result
-						+ "__" + testarea.value + "__" + bugnumber.value;
+				var transfer_temp = "none";
+				if (case_type == "manual") {
+					var testarea = document.getElementById('textarea__'
+							+ name_all[3] + "__" + name_all[4]);
+					var bugnumber = document.getElementById('bugnumber__'
+							+ name_all[3] + "__" + name_all[4]);
+					transfer_temp = package_name + "__" + name + ":" + result
+							+ "__" + testarea.value + "__" + bugnumber.value;
+				} else {
+					transfer_temp = package_name + "__" + name + ":" + result
+							+ "__auto__auto";
+				}
 				arr.push(transfer_temp);
 			}
 		}
@@ -705,7 +863,13 @@ function passAll() {
 	var result_list = new Array();
 	result_list = result.split("::");
 	for ( var i = 0; i < result_list.length; i++) {
-		document.getElementById("pass__radio__" + result_list[i]).checked = true;
+		if (document.getElementById("summary_case_" + result_list[i]).style.display != "none") {
+			var reg = new RegExp("_P:", "g");
+			var radio_id = result_list[i].replace(reg, "__P:");
+			reg = new RegExp("_N:", "g");
+			radio_id = radio_id.replace(reg, "__N:");
+			document.getElementById("pass__radio__" + radio_id).checked = true;
+		}
 	}
 }
 
@@ -714,7 +878,13 @@ function failAll() {
 	var result_list = new Array();
 	result_list = result.split("::");
 	for ( var i = 0; i < result_list.length; i++) {
-		document.getElementById("fail__radio__" + result_list[i]).checked = true;
+		if (document.getElementById("summary_case_" + result_list[i]).style.display != "none") {
+			var reg = new RegExp("_P:", "g");
+			var radio_id = result_list[i].replace(reg, "__P:");
+			reg = new RegExp("_N:", "g");
+			radio_id = radio_id.replace(reg, "__N:");
+			document.getElementById("fail__radio__" + radio_id).checked = true;
+		}
 	}
 }
 
@@ -723,6 +893,12 @@ function blockAll() {
 	var result_list = new Array();
 	result_list = result.split("::");
 	for ( var i = 0; i < result_list.length; i++) {
-		document.getElementById("block__radio__" + result_list[i]).checked = true;
+		if (document.getElementById("summary_case_" + result_list[i]).style.display != "none") {
+			var reg = new RegExp("_P:", "g");
+			var radio_id = result_list[i].replace(reg, "__P:");
+			reg = new RegExp("_N:", "g");
+			radio_id = radio_id.replace(reg, "__N:");
+			document.getElementById("block__radio__" + radio_id).checked = true;
+		}
 	}
 }

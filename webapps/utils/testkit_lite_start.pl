@@ -326,9 +326,6 @@ sub Setup {
 		  or warning "can not remove " . $globals->{'status_file'};
 	}
 
-	# Ptyshell tool location
-	$globals->{'ptyshell'} = $FindBin::Bin . "/../ptyshell/ptyshell";
-
 	# Default user profile
 	$globals->{'userprofile'} =
 	  $FindBin::Bin . "/../../profiles/user/user.profile";
@@ -350,14 +347,6 @@ sub Setup {
 	$globals->{'testkit_lite_dir'} = $FindBin::Bin . "/../../tests";
 	$globals->{'testlog_dir'}      = $FindBin::Bin . "/../../log";
 	$globals->{'testkit_dir'}      = $FindBin::Bin . "/../..";
-
-	# Check the running user has the authority to run the PtyShell tool or not
-	if ( !-x $globals->{'ptyshell'} ) {
-		return
-		    error "The ptyshell utility ("
-		  . $globals->{'ptyshell'} . ")"
-		  . " doesn't exists or isn't executable.";
-	}
 
 	if ( $options->{'userprofile'} ) {
 		$globals->{'userprofile'} = $options->{'userprofile'};
@@ -778,15 +767,12 @@ sub Spawn_subshell {
 	is_ok $subshell->LogFile($sslog_file)
 	  or return error "Failed to open subshell log file", $Error::Last;
 
-	is_ok $subshell->Spawn(
-		$user)    # TODO: compare all tests with $user=undef vs. $user='root'
+	is_ok $subshell->Spawn("sdb devices")
 	  or return error "Failed to spawn a subshell", $Error::Last;
 
-	$subshell->Settle() or warning "Too much noise on a just started subshell";
-
-	is_ok $subshell->Send(
-"export LC_ALL=C; export LC_MESSAGES=C; export LC_COLLATE=C; export LC_CTYPE=C; export LC_MONETARY=C; export LC_NUMERIC=C; export LC_TIME=C; \n"
-	  )           # To avoid messages in local languages
+	is_ok $subshell->Spawn(
+"export LC_ALL=C; export LC_MESSAGES=C; export LC_COLLATE=C; export LC_CTYPE=C; export LC_MONETARY=C; export LC_NUMERIC=C; export LC_TIME=C;"
+	  )    # To avoid messages in local languages
 	  or return error "Failed to send command to the started subshell",
 	  $Error::Last;
 
@@ -904,7 +890,7 @@ sub initProfileInfo {
 				}
 				if ( $line =~ /select_testsuite=(.*)/ ) {
 					if ( $1 ne "Any Test Suite" ) {
-						push( @thisTargetFilter, "--testsuite " . $1 );
+						push( @thisTargetFilter, "--suite " . $1 );
 						push( @targetFilter,     'suite name="' . $1 . '"' );
 					}
 				}
@@ -916,7 +902,7 @@ sub initProfileInfo {
 				}
 				if ( $line =~ /select_testset=(.*)/ ) {
 					if ( $1 ne "Any Test Set" ) {
-						push( @thisTargetFilter, "--testset " . $1 );
+						push( @thisTargetFilter, "--set " . $1 );
 						push( @targetFilter,     'set name="' . $1 . '"' );
 					}
 				}
@@ -942,6 +928,7 @@ sub readProfile {
 	($profile_path) = @_;
 
 	my $targetPackages = "";
+	my $wrtPackages    = "-e \"WRTLauncher";
 	my $hasWebapi      = "False";
 	if ( !@thisTargetPackages ) {
 		&initProfileInfo($profile_path);
@@ -949,12 +936,13 @@ sub readProfile {
 	foreach (@thisTargetPackages) {
 
 		# check if the package is still there
-		my $isInstalled = `rpm -qa | grep $_`;
-		if ( $isInstalled ne "" ) {
+		my $cmd         = "sdb shell ls /usr/share/$_/tests.xml";
+		my $isInstalled = `$cmd`;
+		if ( $isInstalled !~ /No such file or directory/ ) {
 			if ( $_ =~ /webapi/ ) {
 				$isWebApi = "True";
-				$targetPackages .=
-				  "/usr/share/$_/tests.xml -e \"WRTLauncher " . $_ . "\" ";
+				$targetPackages .= "/usr/share/$_/tests.xml ";
+				$wrtPackages .= " " . $_;
 			}
 			else {
 				$targetPackages .= "/usr/share/$_/tests.xml ";
@@ -962,8 +950,14 @@ sub readProfile {
 		}
 	}
 	if ( $targetPackages ne "none" ) {
-		foreach (@thisTargetFilter) {
-			$targetPackages .= $_ . " ";
+		if ( $isWebApi eq "True" ) {
+			$targetPackages .= $wrtPackages . '"';
+		}
+		if ( @thisTargetFilter >= 1 ) {
+			$targetPackages .= " ";
+			foreach (@thisTargetFilter) {
+				$targetPackages .= $_ . " ";
+			}
 		}
 	}
 	return $targetPackages;
@@ -990,10 +984,25 @@ sub getBackupResultXMLCMD {
 	}
 
 	# write runconfig and info file under each report folder
-	chomp( my $time = `ls -t ../../../../lite | cut -f 1 | sed -n '1,1p'` );
+	syncLiteResult();
+	chomp( my $time     = `ls -t ../../../lite | cut -f 1 | sed -n '1,1p'` );
+	chomp( my $time_all = `ls -l ../../../lite | grep latest` );
+	if ( $time_all =~ /-> \/opt\/testkit\/lite\/(.*)/ ) {
+		$time = $1;
+	}
 	writeResultInfo( $time, $isOnlyAuto, @targetFilter );
 	inform "[Backup Result]:@copyCommands";
 	return \@copyCommands;
+}
+
+sub syncLiteResult {
+	my $result_dir_lite = $FindBin::Bin . "/../../lite";
+	system("rm -rf $result_dir_lite/*");
+	system( "sdb shell 'cd /opt/testkit/lite; tar -czvf /tmp/lite.tar.gz .'" );
+	system( "sdb pull /tmp/lite.tar.gz $result_dir_lite" );
+	system( "sdb shell rm -rf /tmp/lite.tar.gz" );
+	system("cd $result_dir_lite;tar -xzvf $result_dir_lite/lite.tar.gz");
+	system("rm -rf $result_dir_lite/lite.tar.gz");
 }
 
 # run test in ptyshell
@@ -1012,13 +1021,7 @@ sub getBackupResultXMLCMD {
 	# write INFO for current status
 	write_info("Sub shell started");
 
-	# Change to the test suite directory in ptyshell
-	$subshell->Settle();
-	$subshell->Send( "cd " . $globals->{'testkit_dir'} . "\n" );
-
 	# Run the test in ptyshell
-	$subshell->Settle();
-
 	my $profile_content =
 	  &readProfile( $globals->{'testkit_dir'} . "/tests/testkit" );
 	if ( $profile_content eq "" ) {
@@ -1028,12 +1031,16 @@ sub getBackupResultXMLCMD {
 		if ( $isWebApi eq "False" ) {
 			inform "[CMD]:\nrm -rf "
 			  . $globals->{'testlog_dir'}
-			  . "/runtest/latest/*;\n testkit-lite -f $profile_content;\nexit\n";
+			  . "/runtest/latest/*;\n"
+			  . 'sdb shell testkit-lite -f '
+			  . $profile_content . "\n";
 		}
 		else {
 			inform "[CMD]:\nrm -rf "
 			  . $globals->{'testlog_dir'}
-			  . "/runtest/latest/*;\n export DISPLAY=:0.0;\n su tizen -c 'testkit-lite -f $profile_content';\nexit\n";
+			  . "/runtest/latest/*;\n"
+			  . 'sdb shell testkit-lite -f '
+			  . $profile_content . "\n";
 		}
 	}
 
@@ -1041,20 +1048,20 @@ sub getBackupResultXMLCMD {
 #$subshell->Send("rm -rf ".$globals->{'testlog_dir'}."/runtest/latest/*;/usr/local/bin/testrunner-lite -f $profile_content -o ".$globals->{'testlog_dir'}."/runtest/latest/results.xml;exit\n");
 	if ( $profile_content ne "" ) {
 		if ( $isWebApi eq "False" ) {
-			$subshell->Send( "rm -rf "
+			$subshell->Spawn( "rm -rf "
 				  . $globals->{'testlog_dir'}
-				  . "/runtest/latest/*;testkit-lite -f $profile_content;exit\n"
+				  . "/runtest/latest/*; sdb shell testkit-lite -f $profile_content"
 			);
 		}
 		else {
-			$subshell->Send( "rm -rf "
+			$subshell->Spawn( "rm -rf "
 				  . $globals->{'testlog_dir'}
-				  . "/runtest/latest/*;export DISPLAY=:0.0;su tizen -c 'testkit-lite -f $profile_content';exit\n"
+				  . "/runtest/latest/*; sdb shell testkit-lite -f $profile_content"
 			);
 		}
 	}
 	else {
-		$subshell->Send("exit\n");
+		$subshell->Spawn("exit\n");
 	}
 
 	# write status

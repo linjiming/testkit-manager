@@ -1,8 +1,7 @@
 testkit-manager TODO list:
 ======================================
-  - add progress bar for EXECUTE and EXECUTE-MANUAL page
-  - add detailed result number for the tree view in the detailed report
-  - support new format of [spec] in the tree view of compliance from test type
-  - support update, install, and view package details functions in CUSTOM page
-  - support mail, export, and compare functions in REPORT page
-  - add page STATISTIC, HELP, and ABOUT
+- Bug Fixing and Stabilization
+- Optimize workflow on UI and improve user experience
+- Improve REPORT page to provide more readable and informative test report
+- Support test report export
+- Support IP-based communication with devices

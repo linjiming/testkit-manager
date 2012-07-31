@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-AC_INIT([testkit-manager], [1.0.0], [wei.z.zhang@intel.com])
+AC_INIT([testkit-manager], [2.2.0], [weidongx.sun@intel.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 # Checks for programs.
@@ -23,9 +23,9 @@ AC_PROG_CC
 
 AC_CONFIG_FILES([
 Makefile
+doc/Makefile
 webapps/Makefile
 webapps/bin/Makefile
-webapps/ptyshell/Makefile
 webapps/utils/Makefile
 ])
 AC_OUTPUT

@@ -8,35 +8,49 @@
 ** Michael Zeltner and Geir Bækholt)
 ** All you guys rock :)
 */
+/* start header page */
+.main_menu_bg {
+	background-image: url(../images/header_background.png);
+	background-repeat: no-repeat;
+	background-position: center;
+}
+/* end header page */
+
 /* start template page */
 .not_implemented {
-	font-family: Calibri;
-	font-size: 26px;
+	font-family: Arial;
+	font-size: 16px;
 	background-color: #fafafa;
 }
-/* start template page */
+/* end template page */
 
 /* start help page */
 .help_list {
-	font-family: Calibri;
-	font-size: 16px;
+	font-family: Arial;
+	font-size: 10px;
 	background-color: #fafafa;
 }
 
 .help_level_1 {
-	font-size: 20px;
+	font-size: 12px;
 	font-weight: bold;
 }
 
 .help_level_2 {
-	font-size: 18px;
+	font-size: 11px;
 }
 /* end help page */
 
 /* start test report page */
+.top_button_bg {
+	background-image: url(../images/report_top_button_background.png);
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
 .report_list {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	background-color: #fafafa;
 }
 
@@ -103,18 +117,27 @@
 	border-right: 0px;
 }
 
+input::-moz-focus-inner {
+	border: 0;
+	padding: 0;
+}
+
 .top_button {
-	width: 119px;
-	height: 44px;
+	line-height: 22px;
+	width: 71px;
+	height: 26px;
 	background-image: url(../images/button_medium.png);
 	text-shadow: 0px 1px #FFFFFF;
+	width: 71px;
 }
 
 .bottom_button {
-	width: 95px;
-	height: 44px;
+	line-height: 22px;
+	width: 57px;
+	height: 26px;
 	background-image: url(../images/button_small.png);
 	text-shadow: 0px 1px #FFFFFF;
+	width: 57px;
 }
 
 .result_pass {
@@ -130,12 +153,12 @@
 }
 
 .submit_server {
-	width: 190px;
-	height: 30px;
+	width: 105px;
+	height: 18px;
 }
 
 .submit_hyperlink {
-	font-family: Calibri;
+	font-family: Arial;
 	font-size: 22px;
 }
 /* end test report page */
@@ -305,11 +328,9 @@ textarea {
 }
 */
 select {
-	height: 36px;
-	font-family: Calibri;
-	font-size: 22px;
-	border-color: #E2E3E3;
-	border-radius: 3px;
+	height: 22px;
+	font-family: Arial;
+	font-size: 14px;
 }
 
 abbr,acronym,.explain {
@@ -1017,8 +1038,8 @@ p.revision_saved {
 
 /* start header stuff */
 .link-level1 {
-	font-family: Calibri;
-	font-size: 26px;
+	font-family: Arial;
+	font-size: 14px;
 	color: #000000;
 	text-decoration: none;
 	text-shadow: 0px 1px #FFFFFF;
@@ -1030,8 +1051,8 @@ p.revision_saved {
 }
 
 .link-level1-active {
-	font-family: Calibri;
-	font-size: 26px;
+	font-family: Arial;
+	font-size: 14px;
 	color: #045b17;
 	text-decoration: none;
 	text-shadow: 0px 1px #FFFFFF;
@@ -1053,21 +1074,21 @@ p.revision_saved {
 }
 
 .username {
-	font-family: Calibri;
-	font-size: 18px;
+	font-family: Arial;
+	font-size: 10px;
 	color: #045b17;
 }
 
 #about {
-	font-family: Calibri;
-	font-size: 16px;
+	font-family: Arial;
+	font-size: 11px;
 	background-image: url(../images/about_background.png);
 	z-index: 2;
 	position: absolute;
-	width: 510px;
-	height: 308px;
-	left: 760px;
-	top: 542px;
+	width: 306px;
+	height: 185px;
+	left: 460px;
+	top: 325px;
 }
 
 /* end header stuff */
@@ -1158,14 +1179,14 @@ p.revision_saved {
 
 /* start footer stuff */
 .legal-home {
-	font-family: Calibri;
+	font-family: Arial;
 	font-size: 18px;
 	color: #626161;
 	background-color: #b1ecff
 }
 
 .legal-other {
-	font-family: Calibri;
+	font-family: Arial;
 	font-size: 18px;
 	color: #626161;
 	background-color: #fafafa
@@ -1311,16 +1332,16 @@ table.bartable td {
 }
 
 input[type=submit],input[type=reset],input[type=button] {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	cursor: pointer;
 	border: hidden;
 	background-color: transparent
 }
 
 input[type=checkbox] {
-	width: 20px;
-	height: 20px;
+	width: 12px;
+	height: 12px;
 }
 
 tr.list_head {
@@ -1366,11 +1387,11 @@ tr.list_item1 {
 }
 
 input[type=text],input[type=password],textarea {
-	font-family: Calibri;
-	font-size: 18px;
+	font-family: Arial;
+	font-size: 10px;
 	border: solid 1px;
 	border-color: #E2E3E3;
-	border-radius: 3px;
+	border-radius: 2px;
 }
 
 td.dropdown_dis {
@@ -1400,8 +1421,8 @@ tr.selectable:hover {
 
 /* start test custom page */
 .custom_title {
-	font-family: Calibri;
-	font-size: 24px;
+	font-family: Arial;
+	font-size: 14px;
 	border-top: 0px;
 	border-bottom: 0px;
 	border-left: 0px;
@@ -1409,18 +1430,18 @@ tr.selectable:hover {
 }
 
 .custom_font {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 }
 
 .custom_select {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 }
 
 .custom_list_type_bottomright {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	background-color: #FAFAFA;
 	border-top: 0px;
 	border-bottom: 1px solid #E2E3E3;
@@ -1436,8 +1457,8 @@ tr.selectable:hover {
 }
 
 .custom_list_type_right {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	background-color: #FAFAFA;
 	border-top: 0px;
 	border-bottom: 0px;
@@ -1446,8 +1467,8 @@ tr.selectable:hover {
 }
 
 .custom_list_type_bottom {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	background-color: #FAFAFA;
 	border-top: 0px;
 	border-bottom: 1px solid #E2E3E3;
@@ -1456,8 +1477,8 @@ tr.selectable:hover {
 }
 
 .custom_list_type_none {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	background-color: #FAFAFA;
 	border-top: 0px;
 	border-bottom: 0px;
@@ -1466,8 +1487,8 @@ tr.selectable:hover {
 }
 
 .custom_list_type_bottomright_packagename {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	color: #116795;
 	background-color: #FAFAFA;
 	border-top: 0px;
@@ -1477,8 +1498,8 @@ tr.selectable:hover {
 }
 
 .custom_list_type_bottomright_uninstall_packagename {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	color: gray;
 	background-color: #FAFAFA;
 	border-top: 0px;
@@ -1488,8 +1509,8 @@ tr.selectable:hover {
 }
 
 .custom_list_type_right_packagename {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	color: #116795;
 	border-top: 0px;
 	border-bottom: 0px;
@@ -1498,8 +1519,8 @@ tr.selectable:hover {
 }
 
 .custom_list_type_none_packagename {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	color: #116795;
 	border-top: 0px;
 	border-bottom: 0px;
@@ -1507,19 +1528,9 @@ tr.selectable:hover {
 	border-right: 0px;
 }
 
-.custom_list_type_bottomright_title {
-	font-family: Calibri;
-	font-size: 24px;
-	background-color: #FAFAFA;
-	border-top: 0px;
-	border-bottom: 1px solid #E2E3E3;
-	border-left: 0px;
-	border-right: 1px solid #E2E3E3;
-}
-
 .custom_list_type_bottom_title {
-	font-family: Calibri;
-	font-size: 24px;
+	font-family: Arial;
+	font-size: 14px;
 	background-color: #FAFAFA;
 	border-top: 0px;
 	border-bottom: 1px solid #E2E3E3;
@@ -1528,8 +1539,8 @@ tr.selectable:hover {
 }
 
 .custom_list_type_bottomright_title {
-	font-family: Calibri;
-	font-size: 24px;
+	font-family: Arial;
+	font-size: 14px;
 	background-color: #FAFAFA;
 	border-top: 0px;
 	border-bottom: 1px solid #E2E3E3;
@@ -1540,25 +1551,25 @@ tr.selectable:hover {
 .small_button {
 	width: 95px;
 	height: 44px;
-	font-family: Calibri;
+	font-family: Arial;
 	font-size: 22px;
 	background-image: url(../images/button_small.png);
 }
 
 .medium_button {
-	width: 119px;
-	height: 44px;
-	font-family: Calibri;
-	font-size: 22px;
+	width: 71px;
+	height: 26px;
+	font-family: Arial;
+	font-size: 14px;
 	background-image: url(../images/button_medium.png);
 	text-shadow: 0px 1px #FFFFFF;
 }
 
 .large_button {
-	width: 119px;
-	height: 44px;
-	font-family: Calibri;
-	font-size: 22px;
+	width: 71px;
+	height: 26px;
+	font-family: Arial;
+	font-size: 14px;
 	background-image: url(../images/button_medium.png);
 }
 
@@ -1571,13 +1582,13 @@ tr.selectable:hover {
 	border-bottom: 1px solid #E2E3E3;
 	border-left: 0px;
 	border-right: 3px solid #E2E3E3;
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 }
 
 .view_case_name_list {
-	font-family: Calibri;
-	font-size: 18px;
+	font-family: Arial;
+	font-size: 12px;
 	color: #116795;
 }
 
@@ -1586,21 +1597,47 @@ tr.selectable:hover {
 	border-bottom: 1px solid #E2E3E3;
 	border-left: 3px solid #E2E3E3;
 	border-right: 0px;
-	font-family: Calibri;
-	font-size: 12px;
+	font-family: Arial;
+	font-size: 8px;
 }
 
 .view_no_match_testcase_message {
-	font-family: Calibri;
-	font-size: 30px;
+	font-family: Arial;
+	font-size: 20px;
 	color: #116795;
 	padding-top: 50%;
 	text-align: center;
 }
 
+.static_list_scale_head {
+	background-color: #FAFAFA;
+	border-top: 0px;
+	border-bottom: 1px solid #FAFAFA;
+	border-left: 0px;
+	border-right: 0px;
+}
+
+.static_list_scale {
+	background-color: #FAFAFA;
+	border-top: 0px;
+	border-bottom: 1px solid #E2E3E3;
+	border-left: 1px solid #E2E3E3;
+	border-right: 1px solid #E2E3E3;
+}
+
+.static_list_scale_num {
+	font-family: Arial;
+	font-size: 14px;
+	background-color: #FAFAFA;
+	border-top: 0px;
+	border-bottom: 0px;
+	border-left: 0px;
+	border-right: 0px;
+}
+
 .static_list_packagename {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	color: black;
 	background-color: #FAFAFA;
 	border-top: 1px solid #FAFAFA;
@@ -1610,8 +1647,8 @@ tr.selectable:hover {
 }
 
 .static_list_count_bar {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	color: black;
 	background-color: #FAFAFA;
 	border-top: 1px solid #E2E3E3;
@@ -1621,8 +1658,8 @@ tr.selectable:hover {
 }
 
 .static_list_num {
-	font-family: Calibri;
-	font-size: 22px;
+	font-family: Arial;
+	font-size: 14px;
 	color: black;
 	background-color: #FAFAFA;
 	border-top: 1px solid #E2E3E3;
@@ -1632,8 +1669,8 @@ tr.selectable:hover {
 }
 
 .static_chart_select {
-	font-family: Calibri;
-	font-size: 26px;
+	font-family: Arial;
+	font-size: 16px;
 	color: #116795;
 	border-top: 0px;
 	border-bottom: 1px solid #E2E3E3;

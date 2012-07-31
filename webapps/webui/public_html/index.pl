@@ -32,19 +32,17 @@ print_header( "$MTK_BRANCH Manager Main Page", "" );
 
 print <<DATA;
 <map name="home_menu" id="home_menu">
-  <area href="tests_report.pl" alt="Report" title="Report" shape="rect" coords="528,16,843,250" />
-  <area href="tests_custom.pl" alt="Custom" title="Custom" shape="rect" coords="34,88,313,330" />
-  <area href="tests_help.pl" alt="Help" title="Help" shape="rect" coords="850,173,1164,411" />
-  <area href="tests_execute.pl" alt="Execute" title="Execute" shape="rect" coords="315,295,626,528" />
-  <area href="tests_statistic.pl" alt="Statistic" title="Statistic" shape="rect" coords="633,444,946,684" />
-  <area href="#about" alt="About" title="About" shape="rect" coords="1133,674,1267,740" onclick="javascript:showAbout()" />
+  <area href="tests_report.pl" alt="Report" title="Report" shape="rect" coords="316,8,506,150" />
+  <area href="tests_custom.pl" alt="Custom" title="Custom" shape="rect" coords="20,53,203,199" />
+  <area href="tests_help.pl" alt="Help" title="Help" shape="rect" coords="509,102,700,248" />
+  <area href="tests_execute.pl" alt="Execute" title="Execute" shape="rect" coords="204,175,378,317" />
+  <area href="tests_statistic.pl" alt="Statistic" title="Statistic" shape="rect" coords="379,266,570,411" />
+  <area href="#about" alt="About" title="About" shape="rect" coords="674,402,766,442" onclick="javascript:showAbout()" />
 </map>
-<img src="images/home_menu.png" width="1280" height="740" alt="home_menu" usemap="#home_menu" />
+<img src="images/home_menu.png" width="768" height="444" alt="home_menu" usemap="#home_menu" />
 <div id="about" style="display:none" onclick="javascript:showAbout()">
   <div align="left">
-    <div style="position:relative; width:350px; height:130px; left: 90px; top: 75px;">Testkit-manager is a GUI, which is developed as an auto-testing tool.
-It uses &quot;testkit-lite&quot; as execution tool for running case. With this tool, we can filter cases that we want to run with several properties' value, the
-filtered cases can be run automatically and the report will be generated after finishing running. We can also submit report and view report with this tool.</div>
+    <div style="position:relative; width:200px; height:100px; left: 57px; top: 35px;">Testkit-manager is a GUI for &quot;testkit-lite&quot;. With this tool, we can filter cases with several properties' value. The filtered cases can be run automatically and the report will be generated after finishing running. We can also submit report and view report with this tool.</div>
     </div>
   </div>
 </div>

@@ -25,23 +25,36 @@
 use strict;
 use Templates;
 use TestStatus;
+use Data::Dumper;
 
 my $js_init           = '';
 my $selected_profile  = "none";
 my $have_progress_bar = "TRUE";
 my %profile_list;    #parse and save all information from profile files
-my @progress_bar_max_value = ();    #save all auto progress bar's max value
-my @package_list           = ();    #save all the packages
+my @progress_bar_max_value     = ();     #save all auto progress bar's max value
+my @package_list               = ();     #save all the packages
+my $have_testkit_lite          = "FALSE";
+my $have_correct_testkit_lite  = "FALSE";
+my $testkit_lite_status        = "FALSE";
+my $testkit_lite_error_message = "none";
+
+check_testkit_lite();
 
 if ( $_GET{'profile'} ) {
+	if ( ( $have_testkit_lite eq "TRUE" ) and ( $have_testkit_lite eq "TRUE" ) )
+	{
 
-	# Start tests via AJAX
-	$js_init = "startTests('$_GET{'profile'}');\n";
+		# Start tests via AJAX
+		$js_init = "startTests('$_GET{'profile'}');\n";
+	}
 }
 else {
-	my $status = read_status();
-	if ( $status->{'IS_RUNNING'} ) {
-		$js_init = "startRefresh();\n";
+	if ( ( $have_testkit_lite eq "TRUE" ) and ( $have_testkit_lite eq "TRUE" ) )
+	{
+		my $status = read_status();
+		if ( $status->{'IS_RUNNING'} ) {
+			$js_init = "startRefresh();\n";
+		}
 	}
 }
 
@@ -49,6 +62,12 @@ print "HTTP/1.0 200 OK" . CRLF;
 print "Content-type: text/html" . CRLF . CRLF;
 
 print_header( "$MTK_BRANCH Manager Main Page", "execute" );
+
+if (   ( $have_testkit_lite eq "FALSE" )
+	or ( $have_correct_testkit_lite eq "FALSE" ) )
+{
+	print show_error_dlg($testkit_lite_error_message);
+}
 
 my $found         = 0;
 my $profiles_list = '';
@@ -140,30 +159,33 @@ if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/profiles/test' ) ) {
 print <<DATA;
 <div id="ajax_loading" style="display:none"></div>
 <div id="message"></div>
-<table width="1280" border="0" cellspacing="0" cellpadding="0" class="report_list">
+<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
   <tr>
-    <td height="50" background="images/report_top_button_background.png"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+    <td height="30" class="top_button_bg"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
         <tbody>
           <tr>
-            <td width="25">&nbsp;</td>
-            <td width="420" style="font-size:24px">Profile name:
+            <td width="15">&nbsp;</td>
+            <td width="252" style="font-size:14px">Profile name:
 DATA
-if ($found) {
+if (    ($found)
+	and ( $have_testkit_lite eq "TRUE" )
+	and ( $have_correct_testkit_lite eq "TRUE" ) )
+{
 	print <<DATA;
-            <select name="test_profile" id="test_profile" style="width: 12em;" onchange="javascript:filter_progress_bar();">$profiles_list</select></td>
-            <td width="10"><img src="images/environment-spacer.gif" alt="" width="10" height="1"></td>
-            <td width="119"><input type="submit" name="START" id="start_button" value="Start Test" class="top_button" onclick="javascript:startTests('');"></td>
-            <td width="10"><img src="images/environment-spacer.gif" alt="" width="10" height="1"></td>
-            <td width="119"><input type="submit" name="STOP" id="stop_button" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
+            <select name="test_profile" id="test_profile" style="width: 11em;" onchange="javascript:filter_progress_bar();">$profiles_list</select></td>
+            <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
+            <td width="71"><input type="submit" name="START" id="start_button" value="Start Test" class="top_button" onclick="javascript:startTests('');"></td>
+            <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
+            <td width="71"><input type="submit" name="STOP" id="stop_button" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
 DATA
 }
 else {
 	print <<DATA;
             <select name="test_profile_no" id="test_profile_no" style="width: 12em;" size="1" disabled="disabled"><option>&lt;No profiles present&gt;</option></select></td>
-            <td width="10"><img src="images/environment-spacer.gif" alt="" width="10" height="1"></td>
-            <td width="119"><input type="submit" name="START" id="start_button" value="Start Test" disabled="disabled" class="top_button" onclick="javascript:startTests('');"></td>
-            <td width="10"><img src="images/environment-spacer.gif" alt="" width="10" height="1"></td>
-            <td width="119"><input type="submit" name="STOP" id="stop_button" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
+            <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
+            <td width="71"><input type="submit" name="START" id="start_button" value="Start Test" disabled="disabled" class="top_button" onclick="javascript:startTests('');"></td>
+            <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
+            <td width="71"><input type="submit" name="STOP" id="stop_button" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
 DATA
 }
 print <<DATA;
@@ -175,7 +197,7 @@ print <<DATA;
   <tr>
     <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
-          <td width="480" valign="top" class="report_list_outside_left_bold">
+          <td width="288" valign="top" class="report_list_outside_left_bold">
 DATA
 foreach ( keys %profile_list ) {
 	my $profile_name = $_;
@@ -199,6 +221,9 @@ DATA
 	my @package_number = split( "__", $profile_list{$profile_name} );
 	my $auto_all       = 0;
 	my $manual_all     = 0;
+	my $auto_text_id   = 'text_' . $profile_name . '_all';
+	my $bar_id         = 'bar_' . $profile_name . '_all';
+	my $progress_id    = 'text_progress_' . $profile_name . '_all';
 	foreach (@package_number) {
 		my @temp         = split( ":", $_ );
 		my $package_name = $temp[0];
@@ -207,20 +232,22 @@ DATA
 		$auto_all   = int($auto_all) + int($auto);
 		$manual_all = int($manual_all) + int($manual);
 	}
+	push( @progress_bar_max_value,
+		'bar_' . $profile_name . '_all' . '::' . $auto_all );
 	print <<DATA;
             <table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
               <tr>
-                <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row">Total</td>
                 <td class="report_list_one_row"></td>
               </tr>
               <tr>
-                <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row">&nbsp;&nbsp;Auto Test($auto_all)</td>
-                <td class="report_list_one_row"></td>
+                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
+                <td align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$auto_text_id">Auto Test</span><span id="$progress_id">($auto_all)</span></td>
+                <td class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
               <tr>
-                <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row">&nbsp;&nbsp;Manual Test($manual_all)</td>
                 <td class="report_list_one_row"></td>
               </tr>
@@ -239,17 +266,17 @@ DATA
 		  'text_progress_' . $profile_name . '_' . $package_name;
 		print <<DATA;
               <tr>
-                <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row">$package_name</td>
                 <td class="report_list_one_row"></td>
               </tr>
               <tr>
-                <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$auto_text_id">Auto Test</span><span id="$progress_id">($auto)</span></td>
                 <td align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
               <tr>
-                <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row">&nbsp;&nbsp;Manual Test($manual)</td>
                 <td class="report_list_one_row"></td>
               </tr>
@@ -261,12 +288,12 @@ DATA
 }
 print <<DATA;
           </td>
-          <td width="800" valign="top" class="report_list_outside_right_bold"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+          <td width="480" valign="top" class="report_list_outside_right_bold"><table width="100%" border="0" cellspacing="0" cellpadding="0">
               <tr>
-                <td align="left" height="50">&nbsp;<span id="exec_info">Nothing started</span>&nbsp;<span id="exec_status"></span></td>
+                <td align="left" height="30">&nbsp;<span id="exec_info">Nothing started</span>&nbsp;<span id="exec_status"></span></td>
               </tr>
               <tr>
-                <td align="center"><pre align="left" id="cmdlog" style="margin-top:0px;margin-bottom:7px;height:500px;width:750px;overflow:auto;text-wrap:none;border:1px solid #BCBCBC;background-color:white;color:black;font-size:18px;">Execute output will go here...</pre></td>
+                <td align="left"><pre id="cmdlog" style="margin-top:0px;margin-bottom:4px; margin-left:4px; height:310px;width:450px;overflow:auto;text-wrap:none;border:1px solid #BCBCBC;background-color:white;color:black;font-family:Arial;font-size:10px;">Execute output will go here...</pre></td>
               </tr>
             </table></td>
         </tr>
@@ -314,7 +341,7 @@ $js_init
 // <![CDATA[
 function filter_progress_bar() {
 	var view = document.getElementById('test_profile').value;
-	var page = document.all;
+	var page = document.getElementsByTagName("*");
 	for ( var i = 0; i < page.length; i++) {
 		var temp_id = page[i].id;
 		if (temp_id.indexOf("progress_bar_") >= 0) {
@@ -347,4 +374,120 @@ var progress_bar_max_value_list = new Array$progress_bar_max_value_list_array;
 DATA
 
 print_footer("");
+
+sub check_testkit_lite {
+	my @device = `sdb devices`;
+	if ( $device[1] =~ /device/ ) {
+		my $cmd          = "sdb shell 'rpm -qa | grep testkit-lite'";
+		my $testkit_lite = `$cmd`;
+		if ( $testkit_lite =~ /testkit-lite-(.*)-\d\.noarch/ ) {
+			$have_testkit_lite = "TRUE";
+			my $version = $1;
+			if ( $version eq $MTK_VERSION ) {
+
+				# everthing is fine here
+				$have_correct_testkit_lite = "TRUE";
+			}
+			else {
+
+				# have testkit-lite but version is not correct
+				$have_correct_testkit_lite = "FALSE";
+				install_testkit_lite();
+			}
+		}
+		else {
+
+			# don't have testkit-lite
+			install_testkit_lite();
+		}
+	}
+	else {
+		$testkit_lite_error_message = "Can't find a connected device";
+	}
+}
+
+sub install_testkit_lite {
+	my $check_network = check_network();
+	if ( $check_network =~ /OK/ ) {
+		my $repo      = get_repo();
+		my @repo_all  = split( "::", $repo );
+		my $repo_type = $repo_all[0];
+		my $repo_url  = $repo_all[1];
+		my $GREP_PATH = $repo_url;
+		$GREP_PATH =~ s/\:/\\:/g;
+		$GREP_PATH =~ s/\//\\\//g;
+		$GREP_PATH =~ s/\./\\\./g;
+		$GREP_PATH =~ s/\-/\\\-/g;
+
+		my $cmd = "";
+		if ( $repo_type =~ /remote/ ) {
+			$cmd =
+			    "wget -r -l 1 -nd -A rpm --spider "
+			  . $repo_url
+			  . " 2>&1 | grep $GREP_PATH"
+			  . "testkit-lite.*.noarch.rpm";
+		}
+		if ( $repo_type =~ /local/ ) {
+			$cmd = "find "
+			  . $repo_url
+			  . " | grep $GREP_PATH"
+			  . "testkit-lite.*.noarch.rpm";
+		}
+		my $network_result = `$cmd`;
+		if (
+			$network_result =~ /$GREP_PATH.*testkit-lite-(.*)-(\d).noarch.rpm/ )
+		{
+			my $main_version = $1;
+			my $sub_version  = $2;
+			if ( $main_version eq $MTK_VERSION ) {
+				if ( $have_testkit_lite eq "TRUE" ) {
+					system("sdb shell rpm -e testkit-lite &>/dev/null");
+				}
+				if ( $repo_type =~ /remote/ ) {
+					system( "wget -c $repo_url"
+						  . "testkit-lite-$main_version-$sub_version.noarch.rpm -P /tmp -q -N"
+					);
+					system(
+"sdb push /tmp/testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
+					);
+				}
+				if ( $repo_type =~ /local/ ) {
+					system( "sdb push $repo_url"
+						  . "testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
+					);
+				}
+				system( "sdb shell 'rpm -ivh /tmp/"
+					  . "testkit-lite-$main_version-$sub_version.noarch.rpm --nodeps"
+					  . "' 2>&1 >/dev/null" );
+				my $cmd          = "sdb shell 'rpm -qa | grep testkit-lite'";
+				my $testkit_lite = `$cmd`;
+				if ( $testkit_lite =~ /testkit-lite-(.*)-\d\.noarch/ ) {
+					$have_testkit_lite = "TRUE";
+					my $version = $1;
+					if ( $version eq $MTK_VERSION ) {
+						$have_correct_testkit_lite = "TRUE";
+					}
+				}
+				if (   ( $have_testkit_lite eq "FALSE" )
+					or ( $have_correct_testkit_lite eq "FALSE" ) )
+				{
+					$testkit_lite_error_message =
+"testkit-lite-$1-$2.noarch.rpm is find in the repo, however we failed to install it, please try manually";
+				}
+			}
+			else {
+				$testkit_lite_error_message =
+"Only find testkit-lite-$1-$2.noarch.rpm in the repo, please install testkit-lite-$MTK_VERSION-x.noarch.rpm manually";
+			}
+		}
+		else {
+			$testkit_lite_error_message =
+"Can't find testkit-lite in the repo, please install testkit-lite-$MTK_VERSION-x.noarch.rpm manually";
+		}
+	}
+	else {
+		$testkit_lite_error_message =
+"Can't connect to the repo, please install testkit-lite-$MTK_VERSION-x.noarch.rpm manually";
+	}
+}
 

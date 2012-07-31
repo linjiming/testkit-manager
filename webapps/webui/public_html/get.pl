@@ -67,6 +67,7 @@ $TestKitLogger::logger->log(message =>  "The $directPath: $directPath");
 if (($_GET{'file'} !~ m!^\Q$SERVER_PARAM{'APP_DATA'}\E/results/!) and
 	($_GET{'file'} !~ m!^\Q$SERVER_PARAM{'APP_DATA'}\E/log/!) and
 	($_GET{'file'} !~ m!^\Q$SERVER_PARAM{'APP_DATA'}\E/data/!) and
+	($_GET{'file'} !~ m!^\Q$SERVER_PARAM{'APP_DATA'}\E/package/!) and
 	($_GET{'file'} !~ m!^\Q$APP_BIN\E/!) and 
 	($_GET{'file'} !~ m!^\Q$directPath_result\E/!) and 
 	($_GET{'file'} !~ m!^\Q/opt\E/!) and 

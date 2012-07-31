@@ -40,11 +40,11 @@ $Common::debug_inform_sub = sub { };
 	qw(
 	  CRLF
 	  %SERVER_PARAM %_GET %_POST %_COOKIE %CONFIG
-	  $result_dir_manager $test_definition_dir
+	  $result_dir_manager $result_dir_lite $test_definition_dir $opt_dir $profile_dir_manager $configuration_file $DOWNLOAD_CMD
 	  $cert_sys_host $cert_sys_base
 	  &print_header &print_footer
 	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg
-	  &updatePackageList &updateCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem
+	  &updatePackageList &updateCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &syncDefination &compare_version &check_network &get_repo
 	  ),
 	@Common::EXPORT,
 	@Manifest::EXPORT
@@ -255,9 +255,9 @@ if (!elem) {
 // ]]>
 </script>
 <div id="error_msg_area" style="border: none;$error_show">
-<table border="0" cellpadding="1" cellspacing="1" width="80%" align="center">
+<table border="0" cellpadding="1" cellspacing="1" width="768" align="center">
   <tr>
-    <th style="border: dashed 1px darkred; background: red; color: white; font-family: Calibri; font-size: 22px;">
+    <th style="border: dashed 1px darkred; background: red; color: white; font-family: Arial; font-size: 12px;">
       <table border="0" cellpadding="0" cellspacing="0" align="center">
         <tr>
           <td width="100%">Attention</td>
@@ -268,13 +268,12 @@ if (!elem) {
   </tr>
   <tr><td align="center" style="border: dashed 1px darkred; border-top: none;">
     <table border="0" cellpadding="0" cellspacing="0">
-      <tr><td height="10" colspan="3"></td></tr>
-      <tr><td width="10%"></td><td align="left" id="error_msg_text" font-family: Calibri; style="font-size: 20px;">$error_text</td><td width="10%"></td></tr>
-      <tr><td height="10" colspan="3"></td></tr>
+      <tr><td height="6" colspan="3"></td></tr>
+      <tr><td width="10%"></td><td align="left" id="error_msg_text" font-family: Arial; style="font-size: 10px;">$error_text</td><td width="10%"></td></tr>
+      <tr><td height="6" colspan="3"></td></tr>
     </table>
   </td></tr>
 </table>
-<br />
 </div>
 DATA
 }
@@ -295,27 +294,26 @@ if (!elem) {
 }
 // ]]>
 </script>
-<div id="error_msg_area" style="border: none;$message_show">
-<table border="0" cellpadding="1" cellspacing="1" width="80%" align="center">
+<div id="msg_area" style="border: none;$message_show">
+<table border="0" cellpadding="1" cellspacing="1" width="768" align="center">
   <tr>
-    <th style="border: dashed 1px darkred; background: green; color: white; font-family: Calibri; font-size: 22px;">
+    <th style="border: dashed 1px darkred; background: green; color: white; font-family: Arial; font-size: 12px;">
       <table border="0" cellpadding="0" cellspacing="0" align="center">
         <tr>
           <td width="100%">Message</td>
-          <td><img src="images/close.png" alt="Close" width="20" height="20" style="cursor: pointer;" title="Close" onclick="javascript:document.getElementById('error_msg_area').style.display='none';" /></td>
+          <td><img src="images/close.png" alt="Close" width="20" height="20" style="cursor: pointer;" title="Close" onclick="javascript:document.getElementById('msg_area').style.display='none';" /></td>
         </tr>
       </table>
     </th>
   </tr>
   <tr><td align="center" style="border: dashed 1px darkred; border-top: none;">
     <table border="0" cellpadding="0" cellspacing="0">
-      <tr><td height="10" colspan="3"></td></tr>
-      <tr><td width="10%"></td><td align="left" id="error_msg_text" font-family: Calibri; style="font-size: 20px;">$message_text</td><td width="10%"></td></tr>
-      <tr><td height="10" colspan="3"></td></tr>
+      <tr><td height="6" colspan="3"></td></tr>
+      <tr><td width="10%"></td><td align="left" id="error_msg_text" font-family: Arial; style="font-size: 10px;">$message_text</td><td width="10%"></td></tr>
+      <tr><td height="6" colspan="3"></td></tr>
     </table>
   </td></tr>
 </table>
-<br />
 </div>
 DATA
 }
@@ -323,16 +321,23 @@ DATA
 sub show_not_implemented {
 	my ($function) = @_;
 	return <<DATA;
-<table width="1280" height="200" border="0" cellpadding="0" cellspacing="0" class="not_implemented">
+<table width="768" height="120" border="0" cellpadding="0" cellspacing="0" class="not_implemented">
     <tr>
-      <td align="center" valign="middle">Sorry, function "$function" has not been implemented.</td>
+      <td align="center" valign="middle">Sorry, function "$function" is not available.</td>
     </tr>
 </table>
 DATA
 }
 
-our $result_dir_manager  = $FindBin::Bin . "/../../../results/";
-our $test_definition_dir = "/usr/share/";
+our $result_dir_manager  = "/opt/testkit/manager/results/";
+our $result_dir_lite     = "/opt/testkit/manager/lite/";
+our $test_definition_dir = "/opt/testkit/manager/defination/";
+our $opt_dir             = "/opt/testkit/manager/package/";
+our $profile_dir_manager = $FindBin::Bin . "/../../../profiles/test/";
+our $configuration_file  = $FindBin::Bin . "/../../../CONF";
+our $DOWNLOAD_CMD        = "wget -r -l 1 -nd -A rpm --spider";
+
+my $CHECK_NETWORK = "wget --spider --timeout=5 --tries=2";
 
 sub updatePackageList {
 	my @package_list = ();
@@ -560,7 +565,7 @@ sub printManualCaseInfo {
 	}
 
 	print <<DATA;
-<table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:18px;table-layout:fixed" frame="bottom" rules="all">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:10px;table-layout:fixed" frame="below" rules="all">
 DATA
 	my @temp_steps = split( "__", $steps );
 	foreach (@temp_steps) {
@@ -569,23 +574,27 @@ DATA
 		my $expected_result  = shift @temp;
 		print <<DATA;
   <tr>
-    <td align="left" width="19%" class="report_list_outside_left">&nbsp;Step Description:</td>
-    <td align="left" width="81%" class="report_list_outside_right">&nbsp;$step_description</td>
+    <td align="left" width="22%" class="report_list_outside_left">&nbsp;Step Description:</td>
+    <td align="left" width="0.5%" class="report_list_one_row"></td>
+    <td align="left" width="77.5%" class="report_list_one_row">$step_description</td>
   </tr>
   <tr>
-    <td align="left" width="19%" class="report_list_outside_left">&nbsp;Expected Result:</td>
-    <td align="left" width="81%" class="report_list_outside_right">&nbsp;$expected_result</td>
+    <td align="left" width="22%" class="report_list_outside_left">&nbsp;Expected Result:</td>
+    <td align="left" width="0.5%" class="report_list_one_row"></td>
+    <td align="left" width="77.5%" class="report_list_one_row">$expected_result</td>
   </tr>
 DATA
 	}
 	print <<DATA;
   <tr>
-    <td align="left" width="19%" class="report_list_outside_left">&nbsp;Comment:</td>
-    <td align="left" width="81%" class="report_list_outside_right"><textarea id="$id_textarea" name="textarea" cols="66" rows="4">$comment</textarea></td>
+    <td align="left" width="22%" class="report_list_outside_left">&nbsp;Comment:</td>
+    <td align="left" width="0.5%" class="report_list_one_row"></td>
+    <td align="left" width="77.5%" class="report_list_one_row"><textarea id="$id_textarea" name="textarea" cols="64" rows="4">$comment</textarea></td>
   </tr>
   <tr>
-    <td align="left" width="19%" class="report_list_outside_left">&nbsp;Bug Number:</td>
-    <td align="left" width="81%" class="report_list_outside_right"><input type="text" id="$id_bugnumber" name="textfield" value="$bugnumber"></td>
+    <td align="left" width="22%" class="report_list_outside_left">&nbsp;Bug Number:</td>
+    <td align="left" width="0.5%" class="report_list_one_row"></td>
+    <td align="left" width="77.5%" class="report_list_one_row"><input type="text" id="$id_bugnumber" name="textfield" value="$bugnumber"></td>
   </tr>
 </table>
 DATA
@@ -620,7 +629,7 @@ sub printDetailedCaseInfo {
 	my $spec_statement              = $caseInfo{"spec_statement"};
 	my $steps                       = $caseInfo{"steps"};
 	print <<DATA;
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:18px;table-layout:fixed" frame="bottom" rules="all">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:10px;table-layout:fixed" frame="below" rules="all">
                               <tr>
                                 <td align="left" width="15%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="TC ID:">&nbsp;TC ID:</td>
                                 <td align="left" colspan="3" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name">&nbsp;$name</td>
@@ -816,7 +825,7 @@ sub printDetailedCaseInfoWithComment {
 		}
 	}
 	print <<DATA;
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:18px;table-layout:fixed" frame="bottom" rules="all">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:10px;table-layout:fixed" frame="below" rules="all">
                               <tr>
                                 <td align="left" width="15%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="TC ID:">&nbsp;TC ID:</td>
                                 <td align="left" colspan="3" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name">&nbsp;$name</td>
@@ -979,6 +988,280 @@ sub updateManualCaseResult {
 sub callSystem {
 	my ($command) = @_;
 	system($command);
+}
+
+sub install_package {
+	my ($package_name)   = @_;
+	my $package_rpm_name = "";
+	my $check_network    = check_network();
+	if ( $check_network =~ /OK/ ) {
+		my $repo      = get_repo();
+		my @repo_all  = split( "::", $repo );
+		my $repo_type = $repo_all[0];
+		my $repo_url  = $repo_all[1];
+		my $GREP_PATH = $repo_url;
+		$GREP_PATH =~ s/\:/\\:/g;
+		$GREP_PATH =~ s/\//\\\//g;
+		$GREP_PATH =~ s/\./\\\./g;
+		$GREP_PATH =~ s/\-/\\\-/g;
+
+		my $cmd = "";
+		if ( $repo_type =~ /remote/ ) {
+			$cmd =
+			    "$DOWNLOAD_CMD "
+			  . $repo_url
+			  . " 2>&1 | grep $GREP_PATH"
+			  . "$package_name.*.rpm";
+		}
+		if ( $repo_type =~ /local/ ) {
+			$cmd = "find "
+			  . $repo_url
+			  . " | grep $GREP_PATH"
+			  . "$package_name.*.rpm";
+		}
+		my $network_result = `$cmd`;
+		if ( $network_result =~ /$GREP_PATH.*($package_name.*.rpm)/ ) {
+			$package_rpm_name = $1;
+
+			if ( $repo_type =~ /remote/ ) {
+				system("wget -c $repo_url$package_rpm_name -P /tmp -q -N");
+				system("sdb push /tmp/$package_rpm_name /tmp &>/dev/null");
+			}
+			if ( $repo_type =~ /local/ ) {
+				system("sdb push $repo_url$package_rpm_name /tmp &>/dev/null");
+			}
+
+			my $cmd = "sdb shell 'rpm -qa | grep " . $package_name . "'";
+			my $have_package = `$cmd`;
+
+			# update package
+			if ( $have_package =~ /$package_name/ ) {
+				system(
+"sdb shell 'cd /tmp; rpm -Uvh $package_rpm_name --nodeps &>/dev/null'"
+				);
+			}
+			else {
+				system(
+"sdb shell 'cd /tmp; rpm -ivh $package_rpm_name --nodeps &>/dev/null'"
+				);
+			}
+		}
+		syncDefination();
+		my $check_cmd     = "sdb shell 'rpm -qa | grep " . $package_name . "'";
+		my $check_install = `$check_cmd`;
+		if ( $check_install =~ /$package_name/ ) {
+			return "OK";
+		}
+		else {
+			if ( $repo_type =~ /remote/ ) {
+				my $check_download_cmd = `ls /tmp/$package_rpm_name`;
+				if ( $check_download_cmd =~ /No such file or directory/ ) {
+					return "download error from http repo";
+				}
+				my $check_push_cmd = `sdb shell ls /tmp/$package_rpm_name`;
+				if ( $check_download_cmd =~ /No such file or directory/ ) {
+					return "can't push package rpm to the device";
+				}
+				return "package rpm is in device at /tmp you can try manully";
+			}
+			if ( $repo_type =~ /local/ ) {
+				my $check_download_cmd = `ls $repo_url$package_rpm_name`;
+				if ( $check_download_cmd =~ /No such file or directory/ ) {
+					return "can't find the package in the local repo";
+				}
+				my $check_push_cmd = `sdb shell ls /tmp/$package_rpm_name`;
+				if ( $check_download_cmd =~ /No such file or directory/ ) {
+					return "can't push package rpm to the device";
+				}
+				return "package rpm is in device at /tmp you can try manully";
+			}
+		}
+	}
+}
+
+sub syncDefination {
+
+	# sync xml defination file
+	system( "rm -rf $test_definition_dir" . "*" );
+	system( "rm -rf $opt_dir" . "*" );
+	my $cmd_defination = "sdb shell ls /usr/share/*/tests.xml";
+	my @definations    = `$cmd_defination`;
+	if ( $definations[0] !~ /No such file or directory/ ) {
+		foreach (@definations) {
+			my $defination = "";
+			if ( $_ =~ /(\/usr\/share\/.*\/tests.xml)/ ) {
+				$defination = $1;
+			}
+			$defination =~ s/\s*$//;
+			if ( $defination =~ /share\/(.*)\/tests.xml/ ) {
+				my $package_name = $1;
+				system("mkdir $test_definition_dir$package_name");
+				system(
+					"sdb pull $defination $test_definition_dir$package_name");
+				system("mkdir $opt_dir$package_name");
+				system("echo 'No readme info' > $opt_dir$package_name/README");
+				system(
+					"echo 'No license info' > $opt_dir$package_name/LICENSE");
+			}
+		}
+	}
+
+	# sync readme file and license file
+	my $cmd_readme = "sdb shell ls /opt/*/README";
+	my @readmes    = `$cmd_readme`;
+	if ( $readmes[0] !~ /No such file or directory/ ) {
+		foreach (@readmes) {
+			my $readme = "";
+			if ( $_ =~ /(\/opt\/.*\/README)/ ) {
+				$readme = $1;
+			}
+			$readme =~ s/\s*$//;
+			if ( $readme =~ /opt\/(.*)\/README/ ) {
+				my $package_name = $1;
+				if ( -e "$opt_dir$package_name/README" ) {
+					system("rm -f $opt_dir$package_name/README");
+					system("sdb pull $readme $opt_dir$package_name");
+					my $license_cmd = `sdb shell ls /opt/$package_name/LICENSE`;
+					if ( $license_cmd !~ /No such file or directory/ ) {
+						my $license = $readme;
+						$license =~ s/README/LICENSE/;
+						system("sdb pull $license $opt_dir$package_name");
+					}
+					else {
+						system(
+"echo 'No license info' > $opt_dir$package_name/LICENSE"
+						);
+					}
+				}
+			}
+		}
+	}
+}
+
+sub compare_version {
+	my ( $old, $new ) = @_;
+	my $old_1 = 0;
+	my $old_2 = 0;
+	my $old_3 = 0;
+	my $old_4 = 0;
+	my $new_1 = 0;
+	my $new_2 = 0;
+	my $new_3 = 0;
+	my $new_4 = 0;
+	if ( $old =~ /(\d)\.(\d)\.(\d)-(\d)/ ) {
+		$old_1 = int($1);
+		$old_2 = int($2);
+		$old_3 = int($3);
+		$old_4 = int($4);
+	}
+	if ( $new =~ /(\d)\.(\d)\.(\d)-(\d)/ ) {
+		$new_1 = int($1);
+		$new_2 = int($2);
+		$new_3 = int($3);
+		$new_4 = int($4);
+	}
+
+	if ( $old_1 > $new_1 ) {
+		return "error";
+	}
+	elsif ( $old_1 < $new_1 ) {
+		return "update";
+	}
+
+	# old_1 = new_1
+	else {
+		if ( $old_2 > $new_2 ) {
+			return "error";
+		}
+		elsif ( $old_2 < $new_2 ) {
+			return "update";
+		}
+
+		# old_2 = new_2
+		else {
+			if ( $old_3 > $new_3 ) {
+				return "error";
+			}
+			elsif ( $old_3 < $new_3 ) {
+				return "update";
+			}
+
+			# old_3 = new_3
+			else {
+				if ( $old_4 > $new_4 ) {
+					return "error";
+				}
+				elsif ( $old_4 < $new_4 ) {
+					return "update";
+				}
+
+				# old_4 = new_4
+				else {
+					return "not_update";
+				}
+			}
+		}
+	}
+}
+
+sub get_repo {
+	my $repo_url = "none";
+	open FILE, $configuration_file or die $!;
+	while (<FILE>) {
+		if ( $_ =~ /^repo_url/ ) {
+			$repo_url = $_;
+			last;
+		}
+	}
+	if ( $repo_url eq "none" ) {
+		return "none";
+	}
+	else {
+		my @repo      = split( "=", $repo_url );
+		my $repo_type = $repo[0];
+		my $repo_url  = $repo[1];
+		$repo_url =~ s/^\s*//;
+		$repo_url =~ s/\s*$//;
+		if ( $repo_type =~ /remote/ ) {
+			return "remote::$repo_url";
+		}
+		elsif ( $repo_type =~ /local/ ) {
+			return "local::$repo_url";
+		}
+		else {
+			return "none";
+		}
+	}
+}
+
+sub check_network {
+	my $repo = get_repo();
+	if ( $repo =~ /none/ ) {
+		return "Can't find repo URL in the configuration file";
+	}
+	else {
+		my @repo_all  = split( "::", $repo );
+		my $repo_type = $repo_all[0];
+		my $repo_url  = $repo_all[1];
+		if ( $repo_type =~ /remote/ ) {
+			my $network = `$CHECK_NETWORK $repo_url 2>&1 |grep 200`;
+			if ( $network =~ /200 OK/ ) {
+				return "OK";
+			}
+			else {
+				return "Can't connect to repo $repo_url";
+			}
+		}
+		if ( $repo_type =~ /local/ ) {
+			my $network = `ls $repo_url`;
+			if ( $network =~ /No such file or directory/ ) {
+				return "Can't find local repo $repo_url";
+			}
+			else {
+				return "OK";
+			}
+		}
+	}
 }
 
 1;

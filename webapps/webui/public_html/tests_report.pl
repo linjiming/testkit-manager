@@ -30,11 +30,9 @@ use Data::Dumper;
 use Digest::SHA qw(sha1_hex);
 
 # data which is going to be displayed
-my $result_dir_manager = $FindBin::Bin . "/../../../results/";
-my $result_dir_lite    = $FindBin::Bin . "/../../../../lite/";
-my @report_display     = ();
-my @select_dir         = ();
-my @package_list       = ();
+my @report_display   = ();
+my @select_dir       = ();
+my @package_list     = ();
 my @test_type        = ();         #which test type are stored in the xml
 my $hasTestTypeError = "FALSE";    #have error when list all cases by test type
 my %caseInfo;                      #parse all info items from xml
@@ -52,6 +50,8 @@ my @same_package_list = ();    #extract same packages from selected reports
 my $max_package_number =
   0;    #extract the maximum package number from selected reports
 my %all_package_list;    #store package distribution
+my @reverse_time = ();   #store reversed order time list
+my @ordered_time = ();   #store normal order time list
 
 # clear text pipe
 autoflush_on();
@@ -68,16 +68,16 @@ if ( $_POST{'compare'} ) {
 	if ( @same_package_list > 0 ) {
 		print <<DATA;
 <div id="message"></div>
-<table width="1280" border="0" cellspacing="0" cellpadding="0" class="report_list" style="table-layout:fixed">
+<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list" style="table-layout:fixed">
   <tr>
-    <td height="50"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
-        <tr style="font-size:24px">
+    <td height="30"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0" style="table-layout:fixed">
+        <tr style="font-size:14px">
 DATA
 		for ( my $i = 0 ; $i < @select_dir ; $i++ ) {
 			my $time       = $select_dir[$i];
 			my $class_time = "report_list_outside_left_compare_empty";
 			print <<DATA;
-          <td class="$class_time" align="center">$time</td>
+          <td class="$class_time" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$time">$time</td>
 DATA
 		}
 		print <<DATA;
@@ -91,8 +91,8 @@ DATA
 			my $package_temp = $package;
 			$package_temp =~ s/_tests.xml//;
 			print <<DATA;
-  <tr style="font-size:24px">
-    <td height="50" class="report_list_outside_left_compare" align="left" style="background-color:#89D6F2">&nbsp;Package Name: $package_temp</td>
+  <tr style="font-size:14px">
+    <td height="30" class="report_list_outside_left_compare" align="left" style="background-color:#89D6F2">&nbsp;Package Name: $package_temp</td>
   </tr>
   <tr>
     <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -115,9 +115,9 @@ DATA
 				if ( $should_print eq "TRUE" ) {
 					print <<DATA;
           <td valign="top" class="$class_td_border"><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
-              <tr style="font-size:24px">
-                <td width="80%" height="50" class="$class_name" align="left">&nbsp;Name</td>
-                <td width="20%" height="50" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">Result</td>
+              <tr style="font-size:14px">
+                <td width="80%" height="30" class="$class_name" align="left">&nbsp;Name</td>
+                <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">Result</td>
               </tr>
 DATA
 
@@ -151,6 +151,7 @@ DATA
 							&& ( $isAuto eq "TRUE" ) )
 						{
 							$startCase = "FALSE";
+							$isAuto    = "FALSE";
 							%caseInfo  = updateCaseInfo($xml);
 
 							my $id = 'ID_' . sha1_hex( $package_temp . $name );
@@ -165,13 +166,13 @@ DATA
 							$id .= '_' . $i;
 							print <<DATA;
               <tr id = "$id">
-                <td width="80%" height="50" class="$class_name" align="left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_$id');">&nbsp;$name</a></td>
-                <td width="20%" height="50" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$result">$result</td>
+                <td width="80%" height="30" class="$class_name" align="left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_$id');">&nbsp;$name</a></td>
+                <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$result">$result</td>
               </tr>
 DATA
 							print <<DATA;
               <tr id="detailed_$id" style="display:none">
-                <td height="50" colspan="2">
+                <td height="30" colspan="2">
 DATA
 							printDetailedCaseInfo( $name, 'auto', %caseInfo );
 							print <<DATA;
@@ -208,10 +209,13 @@ DATA
 							$isManual = "FALSE";
 						}
 						if (   ( $_ =~ /.*<\/testcase>.*/ )
-							&& ( $isManual eq "TRUE" ) )
+							&& ( $isManual eq "TRUE" )
+							&& ( defined( $manual_case_result{$name} ) ) )
+
 						{
 							if ( defined $manual_case_result{$name} ) {
 								$startCase = "FALSE";
+								$isManual  = "FALSE";
 								%caseInfo  = updateCaseInfo($xml);
 								my $id_textarea =
 								    "textarea__P:"
@@ -225,6 +229,7 @@ DATA
 								my $id =
 								  'ID_' . sha1_hex( $package_temp . $name );
 								if ( defined( $case_result{$id} ) ) {
+
 									if ( $case_result{$id} ne $result ) {
 										push( @color_change, $id );
 									}
@@ -235,13 +240,13 @@ DATA
 								$id .= '_' . $i;
 								print <<DATA;
               <tr id = "$id">
-                <td width="80%" height="50" class="$class_name" align="left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_$id');">&nbsp;$name</a></td>
-                <td width="20%" height="50" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$result">$result</td>
+                <td width="80%" height="30" class="$class_name" align="left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_$id');">&nbsp;$name</a></td>
+                <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$result">$result</td>
               </tr>
 DATA
 								print <<DATA;
               <tr id="detailed_$id" style="display:none">
-                <td height="50" colspan="2">
+                <td height="30" colspan="2">
 DATA
 								printDetailedCaseInfoWithComment( $name,
 									'manual', $time, $id_textarea,
@@ -258,13 +263,13 @@ DATA
 					$class_td_border = "report_list_outside_left_compare_empty";
 					print <<DATA;
           <td valign="top" class="$class_td_border"><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
-              <tr style="font-size:24px">
-                <td width="80%" height="50" class="$class_name" align="left">&nbsp;Name</td>
-                <td width="20%" height="50" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">Result</td>
+              <tr style="font-size:14px">
+                <td width="80%" height="30" class="$class_name" align="left">&nbsp;Name</td>
+                <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">Result</td>
               </tr>
               <tr>
-                <td width="80%" height="50" class="$class_name" align="left">&nbsp;None</td>
-                <td width="20%" height="50" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">None</td>
+                <td width="80%" height="30" class="$class_name" align="left">&nbsp;None</td>
+                <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">None</td>
               </tr>
 DATA
 				}
@@ -321,17 +326,14 @@ elsif ( $_POST{'delete'} ) {
 	updateSelectDir(%_POST);
 	foreach (@select_dir) {
 		system("rm -rf $result_dir_manager$_");
-		system("rm -rf $result_dir_lite$_");
 	}
 
-	my $report_ori      = $result_dir_manager . '*s';
-	my $histtory_ori    = $result_dir_manager . 'HISTORY';
-	my $latest_ori      = $result_dir_manager . 'latest';
-	my $latest_ori_lite = $result_dir_lite . 'latest';
+	my $report_ori   = $result_dir_manager . '*s';
+	my $histtory_ori = $result_dir_manager . 'HISTORY';
+	my $latest_ori   = $result_dir_manager . 'latest';
 	system("rm -rf $report_ori");
 	system("rm -rf $histtory_ori");
 	system("rm -rf $latest_ori");
-	system("rm -rf $latest_ori_lite");
 
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
@@ -402,6 +404,10 @@ elsif ( $_POST{'submit_server'} ) {
 	my $testtype    = $_POST{"testtype"};
 	my $hwproduct   = $_POST{"hwproduct"};
 
+	$target    =~ s/ /%20/g;
+	$testtype  =~ s/ /%20/g;
+	$hwproduct =~ s/ /%20/g;
+
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 	print_header( "$MTK_BRANCH Manager Test Report", "report" );
@@ -426,7 +432,8 @@ elsif ( $_POST{'submit_server'} ) {
 			$form_txt .=
 			  " --form attachment." . $i . "=@" . $result_list_txt[ $i - 1 ];
 		}
-		my $command = "curl"
+		my $command =
+		    "curl --connect-timeout 3"
 		  . $form_xml
 		  . $form_txt
 		  . " http://"
@@ -444,9 +451,16 @@ elsif ( $_POST{'submit_server'} ) {
 		  . $image_date;
 		$command =~ s/:/\\:/g;
 		$command =~ s/http\\:/http\:/g;
+		$command .= " 2>&1";
+
 		my $submit_result = `$command`;
 		if ( $submit_result =~ /"ok":"1"/ ) {
 			print show_message_dlg("Reports have been submitted");
+		}
+		elsif ( $submit_result =~ /timed out/ ) {
+			print show_error_dlg( "Connection timeout to server '"
+				  . $server_name
+				  . "' please check your network!" );
 		}
 		else {
 			print show_error_dlg($submit_result);
@@ -468,19 +482,22 @@ elsif ( $_POST{'submit'} ) {
 
 	print <<DATA;
 <div id="message"></div>
-<table width="1280" border="0" cellspacing="0" cellpadding="0">
+<table width="768" border="0" cellspacing="0" cellpadding="0">
   <tr>
     <td><form id="submit_server" name="submit_server" method="post" action="tests_report.pl">
       <table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
-          <td height="50"  background="images/report_top_button_background.png">
-<table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+          <td height="30" class="top_button_bg">
+<table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
   <tr>
-    <td width="25">&nbsp;</td>
-    <td width="200" align="left" valign="middle"><input name="server_name" type="text" class="submit_server" id="server_name" onfocus="javascript:submit_perpare('server_name');" value="Input Server Name" /></td>
-    <td width="200" align="left" valign="middle"><input name="token" type="text" class="submit_server" id="token" onfocus="javascript:submit_perpare('token');" value="Input Token" /></td>
-    <td width="200" align="left" valign="middle"><input name="image_date" type="text" class="submit_server" id="image_date" onfocus="javascript:submit_perpare('image_date');" value="Input Image Date" /></td>
-    <td width="90" align="left" valign="middle"><select name="target" id="target">
+    <td width="15">&nbsp;</td>
+    <td width="110" align="left" valign="middle"><input name="server_name" type="text" class="submit_server" id="server_name" onfocus="javascript:submit_perpare('server_name');" onblur="javascript:update_submit_text_field();" value="Input Server Name" /></td>
+    <td width="5">&nbsp;</td>
+    <td width="110" align="left" valign="middle"><input name="token" type="text" class="submit_server" id="token" onfocus="javascript:submit_perpare('token');" onblur="javascript:update_submit_text_field();" value="Input Token" /></td>
+    <td width="5">&nbsp;</td>
+    <td width="110" align="left" valign="middle"><input name="image_date" type="text" class="submit_server" id="image_date" onfocus="javascript:submit_perpare('image_date');" onblur="javascript:update_submit_text_field();" value="Input Image Date" /></td>
+    <td width="5">&nbsp;</td>
+    <td width="54" align="left" valign="middle"><select name="target" id="target" onchange="javascript:update_submit_text_field();">
         <option>Common</option>
         <option>Netbook</option>
         <option>IVI</option>
@@ -489,7 +506,8 @@ elsif ( $_POST{'submit'} ) {
         <option selected="selected">target</option>
       </select>
     </td>
-    <td width="170" align="left" valign="middle"><select name="testtype" id="testtype">
+    <td width="5">&nbsp;</td>
+    <td width="102" align="left" valign="middle"><select name="testtype" id="testtype" onchange="javascript:update_submit_text_field();">
         <option>CRX-WebAPI-Auto</option>
         <option>Full Feature</option>
         <option>Middleware</option>
@@ -509,14 +527,16 @@ elsif ( $_POST{'submit'} ) {
         <option selected="selected">testtype</option>
       </select>
     </td>
-    <td width="120" align="left" valign="middle"><select name="hwproduct" id="hwproduct">
+    <td width="5">&nbsp;</td>
+    <td width="102" align="left" valign="middle"><select name="hwproduct" id="hwproduct" onchange="javascript:update_submit_text_field();">
         <option>Cedartrail</option>
         <option>Pinetrail</option>
         <option>TunnelCreek</option>
         <option selected="selected">hwproduct</option>
       </select>
     </td>
-    <td width="125" align="center" valign="middle"><input type="submit" name="submit_server" id="submit_button" value="Submit" disabled="disabled" class="bottom_button" /></td>
+    <td width="5">&nbsp;</td>
+    <td width="75" align="center" valign="middle"><input type="submit" name="submit_server" id="submit_button" value="Submit" disabled="disabled" class="bottom_button" /></td>
     <td>&nbsp;</td>
   </tr>
 </table>
@@ -524,17 +544,17 @@ elsif ( $_POST{'submit'} ) {
         </tr>
         <tr>
           <td><table width="100%" border="1" cellpadding="0" cellspacing="0" class="report_list" frame="below" rules="all">
-            <tr style="font-size:24px">
-              <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
-              <td align="left" height="50" class="report_list_one_row">The following report(s) will be submitted to the QA report server:</td>
+            <tr style="font-size:14px">
+              <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
+              <td align="left" height="30" class="report_list_one_row">The following report(s) will be submitted to the QA report server:</td>
             </tr>
 DATA
 	my $number = 1;
 	foreach (@select_dir) {
 		print <<DATA;
             <tr>
-              <td align="left" width="4%" height="50" class="report_list_outside_left">&nbsp;&nbsp;&nbsp;$number.</td>
-              <td align="left" height="50" class="report_list_outside_right">&nbsp;$_<input type="text" name="$_" value="" style="display:none" /></td>
+              <td align="left" width="4%" height="30" class="report_list_outside_left">&nbsp;&nbsp;&nbsp;$number.</td>
+              <td align="left" height="30" class="report_list_outside_right">&nbsp;$_<input type="text" name="$_" value="" style="display:none" /></td>
             </tr>
 DATA
 		$number++;
@@ -549,11 +569,90 @@ DATA
 </table>
 <script language="javascript" type="text/javascript">
 // <![CDATA[
-function submit_perpare(id) {
-	document.getElementById(id).value = "";
-	button = document.getElementById('submit_button');
-	if (button) {
+update_submit_text_field();
+
+function update_submit_text_field() {
+	var button = document.getElementById('submit_button');
+	var server_name = document.getElementById('server_name');
+	var token = document.getElementById('token');
+	var image_date = document.getElementById('image_date');
+	var target = document.getElementById('target');
+	var testtype = document.getElementById('testtype');
+	var hwproduct = document.getElementById('hwproduct');
+
+	var server_name_status = 0;
+	var token_status = 0;
+	var image_date_status = 0;
+	var target_status = 0;
+	var testtype_status = 0;
+	var hwproduct_status = 0;
+
+	if ((server_name.value == "") || (server_name.value == "Input Server Name")) {
+		server_name.style.borderColor = "#E2E3E3";
+		server_name.value = "Input Server Name";
+	} else {
+		var reg1 = /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\$/;
+		var result1 = reg1.exec(server_name.value);
+		var reg2 = /\.com\$/;
+		var result2 = reg2.exec(server_name.value);
+		if (result1 || result2) {
+			server_name_status = 1;
+			server_name.style.borderColor = "green";
+		} else {
+			server_name.style.borderColor = "red";
+		}
+	}
+	if ((token.value == "") || (token.value == "Input Token")) {
+		token.style.borderColor = "#E2E3E3";
+		token.value = "Input Token";
+	} else {
+		var reg = /^.{15,}/;
+		var result = reg.exec(token.value);
+		if (result) {
+			token_status = 1;
+			token.style.borderColor = "green";
+		} else {
+			token.style.borderColor = "red";
+		}
+	}
+	if ((image_date.value == "") || (image_date.value == "Input Image Date")) {
+		image_date.style.borderColor = "#E2E3E3";
+		image_date.value = "Input Image Date";
+	} else {
+		var reg = /^[0-9]{8}%2E[0-9]{1}\$/;
+		var result = reg.exec(image_date.value);
+		if (result) {
+			image_date_status = 1;
+			image_date.style.borderColor = "green";
+		} else {
+			image_date.style.borderColor = "red";
+		}
+	}
+
+	if (target.value != "target") {
+		target_status = 1;
+	}
+	if (testtype.value != "testtype") {
+		testtype_status = 1;
+	}
+	if (hwproduct.value != "hwproduct") {
+		hwproduct_status = 1;
+	}
+
+	if (button && server_name_status && token_status && image_date_status
+			&& target_status && testtype_status && hwproduct_status) {
 		button.disabled = 0;
+	} else {
+		button.disabled = 1;
+	}
+}
+
+function submit_perpare(id) {
+	var reg = /^Input /;
+	var str = document.getElementById(id).value;
+	var result = reg.exec(str);
+	if (result) {
+		document.getElementById(id).value = "";
 	}
 }
 // ]]>
@@ -606,19 +705,19 @@ sub showReport {
 	getReportDisplayData();
 
 	print <<DATA;
-<table width="1280" border="0" cellspacing="0" cellpadding="0" class="report_list">
+<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
   <tr>
     <td><form id="report_list" name="report_list" method="post" action="tests_report.pl">
-      <table width="1280" border="0" cellspacing="0" cellpadding="0">
+      <table width="768" border="0" cellspacing="0" cellpadding="0">
         <tr>
-          <td height="50" background="images/report_top_button_background.png"><table width="1280" height="50" border="0" cellpadding="0" cellspacing="0">
+          <td height="30" class="top_button_bg"><table width="768" height="30" border="0" cellpadding="0" cellspacing="0">
             <tr>
               <td width="2%">&nbsp;</td>
-              <td><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+              <td><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td width="119"><input type="submit" name="compare" id="compare_button" value="Compare" disabled="disabled" class="top_button" /></td>
-                  <td width="10"><img src="images/environment-spacer.gif" alt="" width="10" height="1" /></td>
-                  <td width="119"><input type="submit" name="delete" id="delete_button" value="Delete" disabled="disabled" onclick="javascript:return confirm_remove();" class="top_button" /></td>
+                  <td width="71"><input type="submit" name="compare" id="compare_button" value="Compare" disabled="disabled" class="top_button" /></td>
+                  <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1" /></td>
+                  <td width="71"><input type="submit" name="delete" id="delete_button" value="Delete" disabled="disabled" onclick="javascript:return confirm_remove();" class="top_button" /></td>
                   <td>&nbsp;</td>
                 </tr>
               </table></td>
@@ -626,22 +725,22 @@ sub showReport {
           </table></td>
         </tr>
         <tr>
-          <td><table width="1280" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
-            <tr style="font-size:24px">
-              <td width="4%" height="50" align="center" valign="middle" class="report_list_outside_left"><label>
+          <td><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
+            <tr style="font-size:14px">
+              <td width="4%" height="30" align="center" valign="middle" class="report_list_outside_left"><label>
                 <input type="checkbox" name="check_all" id="check_all" onclick="javascript:check_uncheck_all();" />
               </label></td>
               <td align="left" width="24%" class="report_list_inside">&nbsp;Time</td>
               <td align="left" width="12%" class="report_list_inside">&nbsp;User Name</td>
               <td align="left" width="12%" class="report_list_inside">&nbsp;Platform</td>
-              <td width="24%" class="report_list_inside"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+              <td width="24%" class="report_list_inside"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td width="20%" align="center">Total</td>
-                  <td width="3%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="20" /></td>
+                  <td width="3%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="12" /></td>
                   <td width="20%" align="center">Pass</td>
-                  <td width="3%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="20" /></td>
+                  <td width="3%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="12" /></td>
                   <td width="20%" align="center">Fail</td>
-                  <td width="3%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="20" /></td>
+                  <td width="3%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="12" /></td>
                   <td width="28%" align="center">Not run</td>
                   <td width="3%" align="center">&nbsp;</td>
                 </tr>
@@ -662,13 +761,13 @@ DATA
 		my $not_run   = $report_display[ $count++ ];
 		print <<DATA;
             <tr>
-              <td width="4%" height="50" align="center" valign="middle" class="report_list_outside_left"><label>
+              <td width="4%" height="30" align="center" valign="middle" class="report_list_outside_left"><label>
                 <input type="checkbox" id="$time" name="$time" onclick="javascript:update_state();" />
               </label></td>
               <td align="left" width="24%" class="report_list_inside">&nbsp;$time</td>
               <td align="left" width="12%" class="report_list_inside">&nbsp;$user_name</td>
               <td align="left" width="12%" class="report_list_inside">&nbsp;$platform</td>
-              <td width="24%" class="report_list_inside"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+              <td width="24%" class="report_list_inside"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td width="20%" align="left">&nbsp;&nbsp;&nbsp;$total</td>
                   <td width="3%" align="center">&nbsp;</td>
@@ -680,23 +779,11 @@ DATA
                   <td width="6%" align="center">&nbsp;</td>
                 </tr>
               </table></td>
-              <td align="left" width="24%" class="report_list_outside_right"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+              <td align="left" width="24%" class="report_list_outside_right"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td><a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="38" height="38" /></a></td>
-                  <td><a href="tests_report.pl?time=$time&detailed=1"><img title="View Detailed Report" src="images/operation_view_detailed_report.png" alt="operation_view_detailed_report" width="38" height="38" border="0" /></a></td>
-DATA
-
-		if ( $not_run ne "0" ) {
-			print <<DATA;
-                  <td><a href="tests_execute_manual.pl?time=$time"><img title="Continue Execution" src="images/operation_continue_execution_enable.png" alt="operation_continue_execution_enable" width="38" height="38" /></a></td>
-DATA
-		}
-		else {
-			print <<DATA;
-                  <td><img title="Execution Complete" src="images/operation_continue_execution_disable.png" alt="operation_continue_execution_disable" width="38" height="38" /></td>
-DATA
-		}
-		print <<DATA;
+                  <td><a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="23" height="23" /></a></td>
+                  <td><a href="tests_report.pl?time=$time&detailed=1"><img title="View Detailed Report" src="images/operation_view_detailed_report.png" alt="operation_view_detailed_report" width="23" height="23" border="0" /></a></td>
+                  <td><a href="tests_execute_manual.pl?time=$time"><img title="Continue Execution" src="images/operation_continue_execution_enable.png" alt="operation_continue_execution_enable" width="23" height="23" /></a></td>
                 </tr>
               </table></td>
             </tr>
@@ -706,17 +793,17 @@ DATA
           </table></td>
         </tr>
         <tr>
-          <td height="50"><table width="1280" height="50" border="0" cellpadding="0" cellspacing="0">
+          <td height="30"><table width="768" height="30" border="0" cellpadding="0" cellspacing="0">
             <tr>
               <td width="4%">&nbsp;</td>
               <td><label></label>
-                <table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+                <table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td width="95"><input type="submit" name="mail" id="mail_button" value="Mail" disabled="disabled" onclick="javascript:mail_report();" class="bottom_button" /></td>
-                    <td width="10"><img src="images/environment-spacer.gif" alt="" width="10" height="1" /></td>
-                    <td width="95"><input type="submit" name="submit" id="submit_button" value="Submit" disabled="disabled" onclick="javascript:submit_report();" class="bottom_button" /></td>
-                    <td width="10"><img src="images/environment-spacer.gif" alt="" width="10" height="1" /></td>
-                    <td width="95"><input type="submit" name="export" id="export_button" value="Export" disabled="disabled" onclick="javascript:export_report();" class="bottom_button" /></td>
+                    <td width="57"><input type="submit" name="mail" id="mail_button" value="Mail" disabled="disabled" onclick="javascript:mail_report();" class="bottom_button" /></td>
+                    <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1" /></td>
+                    <td width="57"><input type="submit" name="submit" id="submit_button" value="Submit" disabled="disabled" onclick="javascript:submit_report();" class="bottom_button" /></td>
+                    <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1" /></td>
+                    <td width="57"><input type="submit" name="export" id="export_button" value="Export" disabled="disabled" onclick="javascript:export_report();" class="bottom_button" /></td>
                     <td>&nbsp;</td>
                   </tr>
                 </table></td>
@@ -730,6 +817,11 @@ DATA
 </table>
 <script language="javascript" type="text/javascript">
 // <![CDATA[
+var check_all_box = document.getElementById('check_all');
+if (check_all_box) {
+	update_state(); // Remember state of the buttons
+}
+
 function count_checked() {
 	var num = 0;
 	var form = document.report_list;
@@ -866,51 +958,51 @@ sub showSummaryReport {
 	my $whole_status    = "complete";
 
 	print <<DATA;
-<table width="1280" border="0" cellspacing="0" cellpadding="0" class="report_list">
-  <tr style="font-size:24px">
-    <td align="left" height="50" background="images/report_top_button_background.png">&nbsp;Test Environment</td>
+<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
+  <tr style="font-size:14px">
+    <td align="left" height="30" class="top_button_bg">&nbsp;Test Environment</td>
   </tr>
   <tr>
     <td><table width="100%" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
       <tr>
-        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Platform</td>
-        <td align="left" width="50%" height="50" class="report_list_outside_right">&nbsp;$platform</td>
+        <td align="left" width="50%" height="30" class="report_list_outside_left" style="font-size:14px">&nbsp;Platform</td>
+        <td align="left" width="50%" height="30" class="report_list_outside_right">&nbsp;$platform</td>
       </tr>
       <tr>
-        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Package Manager </td>
-        <td align="left" width="50%" height="50"class="report_list_outside_right">&nbsp;$package_manager</td>
+        <td align="left" width="50%" height="30" class="report_list_outside_left" style="font-size:14px">&nbsp;Package Manager </td>
+        <td align="left" width="50%" height="30"class="report_list_outside_right">&nbsp;$package_manager</td>
       </tr>
       <tr>
-        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Username</td>
-        <td align="left" width="50%" height="50"class="report_list_outside_right">&nbsp;$username</td>
+        <td align="left" width="50%" height="30" class="report_list_outside_left" style="font-size:14px">&nbsp;Username</td>
+        <td align="left" width="50%" height="30"class="report_list_outside_right">&nbsp;$username</td>
       </tr>
       <tr>
-        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Hostname</td>
-        <td align="left" width="50%" height="50"class="report_list_outside_right">&nbsp;$hostname</td>
+        <td align="left" width="50%" height="30" class="report_list_outside_left" style="font-size:14px">&nbsp;Hostname</td>
+        <td align="left" width="50%" height="30"class="report_list_outside_right">&nbsp;$hostname</td>
       </tr>
       <tr>
-        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Kernel</td>
-        <td align="left" width="50%" height="50"class="report_list_outside_right">&nbsp;$kernel</td>
+        <td align="left" width="50%" height="30" class="report_list_outside_left" style="font-size:14px">&nbsp;Kernel</td>
+        <td align="left" width="50%" height="30"class="report_list_outside_right">&nbsp;$kernel</td>
       </tr>
       <tr>
-        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Operation System </td>
-        <td align="left" width="50%" height="50"class="report_list_outside_right">&nbsp;$operation_system</td>
+        <td align="left" width="50%" height="30" class="report_list_outside_left" style="font-size:14px">&nbsp;Operation System </td>
+        <td align="left" width="50%" height="30"class="report_list_outside_right">&nbsp;$operation_system</td>
       </tr>
     </table></td>
   </tr>
-  <tr style="font-size:24px">
-    <td align="left" height="50" style="background-color:#88D6F2">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&detailed=1"><img title="View Detailed Report" src="images/operation_view_detailed_report.png" alt="operation_view_detailed_report" width="38" height="38" /></a></td>
+  <tr style="font-size:14px">
+    <td align="left" height="30" style="background-color:#88D6F2">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&detailed=1"><img title="View Detailed Report" src="images/operation_view_detailed_report.png" alt="operation_view_detailed_report" width="23" height="23" /></a></td>
   </tr>
   <tr>
     <td><table width="100%" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
-      <tr style="font-size:24px">
-        <td align="left" width="25%" height="50" class="report_list_outside_left">&nbsp;Package Name</td>
-        <td align="left" width="12%" height="50" class="report_list_inside">&nbsp;Type</td>
-        <td align="left" width="13%" height="50" class="report_list_inside">&nbsp;Status</td>
-        <td align="left" width="12%" height="50" class="report_list_outside_right">&nbsp;Total</td>
-        <td align="left" width="12%" height="50" class="report_list_one_row">&nbsp;Pass</td>
-        <td align="left" width="12%" height="50" class="report_list_one_row">&nbsp;Fail</td>
-        <td align="left" width="14%" height="50" class="report_list_one_row">&nbsp;Not run</td>
+      <tr style="font-size:14px">
+        <td align="left" width="25%" height="30" class="report_list_outside_left">&nbsp;Package Name</td>
+        <td align="left" width="12%" height="30" class="report_list_inside">&nbsp;Type</td>
+        <td align="left" width="13%" height="30" class="report_list_inside">&nbsp;Status</td>
+        <td align="left" width="12%" height="30" class="report_list_outside_right">&nbsp;Total</td>
+        <td align="left" width="12%" height="30" class="report_list_one_row">&nbsp;Pass</td>
+        <td align="left" width="12%" height="30" class="report_list_one_row">&nbsp;Fail</td>
+        <td align="left" width="14%" height="30" class="report_list_one_row">&nbsp;Not run</td>
       </tr>
 DATA
 
@@ -923,27 +1015,57 @@ DATA
 		}
 		if ( $_ =~ /Total\(M\):(.*)/ ) {
 			push( @data, $1 );
-			$whole_total_m = $1;
+			if ( $whole_total_m ne "none" ) {
+				$whole_total_m += int($1);
+			}
+			else {
+				$whole_total_m = $1;
+			}
 		}
 		if ( $_ =~ /Pass\(M\):(.*)/ ) {
 			push( @data, $1 );
-			$whole_pass_m = $1;
+			if ( $whole_pass_m ne "none" ) {
+				$whole_pass_m += int($1);
+			}
+			else {
+				$whole_pass_m = $1;
+			}
 		}
 		if ( $_ =~ /Fail\(M\):(.*)/ ) {
 			push( @data, $1 );
-			$whole_fail_m = $1;
+			if ( $whole_fail_m ne "none" ) {
+				$whole_fail_m += int($1);
+			}
+			else {
+				$whole_fail_m = $1;
+			}
 		}
 		if ( $_ =~ /Total\(A\):(.*)/ ) {
 			push( @data, $1 );
-			$whole_total_a = $1;
+			if ( $whole_total_a ne "none" ) {
+				$whole_total_a += int($1);
+			}
+			else {
+				$whole_total_a = $1;
+			}
 		}
 		if ( $_ =~ /Pass\(A\):(.*)/ ) {
 			push( @data, $1 );
-			$whole_pass_a = $1;
+			if ( $whole_pass_a ne "none" ) {
+				$whole_pass_a += int($1);
+			}
+			else {
+				$whole_pass_a = $1;
+			}
 		}
 		if ( $_ =~ /Fail\(A\):(.*)/ ) {
 			push( @data, $1 );
-			$whole_fail_a = $1;
+			if ( $whole_fail_a ne "none" ) {
+				$whole_fail_a += int($1);
+			}
+			else {
+				$whole_fail_a = $1;
+			}
 
 			my $package_name = shift(@data);
 			my $total_m      = shift(@data);
@@ -964,43 +1086,43 @@ DATA
 
 			print <<DATA;
       <tr>
-        <td align="left" width="25%" height="50" rowspan="2" class="report_list_outside_left">&nbsp;$package_name</td>
-        <td align="left" width="12%" height="25" class="report_list_inside">&nbsp;auto</td>
+        <td align="left" width="25%" height="30" rowspan="2" class="report_list_outside_left">&nbsp;$package_name</td>
+        <td align="left" width="12%" height="15" class="report_list_inside">&nbsp;auto</td>
 DATA
 			if ( $not_run_a eq "0" ) {
 				print <<DATA;
-        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
+        <td align="left" width="13%" height="15" class="report_list_inside">&nbsp;complete</td>
 DATA
 			}
 			else {
 				print <<DATA;
-        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
+        <td align="left" width="13%" height="15" class="report_list_inside">&nbsp;incomplete</td>
 DATA
 			}
 			print <<DATA;
-        <td align="left" width="12%" height="25" class="report_list_outside_right">&nbsp;$total_a</td>
-        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$pass_a</td>
-        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$fail_a</td>
-        <td align="left" width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$not_run_a</td>
+        <td align="left" width="12%" height="15" class="report_list_outside_right">&nbsp;$total_a</td>
+        <td align="left" width="12%" height="15" class="report_list_one_row" style="color: #137717">&nbsp;$pass_a</td>
+        <td align="left" width="12%" height="15" class="report_list_one_row" style="color: #830300">&nbsp;$fail_a</td>
+        <td align="left" width="14%" height="15" class="report_list_one_row" style="color: #A65604">&nbsp;$not_run_a</td>
       </tr>
       <tr>
-        <td align="left" width="12%" height="25" class="report_list_inside">&nbsp;manual</td>
+        <td align="left" width="12%" height="15" class="report_list_inside">&nbsp;manual</td>
 DATA
 			if ( $not_run_m eq "0" ) {
 				print <<DATA;
-        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
+        <td align="left" width="13%" height="15" class="report_list_inside">&nbsp;complete</td>
 DATA
 			}
 			else {
 				print <<DATA;
-        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
+        <td align="left" width="13%" height="15" class="report_list_inside">&nbsp;incomplete</td>
 DATA
 			}
 			print <<DATA;
-        <td align="left" width="12%" height="25" class="report_list_outside_right">&nbsp;$total_m</td>
-        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$pass_m</td>
-        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$fail_m</td>
-        <td align="left" width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$not_run_m</td>
+        <td align="left" width="12%" height="15" class="report_list_outside_right">&nbsp;$total_m</td>
+        <td align="left" width="12%" height="15" class="report_list_one_row" style="color: #137717">&nbsp;$pass_m</td>
+        <td align="left" width="12%" height="15" class="report_list_one_row" style="color: #830300">&nbsp;$fail_m</td>
+        <td align="left" width="14%" height="15" class="report_list_one_row" style="color: #A65604">&nbsp;$not_run_m</td>
       </tr>
 DATA
 			@data = ();
@@ -1015,57 +1137,57 @@ DATA
 	}
 	print <<DATA;
       <tr>
-        <td align="left" width="25%" height="50" rowspan="2" class="report_list_outside_left">&nbsp;Total</td>
-        <td align="left" width="12%" height="25" class="report_list_inside">&nbsp;auto</td>
+        <td align="left" width="25%" height="30" rowspan="2" class="report_list_outside_left">&nbsp;Total</td>
+        <td align="left" width="12%" height="15" class="report_list_inside">&nbsp;auto</td>
 DATA
 	if ( $whole_not_run_a eq "0" ) {
 		print <<DATA;
-        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
+        <td align="left" width="13%" height="15" class="report_list_inside">&nbsp;complete</td>
 DATA
 	}
 	else {
 		print <<DATA;
-        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
+        <td align="left" width="13%" height="15" class="report_list_inside">&nbsp;incomplete</td>
 DATA
 	}
 	print <<DATA;
-        <td align="left" width="12%" height="25" class="report_list_outside_right">&nbsp;$whole_total_a</td>
-        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$whole_pass_a</td>
-        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$whole_fail_a</td>
-        <td align="left" width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$whole_not_run_a</td>
+        <td align="left" width="12%" height="15" class="report_list_outside_right">&nbsp;$whole_total_a</td>
+        <td align="left" width="12%" height="15" class="report_list_one_row" style="color: #137717">&nbsp;$whole_pass_a</td>
+        <td align="left" width="12%" height="15" class="report_list_one_row" style="color: #830300">&nbsp;$whole_fail_a</td>
+        <td align="left" width="14%" height="15" class="report_list_one_row" style="color: #A65604">&nbsp;$whole_not_run_a</td>
       </tr>
       <tr>
-        <td align="left" width="12%" height="25" class="report_list_inside">&nbsp;manual</td>
+        <td align="left" width="12%" height="15" class="report_list_inside">&nbsp;manual</td>
 DATA
 	if ( $whole_not_run_m eq "0" ) {
 		print <<DATA;
-        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
+        <td align="left" width="13%" height="15" class="report_list_inside">&nbsp;complete</td>
 DATA
 	}
 	else {
 		print <<DATA;
-        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
+        <td align="left" width="13%" height="15" class="report_list_inside">&nbsp;incomplete</td>
 DATA
 	}
 	print <<DATA;
-        <td align="left" width="12%" height="25" class="report_list_outside_right">&nbsp;$whole_total_m</td>
-        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$whole_pass_m</td>
-        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$whole_fail_m</td>
-        <td align="left" width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$whole_not_run_m</td>
+        <td align="left" width="12%" height="15" class="report_list_outside_right">&nbsp;$whole_total_m</td>
+        <td align="left" width="12%" height="15" class="report_list_one_row" style="color: #137717">&nbsp;$whole_pass_m</td>
+        <td align="left" width="12%" height="15" class="report_list_one_row" style="color: #830300">&nbsp;$whole_fail_m</td>
+        <td align="left" width="14%" height="15" class="report_list_one_row" style="color: #A65604">&nbsp;$whole_not_run_m</td>
       </tr>
     </table></td>
   </tr>
-  <tr style="font-size:24px">
-    <td align="left" height="50" style="background-color:#88D6F2">&nbsp;Test Log</td>
+  <tr style="font-size:14px">
+    <td align="left" height="30" style="background-color:#88D6F2">&nbsp;Test Log</td>
   </tr>
   <tr>
-    <td align="left" height="50">
+    <td align="left" height="30">
     <label>
     <input name="log_path" id="log_path" type="text" style="display:none" value="$result_dir" />
     </label>
     &nbsp;$result_dir
-    &nbsp;&nbsp;<a href="get.pl$result_dir_tgz"><img title="Download consolidated log" src="images/operation_download.png" alt="operation_download_consolidated_log" width="38" height="38" /></a>
-    &nbsp;&nbsp;<img title="Copy URL" src="images/operation_copy_url.png" alt="operation_copy_url" width="38" height="38" onclick="javascript:copyUrl();" style="cursor:pointer" /></td>
+    &nbsp;&nbsp;<a href="get.pl$result_dir_tgz"><img title="Download consolidated log" src="images/operation_download.png" alt="operation_download_consolidated_log" width="23" height="23" /></a>
+    &nbsp;&nbsp;<img title="Copy URL" src="images/operation_copy_url.png" alt="operation_copy_url" width="23" height="23" onclick="javascript:copyUrl();" style="cursor:pointer" /></td>
   </tr>
 </table>
 <script language="javascript" type="text/javascript">
@@ -1088,15 +1210,15 @@ sub showDetailedReport {
 	my ($time) = @_;
 	print <<DATA;
   <div id="message"></div>
-  <table width="1280" border="0" cellspacing="0" cellpadding="0" class="report_list">
+  <table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
     <tr>
       <td><form id="detailed_report" name="detailed_report" method="post" action="tests_report.pl">
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
           <tr>
-            <td align="left" height="50" background="images/report_top_button_background.png"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+            <td align="left" height="30" class="top_button_bg"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 <td width="2%">&nbsp;</td>
-                <td style="font-size:24px">View by:
+                <td style="font-size:14px">View by:
                   <select name="select_view" id="select_view" onchange="javascript:filter_view();">
                     <option selected="selected">Package</option>
                     <option>Component</option>
@@ -1120,7 +1242,7 @@ sub showDetailedReport {
             </table></td>
           </tr>
           <tr>
-            <td><table width="100%" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all">
+            <td><table width="100%" border="1" cellspacing="0" cellpadding="0" style="table-layout:fixed" frame="void" rules="all">
               <tr>
                 <td width="1%" class="report_list_one_row" style="background-color:#E9F6FC">&nbsp;</td>
                 <td width="29%" valign="top" class="report_list_outside_left_bold" style="background-color:#E9F6FC">
@@ -1130,15 +1252,22 @@ sub showDetailedReport {
                 <td width="70%" valign="top" class="report_list_outside_right_bold"><div id="view_area_package">
                   <div id="view_area_package_reg" style="display:none"></div>
                   <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                    <tr style="font-size:24px">
-                      <td align="left" height="50" class="report_list_one_row">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="38" height="38" /></td>
+                    <tr style="font-size:14px">
+                      <td align="left" height="30" class="report_list_one_row"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td width="56%">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"></td>
+                            <td width="10%"><a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="23" height="23" /></a></td>
+                            <td width="4%"><label><input type="checkbox" id="$time" name="$time" checked="checked" style="display:none" /></label></td>
+                            <td width="30%" align="right"><input type="submit" name="submit" id="submit_button" value="Submit" class="bottom_button" />&nbsp;&nbsp;</td>
+                          </tr>
+                      </table></td>
                     </tr>
                     <tr>
                       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
-                          <tr style="font-size:24px">
-                            <td align="left" width="33%" height="50" class="report_list_outside_left">&nbsp;Name</td>
-                            <td align="left" width="34%" height="50" class="report_list_one_row">&nbsp;Description</td>
-                            <td width="33%" height="50" class="report_list_outside_right" align="center">Result</td>
+                          <tr style="font-size:14px">
+                            <td align="left" width="33%" height="30" class="report_list_outside_left">&nbsp;Name</td>
+                            <td align="left" width="34%" height="30" class="report_list_one_row">&nbsp;Description</td>
+                            <td width="33%" height="30" class="report_list_outside_right" align="center">Result</td>
                           </tr>
 DATA
 
@@ -1181,6 +1310,7 @@ DATA
 			}
 			if ( ( $_ =~ /.*<\/testcase>.*/ ) && ( $isAuto eq "TRUE" ) ) {
 				$startCase   = "FALSE";
+				$isAuto      = "FALSE";
 				%caseInfo    = updateCaseInfo($xml);
 				$result      = $caseInfo{"result"};
 				$description = $caseInfo{"description"};
@@ -1208,12 +1338,12 @@ DATA
 					print "\n";
 				}
 				print <<DATA;
-                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="33%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                            <td width="33%" height="30" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_package_$name" style="display:none">
-                            <td height="50" colspan="3">
+                            <td height="30" colspan="3">
 DATA
 				printDetailedCaseInfo( $name, $execution_type, %caseInfo );
 				print <<DATA;
@@ -1253,6 +1383,7 @@ DATA
 			}
 			if ( ( $_ =~ /.*<\/testcase>.*/ ) && ( $isManual eq "TRUE" ) ) {
 				$startCase = "FALSE";
+				$isManual  = "FALSE";
 				%caseInfo  = updateCaseInfo($xml);
 				if ( defined $manual_case_result{$name} ) {
 					$result      = $manual_case_result{$name};
@@ -1287,12 +1418,12 @@ DATA
 					}
 
 					print <<DATA;
-                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="33%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                            <td width="33%" height="30" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_package_$name" style="display:none">
-                            <td height="50" colspan="3">
+                            <td height="30" colspan="3">
 DATA
 					printDetailedCaseInfoWithComment( $name, $execution_type,
 						$time, $id_textarea, $id_bugnumber, %caseInfo );
@@ -1311,15 +1442,22 @@ DATA
                 </div><div id="view_area_component" style="display:none">
                   <div id="view_area_component_reg" style="display:none"></div>
                   <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                    <tr style="font-size:24px">
-                      <td align="left" height="50" class="report_list_one_row">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="38" height="38" /></td>
+                    <tr style="font-size:14px">
+                      <td align="left" height="30" class="report_list_one_row"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td width="56%">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"></td>
+                            <td width="10%"><a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="23" height="23" /></a></td>
+                            <td width="4%"><label><input type="checkbox" id="$time" name="$time" checked="checked" style="display:none" /></label></td>
+                            <td width="30%" align="right"><input type="submit" name="submit" id="submit_button" value="Submit" class="bottom_button" />&nbsp;&nbsp;</td>
+                          </tr>
+                      </table></td>
                     </tr>
                     <tr>
                       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
-                          <tr style="font-size:24px">
-                            <td align="left" width="33%" height="50" class="report_list_outside_left">&nbsp;Name</td>
-                            <td align="left" width="34%" height="50" class="report_list_one_row">&nbsp;Description</td>
-                            <td width="33%" height="50" class="report_list_outside_right" align="center">Result</td>
+                          <tr style="font-size:14px">
+                            <td align="left" width="33%" height="30" class="report_list_outside_left">&nbsp;Name</td>
+                            <td align="left" width="34%" height="30" class="report_list_one_row">&nbsp;Description</td>
+                            <td width="33%" height="30" class="report_list_outside_right" align="center">Result</td>
                           </tr>
 DATA
 
@@ -1355,6 +1493,7 @@ DATA
 			}
 			if ( ( $_ =~ /.*<\/testcase>.*/ ) && ( $isAuto eq "TRUE" ) ) {
 				$startCase   = "FALSE";
+				$isAuto      = "FALSE";
 				%caseInfo    = updateCaseInfo($xml);
 				$result      = $caseInfo{"result"};
 				$description = $caseInfo{"description"};
@@ -1384,12 +1523,12 @@ DATA
 					print "\n";
 				}
 				print <<DATA;
-                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="33%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                            <td width="33%" height="30" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_component_$name" style="display:none">
-                            <td height="50" colspan="3">
+                            <td height="30" colspan="3">
 DATA
 				printDetailedCaseInfo( $name, $execution_type, %caseInfo );
 				print <<DATA;
@@ -1423,6 +1562,7 @@ DATA
 			}
 			if ( ( $_ =~ /.*<\/testcase>.*/ ) && ( $isManual eq "TRUE" ) ) {
 				$startCase   = "FALSE";
+				$isManual    = "FALSE";
 				%caseInfo    = updateCaseInfo($xml);
 				$description = $caseInfo{"description"};
 				if ( defined $manual_case_result{$name} ) {
@@ -1459,12 +1599,12 @@ DATA
 						print "\n";
 					}
 					print <<DATA;
-                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="33%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                            <td width="33%" height="30" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_component_$name" style="display:none">
-                            <td height="50" colspan="3">
+                            <td height="30" colspan="3">
 DATA
 					printDetailedCaseInfoWithComment( $name, $execution_type,
 						$time, $id_textarea, $id_bugnumber, %caseInfo );
@@ -1483,15 +1623,22 @@ DATA
                 </div><div id="view_area_test_type" style="display:none">
                   <div id="view_area_test_type_reg" style="display:none"></div>
                   <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                    <tr style="font-size:24px">
-                      <td align="left" height="50" class="report_list_one_row">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="38" height="38" /></td>
+                    <tr style="font-size:14px">
+                      <td align="left" height="30" class="report_list_one_row"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td width="56%">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"></td>
+                            <td width="10%"><a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="23" height="23" /></a></td>
+                            <td width="4%"><label><input type="checkbox" id="$time" name="$time" checked="checked" style="display:none" /></label></td>
+                            <td width="30%" align="right"><input type="submit" name="submit" id="submit_button" value="Submit" class="bottom_button" />&nbsp;&nbsp;</td>
+                          </tr>
+                      </table></td>
                     </tr>
                     <tr>
                       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
-                          <tr style="font-size:24px">
-                            <td align="left" width="33%" height="50" class="report_list_outside_left">&nbsp;Name</td>
-                            <td align="left" width="34%" height="50" class="report_list_one_row">&nbsp;Description</td>
-                            <td width="33%" height="50" class="report_list_outside_right" align="center">Result</td>
+                          <tr style="font-size:14px">
+                            <td align="left" width="33%" height="30" class="report_list_outside_left">&nbsp;Name</td>
+                            <td align="left" width="34%" height="30" class="report_list_one_row">&nbsp;Description</td>
+                            <td width="33%" height="30" class="report_list_outside_right" align="center">Result</td>
                           </tr>
 DATA
 
@@ -1536,6 +1683,7 @@ DATA
 			}
 			if ( ( $_ =~ /.*<\/testcase>.*/ ) && ( $isAuto eq "TRUE" ) ) {
 				$startCase   = "FALSE";
+				$isAuto      = "FALSE";
 				%caseInfo    = updateCaseInfo($xml);
 				$result      = $caseInfo{"result"};
 				$description = $caseInfo{"description"};
@@ -1553,7 +1701,7 @@ DATA
 						if ( $temp_spec[$i] eq "" ) {
 							$temp_spec[$i] = "none";
 							print
-'<p style="font-size:18px">&nbsp;<span style="color:red">'
+'<p style="font-size:10px">&nbsp;<span style="color:red">'
 							  . $name
 							  . '</span> got "::" in [SPEC]</p>';
 						}
@@ -1568,7 +1716,7 @@ DATA
 				}
 				elsif ( $test_type eq "compliance" ) {
 					print
-					  '<p style="font-size:18px">&nbsp;<span style="color:red">'
+					  '<p style="font-size:10px">&nbsp;<span style="color:red">'
 					  . $name
 					  . '</span> got no [SPEC] in xml</p>';
 				}
@@ -1604,12 +1752,12 @@ DATA
 					print "\n";
 				}
 				print <<DATA;
-                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="33%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                            <td width="33%" height="30" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_test_type_$name" style="display:none">
-                            <td height="50" colspan="3">
+                            <td height="30" colspan="3">
 DATA
 				printDetailedCaseInfo( $name, $execution_type, %caseInfo );
 				print <<DATA;
@@ -1649,6 +1797,7 @@ DATA
 			}
 			if ( ( $_ =~ /.*<\/testcase>.*/ ) && ( $isManual eq "TRUE" ) ) {
 				$startCase = "FALSE";
+				$isManual  = "FALSE";
 				%caseInfo  = updateCaseInfo($xml);
 				if ( defined $manual_case_result{$name} ) {
 					$result      = $manual_case_result{$name};
@@ -1667,7 +1816,7 @@ DATA
 							if ( $temp_spec[$i] eq "" ) {
 								$temp_spec[$i] = "none";
 								print
-'<p style="font-size:18px">&nbsp;<span style="color:red">'
+'<p style="font-size:10px">&nbsp;<span style="color:red">'
 								  . $name
 								  . '</span> got "::" in [SPEC]</p>';
 							}
@@ -1682,7 +1831,7 @@ DATA
 					}
 					elsif ( $test_type eq "compliance" ) {
 						print
-'<p style="font-size:18px">&nbsp;<span style="color:red">'
+'<p style="font-size:10px">&nbsp;<span style="color:red">'
 						  . $name
 						  . '</span> got no [SPEC] in xml</p>';
 					}
@@ -1724,12 +1873,12 @@ DATA
 						print "\n";
 					}
 					print <<DATA;
-                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="33%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                            <td width="33%" height="30" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_test_type_$name" style="display:none">
-                            <td height="50" colspan="3">
+                            <td height="30" colspan="3">
 DATA
 					printDetailedCaseInfoWithComment( $name, $execution_type,
 						$time, $id_textarea, $id_bugnumber, %caseInfo );
@@ -1838,7 +1987,7 @@ DATA
 				var title = node.title;
 				var reg = title;
 				document.getElementById("view_area_package_reg").innerHTML = reg;
-				var page = document.all;
+				var page = document.getElementsByTagName("*");
 				for ( var i = 0; i < page.length; i++) {
 					var temp_id = page[i].id;
 					if (temp_id.indexOf("case_package_") >= 0) {
@@ -1946,7 +2095,7 @@ DATA
 				var reg = title;
 				
 				document.getElementById("view_area_component_reg").innerHTML = reg;
-				var page = document.all;
+				var page = document.getElementsByTagName("*");
 				for ( var i = 0; i < page.length; i++) {
 					var temp_id = page[i].id;
 					if (temp_id.indexOf("case_component_") >= 0) {
@@ -2164,7 +2313,7 @@ DATA
 					reg = title;
 				}
 				document.getElementById("view_area_test_type_reg").innerHTML = title;
-				var page = document.all;
+				var page = document.getElementsByTagName("*");
 				for ( var i = 0; i < page.length; i++) {
 					var temp_id = page[i].id;
 					if (temp_id.indexOf("case_test_type_") >= 0) {
@@ -2213,7 +2362,7 @@ function filter() {
 	if (view == "Package") {
 		// get which tree element was clicked
 		var reg_view = document.getElementById('view_area_package_reg').innerHTML;
-		var page = document.all;
+		var page = document.getElementsByTagName("*");
 		for ( var i = 0; i < page.length; i++) {
 			var temp_id = page[i].id;
 			if (temp_id.indexOf("case_package_") >= 0) {
@@ -2273,7 +2422,7 @@ function filter() {
 	if (view == "Component") {
 		// get which tree element was clicked
 		var reg_view = document.getElementById('view_area_component_reg').innerHTML;
-		var page = document.all;
+		var page = document.getElementsByTagName("*");
 		for ( var i = 0; i < page.length; i++) {
 			var temp_id = page[i].id;
 			if (temp_id.indexOf("case_component_") >= 0) {
@@ -2333,7 +2482,7 @@ function filter() {
 	if (view == "Test type") {
 		// get which tree element was clicked
 		var reg_view = document.getElementById('view_area_test_type_reg').innerHTML;
-		var page = document.all;
+		var page = document.getElementsByTagName("*");
 		for ( var i = 0; i < page.length; i++) {
 			var temp_id = page[i].id;
 			if (temp_id.indexOf("case_test_type_") >= 0) {
@@ -2482,7 +2631,7 @@ function filter_view() {
 
 // set all failed cases to display
 function update_case_display(view) {
-	var page = document.all;
+	var page = document.getElementsByTagName("*");
 	for ( var i = 0; i < page.length; i++) {
 		var temp_id = page[i].id;
 		if (temp_id.indexOf("case_") >= 0) {
@@ -2785,19 +2934,19 @@ sub updateResultList_wanted {
 
 sub getReportDisplayData {
 	find( \&getReportDisplayData_wanted, $result_dir_manager );
-}
 
-sub getReportDisplayData_wanted {
-	my $time      = "none";
-	my $user_name = "none";
-	my $platform  = "none";
-	my $total     = 0;
-	my $pass      = 0;
-	my $fail      = 0;
-	my $not_run   = 0;
-	my $dir       = $File::Find::name;
-	if ( $dir =~ /.*\/([0-9:\.\-]+)$/ ) {
+	@ordered_time = reverse(@reverse_time);
+	foreach (@ordered_time) {
+		my $time      = "none";
+		my $user_name = "none";
+		my $platform  = "none";
+		my $total     = 0;
+		my $pass      = 0;
+		my $fail      = 0;
+		my $not_run   = 0;
+		my $dir       = $_;
 		open FILE, $dir . "/runconfig" or die $!;
+
 		while (<FILE>) {
 			if ( $_ =~ /Hardware Platform:(.*)/ ) {
 				$platform = $1;
@@ -2828,6 +2977,13 @@ sub getReportDisplayData_wanted {
 		push( @report_display, $pass );
 		push( @report_display, $fail );
 		push( @report_display, ( int($total) - int($pass) - int($fail) ) );
+	}
+}
+
+sub getReportDisplayData_wanted {
+	my $dir = $File::Find::name;
+	if ( $dir =~ /.*\/([0-9:\.\-]+)$/ ) {
+		push( @reverse_time, $dir );
 	}
 }
 

@@ -26,8 +26,8 @@ use strict;
 use Templates;
 use File::Find;
 use FindBin;
+use Data::Dumper;
 
-my $profile_dir_manager = $FindBin::Bin . "/../../../profiles/test/";
 if ( !( -e $profile_dir_manager ) ) {
 	system( 'mkdir ' . $profile_dir_manager );
 }
@@ -68,7 +68,6 @@ my @priority_item        = ();
 my @component_item       = ();
 my @execution_type_item  = ();
 
-my $testSuitesPath        = "none";
 my $package_name_number   = 0;
 my $count_num             = 0;
 my $number                = 0;
@@ -117,7 +116,6 @@ my @load_profile_result_pkg_name;
 my @select_packages_filter;
 my @checkbox_packages;
 
-my $test_definition_dir = "/usr/share/";
 my $case_value;
 my @case_value;
 my @case_id;
@@ -139,34 +137,53 @@ my @one_package_case_count_total = ();
 
 my @filter_auto_count;
 my @filter_manual_count;
-my $download_cmd  = "wget -r -l 1 -nd -A rpm --spider";
-my $download_path = 
 my @package_version_installed   = ();
 my @package_version_latest      = ();
 my @update_package_flag         = ();
 my @uninstall_package_name      = ();
 my @uninstall_package_version   = ();
 my $UNINSTALL_PACKAGE_COUNT_MAX = "100";
+my $sort_flag                   = 0;
 
 # press delete package button
 if ( $_GET{"delete_package"} ) {
+	syncDefination();
 	my $flag_i = 0;
 	my @package_name_temp;
 	my $checkbox_value  = $_GET{"checkbox"};
 	my @select_packages = split /\*/, $checkbox_value;
 	my $get_value       = $_GET{"advanced"};
 	my @get_value       = split /\*/, $get_value;
+	$sort_flag = $_GET{'sort_flag'};
 
 	ScanPackages();
 	foreach (@package_name) {
 		my $temp = $_;
 		if ( $_GET{ "delete_" . "$temp" } ) {
-			system("rpm -e $_");
+			my $cmd          = "sdb shell 'rpm -qa | grep " . $temp . "'";
+			my $have_package = `$cmd`;
+			if ( $have_package =~ /$temp/ ) {
+				system("sdb shell rpm -e $temp");
+				my $cmd = "sdb shell 'wrt-launcher -l | grep " . $temp . "'";
+				my @package_items = `$cmd`;
+				foreach (@package_items) {
+					my $package_id = "none";
+					if ( $_ =~ /^\s+(\d+)\s+(\d+)/ ) {
+						$package_id = $2;
+					}
+					if ( $package_id ne "none" ) {
+						system(
+"sdb shell wrt-installer -u $package_id 2>&1 >/dev/null"
+						);
+					}
+				}
+			}
 		}
 		else {
 			push( @package_name_temp, $_ );
 		}
 	}
+	syncDefination();
 
 	@package_name = @package_name_temp;
 
@@ -182,6 +199,15 @@ if ( $_GET{"delete_package"} ) {
 	$advanced_value_component      = $get_value[9];
 
 	CountPackages();
+	@sort_package_name    = sort @package_name;
+	@reverse_package_name = reverse @sort_package_name;
+	if ( !$sort_flag ) {
+		@package_name = @sort_package_name;
+	}
+	else {
+		@package_name = @reverse_package_name;
+	}
+
 	AnalysisVersion();
 	CreateFilePath();
 	AnalysisTestsXML();
@@ -207,6 +233,7 @@ if ( $_GET{"delete_package"} ) {
 }
 
 elsif ( $_GET{'view_single_package'} ) {
+	syncDefination();
 	my $get_value  = $_GET{"advanced"};
 	my @get_value  = split /\*/, $get_value;
 	my $view_count = 0;
@@ -242,7 +269,11 @@ elsif ( $_GET{'view_single_package'} ) {
 	FilterCase();
 	UpdateViewPageSelectItem();
 
-	my $i;
+	for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
+		$view_package_name_flag[$count] = $package_name_flag[$count];
+	}
+
+	my $i = 0;
 	while ( $i < @package_name ) {
 		if ( $package_name_flag[$i] eq "a" ) {
 			$package_name_flag[$i] = "b";
@@ -252,11 +283,13 @@ elsif ( $_GET{'view_single_package'} ) {
 		}
 		$i++;
 	}
+
 	ViewDetailedInfo();
 }
 
 # press view button
 elsif ( $_POST{'view_package_info'} ) {
+	syncDefination();
 	my %hash = %_POST;
 	my $key;
 	my $value;
@@ -293,7 +326,7 @@ elsif ( $_POST{'view_package_info'} ) {
 		}
 	}
 
-	my $i;
+	my $i = 0;
 	while ( $i < @package_name ) {
 		if ( $package_name_flag[$i] eq "a" ) {
 			$package_name_flag[$i] = "b";
@@ -309,6 +342,7 @@ elsif ( $_POST{'view_package_info'} ) {
 }
 
 elsif ( $_POST{'view_filter_package_list'} ) {
+	syncDefination();
 	$advanced_value_version      = $_POST{"select_ver"};
 	$advanced_value_architecture = $_POST{"select_arc"};
 
@@ -329,137 +363,16 @@ elsif ( $_POST{'view_filter_package_list'} ) {
 	FilterCaseValue();
 	FilterCase();
 	UpdateViewPageSelectItem();
+
+	for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
+		$view_package_name_flag[$count] = $package_name_flag[$count];
+	}
 	ViewDetailedInfo();
-}
-
-# press Execute button
-elsif ( $_POST{'execute_profile'} ) {
-	my $key;
-	my $value;
-	my $flag_i    = 0;
-	my $count     = 0;
-	my $count_cn  = 0;
-	my $count_ver = 0;
-	my %hash      = %_POST;
-	my $auto_case_number;
-	my $manual_case_number;
-	my @auto_case_number;
-	my @manual_case_number;
-	my @select_packages;
-	my @select_packages_filter;
-
-	$count_package_number_post     = $_POST{"package_name_number"};
-	$advanced_value_version        = $_POST{"select_ver"};
-	$advanced_value_architecture   = $_POST{"select_arc"};
-	$advanced_value_category       = $_POST{"select_category"};
-	$advanced_value_priority       = $_POST{"select_pri"};
-	$advanced_value_status         = $_POST{"select_status"};
-	$advanced_value_execution_type = $_POST{"select_exe"};
-	$advanced_value_test_suite     = $_POST{"select_testsuite"};
-	$advanced_value_type           = $_POST{"select_type"};
-	$advanced_value_test_set       = $_POST{"select_testset"};
-	$advanced_value_component      = $_POST{"select_com"};
-
-	open OUT, '> ' . $profile_dir_manager . 'temp_profile';
-
-	ScanPackages();
-
-	CountPackages();
-
-	AnalysisVersion();
-
-	CreateFilePath();
-
-	AnalysisTestsXML();
-
-	FilterCaseValue();
-
-	FilterCase();
-
-	print OUT "[Auto]\n";
-
-	while ( ( $key, $value ) = each %hash ) {
-		if ( $key =~ /checkbox/ ) {
-			push( @select_packages, $key );
-		}
-	}
-
-	my @temp;
-	while ( $flag_i < @package_name ) {
-		if ( $package_name_flag[$flag_i] eq "a" ) {
-			push( @temp, "[Display-packages]:" . $package_name[$flag_i] );
-			push( @load_profile_result_pkg_name, $package_name[$flag_i] );
-			foreach (@select_packages) {
-				if ( $_ eq "checkbox_" . $package_name[$flag_i] ) {
-					s/checkbox_//g;
-					push( @select_packages_filter, $_ );
-					$auto_case_number   = $filter_auto_count[$flag_i];
-					$manual_case_number = $filter_manual_count[$flag_i];
-					push( @auto_case_number,   $auto_case_number );
-					push( @manual_case_number, $manual_case_number );
-				}
-			}
-		}
-		else {
-			push( @temp, "[None-Display-packages]:" . $package_name[$flag_i] );
-		}
-		$flag_i++;
-	}
-
-	for ( my $i = 0 ; $i < @select_packages_filter ; $i++ ) {
-		print OUT $select_packages_filter[$i] . "("
-		  . $auto_case_number[$i] . " "
-		  . $manual_case_number[$i] . ")\n";
-	}
-
-	print OUT "[/Auto]\n";
-
-	print OUT "\n[Advanced-feature]\n";
-	while ( ( $key, $value ) = each %hash ) {
-		if ( ( $key =~ /\_ver/ ) || ( $key =~ /\_arc/ ) ) {
-			print OUT $key . "=" . $value . "\n";
-		}
-	}
-
-	print OUT "select_category=" . $advanced_value_category . "\n";
-	print OUT "select_pri=" . $advanced_value_priority . "\n";
-	print OUT "select_status=" . $advanced_value_status . "\n";
-	print OUT "select_exe=" . $advanced_value_execution_type . "\n";
-	print OUT "select_testsuite=" . $advanced_value_test_suite . "\n";
-	print OUT "select_type=" . $advanced_value_type . "\n";
-	print OUT "select_testset=" . $advanced_value_test_set . "\n";
-	print OUT "select_com=" . $advanced_value_component . "\n";
-
-	print OUT "\n";
-	foreach (
-		my $count_cn = 0 ;
-		$count_cn < $count_package_number_post ;
-		$count_cn++
-	  )
-	{
-		print OUT "\n[Package"
-		  . $count_cn
-		  . "-count]:"
-		  . $case_number[ 3 * $count_cn ];
-	}
-	print OUT "\n";
-	foreach (@version) {
-		print OUT "\n[Package" . $count_ver . "-version]:" . $_;
-		$count_ver++;
-	}
-	print OUT "\n\n";
-	for ( my $i = 0 ; $i < @select_packages_filter ; $i++ ) {
-		print OUT "[select-packages]: " . $select_packages_filter[$i] . "\n";
-	}
-	print <<DATA;
-		<script>
-		document.location="tests_execute.pl?profile=temp_profile"
-		</script>
-DATA
 }
 
 #press load button
 elsif ( $_GET{'load_profile_button'} ) {
+	syncDefination();
 	my $file;
 	my $flag_i            = 0;
 	my $load_profile_name = $_GET{"load_profile_button"};
@@ -535,6 +448,8 @@ elsif ( $_GET{'load_profile_button'} ) {
 	}
 
 	ScanPackages();
+	@sort_package_name = sort @package_name;
+	@package_name      = @sort_package_name;
 
 	CountPackages();
 
@@ -553,8 +468,11 @@ elsif ( $_GET{'load_profile_button'} ) {
 	closedir LOADPROFILE;
 }
 else {
+	syncDefination();
 	ScanPackages();
 	CountPackages();
+	@sort_package_name = sort @package_name;
+	@package_name      = @sort_package_name;
 	AnalysisVersion();
 	my $i = @package_name;
 	if ( $i eq "0" ) {
@@ -571,34 +489,11 @@ else {
 #update custom page
 sub UpdatePage {
 	CountPackages();
-	@sort_package_name    = sort @package_name;
-	@reverse_package_name = reverse @sort_package_name;
-	if ( $_GET{'order'} ) {
-		if ( $_GET{'order'} eq "down" ) {
-			@package_name = @reverse_package_name;
-			$image        = "images/up_and_down_2.png";
-			$value        = "up";
-		}
-		elsif ( $_GET{'order'} eq "up" ) {
-			@package_name = @sort_package_name;
-			$image        = "images/up_and_down_1.png";
-			$value        = "down";
-		}
-	}
-
-	if ( $value eq "" ) {
-		$value = "up";
-	}
-	if ( $image eq "" ) {
-		$image = "images/up_and_down_2.png";
-	}
 
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 
 	print_header( "$MTK_BRANCH Manager Main Page", "custom" );
-
-	AnalysisVersion();
 
 	CreateFilePath();
 
@@ -611,50 +506,50 @@ sub UpdatePage {
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
 	
-	<table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="">
-	      <table width="100%" height="50" border="0" cellspacing="0" cellpadding="0">
+	      <table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">
 	        <tr>
-	          <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0" background="images/report_top_button_background.png">
+	          <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
 	            <tr>
-	              <td width="2.5%" height="50" nowrap="nowrap">&nbsp;</td>
-	              <td width="17%" height="50" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
+	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                  <td width="47%" height="50" align="right" class="custom_title">Architecture:&nbsp</td>
-	                  <td width="53%" height="50"><select id="select_arc" name="select_arc" class="custom_select">
+	                  <td width="47%" height="30" align="right" class="custom_title">Architecture:&nbsp</td>
+	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
 	                    <option>X86</option>
 	                  </select>                  </td>
 	                </tr>
 	              </table></td>
-	              <td width="13%" height="50" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                <td width="13%" height="50" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="50" align="right" class="custom_title">Version:&nbsp</td>
-	                  <td width="50%" height="50" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_case_item();">
+	                <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
+	                  <td width="37%" height="30" align="right" class="custom_title">Version:&nbsp</td>
+	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_case_item();">
 DATA
 	DrawVersionSelect();
 	print <<DATA;
                   </select></td>
                 </tr>
               </table></td>
-              <td width="2%" height="50" nowrap="nowrap">&nbsp;</td>
-              <td width="4%" height="50" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
-              <td width="4.5%" height="50" nowrap="nowrap"><a id="sort_packages" href="tests_custom.pl?order=$value"><img src="$image" width="38" height="38"/></a></td>
-              <td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
-              <td width="42%" height="50" align="left" nowrap="nowrap">
+              <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
+              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
+              <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" src="images/up_and_down_1.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
+              <td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
+              <td width="42%" height="30" align="left" nowrap="nowrap">
 				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
 			  </td>
-              <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
+              <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
         <tr>
-          <td id="list_advanced" style="display:none"><table width="1280" border="0" cellspacing="0" cellpadding="0" frame="below" rules="none">
+          <td id="list_advanced" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="below" rules="none">
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;category:</td><td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;category:</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawCategorySelect();
@@ -662,9 +557,9 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;priority:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;priority:<td>
                     <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawPrioritySelect();
@@ -674,9 +569,9 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="30%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="30%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;status:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;status:<td>
                     <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawStatusSelect();
@@ -684,9 +579,9 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;execution_type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;execution_type:<td>
                     <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawExecutiontypeSelect();
@@ -696,9 +591,9 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;testsuite:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;testsuite:<td>
                     <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawTestsuiteSelect();
@@ -706,9 +601,9 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;type:<td>
                     <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawTypeSelect();
@@ -718,9 +613,9 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
-                    <td width="30%" height="50" align="left" class="custom_title">&nbsp;testset:<td>
+                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;testset:<td>
                       <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawTestsetSelect();
@@ -728,9 +623,9 @@ DATA
                     </select>                    </td>
                   </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;component:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;component:<td>
                     <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawComponentSelect();
@@ -745,15 +640,16 @@ DATA
           <td></td>
         </tr>
         <tr>
-          <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
             <tr>
-              <td><table width="100%" height="50" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
+              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" style="table-layout:fixed" frame="below" rules="all">
                 <tr>
-              <td width="4%" height="36" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Package Name</td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottom_title">&nbsp;Operation</td>
+              <td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
+              <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
+              <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_title">Package Name</td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottom_title">&nbsp;Operation</td>
               <input type="hidden" id="package_name_number" name="package_name_number" value="$package_name_number">
                 </tr>
               </table></td>
@@ -773,7 +669,7 @@ DATA
             <tr>
               <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="10%" valign="top"><div align="center">
-                <input type="submit" id="execute_profile" name="execute_profile" class="large_button" disabled="true" value="Execute"/>
+                <input type="button" id="execute_profile" name="execute_profile" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();"/>
               </div></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" valign="top" class="backbackground_button"><div align="center">
@@ -783,7 +679,7 @@ DATA
               <td width="6%" class="backbackground_button">&nbsp;</td>
               <td width="11%" valign="top"><table>
 		        <tr>
-		        	<td height="1" class="backbackground_button"></td>
+		        	<td height="0.6" class="backbackground_button"></td>
 		        </tr>
               	<tr>
               		<td nowrap="nowrap" class="custom_font">Profile name:</td>
@@ -796,7 +692,7 @@ DATA
 		        </tr>
                 <tr>
                   <td>
-                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="" style="width: 14em;" onkeyup="showtips();if(event.keyCode==27)c();" onkeydown="enterTips()" autocomplete=off /></label></td>
+                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="" style="width: 14em;" onkeyup="showtips(event.target);if(event.keyCode==27)c();" onkeydown="enterTips(event.keyCode)" autocomplete=off /></label></td>
                 </tr>
                 <tr>
                   <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
@@ -812,7 +708,7 @@ DATA
               <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" type="button" class="medium_button" value="Load" onclick="javascript:onLoad();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="16" height="1" /></td>
+              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
             </tr>
           </table></td>
         </tr>
@@ -822,28 +718,9 @@ DATA
 
 #When no packages in device, update the page.
 sub UpdateNullPage {
-
-	@sort_package_name    = sort @package_name;
-	@reverse_package_name = reverse @sort_package_name;
-	if ( $_GET{'order'} ) {
-		if ( $_GET{'order'} eq "down" ) {
-			@package_name = @reverse_package_name;
-			$image        = "images/up_and_down_2.png";
-			$value        = "up";
-		}
-		elsif ( $_GET{'order'} eq "up" ) {
-			@package_name = @sort_package_name;
-			$image        = "images/up_and_down_1.png";
-			$value        = "down";
-		}
-	}
-
-	if ( $value eq "" ) {
-		$value = "up";
-	}
-	if ( $image eq "" ) {
-		$image = "images/up_and_down_2.png";
-	}
+	@sort_package_name = sort @package_name;
+	@package_name      = @sort_package_name;
+	$image             = "images/up_and_down_1.png";
 
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
@@ -852,102 +729,102 @@ sub UpdateNullPage {
 	print show_error_dlg("");
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
-	<table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="">
-	      <table width="100%" height="50" border="0" cellspacing="0" cellpadding="0">
+	      <table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">
 	        <tr>
-	          <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0" background="images/report_top_button_background.png">
+	          <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
 	            <tr>
-	              <td width="2.5%" height="50" nowrap="nowrap">&nbsp;</td>
-	              <td width="17%" height="50" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
+	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                  <td width="47%" height="50" align="right" class="custom_title">Architecture:&nbsp</td>
-	                  <td width="53%" height="50"><select id="select_arc" name="select_arc" class="custom_select">
+	                  <td width="47%" height="30" align="right" class="custom_title">Architecture:&nbsp</td>
+	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
 	                    <option>X86</option>
 	                  </select>                  </td>
 	                </tr>
 	              </table></td>
-	              <td width="13%" height="50" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                <td width="13%" height="50" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="50" align="right" class="custom_title">Version:&nbsp</td>
-	                  <td width="50%" height="50" ><select id="select_ver" name="select_ver" value="Any Version" class="custom_select" onchange="javascript:filter_case_item();">
+	                <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
+	                  <td width="37%" height="30" align="right" class="custom_title">Version:&nbsp</td>
+	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" value="Any Version" class="custom_select" onchange="javascript:filter_case_item();">
                   </select></td>
                 </tr>
               </table></td>
-              <td width="2%" height="50" nowrap="nowrap">&nbsp;</td>
-              <td width="4%" height="50" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
-              <td width="4.5%" height="50" nowrap="nowrap"><a id="sort_packages" href="tests_custom.pl?order=$value"><img src="$image" width="38" height="38"/></a></td>
-              <td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
-              <td width="42%" align="left" height="50" nowrap="nowrap">
+              <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
+              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
+              <td width="4.5%" height="30" nowrap="nowrap"><a id="sort_packages" href="tests_custom.pl?order=$value"><img src="$image" width="23" height="23"/></a></td>
+              <td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
+              <td width="42%" align="left" height="30" nowrap="nowrap">
 				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
 			  </td>
-              <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
+              <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
         <tr>
-          <td id="list_advanced" style="display:none"><table width="1280" border="0" cellspacing="0" cellpadding="0" frame="below" rules="none">
+          <td id="list_advanced" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="below" rules="none">
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;category:</td><td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;category:</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" value="Any Category" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;priority:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;priority:<td>
                     <select name="select_pri" id="select_pri" class="custom_select" value="And Priority" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
             </tr>
             <tr>
-              <td width="30%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="30%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;status:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;status:<td>
                     <select name="select_status" id="select_status" class="custom_select" value="Any Status" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;execution_type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;execution_type:<td>
                     <select name="select_exe" id="select_exe" class="custom_select" value="Any Execution Type" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
             </tr>
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;testsuite:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;testsuite:<td>
                     <select name="select_testsuite" id="select_testsuite" class="custom_select" value="Any Test Suite" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;type:<td>
                     <select name="select_type" id="select_type" class="custom_select" value="Any Type" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
             </tr>
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
-                    <td width="30%" height="50" align="left" class="custom_title">&nbsp;testset:<td>
+                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;testset:<td>
                       <select name="select_testset" id="select_testset" class="custom_select" value="Any Test Set" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                   </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;component:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;component:<td>
                     <select name="select_com" id="select_com" class="custom_select" value="Any Component" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
@@ -959,15 +836,15 @@ sub UpdateNullPage {
           <td></td>
         </tr>
         <tr>
-          <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
             <tr>
-              <td><table width="100%" height="50" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
+              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
                 <tr>
-              <td width="4%" height="36" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Package Name</td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottom_title">&nbsp;Opreation</td>
+              <td width="4%" height="22" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Package Name</td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottom_title">&nbsp;Opreation</td>
                 </tr>
               </table></td>
             </tr>
@@ -984,11 +861,11 @@ DATA
 	DrawUninstallPackageList();
 	print <<DATA;
         <tr>
-          <td><table width="100%" height="50" border="0" align="center" class="backbackground_button" cellpadding="0" cellspacing="0">
+          <td><table width="100%" height="30" border="0" align="center" class="backbackground_button" cellpadding="0" cellspacing="0">
             <tr>
               <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="10%"><div align="center">
-                <input type="submit" id="execute_profile" name="execute_profile" class="large_button" disabled="true" value="Execute"/>
+                <input type="button" id="execute_profile" name="execute_profile" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();"/>
               </div></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" class="backbackground_button"><div align="center">
@@ -1003,7 +880,7 @@ DATA
 		        </tr>
                 <tr>
                   <td>
-                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" disabled="true" value="" style="width: 14em;" onkeyup="showtips();if(event.keyCode==27)c();" onkeydown="enterTips()" autocomplete=off /></label></td>
+                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" disabled="true" value="" style="width: 14em;" onkeyup="showtips(event.target);if(event.keyCode==27)c();" onkeydown="enterTips(event.keyCode)" autocomplete=off /></label></td>
                 </tr>
                 <tr>
                   <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
@@ -1034,11 +911,11 @@ sub ViewDetailedInfo {
 	my $case_count_flag = 0;
 	print <<DATA;
 	<tr>
-		<td><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+		<td><table width="100%" height="600px" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none" style="table-layout:fixed">
         	<tr>
 	            <td width="1%" class="report_list_one_row" style="background-color:#E9F6FC">&nbsp;</td>
-	            <td width="29%" height="600px" valign="top" class="view_package_list_info" style="overflow:auto;background-color:#E9F6FC">
-					<div id="tree_area_package" style="height:600px;width:300px">
+	            <td width="29%" height="600px" valign="top" class="view_package_list_info" style="text-wrap:none;background-color:#E9F6FC">
+					<div id="tree_area_package" style="overflow-y:auto;overflow-x:auto;height:600px;width:100%" >
 						<div class='view_no_match_testcase_message' id="no_match_testcase_message" style="display:none">No match testcase!</div>
 						<div class='view_no_match_testcase_message' id="no_select_testcase_message" style="display:none">Please select testcase!</div>
 					</div>
@@ -1281,7 +1158,7 @@ DATA
 										  . $testcase_number
 										  . ' = new YAHOO.widget.TextNode("'
 										  . ' <span class=\'view_case_name_list\'>'
-										  . '<a class=\'view_case_detail\' onclick=\'javascript:onCaseClick('
+										  . '<a onclick=\'javascript:onCaseClick('
 										  . $case_value_flag_count . ');\'>'
 										  . $case_value . '</a>'
 										  . '", set_'
@@ -1360,7 +1237,7 @@ DATA
 											  . $testcase_number
 											  . ' = new YAHOO.widget.TextNode("'
 											  . ' <span class=\'view_case_name_list\'>'
-											  . '<a class=\'view_case_detail\' onclick=\'javascript:onCaseClick('
+											  . '<a onclick=\'javascript:onCaseClick('
 											  . $case_value_flag_count . ');\'>'
 											  . $case_value . '</a>'
 											  . '", set_'
@@ -1476,12 +1353,12 @@ sub UpdateViewPageSelectItem {
 	if ( $_GET{'order'} ) {
 		if ( $_GET{'order'} eq "down" ) {
 			@package_name = @reverse_package_name;
-			$image        = "images/up_and_down_2.png";
+			$image        = "images/up_and_down_1.png";
 			$value        = "up";
 		}
 		elsif ( $_GET{'order'} eq "up" ) {
 			@package_name = @sort_package_name;
-			$image        = "images/up_and_down_1.png";
+			$image        = "images/up_and_down_2.png";
 			$value        = "down";
 		}
 	}
@@ -1490,7 +1367,7 @@ sub UpdateViewPageSelectItem {
 		$value = "up";
 	}
 	if ( $image eq "" ) {
-		$image = "images/up_and_down_2.png";
+		$image = "images/up_and_down_1.png";
 	}
 
 	print "HTTP/1.0 200 OK" . CRLF;
@@ -1503,36 +1380,34 @@ sub UpdateViewPageSelectItem {
 	GetSelectItem();
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
-	<table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="tests_custom.pl">
-	      <table width="100%" height="50" border="0" cellspacing="0" cellpadding="0">
+	      <table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">
 	        <tr>
-	          <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0" background="images/report_top_button_background.png">
+	          <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
 	            <tr>
-	              <td width="2.5%" height="50" nowrap="nowrap">&nbsp;</td>
-	              <td width="17%" height="50" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
+	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                  <td width="47%" height="50" align="left" class="custom_title">Architecture:&nbsp</td>
-	                  <td width="53%" height="50"><select id="select_arc" name="select_arc" class="custom_select">
+	                  <td width="47%" height="30" align="left" class="custom_title">Architecture:&nbsp</td>
+	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
 	                    <option>X86</option>
 	                  </select>                  </td>
 	                </tr>
 	              </table></td>
-	              <td width="13%" height="50" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                  <td width="13%" height="50" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="50" align="right" class="custom_title">Version:&nbsp</td>
-	                  <td width="50%" height="50" ><select id="select_ver" name="select_ver" class="custom_select">
+	                  <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
+	                  <td width="37%" height="30" align="right" class="custom_title">Version:&nbsp</td>
+	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" class="custom_select">
 DATA
 	LoadDrawVersionSelect();
 	print <<DATA;
                   </select></td>
                 </tr>
               </table></td>
-              <td width="2%" height="50" nowrap="nowrap">&nbsp;</td>
-              <td width="4%" height="50" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
-              <td width="4.5%" height="50" nowrap="nowrap"><a id="sort_packages" href="tests_custom.pl?order=$value"><img src="$image" width="38" height="38"/></a></td>        
+              <td width="3%" height="30" nowrap="nowrap">&nbsp;</td> 
 DATA
 	my $hidden_advanced_flag = 0;
 	if (   ( $advanced_value_category =~ /\bAny Category\b/ )
@@ -1545,40 +1420,40 @@ DATA
 		&& ( $advanced_value_component      =~ /\bAny Component\b/ ) )
 	{
 		print <<DATA;
-		<td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
-        <td width="42%" align="left" height="50" nowrap="nowrap">
+		<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
+        <td width="42%" align="left" height="30" nowrap="nowrap">
 			<input id="view_filter_package_list" name="view_filter_package_list" class="medium_button" type="submit" value="View"/>
 		</td>
-         <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
+         <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
         <tr>
-         <td id="list_advanced" style="display:none"><table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+         <td id="list_advanced" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 DATA
 	}
 	else {
 		print <<DATA;
-		<td width="12%" height="50" nowrap="nowrap">
+		<td width="12%" height="30" nowrap="nowrap">
 			<input id="button_adv" name="button_adv" class="medium_button" type="button" value="Normal" onclick="javascript:hidden_Advanced_List();"/>
 		</td>
-		<td width="42%" height="50" align="left" nowrap="nowrap">
+		<td width="42%" height="30" align="left" nowrap="nowrap">
 			<input id="view_filter_package_list" name="view_filter_package_list" class="medium_button" type="submit" value="View"/>
 		</td>
-              <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
+              <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
         <tr>
-		<td id="list_advanced" style="display:"><table width="1280" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
+		<td id="list_advanced" style="display:"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
 DATA
 	}
 
 	print <<DATA;
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;category:</td><td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;category:</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%">
 DATA
 	LoadDrawCategorySelect();
@@ -1586,9 +1461,9 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;priority:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;priority:<td>
                     <select name="select_pri" id="select_pri" class="custom_select" style="width:70%">
 DATA
 	LoadDrawPrioritySelect();
@@ -1598,9 +1473,9 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="30%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="30%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;status:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;status:<td>
                     <select name="select_status" id="select_status" class="custom_select" style="width:70%">
 DATA
 	LoadDrawStatusSelect();
@@ -1608,9 +1483,9 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;execution_type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;execution_type:<td>
                     <select name="select_exe" id="select_exe" class="custom_select" style="width:70%">
 DATA
 	LoadDrawExecutiontypeSelect();
@@ -1620,9 +1495,9 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;testsuite:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;testsuite:<td>
                     <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%">
 DATA
 	LoadDrawTestsuiteSelect();
@@ -1630,9 +1505,9 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;type:<td>
                     <select name="select_type" id="select_type" class="custom_select" style="width:70%">
 DATA
 	LoadDrawTypeSelect();
@@ -1642,9 +1517,9 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
-                    <td width="30%" height="50" align="left" class="custom_title">&nbsp;testset:<td>
+                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;testset:<td>
                       <select name="select_testset" id="select_testset" class="custom_select" style="width:70%">
 DATA
 	LoadDrawTestsetSelect();
@@ -1652,9 +1527,9 @@ DATA
                     </select>                    </td>
                   </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;component:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;component:<td>
                     <select name="select_com" id="select_com" class="custom_select" style="width:70%">
 DATA
 	LoadDrawComponentSelect();
@@ -1670,28 +1545,7 @@ DATA
 
 #After press "Save", "Load", "Delete" button, refresh the page.
 sub UpdateLoadPageSelectItem {
-	@sort_package_name    = sort @package_name;
-	@reverse_package_name = reverse @sort_package_name;
-	if ( $_GET{'order'} ) {
-		if ( $_GET{'order'} eq "down" ) {
-			@package_name = @reverse_package_name;
-			$image        = "images/up_and_down_2.png";
-			$value        = "up";
-		}
-		elsif ( $_GET{'order'} eq "up" ) {
-			@package_name = @sort_package_name;
-			$image        = "images/up_and_down_1.png";
-			$value        = "down";
-		}
-	}
-
-	if ( $value eq "" ) {
-		$value = "up";
-	}
-	if ( $image eq "" ) {
-		$image = "images/up_and_down_2.png";
-	}
-
+	$image = "images/up_and_down_1.png";
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 
@@ -1703,37 +1557,46 @@ sub UpdateLoadPageSelectItem {
 	print show_error_dlg("");
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
-	<table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="tests_custom.pl">
-	      <table width="100%" height="50" border="0" cellspacing="0" cellpadding="0">  
+	      <table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">  
 	        <tr>
-	          <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0" background="images/report_top_button_background.png">
+	          <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
 	            <tr>
-	              <td width="2.5%" height="50" nowrap="nowrap">&nbsp;</td>
-	              <td width="17%" height="50" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
+	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                  <td width="47%" height="50" align="left" class="custom_title">Architecture:&nbsp</td>
-	                  <td width="53%" height="50"><select id="select_arc" name="select_arc" class="custom_select">
+	                  <td width="47%" height="30" align="left" class="custom_title">Architecture:&nbsp</td>
+	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
 	                    <option>X86</option>
 	                  </select>                  </td>
 	                </tr>
 	              </table></td>
-	              <td width="13%" height="50" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                <td width="13%" height="50" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="50" align="right" class="custom_title">Version:&nbsp</td>
-	                  <td width="50%" height="50" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_case_item();">
+	                <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
+	                  <td width="37%" height="30" align="right" class="custom_title">Version:&nbsp</td>
+	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawVersionSelect();
 	print <<DATA;
                   </select></td>
                 </tr>
               </table></td>
-              <td width="2%" height="50" nowrap="nowrap">&nbsp;</td>
-              <td width="4%" height="50" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
-              <td width="4.5%" height="50" nowrap="nowrap"><a id="sort_packages" href="tests_custom.pl?order=$value"><img src="$image" width="38" height="38"/></a></td>        
+              <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
+              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
 DATA
+	if ( !$sort_flag ) {
+		print <<DATA;
+     <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" src="images/up_and_down_1.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
+DATA
+	}
+	else {
+		print <<DATA;
+     <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" src="images/up_and_down_2.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
+DATA
+	}
 	my $hidden_advanced_flag = 0;
 	if (   ( $advanced_value_category =~ /\bAny Category\b/ )
 		&& ( $advanced_value_priority       =~ /\bAny Priority\b/ )
@@ -1747,46 +1610,46 @@ DATA
 
 		if ( @package_name == 0 ) {
 			print <<DATA;
-			<td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
+			<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
 DATA
 		}
 		else {
 			print <<DATA;
-			<td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
+			<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
 DATA
 		}
 		print <<DATA;
-	        <td width="42%" align="left" height="50" nowrap="nowrap">
+	        <td width="42%" align="left" height="30" nowrap="nowrap">
 				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
 			</td>
-	         <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
+	         <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
         <tr>
-         <td id="list_advanced" style="display:none"><table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+         <td id="list_advanced" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 DATA
 	}
 	else {
 		print <<DATA;
-		<td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Normal" onclick="javascript:hidden_Advanced_List();"/></td>
-        <td width="42%" align="left" height="50" nowrap="nowrap">
+		<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Normal" onclick="javascript:hidden_Advanced_List();"/></td>
+        <td width="42%" align="left" height="30" nowrap="nowrap">
 			<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
 		</td>
-         <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
+         <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
         <tr>
-		<td id="list_advanced" style="display:"><table width="1280" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
+		<td id="list_advanced" style="display:"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
 DATA
 	}
 
 	print <<DATA;
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;category:</td><td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;category:</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawCategorySelect();
@@ -1794,9 +1657,9 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;priority:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;priority:<td>
                     <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawPrioritySelect();
@@ -1806,9 +1669,9 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="30%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="30%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;status:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;status:<td>
                     <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawStatusSelect();
@@ -1816,9 +1679,9 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;execution_type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;execution_type:<td>
                     <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawExecutiontypeSelect();
@@ -1828,9 +1691,9 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;testsuite:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;testsuite:<td>
                     <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawTestsuiteSelect();
@@ -1838,9 +1701,9 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;type:<td>
                     <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawTypeSelect();
@@ -1850,9 +1713,9 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
-                    <td width="30%" height="50" align="left" class="custom_title">&nbsp;testset:<td>
+                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;testset:<td>
                       <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawTestsetSelect();
@@ -1860,9 +1723,9 @@ DATA
                     </select>                    </td>
                   </tr>
               </table></td>
-              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;component:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;component:<td>
                     <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawComponentSelect();
@@ -1884,15 +1747,16 @@ sub UpdateLoadPage {
           <td></td>
         </tr>
         <tr>
-          <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
             <tr>
-              <td><table width="100%" height="50" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
+              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" style="table-layout:fixed" frame="below" rules="all">
                 <tr>
-              <td width="4%" height="36" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Package Name</td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottom_title">&nbsp;Operation</td>
+              <td width="4%" height="22" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
+              <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
+              <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_title">Package Name</td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottom_title">&nbsp;Operation</td>
               <input type="hidden" id="package_name_number" name="package_name_number" value="$package_name_number">
                 </tr>
               </table></td>
@@ -1923,7 +1787,7 @@ DATA
             <tr>
               <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="10%" valign="top"><div align="center">
-                <input type="submit" id="execute_profile" name="execute_profile" class="large_button" value="Execute"/>
+                <input type="button" id="execute_profile" name="execute_profile" class="large_button" value="Execute" onclick="javascript:onExecute();"/>
               </div></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" valign="top" class="backbackground_button"><div align="center">
@@ -1933,7 +1797,7 @@ DATA
               <td width="6%" class="backbackground_button">&nbsp;</td>
               <td width="11%" valign="top"><table>
 		        <tr>
-		        	<td height="1" class="backbackground_button"></td>
+		        	<td height="0.6" class="backbackground_button"></td>
 		        </tr>
               	<tr>
               		<td nowrap="nowrap" class="custom_font">Profile name:</td>
@@ -1946,7 +1810,7 @@ DATA
 		        </tr>
                 <tr>
                   <td>
-                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="$load_profile_name" style="width: 14em;" onkeyup="showtips();if(event.keyCode==27)c();" onkeydown="enterTips()" autocomplete=off /></label></td>
+                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="$load_profile_name" style="width: 14em;" onkeyup="showtips(event.target);if(event.keyCode==27)c();" onkeydown="enterTips(event.keyCode)" autocomplete=off /></label></td>
                 </tr>
                 <tr>
                   <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
@@ -1981,7 +1845,7 @@ DATA
             <tr>
               <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="10%" valign="top"><div align="center">
-                <input type="submit" id="execute_profile" name="execute_profile" disabled="true" class="large_button" value="Execute"/>
+                <input type="button" id="execute_profile" name="execute_profile" disabled="true" class="large_button" value="Execute" onclick="javascript:onExecute();"/>
               </div></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" valign="top" class="backbackground_button"><div align="center">
@@ -2004,7 +1868,7 @@ DATA
 		        </tr>
                 <tr>
                   <td>
-                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="$load_profile_name" style="width: 14em;" onkeyup="showtips();if(event.keyCode==27)c();" onkeydown="enterTips()" autocomplete=off /></label></td>
+                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="$load_profile_name" style="width: 14em;" onkeyup="showtips(event.target);if(event.keyCode==27)c();" onkeydown="enterTips(event.keyCode)" autocomplete=off /></label></td>
                 </tr>
                 <tr>
                   <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
@@ -2036,6 +1900,10 @@ print <<DATA;
 <script type="text/javascript" src="run_tests.js"></script>
 <script language="javascript" type="text/javascript">
 // <![CDATA[
+var check_all_box = document.getElementById('checkbox_all');
+if (check_all_box) {
+	update_state(); // Remember state of the buttons
+}
 var profiles_list;      // List of user profiles.
 DATA
 
@@ -2043,6 +1911,51 @@ print <<DATA;
 var package_name_number = 
 DATA
 print $package_name_number. ";";
+
+print <<DATA;
+var case_number = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
+	if ( $count_num == $package_name_number - 1 ) {
+		print '"' . $case_number[ 3 * $count_num ] . '"';
+	}
+	else {
+		print '"' . $case_number[ 3 * $count_num ] . '"' . ",";
+	}
+}
+print <<DATA;
+)
+DATA
+
+print <<DATA;
+var case_number_auto = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
+	if ( $count_num == $package_name_number - 1 ) {
+		print '"' . $case_number[ 3 * $count_num + 1 ] . '"';
+	}
+	else {
+		print '"' . $case_number[ 3 * $count_num + 1 ] . '"' . ",";
+	}
+}
+print <<DATA;
+)
+DATA
+
+print <<DATA;
+var case_number_manual = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
+	if ( $count_num == $package_name_number - 1 ) {
+		print '"' . $case_number[ 3 * $count_num + 2 ] . '"';
+	}
+	else {
+		print '"' . $case_number[ 3 * $count_num + 2 ] . '"' . ",";
+	}
+}
+print <<DATA;
+)
+DATA
 
 print <<DATA;
 var package_name = new Array(
@@ -2055,6 +1968,7 @@ for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
 		print '"' . $package_name[$count_num] . '"' . ",";
 	}
 }
+
 print <<DATA;
 );
 DATA
@@ -2554,7 +2468,33 @@ for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
 print <<DATA;
 );
 
+var filter_auto_count_reverse = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
+	if ( $count_num == $package_name_number - 1 ) {
+		print '"' . "0" . '"';
+	}
+	else {
+		print '"' . "0" . '"' . ",";
+	}
+}
+print <<DATA;
+);
+
 var filter_manual_count = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
+	if ( $count_num == $package_name_number - 1 ) {
+		print '"' . "0" . '"';
+	}
+	else {
+		print '"' . "0" . '"' . ",";
+	}
+}
+print <<DATA;
+);
+
+var filter_manual_count_reverse = new Array(
 DATA
 for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
 	if ( $count_num == $package_name_number - 1 ) {
@@ -2569,8 +2509,13 @@ print <<DATA;
 DATA
 
 print <<DATA;
+var filter_auto_string;
+var filter_manual_string;
 var filter_auto_count_string;
 var filter_manual_count_string;
+var filter_auto_count_reverse_string;
+var filter_manual_count_reverse_string;
+
 filter_case_item();
 DATA
 
@@ -2581,6 +2526,11 @@ DATA
 print <<DATA;
 	);
 DATA
+
+print <<DATA;
+var sort_flag = 
+DATA
+print $sort_flag. ";";
 
 print <<DATA;
 var uninstall_pkg_name;
@@ -2602,10 +2552,10 @@ function rank()
 	var value;
 	image = document.getElementById('image_up_down');
 	value = document.getElementById('value_up_down');
-	if(image.src == "images/up_and_down_1.png"){
-		image.src = "images/up_and_down_2.png";
-	}else{
+	if(image.src == "images/up_and_down_2.png"){
 		image.src = "images/up_and_down_1.png";
+	}else{
+		image.src = "images/up_and_down_2.png";
 	}
 	if(value.href == "tests_custom.pl?down = 1"){
 		value.href="tests_custom.pl?down = 0";
@@ -2706,7 +2656,117 @@ function check_uncheck_all() {
 DATA
 
 print <<DATA;
-function filter_case_item(){	
+function sortPackages(){
+	var img_id = document.getElementById('sort_packages');
+	if (sort_flag){
+		img_id.src = "images/up_and_down_1.png";
+		for(var count = 0; count < package_name_number; count++){
+			var checkbox_id = "checkbox_package_name"+count;
+			var package_name_id = "pn_"+package_name[count];
+			var id = document.getElementById(main_list_id[count]);
+			var package_case_cn_id = "cn_"+package_name[count];
+			var package_ver_id = "ver_"+package_name[count];
+			var update_id = "update_package_name_"+count;
+			var delete_id = "pn_package_name_"+count;
+			var view_id = "view_package_name_"+count;
+			var sec_list_intro_id = "second_list_intro"+count;
+			var sec_list_intro_reverse_id = "second_list_intro_reverse"+count;
+			var sec_list_case_number_id = "sec_list_case_number"+count;
+			var sec_list_case_number_reverse_id = "sec_list_case_number_reverse"+count;
+			var sec_list_read_me_id = "sec_list_read_me"+count;
+			var sec_list_read_me_reverse_id = "sec_list_read_me_reverse"+count;
+			var sec_list_copyright_id = "sec_list_copyright"+count;
+			var sec_list_copyright_reverse_id = "sec_list_copyright_reverse"+count;
+			var sec_list_install_path_id = "sec_list_install_path"+count;
+			var sec_list_install_path_reverse_id = "sec_list_install_path_reverse"+count;
+			
+			document.getElementById(checkbox_id).name = "checkbox_"+package_name[count];
+			document.getElementById(package_name_id).innerHTML = "&nbsp"+package_name[count];
+			
+			id.style.display = "none";
+			if(package_name_flag[count] == "a"){
+			 	id.style.display = "";
+			}
+			document.getElementById(package_case_cn_id).innerHTML = "&nbsp"+case_number[count];
+			document.getElementById(package_ver_id).innerHTML = version[count];
+			document.getElementById(update_id).value = package_name[count];	
+			document.getElementById(delete_id).value = package_name[count];
+			document.getElementById(view_id).value = package_name[count];
+			document.getElementById(sec_list_intro_id).style.display="";
+			document.getElementById(sec_list_intro_reverse_id).style.display="none";		
+			document.getElementById(sec_list_case_number_id).style.display="";
+			document.getElementById(sec_list_case_number_reverse_id).style.display="none";	
+			document.getElementById(sec_list_read_me_id).style.display="";
+			document.getElementById(sec_list_read_me_reverse_id).style.display="none";	
+			document.getElementById(sec_list_copyright_id).style.display="";
+			document.getElementById(sec_list_copyright_reverse_id).style.display="none";	
+			document.getElementById(sec_list_install_path_id).style.display="";
+			document.getElementById(sec_list_install_path_reverse_id).style.display="none";
+		}
+		filter_auto_count_string = filter_auto_string;
+		filter_manual_count_string = filter_manual_string;
+		check_uncheck_all();
+		sort_flag = 0;
+	}
+	else{
+		img_id.src = "images/up_and_down_2.png";
+		for(var count = 0; count < package_name_number; count++){
+			var sort_count = package_name_number-1-count;
+			var checkbox_id = "checkbox_package_name"+count;
+			var package_name_id = "pn_"+package_name[count];
+			var id = document.getElementById(main_list_id[sort_count]);
+			var package_case_cn_id = "cn_"+package_name[count];
+			var package_ver_id = "ver_"+package_name[count];
+			var update_id = "update_package_name_"+count;
+			var delete_id = "pn_package_name_"+count;
+			var view_id = "view_package_name_"+count;
+			var sec_list_intro_id = "second_list_intro"+count;
+			var sec_list_intro_reverse_id = "second_list_intro_reverse"+count;
+			var sec_list_case_number_id = "sec_list_case_number"+count;
+			var sec_list_case_number_reverse_id = "sec_list_case_number_reverse"+count;
+			var sec_list_read_me_id = "sec_list_read_me"+count;
+			var sec_list_read_me_reverse_id = "sec_list_read_me_reverse"+count;
+			var sec_list_copyright_id = "sec_list_copyright"+count;
+			var sec_list_copyright_reverse_id = "sec_list_copyright_reverse"+count;
+			var sec_list_install_path_id = "sec_list_install_path"+count;
+			var sec_list_install_path_reverse_id = "sec_list_install_path_reverse"+count;
+	
+			id.style.display = "none";
+			document.getElementById(checkbox_id).name = "checkbox_"+package_name[sort_count];
+			document.getElementById(package_name_id).innerHTML = "&nbsp"+package_name[sort_count];
+			
+			if(package_name_flag[count] == "a"){	
+			 	id.style.display = "";	
+			}			
+			document.getElementById(package_case_cn_id).innerHTML = "&nbsp"+case_number[sort_count];			
+			document.getElementById(package_ver_id).innerHTML = version[sort_count];	
+			document.getElementById(update_id).value = package_name[sort_count];		
+			document.getElementById(delete_id).value = package_name[sort_count];
+			document.getElementById(view_id).value = package_name[sort_count];
+			
+			document.getElementById(sec_list_intro_id).style.display="none";
+			document.getElementById(sec_list_intro_reverse_id).style.display="";		
+			document.getElementById(sec_list_case_number_id).style.display="none";
+			document.getElementById(sec_list_case_number_reverse_id).style.display="";	
+			document.getElementById(sec_list_read_me_id).style.display="none";
+			document.getElementById(sec_list_read_me_reverse_id).style.display="";	
+			document.getElementById(sec_list_copyright_id).style.display="none";
+			document.getElementById(sec_list_copyright_reverse_id).style.display="";	
+			document.getElementById(sec_list_install_path_id).style.display="none";
+			document.getElementById(sec_list_install_path_reverse_id).style.display="";				
+		} 
+		filter_auto_count_string = filter_auto_count_reverse_string;
+		filter_manual_count_string = filter_manual_count_reverse_string;
+		check_uncheck_all();
+		sort_flag = 1;
+	}
+}
+DATA
+
+print <<DATA;
+function filter_case_item(){
+	document.getElementById('checkbox_all').checked=false;	
+	//check_uncheck_all(); remove for remember initial state
 	var advanced_value_version = document.getElementById('select_ver');
 	var advanced_value_category	= document.getElementById('select_category');
 	var advanced_value_priority = document.getElementById('select_pri');
@@ -2742,7 +2802,7 @@ function filter_case_item(){
 			){					
 				flag_case[i]="a";
 				if(execution_value[j] == "auto"){
-					filter_auto_count[i]++;					
+					filter_auto_count[i]++;
 				}
 				else{
 					filter_manual_count[i]++;
@@ -2750,25 +2810,50 @@ function filter_case_item(){
 			}
 		}
 	}
-	filter_auto_count_string = filter_auto_count.join(":");
-	filter_manual_count_string = filter_manual_count.join(":");
-			
+	for (var i=0; i<package_name_number; i++)
+	{
+		var sort_count = package_name_number-1-i;
+		filter_auto_count_reverse[sort_count] = filter_auto_count[i];
+		filter_manual_count_reverse[sort_count] = filter_manual_count[i];
+	}
+	
+	filter_auto_string = filter_auto_count.join(":");
+	filter_manual_string = filter_manual_count.join(":");
+	filter_auto_count_string = filter_auto_string;
+	filter_manual_count_string = filter_manual_string;
+	filter_auto_count_reverse_string = filter_auto_count_reverse.join(":");
+	filter_manual_count_reverse_string = filter_manual_count_reverse.join(":");
+				
 	for (var i=0; i<package_name_number; i++) {
+		var sort_count = package_name_number-1-i;
 		if(flag_case[i] == "a"){
 			package_name_flag[i] = "a";
-			id = document.getElementById(main_list_id[i]);
-			id.style.display = "";
+			if(sort_flag){
+				id = document.getElementById(main_list_id[sort_count]);
+				id.style.display = "";
+			}
+			else{
+				id = document.getElementById(main_list_id[i]);
+				id.style.display = "";
+			}
 		}
 		else{
 			package_name_flag[i] = "b";
-			id = document.getElementById(main_list_id[i]);
-			id.style.display = "none";	
+			if(sort_flag){
+				id = document.getElementById(main_list_id[sort_count]);
+				id.style.display = "none";	
+			}
+			else{
+				id = document.getElementById(main_list_id[i]);
+				id.style.display = "none";	
+			}
 		}
 	}
 	for( var i=0; i<100; i++){
 		var id = "uninstall_"+i;
 		document.getElementById(id).style.display="none";
 	}
+
 }
 DATA
 
@@ -2860,7 +2945,7 @@ function onDeletePackage(count) {
 	
 	
 	if(confirm("Do you want to delete "+pkg+"?")){
-		document.location="tests_custom.pl?delete_package=1&delete_"+pkg+"=1&checkbox="+checkbox_value+"&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
+		document.location="tests_custom.pl?delete_package=1&delete_"+pkg+"=1&sort_flag="+sort_flag+"&checkbox="+checkbox_value+"&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
 	}
 }
 
@@ -2879,31 +2964,29 @@ function openLC(id) {
 	file=id/LICENSE;
 }
 
-function showtips(){
+function showtips(e) {
 	var sel = document.getElementById('sel');
-	eo=event.srcElement;
-	sel.length=0;
-	var len=msg.length;
-	var re=new RegExp("^"+eo.value,"i")
-	var flag=0
-	for(i=0;i<len;i++){
-		if(re.test(msg[i])==true){
-			sel.style.display=''
-			sel.add(new Option(msg[i]))
-			sel.selectedIndex=0
-			flag=1	
+	sel.length = 0;
+	var len = msg.length;
+	var re = new RegExp("^" + e.value, "i");
+	var flag = 0;
+	for ( var i = 0; i < len; i++) {
+		if (re.test(msg[i]) == true) {
+			sel.style.display = '';
+			sel.add(new Option(msg[i]));
+			sel.selectedIndex = 0;
+			flag = 1;
 		}
 	}
-	if(flag==0){
-			sel.style.display=''
-			sel.add(new Option("No match profile"))
-			sel.selectedIndex=0
-	}	
+	if (flag == 0) {
+		sel.style.display = '';
+		sel.add(new Option("No match profile"));
+		sel.selectedIndex = 0;
+	}
 }
 
-function enterTips(){
+function enterTips(e){
 	var sel = document.getElementById('sel');
-	e=event.keyCode;
 	if(sel.style.display!='none'){
 		if(e==13){
 			event.srcElement.value=sel.value,sel.style.display='none'
@@ -2933,8 +3016,7 @@ document.onclick=function(){c()}
 DATA
 
 sub ScanPackages {
-	$testSuitesPath = "/usr/share/";
-	find( \&GetPackageName, $testSuitesPath );
+	find( \&GetPackageName, $test_definition_dir );
 }
 
 sub CountPackages {
@@ -2944,29 +3026,41 @@ sub CountPackages {
 }
 
 sub AnalysisVersion {
-	my $temp;
 	my $temp_version;
 	my $temp_count = 0;
-	while ( $temp_count < $package_name_number ) {
-		$temp = `rpm -qa|grep $package_name[$temp_count]`;
-		if ( $temp =~ /tests-(.*?)-/ ) {
-			$temp_version = $1;
-			push( @version, $temp_version );
+	my @temp       = `sdb shell 'rpm -qa | grep tests'`;
+	if ( @temp > 0 ) {
+		while ( $temp_count < $package_name_number ) {
+			for ( my $i = 0 ; $i < @temp ; $i++ ) {
+				if (   ( $temp[$i] =~ /$package_name[$temp_count]/ )
+					&& ( $temp[$i] =~ /-(\d\.\d\.\d-\d)/ ) )
+				{
+					$temp_version = $1;
+					push( @version, $temp_version );
+				}
+			}
+			$temp_count++;
 		}
-		$temp_count++;
+	}
+	else {
+		while ( $temp_count < $package_name_number ) {
+			$temp_version = "none";
+			push( @version, $temp_version );
+			$temp_count++;
+		}
 	}
 }
 
 sub CreateFilePath {
 	my $count = 0;
 	while ( $count < $package_name_number ) {
-		$read_me[$count] = "/opt/" . $package_name[$count] . "/README";
+		$read_me[$count] = $opt_dir . $package_name[$count] . "/README";
 		$licence_copyright[$count] =
-		  "/opt/" . $package_name[$count] . "/LICENSE";
+		  $opt_dir . $package_name[$count] . "/LICENSE";
 		$installation_path[$count] =
-		  "/usr/share/" . $package_name[$count] . "/";
+		  $test_definition_dir . $package_name[$count] . "/";
 		$testsxml[$count] =
-		  "/usr/share/" . $package_name[$count] . "/tests.xml";
+		  $test_definition_dir . $package_name[$count] . "/tests.xml";
 		$count++;
 	}
 }
@@ -2993,7 +3087,6 @@ sub AnalysisTestsXML {
 				$case_number_all_temp++;
 			}
 			if ( $_ =~ /<category>(.*?)</ ) {
-
 				$temp = $1;
 				if ( $category_number_temp == 0 ) {
 					push( @category, $temp );
@@ -3104,7 +3197,7 @@ sub AnalysisTestsXML {
 					}
 				}
 			}
-			if ( $_ =~ /type="(.*?)"/ ) {
+			if ( $_ =~ / type="(.*?)"/ ) {
 				$temp = $1;
 				if ( $type_number_temp == 0 ) {
 					push( @type, $temp );
@@ -3223,6 +3316,11 @@ sub AnalysisTestsXML {
 				}
 			}
 		}
+		if ( @category < 1 ) {
+			for ( my $i = 0 ; $i < $case_number_all_temp ; $i++ ) {
+				push( @category, "Any Category" );
+			}
+		}
 		push( @case_number, $case_number_all_temp );
 		push( @case_number, $case_number_auto_temp );
 		push( @case_number,
@@ -3285,6 +3383,7 @@ sub LoadDrawPackageList {
 	my $display;
 	my $i = @checkbox_packages;
 	while ( $count < $package_name_number ) {
+		my $sort_count   = $package_name_number - 1 - $count;
 		my $count_chkbox = 0;
 		if ( $package_name_flag[$count] eq "a" ) {
 			$display = "";
@@ -3294,7 +3393,7 @@ sub LoadDrawPackageList {
 		}
 		print <<DATA;
             <tr id="main_list_$package_name[$count]" style="display:$display">
-              <td><table width="100%" height="50" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
+              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" style="table-layout:fixed">
 DATA
 		my $flag = 0;
 		while ( $count_chkbox < $i ) {
@@ -3302,33 +3401,34 @@ DATA
 			{
 				$flag = 1;
 				print <<DATA;
-				<td width="4%" height="50" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" checked=true onclick="javascript:update_state()"/></td>	
+				<td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" checked=true onclick="javascript:update_state()"/></td>	
 DATA
 			}
 			$count_chkbox++;
 		}
 		if ( $flag eq "0" ) {
 			print <<DATA;
-				<td width="4%" height="50" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" onclick="javascript:update_state()"/></td>	
+				<td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" onclick="javascript:update_state()"/></td>	
 DATA
 		}
 		print <<DATA;
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_packagename" id="pn_$package_name[$count]"><a  onclick="javascript:show_CaseDetail('second_list_$package_name[$count]');">&nbsp;$package_name[$count]</a></td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp;$case_number[3*$count]</td>
-              <td width="24%" height="50" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
+              <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
+              <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_packagename" id="pn_$package_name[$count]" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;cursor:pointer;" title="$package_name[$count]" onclick="javascript:show_CaseDetail('second_list_$package_name[$count]');">$package_name[$count]</td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp;$case_number[3*$count]</td>
+              <td width="24%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td width="22%" height="50" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="38" height="38" /></div></td>
-                  <td width="78%" height="50" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$package_name[$count]">$version[$count]</div></td>
+                  <td width="22%" height="30" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="23" height="23" /></div></td>
+                  <td width="78%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$package_name[$count]">$version[$count]</div></td>
                 </tr>
               </table></td>
-              <td width="24%" height="50" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <td width="24%" height="30" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_install_disable.png" width="38" height="38" /></div></td>
-                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_update_disable.png" id="update_$package_name[$count]" name="update_$package_name[$count]" width="38" height="38" /></div></td>
+                  <td align="center" height="30" valign="middle"><div align="left"><img src="images/operation_install_disable.png" title="Install package" width="23" height="23" /></div></td>
+                  <td align="center" height="30" valign="middle"><div align="left"><img src="images/operation_update_disable.png" title="Update package" id="update_$package_name[$count]" name="update_$package_name[$count]" width="23" height="23" /></div></td>
 					<input type="hidden" id="update_package_name_$count" name="update_package_name_$count" value="$package_name[$count]">
-                  <td align="center" height="50" valign="middle"><div align="left"><img title="Delete package" src="images/operation_delete.png" id="delete_$package_name[$count]" name="delete_$package_name[$count]" style="cursor:pointer" width="38" height="38" onclick="javascript:onDeletePackage($count);"/></a></td>
+                  <td align="center" height="30" valign="middle"><div align="left"><img title="Delete package" src="images/operation_delete.png" id="delete_$package_name[$count]" name="delete_$package_name[$count]" style="cursor:pointer" width="23" height="23" onclick="javascript:onDeletePackage($count);"/></a></td>
                   <input type="hidden" id="pn_package_name_$count" name="pn_package_name_$count" value="$package_name[$count]">
-                  <td align="center" height="50" valign="middle"><div align="left"><img title="View Package" src="images/operation_view_tests.png" id="view_$package_name[$count]" name="view_$package_name[$count]" style="cursor:pointer" width="38" height="38" onclick="javascript:onViewPackage($count);"/></div></td>
+                  <td align="center" height="30" valign="middle"><div align="left"><img title="View Package" src="images/operation_view_tests.png" id="view_$package_name[$count]" name="view_$package_name[$count]" style="cursor:pointer" width="23" height="23" onclick="javascript:onViewPackage($count);"/></div></td>
                 	<input type="hidden" id="view_package_name_$count" name="view_package_name_$count" value="$package_name[$count]">
                 </tr>
               </table></td>
@@ -3336,41 +3436,77 @@ DATA
 		</td>
             </tr>
             <tr id="second_list_$package_name[$count]" style="display:none">
-              <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0">
+              <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td width="40%" height="50" align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Introduction:</td>
-              <td width="60%" height="50" align="left" valign="middle" class="custom_list_type_bottom" id="intro_$package_name[$count]">
+              <td width="25%" height="30" align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Introduction:</td>
+              <td width="75%" height="30" align="left" valign="middle" class="custom_list_type_bottom" id="intro_$package_name[$count]">
               <table>
               <tr>
-               <td width="0.1%" class="backbackground_button"></td>
-               <td width="99.9%" class="backbackground_button">$introduction[$count]</td>
+               <td width="0.5%" class="backbackground_button"></td>
+               <td id="second_list_intro$count" width="99.5%" class="backbackground_button">$introduction[$count]</td>
+              <tr>
+              <tr>
+               <td width="0.5%" class="backbackground_button"></td>
+               <td id="second_list_intro_reverse$count" width="99.5%" style="display:none" class="backbackground_button">$introduction[$package_name_number-1-$count]</td>
               <tr>
               </table>
               </td>
-              </tr>
-            <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Case Number(auto manual):</td>
-              <td class="custom_list_type_bottom" height="50" id="cnam_$package_name[$count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
+             </tr>
+            <tr id="sec_list_case_number$count">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number(auto manual):</td>
+              <td class="custom_list_type_bottom" height="30" id="cnam_$package_name[$count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
                 <tr>
-                  <td width="5%" height="50" align="left" valign="middle">&nbsp;$case_number[3*$count+1]</td>
-                  <td width="95%" height="50" align="left" valign="middle">&nbsp;$case_number[3*$count+2]</td>
+                  <td width="5%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$count+1]</td>
+                  <td width="95%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$count+2]</td>
                 </tr>
               </table></td>
               </tr>
-            <tr>
-              <td align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Readme:</td>
-              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$read_me[$count]
-                <a href="/get.pl?file=$read_me[$count]"><image name="imageField" src="images/operation_open_file.png" align="middle" width="38" height="38" /></td>
+              
+             <tr id="sec_list_case_number_reverse$count" style="display:none">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number(auto manual):</td>
+              <td class="custom_list_type_bottom" height="30" id="cnam_$package_name[$sort_count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
+                <tr>
+                  <td width="5%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$sort_count+1]</td>
+                  <td width="95%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$sort_count+2]</td>
+                </tr>
+              </table></td>
+              </tr> 
+              
+            <tr id="sec_list_read_me$count">
+              <td align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Readme:</td>
+              <td width="5%" height="30" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$read_me[$count]
+                <a href="/get.pl?file=$read_me[$count]"><image name="imageField" src="images/operation_open_file.png" align="middle" width="23" height="23" /></td>
+              </tr>
+            
+            <tr id="sec_list_read_me_reverse$count" style="display:none">
+              <td align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Readme:</td>
+              <td width="5%" height="30" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$read_me[$sort_count]
+                <a href="/get.pl?file=$read_me[$sort_count]"><image name="imageField" src="images/operation_open_file.png" align="middle" width="23" height="23" /></td>
+              </tr>
+              
+            <tr id="sec_list_copyright$count">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Licence&amp;Copyright:</td>
+              <td width="5%" height="30" align="left" valign="middle" id=$licence_copyright[$count] class="custom_list_type_bottom">&nbsp;$licence_copyright[$count]
+                <a href="/get.pl?file=$licence_copyright[$count]"><image name="imageField2" src="images/operation_open_file.png" align="middle" width="23" height="23" /></td>
+              </tr>
+             
+             <tr id="sec_list_copyright_reverse$count" style="display:none">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Licence&amp;Copyright:</td>
+              <td width="5%" height="30" align="left" valign="middle" id=$licence_copyright[$sort_count] class="custom_list_type_bottom">&nbsp;$licence_copyright[$sort_count]
+                <a href="/get.pl?file=$licence_copyright[$sort_count]"><image name="imageField2" src="images/operation_open_file.png" align="middle" width="23" height="23" /></td>
+              </tr>
+              
+            <tr id="sec_list_install_path$count">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Installation Path:</td>
+              <td width="5%" height="30" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$installation_path[$count]
+                <image name="imageField3" id=$installation_path[$count] src="images/operation_copy_url.png" width="23" height="23" onclick="javascript:copyUrl(id);" style="cursor:pointer"/></td>
               </tr>
             <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Licence&amp;Copyright:</td>
-              <td width="5%" height="50" align="left" valign="middle" id=$licence_copyright[$count] class="custom_list_type_bottom">&nbsp;$licence_copyright[$count]
-                <a href="/get.pl?file=$licence_copyright[$count]"><image name="imageField2" src="images/operation_open_file.png" align="middle" width="38" height="38" /></td>
-              </tr>
-            <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Installation Path:</td>
-              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$installation_path[$count]
-                <image name="imageField3" id=$installation_path[$count] src="images/operation_copy_url.png" width="38" height="38" onclick="javascript:copyUrl(id);" style="cursor:pointer"/></td>
+            
+            <tr id="sec_list_install_path_reverse$count" style="display:none">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Installation Path:</td>
+              <td width="5%" height="30" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$installation_path[$sort_count]
+                <image name="imageField3" id=$installation_path[$sort_count] src="images/operation_copy_url.png" width="23" height="23" onclick="javascript:copyUrl(id);" style="cursor:pointer"/></td>
               </tr>
             <tr>
               </table>
@@ -3386,26 +3522,28 @@ DATA
 sub DrawPackageList {
 	my $count = 0;
 	while ( $count < $package_name_number ) {
+		my $sort_count = $package_name_number - 1 - $count;
 		print <<DATA;
             <tr id="main_list_$package_name[$count]">
-              <td><table width="100%" height="50" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
-              <td width="4%" height="50" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" onclick="javascript:update_state()"/></td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_packagename" id="pn_$package_name[$count]"><a  onclick="javascript:show_CaseDetail('second_list_$package_name[$count]');">&nbsp;$package_name[$count]</a></td>
-              <td width="24%" height="50" align="left" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp;$case_number[3*$count]</td>
-              <td width="24%" height="50" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
+              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" style="table-layout:fixed">
+              <td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" onclick="javascript:update_state()"/></td>
+              <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
+              <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_packagename" id="pn_$package_name[$count]" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;cursor:pointer;" title="$package_name[$count]" onclick="javascript:show_CaseDetail('second_list_$package_name[$count]');">$package_name[$count]</td>
+              <td width="24%" height="30" align="left" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp;$case_number[3*$count]</td>
+              <td width="24%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td width="22%" height="50" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="38" height="38" /></div></td>
-                  <td width="78%" height="50" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$package_name[$count]">$version[$count]</div></td>
+                  <td width="22%" height="30" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="23" height="23" /></div></td>
+                  <td width="78%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$package_name[$count]">$version[$count]</div></td>
                 </tr>
               </table></td>
-              <td width="24%" height="50" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <td width="24%" height="30" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_install_disable.png" width="38" height="38" /></div></td>	
-                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_update_disable.png" id="update_$package_name[$count]" name="update_$package_name[$count]" width="38" height="38"/></div></td>
+                  <td align="center" height="30" valign="middle"><div align="left"><img src="images/operation_install_disable.png" title="Install package" width="23" height="23" /></div></td>	
+                  <td align="center" height="30" valign="middle"><div align="left"><img src="images/operation_update_disable.png" title="Update package" id="update_$package_name[$count]" name="update_$package_name[$count]" width="23" height="23"/></div></td>
                   	<input type="hidden" id="update_package_name_$count" name="update_package_name_$count" value="$package_name[$count]">
-                  <td align="center" height="50" valign="middle"><div align="left"><img title="Delete package" src="images/operation_delete.png" id="delete_$package_name[$count]" name="delete_$package_name[$count]" style="cursor:pointer" width="38" height="38" onclick="javascript:onDeletePackage($count);" /></a></td>
+                  <td align="center" height="30" valign="middle"><div align="left"><img title="Delete package" src="images/operation_delete.png" id="delete_$package_name[$count]" name="delete_$package_name[$count]" style="cursor:pointer" width="23" height="23" onclick="javascript:onDeletePackage($count);" /></a></td>
                   <input type="hidden" id="pn_package_name_$count" name="pn_package_name_$count" value="$package_name[$count]">
-                  <td align="center" height="50" valign="middle"><div align="left"><img title="View Package" src="images/operation_view_tests.png" id="view_$package_name[$count]" name="view_$package_name[$count]" style="cursor:pointer" width="38" height="38" onclick="javascript:onViewPackage($count);"/></div></td>
+                  <td align="center" height="30" valign="middle"><div align="left"><img title="View Package" src="images/operation_view_tests.png" id="view_$package_name[$count]" name="view_$package_name[$count]" style="cursor:pointer" width="23" height="23" onclick="javascript:onViewPackage($count);"/></div></td>
                 	<input type="hidden" id="view_package_name_$count" name="view_package_name_$count" value="$package_name[$count]">
                 </tr>
               </table></td>
@@ -3413,43 +3551,80 @@ sub DrawPackageList {
 		</td>
             </tr>
             <tr id="second_list_$package_name[$count]" style="display:none">
-              <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0">
+              <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td width="40%" height="50" align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Introduction:</td>
-              <td width="60%" height="50" align="left" valign="middle" class="custom_list_type_bottom" id="intro_$package_name[$count]">
+              <td width="25%" height="30" align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Introduction:</td>
+              <td width="75%" height="30" align="left" valign="middle" class="custom_list_type_bottom" id="intro_$package_name[$count]">
               <table>
               <tr>
-               <td width="0.1%" class="backbackground_button"></td>
-               <td width="99.9%" class="backbackground_button">$introduction[$count]</td>
+               <td width="0.5%" class="backbackground_button"></td>
+               <td id="second_list_intro$count" width="99.5%" class="backbackground_button">$introduction[$count]</td>
+              <tr>
+              <tr>
+               <td width="0.5%" class="backbackground_button"></td>
+               <td id="second_list_intro_reverse$count" width="99.5%" style="display:none" class="backbackground_button">$introduction[$package_name_number-1-$count]</td>
               <tr>
               </table>
               </td>
              </tr>
-            <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Case Number(auto manual):</td>
-              <td class="custom_list_type_bottom" height="50" id="cnam_$package_name[$count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
+            <tr id="sec_list_case_number$count">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number(auto manual):</td>
+              <td class="custom_list_type_bottom" height="30" id="cnam_$package_name[$count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
                 <tr>
-                  <td width="5%" height="50" align="left" valign="middle">&nbsp;$case_number[3*$count+1]</td>
-                  <td width="95%" height="50" align="left" valign="middle">&nbsp;$case_number[3*$count+2]</td>
+                  <td width="5%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$count+1]</td>
+                  <td width="95%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$count+2]</td>
                 </tr>
               </table></td>
               </tr>
-            <tr>
-              <td align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Readme:</td>
-              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$read_me[$count]
-                <a href="/get.pl?file=$read_me[$count]"><image name="imageField" src="images/operation_open_file.png" align="middle" width="38" height="38" /></td>
+              
+             <tr id="sec_list_case_number_reverse$count" style="display:none">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number(auto manual):</td>
+              <td class="custom_list_type_bottom" height="30" id="cnam_$package_name[$sort_count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
+                <tr>
+                  <td width="5%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$sort_count+1]</td>
+                  <td width="95%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$sort_count+2]</td>
+                </tr>
+              </table></td>
+              </tr> 
+              
+            <tr id="sec_list_read_me$count">
+              <td align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Readme:</td>
+              <td width="5%" height="30" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$read_me[$count]
+                <a href="/get.pl?file=$read_me[$count]"><image name="imageField" src="images/operation_open_file.png" align="middle" width="23" height="23" /></td>
+              </tr>
+            
+            <tr id="sec_list_read_me_reverse$count" style="display:none">
+              <td align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Readme:</td>
+              <td width="5%" height="30" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$read_me[$sort_count]
+                <a href="/get.pl?file=$read_me[$sort_count]"><image name="imageField" src="images/operation_open_file.png" align="middle" width="23" height="23" /></td>
+              </tr>
+              
+            <tr id="sec_list_copyright$count">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Licence&amp;Copyright:</td>
+              <td width="5%" height="30" align="left" valign="middle" id=$licence_copyright[$count] class="custom_list_type_bottom">&nbsp;$licence_copyright[$count]
+                <a href="/get.pl?file=$licence_copyright[$count]"><image name="imageField2" src="images/operation_open_file.png" align="middle" width="23" height="23" /></td>
+              </tr>
+             
+             <tr id="sec_list_copyright_reverse$count" style="display:none">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Licence&amp;Copyright:</td>
+              <td width="5%" height="30" align="left" valign="middle" id=$licence_copyright[$sort_count] class="custom_list_type_bottom">&nbsp;$licence_copyright[$sort_count]
+                <a href="/get.pl?file=$licence_copyright[$sort_count]"><image name="imageField2" src="images/operation_open_file.png" align="middle" width="23" height="23" /></td>
+              </tr>
+              
+            <tr id="sec_list_install_path$count">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Installation Path:</td>
+              <td width="5%" height="30" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$installation_path[$count]
+                <image name="imageField3" id=$installation_path[$count] src="images/operation_copy_url.png" width="23" height="23" onclick="javascript:copyUrl(id);" style="cursor:pointer"/></td>
               </tr>
             <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Licence&amp;Copyright:</td>
-              <td width="5%" height="50" align="left" valign="middle" id=$licence_copyright[$count] class="custom_list_type_bottom">&nbsp;$licence_copyright[$count]
-                <a href="/get.pl?file=$licence_copyright[$count]"><image name="imageField2" src="images/operation_open_file.png" align="middle" width="38" height="38" /></td>
+            
+            <tr id="sec_list_install_path_reverse$count" style="display:none">
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Installation Path:</td>
+              <td width="5%" height="30" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$installation_path[$sort_count]
+                <image name="imageField3" id=$installation_path[$sort_count] src="images/operation_copy_url.png" width="23" height="23" onclick="javascript:copyUrl(id);" style="cursor:pointer"/></td>
               </tr>
             <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Installation Path:</td>
-              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$installation_path[$count]
-                <image name="imageField3" id=$installation_path[$count] src="images/operation_copy_url.png" width="38" height="38" onclick="javascript:copyUrl(id);" style="cursor:pointer"/></td>
-              </tr>
-            <tr>
+            
               </table>
 		</td>
             </tr>
@@ -3462,22 +3637,23 @@ sub DrawUninstallPackageList {
 	for ( my $i = 0 ; $i < $UNINSTALL_PACKAGE_COUNT_MAX ; $i++ ) {
 		print <<DATA;
 		<tr id="uninstall_$i" style="display:none">
-	        <td><table width="100%" height="50" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
-	        <td width="4%" height="50" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_$i" name="checkbox_$i" disabled="disabled"/></td>
-	        <td width="24%" height="50" align="left" class="custom_list_type_bottomright_uninstall_packagename" id="pn_$i" title="Uninstalled" style="cursor:default"></td>
-	        <td width="24%" height="50" align="left" class="custom_list_type_bottomright" id="cn_$i" name="cn_$i">&nbsp;- -</td>
-	        <td width="24%" height="50" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
+	        <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" style="table-layout:fixed">
+	        <td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_$i" name="checkbox_$i" disabled="disabled"/></td>
+	        <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
+	        <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_uninstall_packagename" id="pn_$i" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;cursor:default;" title="Uninstalled"></td>
+	        <td width="24%" height="30" align="left" class="custom_list_type_bottomright" id="cn_$i" name="cn_$i">&nbsp;- -</td>
+	        <td width="24%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
 	        <tr>
-	         <td width="22%" height="50" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="38" height="38" /></div></td>
-	          <td width="78%" height="50" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$i"> </div></td>
+	         <td width="22%" height="30" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="23" height="23" /></div></td>
+	          <td width="78%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$i"> </div></td>
 	          </tr>
 	        </table></td>
-	         <td width="24%" height="50" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	         <td width="24%" height="30" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	         <tr>
-	          <td align="center" height="50" valign="middle"><div align="left"><img title="Install package" src="images/operation_install.png" id="install_pkg_$i" name="install_pkg_$i" style="cursor:pointer" width="38" height="38" onclick="javascript:installPackage($i);"/></div></td>				
-	            <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_update_disable.png" id="update_uninstall_pkg_name_$i" name="update_uninstall_pkg_name_$i" width="38" height="38" /></div></td>
-	            <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_delete.png" id="delete_uninstall_pkg_name_$i" name="delete_uninstall_pkg_name_$i" width="38" height="38"/></a></td>
-	            <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_view_tests.png" id="view_uninstall_pkg_name_$i" name="view_uninstall_pkg_name_$i" width="38" height="38"/></div></td>
+	          <td align="center" height="30" valign="middle"><div align="left"><img title="Install package" src="images/operation_install.png" id="install_pkg_$i" name="install_pkg_$i" style="cursor:pointer" width="23" height="23" onclick="javascript:installPackage($i);"/></div></td>				
+	            <td align="center" height="30" valign="middle"><div align="left"><img title="Update package" src="images/operation_update_disable.png" id="update_uninstall_pkg_name_$i" name="update_uninstall_pkg_name_$i" width="23" height="23" /></div></td>
+	            <td align="center" height="30" valign="middle"><div align="left"><img title="Delete package" src="images/operation_delete.png" id="delete_uninstall_pkg_name_$i" name="delete_uninstall_pkg_name_$i" width="23" height="23"/></a></td>
+	            <td align="center" height="30" valign="middle"><div align="left"><img title="View package" src="images/operation_view_tests.png" id="view_uninstall_pkg_name_$i" name="view_uninstall_pkg_name_$i" width="23" height="23"/></div></td>
 	            </tr>
 	           </table></td>
 	           </table>
@@ -3537,9 +3713,11 @@ sub LoadDrawCategorySelect {
 		<option selected="selected">Any Category</option>
 DATA
 		for ( ; $count < @category_item ; $count++ ) {
-			print <<DATA;
+			if ( $category_item[$count] !~ /Any Category/ ) {
+				print <<DATA;
 			<option>$category_item[$count]</option>
 DATA
+			}
 		}
 	}
 	else {
@@ -3553,9 +3731,11 @@ DATA
 DATA
 			}
 			else {
-				print <<DATA;
+				if ( $category_item[$count] !~ /Any Category/ ) {
+					print <<DATA;
 				<option>$category_item[$count]</option>
 DATA
+				}
 			}
 		}
 	}
@@ -3567,9 +3747,11 @@ sub DrawCategorySelect {
 		<option selected="selected">Any Category</option>
 DATA
 	for ( ; $count < @category_item ; $count++ ) {
-		print <<DATA;
+		if ( $category_item[$count] !~ /Any Category/ ) {
+			print <<DATA;
 		<option>$category_item[$count]</option>
 DATA
+		}
 	}
 }
 
@@ -4015,7 +4197,7 @@ sub GetSelectItem {
 sub GetPackageName {
 	if ( $_ =~ /^tests\.xml$/ ) {
 		my $relative = $File::Find::dir;
-		$relative =~ s/$testSuitesPath//g;
+		$relative =~ s/$test_definition_dir//g;
 		my @temp_package_name = split( "\/", $relative );
 		push( @package_name, @temp_package_name );
 	}
@@ -4042,7 +4224,7 @@ sub FilterCaseValue {
 		my $priority_value;
 		my $category_value;
 
-		open FILE, $tests_xml_dir or die $!;
+		open FILE, $tests_xml_dir or die $! . " " . $tests_xml_dir;
 
 		while (<FILE>) {
 			if ( $_ =~ /suite.*name="(.*?)"/ ) {
@@ -4051,18 +4233,24 @@ sub FilterCaseValue {
 			if ( $_ =~ /set.*name="(.*?)"/ ) {
 				$set_value = $1;
 			}
-			if ( $_ =~
-/testcase.*purpose="(.*?)".*type="(.*?)".*status="(.*?)".*component="(.*?)".*execution_type="(.*?)".*priority="(.*?)"/
-			  )
-			{
-				$type_value      = $2;
-				$status_value    = $3;
-				$component_value = $4;
-				$execution_value = $5;
-				$priority_value  = $6;
-				$category_value  = "null";
+			if ( $_ =~ / type="(.*?)"/ ) {
+				$type_value = $1;
 			}
-
+			if ( $_ =~ /status="(.*?)"/ ) {
+				$status_value = $1;
+			}
+			if ( $_ =~ /component="(.*?)"/ ) {
+				$component_value = $1;
+			}
+			if ( $_ =~ /execution_type="(.*?)"/ ) {
+				$execution_value = $1;
+			}
+			if ( $_ =~ /priority="(.*?)"/ ) {
+				$priority_value = $1;
+			}
+			if ( $_ =~ /testcase.*purpose="(.*?)"/ ) {
+				$category_value = "null";
+			}
 			if ( $_ =~ /\<category\>(.*?)\<\/category\>/ ) {
 				my $category_value_tmp;
 				$category_value_tmp = $1;
@@ -4160,5 +4348,6 @@ sub FilterCase {
 		push( @filter_manual_count, $filter_manual_count );
 	}
 }
+
 print_footer("");
 

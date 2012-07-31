@@ -354,7 +354,7 @@ sub HTTP_Response($$;$) {
 		$info = 'Connection from your IP address ('.$client->peerhost().') refused due to server configuration.<br />You need to specify the proper value for the <b>AcceptConnections</b> in the server config file on the host machine.<br />The config file location is specified in the README file.';
 	}
 	else {
-		$info = 'Please contact the <a href="mailto:shaofeng.tang@intel.com">Intel MeeGo QA team</a> to report about this error.<br />See the <a href="/get.pl?file='.$LOG_FILE.'" target="_blank">server log file</a> for details.';
+		$info = 'Please contact the <a href="mailto:weidongx.sun@intel.com">Intel QA team</a> to report about this error.<br />See the <a href="/get.pl?file='.$LOG_FILE.'" target="_blank">server log file</a> for details.';
 	}
 	print $client "HTTP/1.0 $code" . Socket::CRLF;
 	print $client Socket::CRLF;

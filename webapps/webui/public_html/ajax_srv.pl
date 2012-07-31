@@ -69,15 +69,11 @@ my $isWholeXML = 0;
 my $wholeXML;
 my $hasManual = "False";    # check if still got some manual result
 my %manualResult;           # to record manual result
-my $profile_dir_manager = $FindBin::Bin . "/../../../profiles/test/";
-my $ZYPPER_CMD          = "zypper -n --no-gpg-checks -p";
-my $DOWNLOAD_CMD        = "wget -r -l 1 -nd -A rpm --spider";
-my $CHECK_NETWORK       = "wget --spider --timeout=5 --tries=2";
-my $DOWNLOAD_PATH       = "";
-my $GREP_PATH = "";
+my %autoResult;             # to record auto result
 my @uninstall_package_name    = ();
 my @uninstall_package_version = ();
 my @package_version_latest;
+my @package_version_installed;
 
 my $output_xml =
     "HTTP/1.0 200 OK" 
@@ -106,12 +102,6 @@ sub push_result_back() {
 # If error happened, returns it as the only AJAX reply, else sends the informative data.
 sub send_reply() {
 	if ($error_text) {
-		my $prefix = '';
-		if ( $error_text !~ m/^(Error|Warning):/mi ) {
-			$prefix = '<font color="red"><u><b>Error:</b></u></font> ';
-		}
-		$error_text =
-"<ul><li>$prefix<font color=\"darkblue\">$error_text</font></li></ul>";
 		$error_text =~ s/]]>/]]>]]&gt;<![CDATA[/g
 		  ;    # Escape ]]> that would close CDATA block otherwise
 		print $output_xml
@@ -634,55 +624,81 @@ sub construct_progress_data($) {
 
 sub getUpdateInfoFromNetwork {
 	my @package_name = @_;
-	my $test =
-	  `$DOWNLOAD_CMD $DOWNLOAD_PATH 2>&1 | grep $GREP_PATH.*tests.*rpm`;
-	my @rpm = split /\.rpm/, $test;
+	my @rpm          = ();
+	my $repo         = get_repo();
+	my @repo_all     = split( "::", $repo );
+	my $repo_type    = $repo_all[0];
+	my $repo_url     = $repo_all[1];
+	my $GREP_PATH    = $repo_url;
+	$GREP_PATH =~ s/\:/\\:/g;
+	$GREP_PATH =~ s/\//\\\//g;
+	$GREP_PATH =~ s/\./\\\./g;
+	$GREP_PATH =~ s/\-/\\\-/g;
+
+	if ( $repo_type =~ /remote/ ) {
+		@rpm = `$DOWNLOAD_CMD $repo_url 2>&1 | grep $GREP_PATH.*tests.*rpm`;
+	}
+	if ( $repo_type =~ /local/ ) {
+		@rpm = `find $repo_url | grep $GREP_PATH.*tests.*rpm`;
+	}
 	my @install_flag;
 	my $temp_package_count = 0;
 	push( @update_package_flag, "0" );
+	for ( my $i = 0 ; $i < @rpm ; $i++ ) {
+		$install_flag[$i] = "b";
+	}
 	if ( @package_name > 0 ) {
 		foreach (@package_name) {
-			my $temp_rpm_count            = 0;
-			my $package_name_tmp          = $_;
-			my $package_version_installed = `rpm -qa $_`;
-			$_ = $package_version_installed;
-			s/(.*)\-(.*)\-(.*)/$2/g;
-			s/\.//g;
-			push( @package_version_installed, $_ );
-			push( @package_version_latest,    $_ );
+			my $temp_rpm_count   = 0;
+			my $package_name_tmp = $_;
+			my $cmd = "sdb shell 'rpm -qa | grep " . $package_name_tmp . "'";
+			my $package_version_installed = `$cmd`;
+			my $version                   = "none";
+			if ( $package_version_installed =~ /-(\d\.\d\.\d-\d)/ ) {
+				$version = $1;
+			}
+			push( @package_version_installed, $version );
+			push( @package_version_latest,    $version );
 
 			foreach (@rpm) {
-				$install_flag[$temp_rpm_count] = "b";
-				s/(.*)$GREP_PATH//g;
-				if ( $_ =~ /$package_name_tmp/ ) {
+				my $remote_pacakge_name = $_;
+				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
+				if ( $remote_pacakge_name =~ /$package_name_tmp/ ) {
 					$install_flag[$temp_rpm_count] = "a";
-					s/(.*)\-(.*)\-(.*)/$2/g;
-					s/\.//g;
-					$package_version_latest[$temp_package_count] = $_;
+					my $version = "none";
+					if ( $remote_pacakge_name =~ /-(\d\.\d\.\d-\d)/ ) {
+						$version = $1;
+					}
+					$package_version_latest[$temp_package_count] = $version;
 				}
 				$temp_rpm_count++;
 			}
 			$temp_package_count++;
 		}
 		for ( my $i = 0 ; $i < @rpm ; $i++ ) {
-			if ( $install_flag[$i] ne "a" ) {
-				$_ = $rpm[$i];
-				s/(.*)\-(.*)\-(.*)/$1/g;
-				push( @uninstall_package_name, $_ );
-				$_ = $rpm[$i];
-				s/(.*)\-(.*)\-.\.(.*)/$2/g;
-				push( @uninstall_package_version, $_ );
+			if ( $install_flag[$i] eq "b" ) {
+				my $remote_pacakge_name = $rpm[$i];
+				my $package_name        = "none";
+				my $version             = "none";
+				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
+				if ( $remote_pacakge_name =~ /\s*(.*)-(\d\.\d\.\d-\d)/ ) {
+					$package_name = $1;
+					$version      = $2;
+				}
+				push( @uninstall_package_name,    $package_name );
+				push( @uninstall_package_version, $version );
 			}
 		}
 		for ( my $count = 0 ; $count < @package_name ; $count++ ) {
-			if (
-				int( $package_version_installed[$count] ) ==
-				int( $package_version_latest[$count] ) )
-			{
-				$update_package_flag[$count] = "b";
+			my $result = compare_version(
+				$package_version_installed[$count],
+				$package_version_latest[$count]
+			);
+			if ( $result eq "update" ) {
+				$update_package_flag[$count] = "a";
 			}
 			else {
-				$update_package_flag[$count] = "a";
+				$update_package_flag[$count] = "b";
 			}
 		}
 	}
@@ -693,10 +709,12 @@ sub getUpdateInfoFromNetwork {
 				$_ = $rpm_temp;
 				s/(.*)$GREP_PATH(.*)\-(.*)\-(.*)/$2/g;
 				push( @uninstall_package_name, $_ );
-				$rpm_temp = $rpm[$i];
-				$_        = $rpm_temp;
-				s/(.*)$GREP_PATH(.*)\-(.*)\-(.*)/$3/g;
-				push( @uninstall_package_version, $_ );
+				my $remote_pacakge_name = $rpm[$i];
+				my $version             = "none";
+				if ( $remote_pacakge_name =~ /-(\d\.\d\.\d-\d)/ ) {
+					$version = $1;
+				}
+				push( @uninstall_package_version, $version );
 			}
 		}
 	}
@@ -954,8 +972,15 @@ elsif ( $_GET{'action'} eq 'run_tests' ) {
 			   # Test run has completely finished; redirect to the results page.
 								if ( $status->{'STATUS'} eq 'Finished' ) {
 									chomp( my $time =
-`ls -t ../../../../lite | cut -f 1 | sed -n '1,1p'`
+`ls -t ../../../lite | cut -f 1 | sed -n '1,1p'`
 									);
+									chomp( my $time_all =
+										  `ls -l ../../../lite | grep latest` );
+									if ( $time_all =~
+										/-> \/opt\/testkit\/lite\/(.*)/ )
+									{
+										$time = $1;
+									}
 									updateManualState($time);
 									if ( $hasManual eq "False" ) {
 										$data .= "<redirect>$time</redirect>\n";
@@ -1095,8 +1120,14 @@ elsif ( $_GET{'action'} eq 'get_test_log' ) {
 
 			   # Test run has completely finished; redirect to the results page.
 							chomp( my $time =
-`ls -t ../../../../lite | cut -f 1 | sed -n '1,1p'`
+`ls -t ../../../lite | cut -f 1 | sed -n '1,1p'`
 							);
+							chomp( my $time_all =
+								  `ls -l ../../../lite | grep latest` );
+							if ( $time_all =~ /-> \/opt\/testkit\/lite\/(.*)/ )
+							{
+								$time = $1;
+							}
 							updateManualState($time);
 							if ( $hasManual eq "False" ) {
 								$data .= "<redirect>$time</redirect>\n";
@@ -1139,18 +1170,35 @@ elsif ( $_GET{'action'} eq 'get_test_log' ) {
 
 elsif ( $_GET{'action'} eq 'update_page_with_uninstall_pkg' ) {
 	my @installed_package_list = split /\:/, $_GET{'installed_packages'};
-	my $check_network = `$CHECK_NETWORK $DOWNLOAD_PATH 2>&1 |grep 200`;
-	if ( $check_network =~ /200 OK/ ) {
+	my $flag_uninstall         = 0;
+	my $flag_update            = 0;
+	my $check_network          = check_network();
+	if ( $check_network =~ /OK/ ) {
 		getUpdateInfoFromNetwork(@installed_package_list);
-		$data .=
+		foreach (@uninstall_package_name) {
+			if ( $_ =~ /[a-zA-Z]/ ) {
+				$flag_uninstall = 1;
+			}
+		}
+		foreach (@update_package_flag) {
+			if ( $_ =~ /a/ ) {
+				$flag_update = 1;
+			}
+		}
+		if ( $flag_uninstall || $flag_update ) {
+			$data .=
 "<uninstall_package_name>@uninstall_package_name</uninstall_package_name>\n";
-		$data .=
+			$data .=
 "<uninstall_package_version>@uninstall_package_version</uninstall_package_version>\n";
-		$data .=
-		  "<update_package_flag>@update_package_flag</update_package_flag>\n";
+			$data .=
+"<update_package_flag>@update_package_flag</update_package_flag>\n";
+		}
+		else {
+			$data .=
+"<no_package_update_or_install>1</no_package_update_or_install>\n";
+		}
 	}
 	else {
-		$check_network = "failed: Connection timed out!";
 		$data .=
 "<network_connection_timeout>$check_network</network_connection_timeout>\n";
 	}
@@ -1160,39 +1208,83 @@ elsif ( $_GET{'action'} eq 'update_page_with_uninstall_pkg' ) {
 elsif ( $_GET{'action'} eq 'install_package' ) {
 	my $package_name  = $_GET{'package_name'};
 	my $package_count = $_GET{'package_count'};
-	my $temp          = `$ZYPPER_CMD $DOWNLOAD_PATH in $package_name`;
-	my $check_install_success_or_fail = `rpm -qa $package_name`;
-	if ($check_install_success_or_fail) {
+	my $check_install = install_package($package_name);
+	if ( $check_install =~ /OK/ ) {
+		my $file_name = $test_definition_dir . $package_name . "/tests.xml";
+		my $case_number_temp = 0;
+		open FILE, $file_name or die $!;
+		while (<FILE>) {
+			if ( $_ =~ /<testcase(.*)/ ) {
+				$case_number_temp++;
+			}
+		}
 		$data .=
-"<install_package_name>install_$package_name</install_package_name>\n";
+"<install_package_name>SUCCESS_$package_name</install_package_name>\n";
+		$data .= "<case_number_temp>$case_number_temp</case_number_temp>\n";
 	}
 	else {
-		$data .= "<install_package_name>$package_name</install_package_name>\n";
+		$data .=
+		  "<install_package_name>$check_install</install_package_name>\n";
 	}
 	$data .= "<install_package_count>$package_count</install_package_count>\n";
 }
 
 #update package
 elsif ( $_GET{'action'} eq 'update_package' ) {
-	my $package_name = $_GET{'package_name'};
-	my $count        = $_GET{'package_count'};
-	my $version_old  = `rpm -qa $package_name`;
-	my $temp         = `$ZYPPER_CMD $DOWNLOAD_PATH up $package_name`;
-	my $version_new  = `rpm -qa $package_name`;
-	my $version;
-	$_ = $version_new;
-	s/(.*)\-(.*)\-(.*)/$2/g;
-	$version = $_;
+	my $package_name  = $_GET{'package_name'};
+	my $count         = $_GET{'package_count'};
+	my $cmd           = "sdb shell 'rpm -qa | grep " . $package_name . "'";
+	my $version_old   = `$cmd`;
+	my $version       = $version_old;
+	my $flag          = $_GET{'flag'};
+	my $check_install = install_package($package_name);
+	if ( $version =~ /-(\d\.\d\.\d-\d)/ ) {
+		$version = $1;
+	}
+	if ( $check_install =~ /OK/ ) {
+		my $version_new = `$cmd`;
+		if ( $version_new =~ /-(\d\.\d\.\d-\d)/ ) {
+			$version = $1;
+		}
+		if ( $version_old ne $version_new ) {
 
-	if ( $version_old ne $version_new ) {
-		$data .=
-		  "<update_package_name>update_$package_name</update_package_name>\n";
+			# remove old version's widget
+			my $cmd =
+			  "sdb shell 'wrt-launcher -l | grep " . $package_name . "'";
+			my @package_items = `$cmd`;
+			pop @package_items;
+			foreach (@package_items) {
+				my $package_id = "none";
+				if ( $_ =~ /^\s+(\d+)\s+(\d+)/ ) {
+					$package_id = $2;
+				}
+				if ( $package_id ne "none" ) {
+					system(
+						"sdb shell wrt-installer -u $package_id 2>&1 >/dev/null"
+					);
+				}
+			}
+
+			$data .=
+"<update_package_name>SUCCESS_$package_name</update_package_name>\n";
+			$data .=
+			  "<update_package_name_flag>$flag</update_package_name_flag>\n";
+		}
+		else {
+			my $error_message = "new version and old version are the same";
+			$data .=
+			  "<update_package_name>$error_message</update_package_name>\n";
+			$data .=
+			  "<update_package_name_flag>$flag</update_package_name_flag>\n";
+		}
 	}
 	else {
-		$data .= "<update_package_name>$package_name</update_package_name>\n";
+		$data .= "<update_package_name>$check_install</update_package_name>\n";
+		$data .= "<update_package_name_flag>$flag</update_package_name_flag>\n";
 	}
 	$data .=
 "<update_package_latest_version>$version</update_package_latest_version>\n";
+	$data .= "<update_package_count>$count</update_package_count>\n";
 }
 
 elsif ( $_GET{'action'} eq 'check_profile_isExist' ) {
@@ -1228,6 +1320,67 @@ elsif ( $_GET{'action'} eq 'check_profile_isExist' ) {
 		$data .= "<check_profile_name>$data_isNotExist</check_profile_name>\n";
 	}
 	closedir DELPROFILE;
+}
+
+# execute profile
+elsif ( $_GET{'action'} eq 'execute_profile' ) {
+	my $file;
+	my $flag_i = 0;
+	my @select_packages;
+	my @advanced_value    = split /\*/, $_GET{"advanced"};
+	my @checkbox_value    = split /\*/, $_GET{"checkbox"};
+	my @auto_count        = split /\:/, $_GET{'auto_count'};
+	my @manual_count      = split /\:/, $_GET{'manual_count'};
+	my @package_name_flag = split /\*/, $_GET{"pkg_flag"};
+
+	my $dir_profile_name = $profile_dir_manager;
+
+	$advanced_value_architecture   = $advanced_value[0];
+	$advanced_value_version        = $advanced_value[1];
+	$advanced_value_category       = $advanced_value[2];
+	$advanced_value_priority       = $advanced_value[3];
+	$advanced_value_status         = $advanced_value[4];
+	$advanced_value_execution_type = $advanced_value[5];
+	$advanced_value_test_suite     = $advanced_value[6];
+	$advanced_value_type           = $advanced_value[7];
+	$advanced_value_test_set       = $advanced_value[8];
+	$advanced_value_component      = $advanced_value[9];
+
+	open OUT, '>' . $dir_profile_name . "temp_profile";
+	print OUT "[Auto]\n";
+	while ( $flag_i < @package_name_flag ) {
+		if ( $package_name_flag[$flag_i] eq "a" ) {
+			if ( $checkbox_value[$flag_i] =~ /select/ ) {
+				$_ = $checkbox_value[$flag_i];
+				s/selectcheckbox_//g;
+				print OUT $_ . "("
+				  . $auto_count[$flag_i] . " "
+				  . $manual_count[$flag_i] . ")\n";
+				push( @select_packages, $checkbox_value[$flag_i] );
+			}
+		}
+		$flag_i++;
+	}
+	print OUT "[/Auto]\n";
+
+	print OUT "\n[Advanced-feature]\n";
+	print OUT "select_arc=" . $advanced_value_architecture . "\n";
+	print OUT "select_ver=" . $advanced_value_version . "\n";
+	print OUT "select_category=" . $advanced_value_category . "\n";
+	print OUT "select_pri=" . $advanced_value_priority . "\n";
+	print OUT "select_status=" . $advanced_value_status . "\n";
+	print OUT "select_exe=" . $advanced_value_execution_type . "\n";
+	print OUT "select_testsuite=" . $advanced_value_test_suite . "\n";
+	print OUT "select_type=" . $advanced_value_type . "\n";
+	print OUT "select_testset=" . $advanced_value_test_set . "\n";
+	print OUT "select_com=" . $advanced_value_component . "\n";
+
+	print OUT "\n";
+	foreach (@select_packages) {
+		s/selectcheckbox_//g;
+		print OUT "[select-packages]: " . $_ . "\n";
+	}
+	$data .= "<execute_profile_name>temp_profile</execute_profile_name>\n";
 }
 
 # save profile
@@ -1312,14 +1465,18 @@ elsif ( $_GET{'action'} eq "check_package_isExist" ) {
 				if ( $_ =~ /select-packages/ ) {
 					$temp = $_;
 					@temp = split /:/, $temp;
-					push( @packages_need, $temp[1] );
+					my $package_name = $temp[1];
+					$package_name =~ s/^\s*//;
+					$package_name =~ s/\s*$//;
+					push( @packages_need, $package_name );
 				}
 			}
 		}
 	}
 	for ( my $i = 0 ; $i < @packages_need ; $i++ ) {
-		my $temp = `rpm -qa |grep $packages_need[$i]`;
-		if ($temp) {
+		my $cmd  = "sdb shell ls /usr/share/$packages_need[$i]/tests.xml";
+		my $temp = `$cmd`;
+		if ( $temp !~ /No such file or directory/ ) {
 			$packages_isExist_flag[$i] = "1";
 		}
 		else {
@@ -1372,73 +1529,105 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 			$bugnumber = "none";
 		}
 
-		#write result back to file
-		if (
-			!(
-				  -e $FindBin::Bin
-				. "/../../../results/"
-				. $package
-				. "_manual_case_tests.txt"
-			)
-		  )
-		{
+		# handle all cases including manual cases to the xml file
+		my @temp_2 = split( ":", $name_result );
+		my $name   = shift(@temp_2);
+		my $result = shift(@temp_2);
+		my $auto_case_result_xml =
+		    $FindBin::Bin
+		  . "/../../../results/"
+		  . $time . "/"
+		  . $package
+		  . "_tests.xml";
+		$name =~ s/\s/\\ /g;
+		my $cmd_getLine =
+		  'grep id=\\"' . $name . '\\" ' . $auto_case_result_xml . ' -n';
+		my $grepResult = `$cmd_getLine`;
+
+		if ( $grepResult =~ /\s*(\d*)\s*:(.*>)/ ) {
+			my $line_number  = $1;
+			my $line_content = $2;
+			$line_content =~ s/\s/\\ /g;
+			$line_content =~ s/result=".*"/result="$result"/;
+
+			system( "sed -i '"
+				  . $line_number . "c "
+				  . $line_content . "' "
+				  . $auto_case_result_xml );
+		}
+
+		# record a copy of manual cases, so we can store comment and bug number
+		if ( ( $testarea eq "auto" ) && ( $bugnumber eq "auto" ) ) { }
+		else {
+
+			#write result back to file
+			if (
+				!(
+					  -e $FindBin::Bin
+					. "/../../../results/"
+					. $package
+					. "_manual_case_tests.txt"
+				)
+			  )
+			{
+				my $manual_result;
+				open $manual_result,
+				    ">"
+				  . $FindBin::Bin
+				  . "/../../../results/"
+				  . $package
+				  . "_manual_case_tests.txt"
+				  or die $!;
+				close $manual_result;
+			}
+
 			my $manual_result;
 			open $manual_result,
-			    ">"
+			    ">>"
 			  . $FindBin::Bin
 			  . "/../../../results/"
 			  . $package
 			  . "_manual_case_tests.txt"
 			  or die $!;
+			print {$manual_result} $name_result . "\n";
 			close $manual_result;
-		}
 
-		my $manual_result;
-		open $manual_result,
-		    ">>"
-		  . $FindBin::Bin
-		  . "/../../../results/"
-		  . $package
-		  . "_manual_case_tests.txt"
-		  or die $!;
-		print {$manual_result} $name_result . "\n";
-		close $manual_result;
-
-		#write comment and bug number back to file
-		if (
-			!(
-				  -e $FindBin::Bin
-				. "/../../../results/"
-				. $package
-				. "_manual_case_tests_comment_bug_number.txt"
-			)
-		  )
-		{
-			my $manual_result;
-			open $manual_result,
-			    ">"
+			#write comment and bug number back to file
+			if (
+				!(
+					  -e $FindBin::Bin
+					. "/../../../results/"
+					. $package
+					. "_manual_case_tests_comment_bug_number.txt"
+				)
+			  )
+			{
+				my $manual_result;
+				open $manual_result,
+				    ">"
+				  . $FindBin::Bin
+				  . "/../../../results/"
+				  . $package
+				  . "_manual_case_tests_comment_bug_number.txt"
+				  or die $!;
+				close $manual_result;
+			}
+			my $manual_result_comment_bug_number;
+			my @temp_name = split( ":", $name_result );
+			my $name = shift @temp_name;
+			open $manual_result_comment_bug_number,
+			    ">>"
 			  . $FindBin::Bin
 			  . "/../../../results/"
 			  . $package
 			  . "_manual_case_tests_comment_bug_number.txt"
 			  or die $!;
-			close $manual_result;
+			print {$manual_result_comment_bug_number} $package . "__" 
+			  . $name . "__"
+			  . $testarea . "__"
+			  . $bugnumber . "\n";
+			close $manual_result_comment_bug_number;
 		}
-		my $manual_result_comment_bug_number;
-		my @temp_name = split( ":", $name_result );
-		my $name = shift @temp_name;
-		open $manual_result_comment_bug_number,
-		    ">>"
-		  . $FindBin::Bin
-		  . "/../../../results/"
-		  . $package
-		  . "_manual_case_tests_comment_bug_number.txt"
-		  or die $!;
-		print {$manual_result_comment_bug_number} $package . "__" 
-		  . $name . "__"
-		  . $testarea . "__"
-		  . $bugnumber . "\n";
-		close $manual_result_comment_bug_number;
 	}
 	system( 'mv -f '
 		  . $FindBin::Bin
@@ -1455,15 +1644,23 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 		  . $time
 		  . "/" );
 	updateManualState($time);
+	updateAutoState($time);
+
+	# create tar file
+	my $result_dir_manager = $FindBin::Bin . "/../../../results/";
+	my $tar_cmd_delete     = "rm -f " . $result_dir_manager . $time . "/*.tgz";
+	my $tar_cmd_create =
+	    "tar -czPf "
+	  . $result_dir_manager
+	  . $time . "/"
+	  . $time . ".tgz "
+	  . $result_dir_manager
+	  . $time . "/*";
+	system("$tar_cmd_delete");
+	system("$tar_cmd_create &>/dev/null");
 	$data .= "<save_manual_redirect>1</save_manual_redirect>\n";
 	$data .= "<save_manual_time>$time</save_manual_time>\n";
-	if ( $hasManual eq "False" ) {
-		$data .=
-		  "<save_manual_redirect_report>1</save_manual_redirect_report>\n";
-	}
-	else {
-		$data .= "<save_manual_refresh>1</save_manual_refresh>\n";
-	}
+	$data .= "<save_manual_refresh>1</save_manual_refresh>\n";
 }
 elsif ( $_GET{'action'} eq 'read_result_xml' ) {
 	my $result_path = $_GET{'file'};
@@ -1489,6 +1686,18 @@ elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests
 				my $status = read_status();
 				if ( $status->{'IS_RUNNING'} ) {
 					if ( kill( 'TERM', $status->{'PID'} ) ) {
+						while (1) {
+							my $kill_result = `sdb shell killall testkit-lite`;
+							if ( $kill_result =~ /no process killed/ ) {
+								last;
+							}
+						}
+						while (1) {
+							my $kill_result = `sdb shell killall wrt-client`;
+							if ( $kill_result =~ /no process killed/ ) {
+								last;
+							}
+						}
 						$data .=
 						  '<stopped id="' . $_GET{'tree'} . '">1</stopped>';
 					}
@@ -1892,6 +2101,7 @@ elsif ( $_GET{'action'} eq 'load_caselist' ) {
 	  $CONFIG{'RESULTS_DIR'} . '/' . $testrun_id . '/results';
 	my $tests_result   = $tests_result_dir . '/manualtest.res';
 	my @initial_result = ();
+
 	if ( !-s $tests_result_dir ) {
 		mkdir( $tests_result_dir, 0755 )
 		  || die "could not create directory $tests_result_dir";
@@ -2073,6 +2283,112 @@ elsif ( $_GET{'action'} eq 'save_user' ) {
 }
 else {
 	$error_text = 'Incorrect call parameters!';
+}
+
+sub updateAutoState {
+	my ($time) = @_;
+	undef %autoResult;
+	find( \&updateAutoState_wanted, "../../../results/" . $time . "/" );
+
+	open FILE, $FindBin::Bin . "/../../../results/" . $time . "/info"
+	  or die "Can't open "
+	  . $FindBin::Bin
+	  . "/../../../results/"
+	  . $time . "/info";
+
+	my $package_name;
+	my $inside;
+	my $line = 0;
+	while (<FILE>) {
+		$line++;
+		if ( $_ =~ /Package:(.*)/ ) {
+			$inside       = "False";
+			$package_name = $1;
+			foreach ( keys %autoResult ) {
+				if ( $_ eq $package_name ) {
+					$inside = "True";
+				}
+			}
+		}
+		if ( $_ =~ /Pass\(M\):(\d*)/ ) {
+			if ( $inside eq "True" ) {
+				my @result_all  = split( ":", $autoResult{$package_name} );
+				my $pass_all    = int($1) + int( $result_all[0] );
+				my $line_number = $line - 3;
+				system( "sed -i '"
+					  . $line_number
+					  . 'c Pass:'
+					  . $pass_all
+					  . "' ../../../results/"
+					  . $time
+					  . '/info' );
+				$line_number = $line + 3;
+				system( "sed -i '"
+					  . $line_number
+					  . 'c Pass(A):'
+					  . int( $result_all[0] )
+					  . "' ../../../results/"
+					  . $time
+					  . '/info' );
+			}
+		}
+		if ( $_ =~ /Fail\(M\):(\d*)/ ) {
+			if ( $inside eq "True" ) {
+				my @result_all  = split( ":", $autoResult{$package_name} );
+				my $fail_all    = int($1) + int( $result_all[1] );
+				my $line_number = $line - 3;
+				system( "sed -i '"
+					  . $line_number
+					  . 'c Fail:'
+					  . $fail_all
+					  . "' ../../../results/"
+					  . $time
+					  . '/info' );
+				$line_number = $line + 3;
+				system( "sed -i '"
+					  . $line_number
+					  . 'c Fail(A):'
+					  . int( $result_all[1] )
+					  . "' ../../../results/"
+					  . $time
+					  . '/info' );
+			}
+		}
+	}
+}
+
+sub updateAutoState_wanted {
+	my $dir = $File::Find::name;
+	if ( $dir =~ /.*\/(.*)_tests.xml$/ ) {
+		my $package_name = $1;
+		if ( $dir !~ /_manual_case_tests.xml$/ ) {
+			my $pass  = 0;
+			my $fail  = 0;
+			my $block = 0;
+			my $total = 0;
+			open FILE, $FindBin::Bin . "/" . $dir
+			  or die "Can't open " . $FindBin::Bin . "/" . $dir;
+			while (<FILE>) {
+
+				# just count auto case
+				if ( $_ =~ /.*<testcase.*execution_type="auto".*/ ) {
+					if ( $_ =~ /result="N\/A"/ ) {
+						$block += 1;
+					}
+					if ( $_ =~ /result="PASS"/ ) {
+						$pass += 1;
+					}
+					if ( $_ =~ /result="FAIL"/ ) {
+						$fail += 1;
+					}
+				}
+			}
+			$total = $pass + $fail + $block;
+			if ( $total > 0 ) {
+				$autoResult{$package_name} = $pass . ":" . $fail;
+			}
+		}
+	}
 }
 
 sub updateManualState {

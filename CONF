@@ -1,0 +1,16 @@
+#this the configuration file
+#you can change some basic info for testkit-manager
+
+#repository URL, currently we support two kinds of repos:
+#remote HTTP repo and local repo
+#if you want to specify a remote repo, you can follow the example below:
+#repo_url_remote = http://xxx/
+
+repo_url_remote = http://xxx/
+
+#if you want to specify a local repo, you can follow the example below:
+#repo_url_local = /home/package/
+
+#please note that two kinds of repos can't be open at the same time
+#if so, we'll only detect the first one.
+#also the repo URL must be ended with "/", otherwise it won't recognize package name correctly

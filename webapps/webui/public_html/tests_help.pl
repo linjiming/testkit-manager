@@ -31,10 +31,10 @@ print "Content-type: text/html" . CRLF . CRLF;
 print_header( "$MTK_BRANCH Manager Main Page", "help" );
 
 print <<DATA;
-<table width="1280" border="0" cellspacing="0" cellpadding="0" class="help_list">
+<table width="768" border="0" cellspacing="0" cellpadding="0" class="help_list">
   <tr>
     <td>&nbsp;</td>
-    <td><table width="27%" border="1" cellpadding="0" cellspacing="0" bordercolor="#E2E3E3">
+    <td><table width="30%" border="1" cellpadding="0" cellspacing="0" bordercolor="#E2E3E3">
         <tr>
           <td align="center">Contents [<a id="contents_text" href="#" onClick="javascript:showContents()">hide</a>]</td>
         </tr>
@@ -44,7 +44,7 @@ print <<DATA;
   <tr>
     <td width="2%">&nbsp;</td>
     <td><div id="contents">
-        <table width="27%" border="1" cellpadding="0" cellspacing="0" bordercolor="#E2E3E3">
+        <table width="30%" border="1" cellpadding="0" cellspacing="0" bordercolor="#E2E3E3">
           <tr>
             <td align="left"><ol>
                 <li><a href="#overview">Overview</a></li>
@@ -132,20 +132,20 @@ print <<DATA;
                             <p>6.Execution Type	7.Test suite	8.Type	9.Test set	10.Component</p>
                             <ol>
                               <li>Click icon "Custom", and then the page as below will display, options &lt;Architecture&gt;, &lt;Version&gt; and button &lt;Advanced&gt; will display at the top of this page.</li>
-                              <img src="images/pic_3_1.png" width="544" height="224" />
+                              <img src="images/pic_3_1.png" width="600" height="355" />
                               <li>Click button &lt;Advanced&gt;, the hidden options will display.</li>
-                              <img src="images/pic_3_2.png" width="482" height="276" />
+                              <img src="images/pic_3_2.png" width="600" height="458" />
                               <li>Take &lt;category&gt; option and &lt;priority&gt; option for example:</li>
                               <ol>
                                 <li>At first, consuming that all the ten options' value are init values which are "Any ***", then all the packages installed in the device will display.</li>
                                 <li>Select &lt;category&gt; option with value "Netbook". The packages, which include testcase whose category is "Netbook" , will  display.</li>
-                                <img src="images/pic_3_3.png" width="560" height="272" />
+                                <img src="images/pic_3_3.png" width="600" height="261" />
                                 <li>Then, select &lt;priority&gt; option with value "P1", the packages displayed in step (2), which also include testcase whose priority is "P1", will  display.</li>
-                                <img src="images/pic_3_4.png" width="573" height="258" />
+                                <img src="images/pic_3_4.png" width="600" height="263" />
                                 <li>Select other options in the same way.</li>
                               </ol>
                               <li>Among these displayed packages, we can click "checkbox" to choose the packages that we want to test.</li>
-                              <img src="images/pic_3_5.png" width="574" height="260" />
+                              <img src="images/pic_3_5.png" width="600" height="261" />
                             </ol></td>
                         </tr>
                       </table>
@@ -169,9 +169,9 @@ print <<DATA;
                               <ol>
                                 <li>Filter packages as introduced in 3.1</li>
                                 <li>Input &lt;Profile name :&gt; in the context [8]. We add a "auto search" function for this context.  When we input one profile name, it will automatically search files under the path://***/testkit-manager/profiles/test/ to check whether the profile name has existed.</li>
-                                <img src="images/pic_3_6.png" width="560" height="260" />
+                                <img src="images/pic_3_6.png" width="600" height="301" />
                                 <li>If the "auto search" shows "No match profile"[9], then click button &lt;Save&gt;, and the profile will be saved under path://***/testkit-manager/profiles/test/.</li>
-                                <img src="images/pic_3_7.png" width="540" height="255" />
+                                <img src="images/pic_3_7.png" width="600" height="303" />
                                 <li>
                                   <p>If the "auto search" shows the matched profile name, it represents that there has been profiles whose name are similar to or the same as that you input. [10].</p>
                                   <p>When you select one profile name which has been saved before and then click button &lt;Save&gt;, one confirmation will pop up with content "Profile: &lt;profile name input&gt; exists, Would you like to overwirte it?".</p>
@@ -189,9 +189,9 @@ print <<DATA;
                               <p>We can load profile which we have saved, and run the profile.</p>
                               <ol>
                                 <li>As picture 3-10, fill in the profile name, and click button &lt;Load&gt;.</li>
-                                <img src="images/pic_3_10.png" width="627" height="284" />
+                                <img src="images/pic_3_10.png" width="600" height="357" />
                                 <li>As picture 3-11, the profile "temp_profile" will be loaded.</li>
-                                <img src="images/pic_3_11.png" width="628" height="281" />
+                                <img src="images/pic_3_11.png" width="600" height="260" />
                                 <li>Notes:</li>
                                 <ol>
                                   <li>If the "auto search" shows the matched profile name, it represents that there has been profiles whose name are similar to or the same as what you input..  Then you can select one profile you want to run and click button &lt;Load&gt;. The profile will be loaded and the page will be automatically refreshed to the page saved before.</li>
@@ -238,18 +238,21 @@ print <<DATA;
                               <li>View case information</li>
                               <ol>
                                 <li>Click button &lt;view&gt;, the page will be refreshed as bellow:</li>
-                                <img src="images/pic_3_12.png" width="562" height="390" />
+                                <img src="images/pic_3_12.png" width="600" height="433" />
                                 <li>Click the case name, the detailed case info will display in the right of the page.</li>
                               </ol>
                               <li>Sort packages</li>
                               <p>Click button with arrow icon, the packages will be sorted. Click this button again and the packages will be reversely sorted.</p>
-                              <img src="images/pic_3_13.png" width="627" height="258" />
+                              <img src="images/pic_3_13.png" width="600" height="359" />
                               <li>Delete packages</li>
-                              <p>Click button wich delete icon in picture 3-14, and one confirmation will pop up.</p>
-                              <img src="images/pic_3_14.png" width="628" height="257" />
+                              <p>Click button with delete icon in picture 3-14, and one confirmation will pop up.</p>
+                              <img src="images/pic_3_14.png" width="600" height="357" />
                               <li>List package information</li>
                               <p>Click package name, and detailed packages information will be listed.</p>
-                              <img src="images/pic_3_15.png" width="535" height="325" />
+                              <img src="images/pic_3_15.png" width="600" height="483" />
+                              <li>Update package list from repo</li>
+                              <p>Click Update button ,testkit-manager will scan package list from repo, and list all the packages that not installed , we can click install icon to install theses packages. At the same time, if there are newer version for the package which has been installed from repo, the update icon for this package will enabled.We can click update icon to update this package to the latest  version.</p>
+                              <img src="images/pic_3_16.png" width="600" height="861" />
                             </ol></td>
                         </tr>
                       </table>
