@@ -28,7 +28,7 @@
           height: 50px;
       }
       .yui-pb-bar {
-          background-color: #551F00;
+          background-color: #3E1B05;
       }
     </style>
     <!--end YUI CSS infrastructure-->
@@ -49,7 +49,7 @@
   <body class="ns-0" onclick="javascript:if (typeof(onBodyClick)!='undefined') onBodyClick();" onload="javascript:if (typeof(ajaxInit)!='undefined') ajaxInit();" onmousemove="javascript:dragMove(event);" onmouseup="javascript:dragStop(event);">
 
     <!-- BEGIN globalWrapper -->
-    <div id="globalWrapper">
+    <div id="globalWrapper" align="center">
 
     <!-- START masthead -->
 <table width="1280" height="110" border="0" cellpadding="0" cellspacing="0" background="images/header_background.png">
@@ -61,20 +61,19 @@
       </tr>
       
       <tr>
-        <td width="16%" height="30" align="center"><a href='tests_custom.pl' class='link-level1$$$CUSTOM_STYLE$$$'>CUSTOM</a></td>
-        <td width="5%" height="30" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="20" /></td>
-        <td width="16%" height="30" align="center"><a href='tests_execute.pl' class='link-level1$$$EXECUTE_STYLE$$$'>EXECUTE</a></td>
-        <td width="5%" height="30" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="20" /></td>
-        <td width="16%" height="30" align="center"><a href='tests_report.pl' class='link-level1$$$REPORT_STYLE$$$'>REPORT</a></td>
-        <td width="5%" height="30" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="20" /></td>
-        <td width="16%" height="30" align="center"><a href='tests_statistic.pl' class='link-level1$$$STATISTIC_STYLE$$$'>STATISTIC</a></td>
-        <td width="5%" height="30" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="20" /></td>
-        <td width="10%" height="30" align="center"><a href='tests_help.pl' class='link-level1$$$HELP_STYLE$$$'>HELP</a></td>
-        <td width="6%" align="center">&nbsp;</td>
+        <td width="16%" height="50" align="center" class='link-level1$$$CUSTOM_STYLE$$$-not-highlight'><a href='tests_custom.pl' class='link-level1$$$CUSTOM_STYLE$$$'>CUSTOM</a></td>
+        <td width="5%" height="50" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="20" /></td>
+        <td width="16%" height="50" align="center" class='link-level1$$$EXECUTE_STYLE$$$-not-highlight'><a href='tests_execute.pl' class='link-level1$$$EXECUTE_STYLE$$$'>EXECUTE</a></td>
+        <td width="5%" height="50" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="20" /></td>
+        <td width="16%" height="50" align="center" class='link-level1$$$REPORT_STYLE$$$-not-highlight'><a href='tests_report.pl' class='link-level1$$$REPORT_STYLE$$$'>REPORT</a></td>
+        <td width="5%" height="50" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="20" /></td>
+        <td width="16%" height="50" align="center" class='link-level1$$$STATISTIC_STYLE$$$-not-highlight'><a href='tests_statistic.pl' class='link-level1$$$STATISTIC_STYLE$$$'>STATISTIC</a></td>
+        <td width="5%" height="50" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="20" /></td>
+        <td width="16%" height="50" align="center" class='link-level1$$$HELP_STYLE$$$-not-highlight'><a href='tests_help.pl' class='link-level1$$$HELP_STYLE$$$'>HELP</a></td>
       </tr>
       <tr>
         <td height="10" colspan="10" align="center">&nbsp;</td>
-        </tr>
+      </tr>
     </table></td>
     <td width="25%"><table width="100%" height="110" border="0" cellpadding="0" cellspacing="0">
       <tr>

@@ -100,16 +100,8 @@ my $advanced_value_version;
 my $advanced_value_architecture;
 my $count_checkbox = 0;
 
-my @version_save_flag = ();
-my @category_save_flag;
-my @execution_type_save_flag = ();
-my @priority_save_flag       = ();
-my @status_save_flag         = ();
-my @test_suite_save_flag     = ();
-my @type_save_flag           = ();
-my @test_set_save_flag       = ();
-my @component_save_flag      = ();
-my @package_name_flag        = ();
+my @package_name_flag      = ();
+my @view_package_name_flag = ();
 
 my $advanced_value_category;
 my $advanced_value_priority;
@@ -125,9 +117,40 @@ my @load_profile_result_pkg_name;
 my @select_packages_filter;
 my @checkbox_packages;
 
+my $test_definition_dir = "/usr/share/";
+my $case_value;
+my @case_value;
+my @case_id;
+my @case_execution_type;
+my @case_xml;
+my $case_value_flag_count = 0;
+
+my @filter_version_value         = ();
+my @filter_suite_value           = ();
+my @filter_set_value             = ();
+my @filter_type_value            = ();
+my @filter_status_value          = ();
+my @filter_component_value       = ();
+my @filter_execution_value       = ();
+my @filter_priority_value        = ();
+my @filter_category_value        = ();
+my $case_count_total             = 0;
+my @one_package_case_count_total = ();
+
+my @filter_auto_count;
+my @filter_manual_count;
+my $download_cmd  = "wget -r -l 1 -nd -A rpm --spider";
+my $download_path = 
+my @package_version_installed   = ();
+my @package_version_latest      = ();
+my @update_package_flag         = ();
+my @uninstall_package_name      = ();
+my @uninstall_package_version   = ();
+my $UNINSTALL_PACKAGE_COUNT_MAX = "100";
+
 # press delete package button
 if ( $_GET{"delete_package"} ) {
-	my $flag_i;
+	my $flag_i = 0;
 	my @package_name_temp;
 	my $checkbox_value  = $_GET{"checkbox"};
 	my @select_packages = split /\*/, $checkbox_value;
@@ -163,28 +186,11 @@ if ( $_GET{"delete_package"} ) {
 	CreateFilePath();
 	AnalysisTestsXML();
 
-	for (
-		my $count_flag = 0 ;
-		$count_flag < $package_name_number ;
-		$count_flag++
-	  )
-	{
-		push( @version_save_flag,        "a" );
-		push( @category_save_flag,       "a" );
-		push( @execution_type_save_flag, "a" );
-		push( @priority_save_flag,       "a" );
-		push( @status_save_flag,         "a" );
-		push( @test_suite_save_flag,     "a" );
-		push( @type_save_flag,           "a" );
-		push( @test_set_save_flag,       "a" );
-		push( @component_save_flag,      "a" );
-		push( @package_name_flag,        "a" );
-	}
-	
 	$count_package_number_post = $package_name_number;
-	
-	FilterItem();
-	
+
+	FilterCaseValue();
+	FilterCase();
+
 	while ( $flag_i < @package_name ) {
 		if ( $package_name_flag[$flag_i] eq "a" ) {
 			foreach (@select_packages) {
@@ -197,26 +203,14 @@ if ( $_GET{"delete_package"} ) {
 		$flag_i++;
 	}
 
-	UpdateLoadPage();
+	UpdateLoadPage("");
 }
 
-# press save button
-elsif ( $_GET{'save_profile_button'} ) {
-
-	my $key;
-	my $file;
-	my $value;
-
-	my $count             = 0;
-	my $count_cn          = 0;
-	my $count_ver         = 0;
-	my $flag_i            = 0;
-	my $get_value         = $_GET{"advanced"};
-	my @get_value         = split /\*/, $get_value;
-	my $checkbox_value    = $_GET{"checkbox"};
-	my @select_packages   = split /\*/, $checkbox_value;
-	my $save_profile_name = $_GET{'save_profile_button'};
-	my $dir_profile_name  = $profile_dir_manager;
+elsif ( $_GET{'view_single_package'} ) {
+	my $get_value  = $_GET{"advanced"};
+	my @get_value  = split /\*/, $get_value;
+	my $view_count = 0;
+	my @view_flag;
 
 	$advanced_value_architecture   = $get_value[0];
 	$advanced_value_version        = $get_value[1];
@@ -230,116 +224,43 @@ elsif ( $_GET{'save_profile_button'} ) {
 	$advanced_value_component      = $get_value[9];
 
 	ScanPackages();
+	foreach (@package_name) {
+		my $temp = $_;
+		$view_flag[$view_count] = "b";
+		if ( $_GET{ "view_" . "$temp" } ) {
+			$view_flag[$view_count] = "a";
+		}
+		$view_count++;
+	}
+
 	CountPackages();
 	AnalysisVersion();
 	CreateFilePath();
 	AnalysisTestsXML();
+	GetSelectItem();
+	FilterCaseValue();
+	FilterCase();
+	UpdateViewPageSelectItem();
 
-	for (
-		my $count_flag = 0 ;
-		$count_flag < $package_name_number ;
-		$count_flag++
-	  )
-	{
-		push( @version_save_flag,        "a" );
-		push( @category_save_flag,       "a" );
-		push( @execution_type_save_flag, "a" );
-		push( @priority_save_flag,       "a" );
-		push( @status_save_flag,         "a" );
-		push( @test_suite_save_flag,     "a" );
-		push( @type_save_flag,           "a" );
-		push( @test_set_save_flag,       "a" );
-		push( @component_save_flag,      "a" );
-		push( @package_name_flag,        "a" );
-	}
-
-	$count_package_number_post = $package_name_number;
-
-	open OUT, '>' . $dir_profile_name . $save_profile_name;
-
-	FilterItem();
-
-	print OUT "[Auto]\n";
-
-	my @temp;
-	while ( $flag_i < @package_name ) {
-		if ( $package_name_flag[$flag_i] eq "a" ) {
-			push( @temp, "[Display-packages]:" . $package_name[$flag_i] );
-			push( @load_profile_result_pkg_name, $package_name[$flag_i] );
-			foreach (@select_packages) {
-				if ( $_ =~ /$package_name[$flag_i]/ ) {
-					s/checkbox_//g;
-					push( @checkbox_packages, $_ );
-				}
+	my $i;
+	while ( $i < @package_name ) {
+		if ( $package_name_flag[$i] eq "a" ) {
+			$package_name_flag[$i] = "b";
+			if ( $view_flag[$i] eq "a" ) {
+				$package_name_flag[$i] = "a";
 			}
 		}
-		else {
-			push( @temp, "[None-Display-packages]:" . $package_name[$flag_i] );
-		}
-		$flag_i++;
+		$i++;
 	}
-
-	foreach (@checkbox_packages) {
-		s/checkbox_//g;
-		print OUT $_ . "\n";
-
-	}
-
-	print OUT "[/Auto]\n\n";
-
-	foreach (@temp) {
-		print OUT $_ . "\n";
-	}
-
-	print OUT "\n[Advanced-feature]\n";
-	print OUT "select_arc=" . $advanced_value_architecture . "\n";
-	print OUT "select_ver=" . $advanced_value_version . "\n";
-	print OUT "select_category=" . $advanced_value_category . "\n";
-	print OUT "select_pri=" . $advanced_value_priority . "\n";
-	print OUT "select_status=" . $advanced_value_status . "\n";
-	print OUT "select_exe=" . $advanced_value_execution_type . "\n";
-	print OUT "select_testsuite=" . $advanced_value_test_suite . "\n";
-	print OUT "select_type=" . $advanced_value_type . "\n";
-	print OUT "select_testset=" . $advanced_value_test_set . "\n";
-	print OUT "select_com=" . $advanced_value_component . "\n";
-
-	print OUT "\n";
-	foreach (
-		my $count_cn = 0 ;
-		$count_cn < $count_package_number_post ;
-		$count_cn++
-	  )
-	{
-		print OUT "\n[Package"
-		  . $count_cn
-		  . "-count]:"
-		  . $case_number[ 3 * $count_cn ];
-	}
-	print OUT "\n";
-	foreach (@version) {
-		print OUT "\n[Package" . $count_ver . "-version]:" . $_;
-		$count_ver++;
-	}
-	print OUT "\n\n";
-	foreach (@checkbox_packages) {
-		print OUT "[select-packages]: " . $_ . "\n";
-	}
-
-	UpdateLoadPage();
+	ViewDetailedInfo();
 }
 
-elsif ( $_POST{'execute_profile'} ) {
+# press view button
+elsif ( $_POST{'view_package_info'} ) {
+	my %hash = %_POST;
 	my $key;
 	my $value;
-	my $flag_i    = 0;
-	my %hash      = %_POST;
-	my $count     = 0;
-	my $count_cn  = 0;
-	my $count_ver = 0;
-	my @select_packages;
-	my @select_packages_filter;
-
-	$count_package_number_post   = $_POST{"package_name_number"};
+	my @select_package_temp;
 	$advanced_value_version      = $_POST{"select_ver"};
 	$advanced_value_architecture = $_POST{"select_arc"};
 
@@ -352,26 +273,95 @@ elsif ( $_POST{'execute_profile'} ) {
 	$advanced_value_test_set       = $_POST{"select_testset"};
 	$advanced_value_component      = $_POST{"select_com"};
 
-	for (
-		my $count_flag = 0 ;
-		$count_flag < $count_package_number_post ;
-		$count_flag++
-	  )
-	{
-		push( @version_save_flag,        "a" );
-		push( @category_save_flag,       "a" );
-		push( @execution_type_save_flag, "a" );
-		push( @priority_save_flag,       "a" );
-		push( @status_save_flag,         "a" );
-		push( @test_suite_save_flag,     "a" );
-		push( @type_save_flag,           "a" );
-		push( @test_set_save_flag,       "a" );
-		push( @component_save_flag,      "a" );
-		push( @package_name_flag,        "a" );
+	ScanPackages();
+	CountPackages();
+	AnalysisVersion();
+	CreateFilePath();
+	AnalysisTestsXML();
+	GetSelectItem();
+	FilterCaseValue();
+	FilterCase();
+	UpdateViewPageSelectItem();
+
+	for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
+		$view_package_name_flag[$count] = $package_name_flag[$count];
 	}
 
+	while ( ( $key, $value ) = each %hash ) {
+		if ( $key =~ /checkbox/ ) {
+			push( @select_package_temp, $key );
+		}
+	}
+
+	my $i;
+	while ( $i < @package_name ) {
+		if ( $package_name_flag[$i] eq "a" ) {
+			$package_name_flag[$i] = "b";
+			foreach (@select_package_temp) {
+				if ( $_ eq "checkbox_" . $package_name[$i] ) {
+					$package_name_flag[$i] = "a";
+				}
+			}
+		}
+		$i++;
+	}
+	ViewDetailedInfo();
+}
+
+elsif ( $_POST{'view_filter_package_list'} ) {
+	$advanced_value_version      = $_POST{"select_ver"};
+	$advanced_value_architecture = $_POST{"select_arc"};
+
+	$advanced_value_category       = $_POST{"select_category"};
+	$advanced_value_priority       = $_POST{"select_pri"};
+	$advanced_value_status         = $_POST{"select_status"};
+	$advanced_value_execution_type = $_POST{"select_exe"};
+	$advanced_value_test_suite     = $_POST{"select_testsuite"};
+	$advanced_value_type           = $_POST{"select_type"};
+	$advanced_value_test_set       = $_POST{"select_testset"};
+	$advanced_value_component      = $_POST{"select_com"};
+
+	ScanPackages();
+	CountPackages();
+	AnalysisVersion();
+	CreateFilePath();
+	AnalysisTestsXML();
+	FilterCaseValue();
+	FilterCase();
+	UpdateViewPageSelectItem();
+	ViewDetailedInfo();
+}
+
+# press Execute button
+elsif ( $_POST{'execute_profile'} ) {
+	my $key;
+	my $value;
+	my $flag_i    = 0;
+	my $count     = 0;
+	my $count_cn  = 0;
+	my $count_ver = 0;
+	my %hash      = %_POST;
+	my $auto_case_number;
+	my $manual_case_number;
+	my @auto_case_number;
+	my @manual_case_number;
+	my @select_packages;
+	my @select_packages_filter;
+
+	$count_package_number_post     = $_POST{"package_name_number"};
+	$advanced_value_version        = $_POST{"select_ver"};
+	$advanced_value_architecture   = $_POST{"select_arc"};
+	$advanced_value_category       = $_POST{"select_category"};
+	$advanced_value_priority       = $_POST{"select_pri"};
+	$advanced_value_status         = $_POST{"select_status"};
+	$advanced_value_execution_type = $_POST{"select_exe"};
+	$advanced_value_test_suite     = $_POST{"select_testsuite"};
+	$advanced_value_type           = $_POST{"select_type"};
+	$advanced_value_test_set       = $_POST{"select_testset"};
+	$advanced_value_component      = $_POST{"select_com"};
+
 	open OUT, '> ' . $profile_dir_manager . 'temp_profile';
-	
+
 	ScanPackages();
 
 	CountPackages();
@@ -382,7 +372,9 @@ elsif ( $_POST{'execute_profile'} ) {
 
 	AnalysisTestsXML();
 
-	FilterItem();
+	FilterCaseValue();
+
+	FilterCase();
 
 	print OUT "[Auto]\n";
 
@@ -399,7 +391,12 @@ elsif ( $_POST{'execute_profile'} ) {
 			push( @load_profile_result_pkg_name, $package_name[$flag_i] );
 			foreach (@select_packages) {
 				if ( $_ eq "checkbox_" . $package_name[$flag_i] ) {
+					s/checkbox_//g;
 					push( @select_packages_filter, $_ );
+					$auto_case_number   = $filter_auto_count[$flag_i];
+					$manual_case_number = $filter_manual_count[$flag_i];
+					push( @auto_case_number,   $auto_case_number );
+					push( @manual_case_number, $manual_case_number );
 				}
 			}
 		}
@@ -409,10 +406,12 @@ elsif ( $_POST{'execute_profile'} ) {
 		$flag_i++;
 	}
 
-	foreach (@select_packages_filter) {
-		s/checkbox_//g;
-		print OUT $_ . "\n";
+	for ( my $i = 0 ; $i < @select_packages_filter ; $i++ ) {
+		print OUT $select_packages_filter[$i] . "("
+		  . $auto_case_number[$i] . " "
+		  . $manual_case_number[$i] . ")\n";
 	}
+
 	print OUT "[/Auto]\n";
 
 	print OUT "\n[Advanced-feature]\n";
@@ -448,6 +447,10 @@ elsif ( $_POST{'execute_profile'} ) {
 		print OUT "\n[Package" . $count_ver . "-version]:" . $_;
 		$count_ver++;
 	}
+	print OUT "\n\n";
+	for ( my $i = 0 ; $i < @select_packages_filter ; $i++ ) {
+		print OUT "[select-packages]: " . $select_packages_filter[$i] . "\n";
+	}
 	print <<DATA;
 		<script>
 		document.location="tests_execute.pl?profile=temp_profile"
@@ -458,10 +461,10 @@ DATA
 #press load button
 elsif ( $_GET{'load_profile_button'} ) {
 	my $file;
-	my $flag_i;
+	my $flag_i            = 0;
 	my $load_profile_name = $_GET{"load_profile_button"};
+	my $dir_profile_name  = $profile_dir_manager;
 
-	my $dir_profile_name = $profile_dir_manager;
 	opendir LOADPROFILE, $dir_profile_name
 	  or die "can not open $dir_profile_name";
 	open IN, $profile_dir_manager . $load_profile_name or die $!;
@@ -543,131 +546,31 @@ elsif ( $_GET{'load_profile_button'} ) {
 
 	$count_package_number_post = $package_name_number;
 
-	for (
-		my $count_flag = 0 ;
-		$count_flag < $package_name_number ;
-		$count_flag++
-	  )
-	{
-		push( @version_save_flag,        "a" );
-		push( @category_save_flag,       "a" );
-		push( @execution_type_save_flag, "a" );
-		push( @priority_save_flag,       "a" );
-		push( @status_save_flag,         "a" );
-		push( @test_suite_save_flag,     "a" );
-		push( @type_save_flag,           "a" );
-		push( @test_set_save_flag,       "a" );
-		push( @component_save_flag,      "a" );
-		push( @package_name_flag,        "a" );
-	}
-
-	FilterItem();
-
-	UpdateLoadPage();
+	FilterCaseValue();
+	FilterCase();
+	UpdateLoadPage($load_profile_name);
 
 	closedir LOADPROFILE;
 }
-
-# press delete button
-elsif ( $_GET{'delete_profile_button'} ) {
-
-	my $key;
-	my $file;
-	my $value;
-	my $flag_i              = 0;
-	my %hash                = %_POST;
-	my $get_value           = $_GET{"advanced"};
-	my @get_value           = split /\*/, $get_value;
-	my $checkbox_value      = $_GET{"checkbox"};
-	my @select_packages     = split /\*/, $checkbox_value;
-	my $delete_profile_name = $_GET{'delete_profile_button'};
-	my $dir_profile_name    = $profile_dir_manager;
-	my $delete_profile;
-
-	$advanced_value_architecture   = $get_value[0];
-	$advanced_value_version        = $get_value[1];
-	$advanced_value_category       = $get_value[2];
-	$advanced_value_priority       = $get_value[3];
-	$advanced_value_status         = $get_value[4];
-	$advanced_value_execution_type = $get_value[5];
-	$advanced_value_test_suite     = $get_value[6];
-	$advanced_value_type           = $get_value[7];
-	$advanced_value_test_set       = $get_value[8];
-	$advanced_value_component      = $get_value[9];
-
-	opendir DELPROFILE, $dir_profile_name
-	  or die "can not open $dir_profile_name";
-
-	foreach $file ( readdir DELPROFILE ) {
-		if ( $file =~ /\b$delete_profile_name\b/ ) {
-			$delete_profile = $file;
-			unlink $dir_profile_name . $delete_profile;
-			$delete_profile = 1;
-			last;
-		}
-		else {
-			$delete_profile = 0;
-		}
-	}
-	closedir DELPROFILE;
-
+else {
 	ScanPackages();
 	CountPackages();
 	AnalysisVersion();
-	CreateFilePath();
-	AnalysisTestsXML();
-
-	for (
-		my $count_flag = 0 ;
-		$count_flag < $package_name_number ;
-		$count_flag++
-	  )
-	{
-		push( @version_save_flag,        "a" );
-		push( @category_save_flag,       "a" );
-		push( @execution_type_save_flag, "a" );
-		push( @priority_save_flag,       "a" );
-		push( @status_save_flag,         "a" );
-		push( @test_suite_save_flag,     "a" );
-		push( @type_save_flag,           "a" );
-		push( @test_set_save_flag,       "a" );
-		push( @component_save_flag,      "a" );
-		push( @package_name_flag,        "a" );
-	}
-
-	$count_package_number_post = $package_name_number;
-
-	FilterItem();
-
-	while ( $flag_i < @package_name ) {
-		if ( $package_name_flag[$flag_i] eq "a" ) {
-			foreach (@select_packages) {
-				if ( $_ =~ /$package_name[$flag_i]/ ) {
-					s/checkbox_//g;
-					push( @checkbox_packages, $_ );
-				}
-			}
-		}
-		$flag_i++;
-	}
-	
-	UpdateLoadPage();
-}
-else {
-	ScanPackages();
 	my $i = @package_name;
 	if ( $i eq "0" ) {
+		FilterCaseValue();
 		UpdateNullPage();
+
 	}
 	else {
+		FilterCaseValue();
 		UpdatePage();
 	}
 }
 
-#update page
+#update custom page
 sub UpdatePage {
 	CountPackages();
-
 	@sort_package_name    = sort @package_name;
 	@reverse_package_name = reverse @sort_package_name;
 	if ( $_GET{'order'} ) {
@@ -704,8 +607,10 @@ sub UpdatePage {
 	AnalysisReadMe();
 
 	GetSelectItem();
-
+	print show_error_dlg("");
 	print <<DATA;
+	<div id="ajax_loading" style="display:none"></div>
+	
 	<table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="">
@@ -726,7 +631,7 @@ sub UpdatePage {
 	                <tr>
 	                <td width="13%" height="50" nowrap="nowrap">&nbsp;</td>
 	                  <td width="37%" height="50" align="right" class="custom_title">Version:&nbsp</td>
-	                  <td width="50%" height="50" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_item();">
+	                  <td width="50%" height="50" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_case_item();">
 DATA
 	DrawVersionSelect();
 	print <<DATA;
@@ -735,8 +640,11 @@ DATA
               </table></td>
               <td width="2%" height="50" nowrap="nowrap">&nbsp;</td>
               <td width="4%" height="50" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
-              <td width="4.5%" height="50" nowrap="nowrap"><a href="tests_custom.pl?order=$value"><img src="$image" width="38" height="38"/></a></td>
-              <td width="54%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
+              <td width="4.5%" height="50" nowrap="nowrap"><a id="sort_packages" href="tests_custom.pl?order=$value"><img src="$image" width="38" height="38"/></a></td>
+              <td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
+              <td width="42%" height="50" align="left" nowrap="nowrap">
+				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
+			  </td>
               <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
@@ -746,8 +654,8 @@ DATA
             <tr>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspcategory:</td><td>
-                    <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;category:</td><td>
+                    <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawCategorySelect();
 	print <<DATA;
@@ -756,8 +664,8 @@ DATA
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsppriority:<td>
-                    <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;priority:<td>
+                    <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawPrioritySelect();
 	print <<DATA;
@@ -768,8 +676,8 @@ DATA
             <tr>
               <td width="30%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspstatus:<td>
-                    <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;status:<td>
+                    <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawStatusSelect();
 	print <<DATA;
@@ -778,8 +686,8 @@ DATA
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspexecution_type:<td>
-                    <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;execution_type:<td>
+                    <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawExecutiontypeSelect();
 	print <<DATA;
@@ -790,8 +698,8 @@ DATA
             <tr>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsptestsuite:<td>
-                    <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;testsuite:<td>
+                    <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawTestsuiteSelect();
 	print <<DATA;
@@ -800,8 +708,8 @@ DATA
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsptype:<td>
-                    <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;type:<td>
+                    <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawTypeSelect();
 	print <<DATA;
@@ -812,8 +720,8 @@ DATA
             <tr>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
-                    <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsptestset:<td>
-                      <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                    <td width="30%" height="50" align="left" class="custom_title">&nbsp;testset:<td>
+                      <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawTestsetSelect();
 	print <<DATA;
@@ -822,8 +730,8 @@ DATA
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspcomponent:<td>
-                    <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;component:<td>
+                    <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawComponentSelect();
 	print <<DATA;
@@ -842,16 +750,17 @@ DATA
               <td><table width="100%" height="50" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
                 <tr>
               <td width="4%" height="36" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
-              <td width="24%" height="50" class="custom_list_type_bottomright_title">&nbsp&nbsp&nbsp&nbspPackage Name </td>
-              <td width="24%" height="50" class="custom_list_type_bottomright_title">&nbsp&nbsp&nbsp&nbspCase Number </td>
-              <td width="24%" height="50" class="custom_list_type_bottomright_title">&nbsp&nbsp&nbsp&nbspVersion</td>
-              <td width="24%" height="50" class="custom_list_type_bottom_title">&nbsp&nbsp&nbsp&nbspOperation</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Package Name</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottom_title">&nbsp;Operation</td>
               <input type="hidden" id="package_name_number" name="package_name_number" value="$package_name_number">
                 </tr>
               </table></td>
             </tr>
 DATA
 	DrawPackageList();
+	DrawUninstallPackageList();
 	print <<DATA;
             </tr>
           </table></td>
@@ -864,11 +773,11 @@ DATA
             <tr>
               <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="10%" valign="top"><div align="center">
-                <input type="submit" id="execute_profile" name="execute_profile" class="large_button" value="Execute"/>
+                <input type="submit" id="execute_profile" name="execute_profile" class="large_button" disabled="true" value="Execute"/>
               </div></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" valign="top" class="backbackground_button"><div align="center">
-                <input name="Submit3" type="submit" class="large_button" value="Veiw" />
+                <input type="submit" id="view_package_info" name="view_package_info" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" />
               </div></td>
               <td width="4%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="6%" class="backbackground_button">&nbsp;</td>
@@ -881,6 +790,33 @@ DATA
               	</tr>
               </table>
               </td>
+              <td width="21%" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+		        	<td height="7" class="backbackground_button"></td>
+		        </tr>
+                <tr>
+                  <td>
+                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="" style="width: 14em;" onkeyup="showtips();if(event.keyCode==27)c();" onkeydown="enterTips()" autocomplete=off /></label></td>
+                </tr>
+                <tr>
+                  <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
+                   </select>
+                  </label>
+                  </td>
+                </tr>
+              </table></td>
+              
+              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button"  type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:onSave();"/></td>
+              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" type="button" class="medium_button" value="Load" onclick="javascript:onLoad();"/></td>
+              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
+              <td width="1%"><img src="images/environment-spacer.gif" width="16" height="1" /></td>
+            </tr>
+          </table></td>
+        </tr>
+      </table>
 DATA
 }
 
@@ -913,8 +849,9 @@ sub UpdateNullPage {
 	print "Content-type: text/html" . CRLF . CRLF;
 
 	print_header( "$MTK_BRANCH Manager Main Page", "custom" );
-
+	print show_error_dlg("");
 	print <<DATA;
+	<div id="ajax_loading" style="display:none"></div>
 	<table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="">
@@ -935,14 +872,17 @@ sub UpdateNullPage {
 	                <tr>
 	                <td width="13%" height="50" nowrap="nowrap">&nbsp;</td>
 	                  <td width="37%" height="50" align="right" class="custom_title">Version:&nbsp</td>
-	                  <td width="50%" height="50" ><select id="select_ver" name="select_ver" value="Any Version" class="custom_select" onchange="javascript:filter_item();">
+	                  <td width="50%" height="50" ><select id="select_ver" name="select_ver" value="Any Version" class="custom_select" onchange="javascript:filter_case_item();">
                   </select></td>
                 </tr>
               </table></td>
               <td width="2%" height="50" nowrap="nowrap">&nbsp;</td>
               <td width="4%" height="50" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
-              <td width="4.5%" height="50" nowrap="nowrap"><a href="tests_custom.pl?order=$value"><img src="$image" width="38" height="38"/></a></td>
-              <td width="54%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
+              <td width="4.5%" height="50" nowrap="nowrap"><a id="sort_packages" href="tests_custom.pl?order=$value"><img src="$image" width="38" height="38"/></a></td>
+              <td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
+              <td width="42%" align="left" height="50" nowrap="nowrap">
+				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
+			  </td>
               <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
@@ -952,15 +892,15 @@ sub UpdateNullPage {
             <tr>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspcategory:</td><td>
-                    <select name="select_category" align="20px" id="select_category" class="custom_select" value="Any Category" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;category:</td><td>
+                    <select name="select_category" align="20px" id="select_category" class="custom_select" value="Any Category" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsppriority:<td>
-                    <select name="select_pri" id="select_pri" class="custom_select" value="And Priority" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;priority:<td>
+                    <select name="select_pri" id="select_pri" class="custom_select" value="And Priority" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -968,15 +908,15 @@ sub UpdateNullPage {
             <tr>
               <td width="30%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspstatus:<td>
-                    <select name="select_status" id="select_status" class="custom_select" value="Any Status" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;status:<td>
+                    <select name="select_status" id="select_status" class="custom_select" value="Any Status" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspexecution_type:<td>
-                    <select name="select_exe" id="select_exe" class="custom_select" value="Any Execution Type" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;execution_type:<td>
+                    <select name="select_exe" id="select_exe" class="custom_select" value="Any Execution Type" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -984,15 +924,15 @@ sub UpdateNullPage {
             <tr>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsptestsuite:<td>
-                    <select name="select_testsuite" id="select_testsuite" class="custom_select" value="Any Test Suite" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;testsuite:<td>
+                    <select name="select_testsuite" id="select_testsuite" class="custom_select" value="Any Test Suite" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsptype:<td>
-                    <select name="select_type" id="select_type" class="custom_select" value="Any Type" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;type:<td>
+                    <select name="select_type" id="select_type" class="custom_select" value="Any Type" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -1000,15 +940,15 @@ sub UpdateNullPage {
             <tr>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
-                    <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsptestset:<td>
-                      <select name="select_testset" id="select_testset" class="custom_select" value="Any Test Set" style="width:70%" onchange="javascript:filter_item();">
+                    <td width="30%" height="50" align="left" class="custom_title">&nbsp;testset:<td>
+                      <select name="select_testset" id="select_testset" class="custom_select" value="Any Test Set" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                   </tr>
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspcomponent:<td>
-                    <select name="select_com" id="select_com" class="custom_select" value="Any Component" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;component:<td>
+                    <select name="select_com" id="select_com" class="custom_select" value="Any Component" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -1024,43 +964,513 @@ sub UpdateNullPage {
               <td><table width="100%" height="50" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
                 <tr>
               <td width="4%" height="36" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
-              <td width="24%" height="50" class="custom_list_type_bottomright_title">&nbsp&nbsp&nbsp&nbspPackage Name </td>
-              <td width="24%" height="50" class="custom_list_type_bottomright_title">&nbsp&nbsp&nbsp&nbspCase Number </td>
-              <td width="24%" height="50" class="custom_list_type_bottomright_title">&nbsp&nbsp&nbsp&nbspVersion</td>
-              <td width="24%" height="50" class="custom_list_type_bottom_title">&nbsp&nbsp&nbsp&nbspOpreation</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Package Name</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottom_title">&nbsp;Opreation</td>
                 </tr>
               </table></td>
             </tr>
             </tr>
           </table></td>
         </tr>
-        <tr><table width="100%" height="300" border="0" align="center" class="backbackground_button" cellpadding="0" cellspacing="0">
+        <tr><table width="100%" height="300" border="0" id="update_null_page_div" align="center" class="backbackground_button" cellpadding="0" cellspacing="0" style="display:">
         	<tr>
-        		<td width="20%" class="backbackground_button">&nbsp;</td>
-        		<td width="80%"><input type="button" class="custom_list_type_bottomright_packagename" id="update_null_page" name="update_null_page" value="No packages, please install packages and then click here to refresh page!" onclick="javascript:refreshPage();" /></td>
+        		<td width="100%" align="center" class="custom_list_type_bottomright_packagename" id="update_null_page" name="update_null_page">No packages, please click Update button , install packages, then click reload button to refresh page!</td>
         	</tr>
         </table>
         </tr>
+DATA
+	DrawUninstallPackageList();
+	print <<DATA;
         <tr>
           <td><table width="100%" height="50" border="0" align="center" class="backbackground_button" cellpadding="0" cellspacing="0">
             <tr>
               <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="10%"><div align="center">
-                <input type="submit" id="execute_profile" name="execute_profile" class="large_button" value="Execute"/>
+                <input type="submit" id="execute_profile" name="execute_profile" class="large_button" disabled="true" value="Execute"/>
               </div></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" class="backbackground_button"><div align="center">
-                <input name="Submit3" type="submit" class="large_button" value="Veiw" />
+                <input id="view_package_info" name="view_package_info" type="submit" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" />
               </div></td>
               <td width="4%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="6%" class="backbackground_button">&nbsp;</td>
               <td width="11%" nowrap="nowrap" class="custom_font">Profile name:</td>
+              <td width="21%" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+		        	<td height="7" class="backbackground_button"></td>
+		        </tr>
+                <tr>
+                  <td>
+                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" disabled="true" value="" style="width: 14em;" onkeyup="showtips();if(event.keyCode==27)c();" onkeydown="enterTips()" autocomplete=off /></label></td>
+                </tr>
+                <tr>
+                  <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
+                   </select>
+                  </label>
+                  </td>
+                </tr>
+              </table></td>
+              
+              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button"  type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:onSave();"/></td>
+              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" type="button" class="medium_button" value="Load" disabled="true" onclick="javascript:onLoad();"/></td>
+              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
+              <td width="1%"><img src="images/environment-spacer.gif" width="16" height="1" /></td>
+            </tr>
+          </table></td>
+        </tr>
+      </table>
 DATA
 }
 
-#After press "Save", "Load", "Delete" button, refresh the page.
-sub UpdateLoadPage {
+#After press View button, Update the page.
+sub ViewDetailedInfo {
+	my $xml = "none";
+	my %caseInfo;
+	my $case_count_flag = 0;
+	print <<DATA;
+	<tr>
+		<td><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        	<tr>
+	            <td width="1%" class="report_list_one_row" style="background-color:#E9F6FC">&nbsp;</td>
+	            <td width="29%" height="600px" valign="top" class="view_package_list_info" style="overflow:auto;background-color:#E9F6FC">
+					<div id="tree_area_package" style="height:600px;width:300px">
+						<div class='view_no_match_testcase_message' id="no_match_testcase_message" style="display:none">No match testcase!</div>
+						<div class='view_no_match_testcase_message' id="no_select_testcase_message" style="display:none">Please select testcase!</div>
+					</div>
+				</td>			
+DATA
 
+	print <<DATA;
+<script type="text/javascript" src="run_tests.js"></script>
+<script language="javascript" type="text/javascript">
+// <![CDATA[
+// package tree
+//global variable to allow console inspection of tree:
+
+drawCaseTree();
+// anonymous function wraps the remainder of the logic:
+function drawCaseTree() {
+	var tree;
+
+	// function to initialize the tree:
+	function treeInit() {
+		buildTree();
+	}
+
+	// Function creates the tree
+	function buildTree() {
+
+		// instantiate the tree:
+		tree = new YAHOO.widget.TreeView("tree_area_package");
+DATA
+
+	my $package_number                    = 1;
+	my $count                             = 0;
+	my $advanced_value_category_tmp       = $advanced_value_category;
+	my $advanced_value_test_suite_tmp     = $advanced_value_test_suite;
+	my $advanced_value_test_set_tmp       = $advanced_value_test_set;
+	my $advanced_value_type_tmp           = $advanced_value_type;
+	my $advanced_value_status_tmp         = $advanced_value_status;
+	my $advanced_value_component_tmp      = $advanced_value_component;
+	my $advanced_value_execution_type_tmp = $advanced_value_execution_type;
+	my $advanced_value_priority_tmp       = $advanced_value_priority;
+	my $testcase_id;
+	my $testcase_execution_type;
+	my @package_name_tmp = @package_name;
+
+	foreach (@package_name_tmp) {
+		if ( $view_package_name_flag[$count] eq "a" ) {
+			$case_count_flag++;
+		}
+		if ( $package_name_flag[$count] eq "a" ) {
+			my $suite_number    = 0;
+			my $set_number      = 0;
+			my $testcase_number = 1;
+			my $xml_temp;
+			my $suite_value;
+			my $set_value;
+			my $category_value;
+			my $flag_suite        = "n";
+			my $flag_set          = "n";
+			my $flag_case         = "n";
+			my $flag_category     = "n";
+			my $draw_package_flag = 0;
+			my $draw_suite_flag   = 0;
+			my $draw_set_flag     = 0;
+			my $package           = $_;
+			my $tests_xml_dir = $test_definition_dir . $package . "/tests.xml";
+
+			open FILE, $tests_xml_dir or die $!;
+			while (<FILE>) {
+				if ( $_ =~ /suite.*name="(.*?)"/ ) {
+					$suite_value = $1;
+					$flag_suite  = "s";
+					if (
+						(
+							$advanced_value_test_suite_tmp =~
+							/\bAny Test Suite\b/
+						)
+						|| ( $advanced_value_test_suite_tmp =~
+							/\b$suite_value\b/ )
+					  )
+					{
+						$flag_suite = "m";
+						$suite_number++;
+						$draw_suite_flag = 0;
+					}
+				}
+				if ( $flag_suite eq "m" ) {
+					if ( $_ =~ /set.*name="(.*?)"/ ) {
+						$set_value = $1;
+						$flag_set  = "s";
+						if (
+							(
+								$advanced_value_test_set_tmp =~
+								/\bAny Test Set\b/
+							)
+							|| ( $advanced_value_test_set_tmp =~
+								/\b$set_value\b/ )
+						  )
+						{
+							$flag_set = "m";
+							$set_number++;
+							$draw_set_flag = 0;
+						}
+					}
+					if ( $flag_set eq "m" ) {
+						if ( $_ =~ /testcase.*purpose="(.*?)".*id="(.*?)"/ ) {
+							$xml_temp      = "none";
+							$case_value    = $2;
+							$testcase_id   = $2;
+							$flag_case     = "s";
+							$flag_category = "s";
+							if ( $_ =~
+/testcase.*purpose="(.*?)".*type="(.*?)".*status="(.*?)".*component="(.*?)".*execution_type="(.*?)".*priority="(.*?)".*id="(.*?)"/
+							  )
+							{
+								my $tmp2 = $2;
+								my $tmp3 = $3;
+								my $tmp4 = $4;
+								my $tmp5 = $5;
+								my $tmp6 = $6;
+								my $tmp7 = $7;
+								$testcase_execution_type = $tmp5;
+
+								if (
+									(
+										(
+											$advanced_value_type_tmp =~
+											/\bAny Type\b/
+										)
+										|| ( $advanced_value_type_tmp =~
+											/\b$tmp2\b/ )
+									)
+									&& (
+										(
+											$advanced_value_status_tmp =~
+											/\bAny Status\b/
+										)
+										|| ( $advanced_value_status_tmp =~
+											/\b$tmp3\b/ )
+									)
+									&& (
+										(
+											$advanced_value_component_tmp =~
+											/\bAny Component\b/
+										)
+										|| ( $advanced_value_component_tmp =~
+											/\b$tmp4\b/ )
+									)
+									&& (
+										(
+											$advanced_value_execution_type_tmp
+											=~ /\bAny Execution Type\b/
+										)
+										|| ( $advanced_value_execution_type_tmp
+											=~ /\b$tmp5\b/ )
+									)
+									&& (
+										(
+											$advanced_value_priority_tmp =~
+											/\bAny Priority\b/
+										)
+										|| ( $advanced_value_priority_tmp =~
+											/\b$tmp6\b/ )
+									)
+								  )
+								{
+									$flag_case = "m";
+								}
+							}
+						}
+						if ( $flag_case eq "m" ) {
+							chomp( $xml_temp .= $_ );
+							if ( $_ =~ /\<category\>(.*?)\<\/category\>/ ) {
+								$category_value = $1;
+								if ( $flag_category eq "s" ) {
+									if (
+										(
+											$advanced_value_category_tmp =~
+											/\bAny Category\b/
+										)
+										|| ( $advanced_value_category_tmp =~
+											/\b$category_value\b/ )
+									  )
+									{
+										$flag_category = "m";
+										push( @case_value, $case_value );
+										push( @case_execution_type,
+											$testcase_execution_type );
+										push( @case_id, $testcase_id );
+
+										if ( $draw_package_flag eq "0" ) {
+											print 'var package_'
+											  . $package_number
+											  . ' = new YAHOO.widget.TextNode("'
+											  . $package
+											  . '", tree.getRoot(), false);';
+											print "\n";
+											print 'package_'
+											  . $package_number
+											  . '.title="Package: '
+											  . $package . '";';
+											print "\n";
+											$draw_package_flag = 1;
+										}
+
+										if ( $draw_suite_flag eq "0" ) {
+											print 'var suite_'
+											  . $suite_number
+											  . ' = new YAHOO.widget.TextNode("'
+											  . $suite_value
+											  . '", package_'
+											  . $package_number
+											  . ', false);';
+											print "\n";
+											print 'suite_'
+											  . $suite_number
+											  . '.title="Suite: '
+											  . $value . '"';
+											print "\n";
+											$draw_suite_flag = 1;
+										}
+
+										if ( $draw_set_flag eq "0" ) {
+											print 'var set_'
+											  . $set_number
+											  . ' = new YAHOO.widget.TextNode("'
+											  . $set_value
+											  . '", suite_'
+											  . $suite_number
+											  . ', false);';
+											print "\n";
+											print 'set_'
+											  . $set_number
+											  . '.title="Set: '
+											  . $set_value . '";';
+											print "\n";
+											$draw_set_flag = 1;
+										}
+
+										print 'var testcase_'
+										  . $testcase_number
+										  . ' = new YAHOO.widget.TextNode("'
+										  . ' <span class=\'view_case_name_list\'>'
+										  . '<a class=\'view_case_detail\' onclick=\'javascript:onCaseClick('
+										  . $case_value_flag_count . ');\'>'
+										  . $case_value . '</a>'
+										  . '", set_'
+										  . $set_number
+										  . ', false);';
+										print "\n";
+										print 'testcase_'
+										  . $testcase_number
+										  . '.title="Case: '
+										  . $case_value . '";';
+										print "\n";
+										$case_value_flag_count++;
+									}
+								}
+							}
+							else {
+								if ( $flag_category ne "m" ) {
+									if ( $_ =~ /\<\/testcase\>/ ) {
+										if ( $advanced_value_category_tmp =~
+											/\bAny Category\b/ )
+										{
+											chomp( $xml = $xml_temp );
+											push( @case_value, $case_value );
+											push( @case_execution_type,
+												$testcase_execution_type );
+											push( @case_id,  $testcase_id );
+											push( @case_xml, $xml );
+
+											if ( $draw_package_flag eq "0" ) {
+												print 'var package_'
+												  . $package_number
+												  . ' = new YAHOO.widget.TextNode("'
+												  . $package
+												  . '", tree.getRoot(), false);';
+												print "\n";
+												print 'package_'
+												  . $package_number
+												  . '.title="Package: '
+												  . $package . '";';
+												print "\n";
+												$draw_package_flag = 1;
+											}
+											if ( $draw_suite_flag eq "0" ) {
+												print 'var suite_'
+												  . $suite_number
+												  . ' = new YAHOO.widget.TextNode("'
+												  . $suite_value
+												  . '", package_'
+												  . $package_number
+												  . ', false);';
+												print "\n";
+												print 'suite_'
+												  . $suite_number
+												  . '.title="Suite: '
+												  . $value . '"';
+												print "\n";
+												$draw_suite_flag = 1;
+											}
+											if ( $draw_set_flag eq "0" ) {
+												print 'var set_'
+												  . $set_number
+												  . ' = new YAHOO.widget.TextNode("'
+												  . $set_value
+												  . '", suite_'
+												  . $suite_number
+												  . ', false);';
+												print "\n";
+												print 'set_'
+												  . $set_number
+												  . '.title="Set: '
+												  . $set_value . '";';
+												print "\n";
+												$draw_set_flag = 1;
+											}
+											print 'var testcase_'
+											  . $testcase_number
+											  . ' = new YAHOO.widget.TextNode("'
+											  . ' <span class=\'view_case_name_list\'>'
+											  . '<a class=\'view_case_detail\' onclick=\'javascript:onCaseClick('
+											  . $case_value_flag_count . ');\'>'
+											  . $case_value . '</a>'
+											  . '", set_'
+											  . $set_number
+											  . ', false);';
+											print "\n";
+											print 'testcase_'
+											  . $testcase_number
+											  . '.title="Case: '
+											  . $case_value . '";';
+											print "\n";
+											$case_value_flag_count++;
+										}
+									}
+								}
+							}
+							if ( $flag_category eq "m" ) {
+								if ( $_ =~ /\<\/testcase\>/ ) {
+									chomp( $xml = $xml_temp );
+									push( @case_xml, $xml );
+								}
+							}
+						}
+					}
+				}
+			}
+			$package_number++;
+		}
+		$count++;
+	}
+	if ( @case_value > 0 ) {
+		print <<DATA;
+	// The tree is not created in the DOM until this method is called:
+		tree.draw();
+DATA
+	}
+	else {
+		if ( $case_count_flag eq "0" ) {
+			print <<DATA;
+   			 document.getElementById("no_match_testcase_message").style.display="";
+DATA
+		}
+		else {
+			print <<DATA;
+   			 document.getElementById("no_select_testcase_message").style.display="";
+DATA
+		}
+	}
+	print <<DATA;
+	}
+	// Add a window onload handler to build the tree when the load
+	// event fires.
+	YAHOO.util.Event.addListener(window, "load", treeInit);
+}
+// ]]>
+</script>
+		<td width="70%" valign="top" class="view_case_detail_info" >
+DATA
+	my $count_temp = 0;
+	if ( @case_value eq "0" ) {
+		print <<DATA;
+			
+	          <div id="view_area_case_info_$count_temp" style="display:"> 
+	                          		
+DATA
+		%caseInfo = updateCaseInfo("none");
+		printDetailedCaseInfo( "none", "none", %caseInfo );
+		print <<DATA;
+</div>
+DATA
+	}
+	foreach (@case_value) {
+		my $temp = $_;
+		%caseInfo = updateCaseInfo( $case_xml[$count_temp] );
+		if ( $count_temp eq "0" ) {
+			print <<DATA;
+			
+	          <div id="view_area_case_info_$count_temp" style="display:">                 		
+DATA
+			printDetailedCaseInfo( $case_id[$count_temp],
+				$case_execution_type[$count_temp], %caseInfo );
+			print <<DATA;
+</div>
+DATA
+		}
+		else {
+			print <<DATA;
+			
+	          <div id="view_area_case_info_$count_temp" style="display:none">                 		
+DATA
+			printDetailedCaseInfo( $case_id[$count_temp],
+				$case_execution_type[$count_temp], %caseInfo );
+			print <<DATA;
+</div>
+DATA
+		}
+		$count_temp++;
+	}
+
+	print <<DATA;
+		</td>
+        	</tr>
+     	</table>
+     	</td>
+	</tr>
+DATA
+}
+
+#After press View button, refresh the page.
+sub UpdateViewPageSelectItem {
 	@sort_package_name    = sort @package_name;
 	@reverse_package_name = reverse @sort_package_name;
 	if ( $_GET{'order'} ) {
@@ -1091,8 +1501,8 @@ sub UpdateLoadPage {
 	AnalysisReadMe();
 
 	GetSelectItem();
-
 	print <<DATA;
+	<div id="ajax_loading" style="display:none"></div>
 	<table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="tests_custom.pl">
@@ -1111,9 +1521,9 @@ sub UpdateLoadPage {
 	              </table></td>
 	              <td width="13%" height="50" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                <td width="13%" height="50" nowrap="nowrap">&nbsp;</td>
+	                  <td width="13%" height="50" nowrap="nowrap">&nbsp;</td>
 	                  <td width="37%" height="50" align="right" class="custom_title">Version:&nbsp</td>
-	                  <td width="50%" height="50" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_item();">
+	                  <td width="50%" height="50" ><select id="select_ver" name="select_ver" class="custom_select">
 DATA
 	LoadDrawVersionSelect();
 	print <<DATA;
@@ -1122,14 +1532,7 @@ DATA
               </table></td>
               <td width="2%" height="50" nowrap="nowrap">&nbsp;</td>
               <td width="4%" height="50" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
-              <td width="4.5%" height="50" nowrap="nowrap"><a href="tests_custom.pl?order=$value"><img src="$image" width="38" height="38"/></a></td>
-              <td width="54%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
-              <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-        
+              <td width="4.5%" height="50" nowrap="nowrap"><a id="sort_packages" href="tests_custom.pl?order=$value"><img src="$image" width="38" height="38"/></a></td>        
 DATA
 	my $hidden_advanced_flag = 0;
 	if (   ( $advanced_value_category =~ /\bAny Category\b/ )
@@ -1142,11 +1545,31 @@ DATA
 		&& ( $advanced_value_component      =~ /\bAny Component\b/ ) )
 	{
 		print <<DATA;
-          <td id="list_advanced" style="display:none"><table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+		<td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
+        <td width="42%" align="left" height="50" nowrap="nowrap">
+			<input id="view_filter_package_list" name="view_filter_package_list" class="medium_button" type="submit" value="View"/>
+		</td>
+         <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
+            </tr>
+          </table></td>
+        </tr>
+        <tr>
+         <td id="list_advanced" style="display:none"><table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 DATA
 	}
 	else {
 		print <<DATA;
+		<td width="12%" height="50" nowrap="nowrap">
+			<input id="button_adv" name="button_adv" class="medium_button" type="button" value="Normal" onclick="javascript:hidden_Advanced_List();"/>
+		</td>
+		<td width="42%" height="50" align="left" nowrap="nowrap">
+			<input id="view_filter_package_list" name="view_filter_package_list" class="medium_button" type="submit" value="View"/>
+		</td>
+              <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
+            </tr>
+          </table></td>
+        </tr>
+        <tr>
 		<td id="list_advanced" style="display:"><table width="1280" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
 DATA
 	}
@@ -1155,8 +1578,8 @@ DATA
             <tr>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspcategory:</td><td>
-                    <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;category:</td><td>
+                    <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%">
 DATA
 	LoadDrawCategorySelect();
 	print <<DATA;
@@ -1165,8 +1588,8 @@ DATA
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsppriority:<td>
-                    <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;priority:<td>
+                    <select name="select_pri" id="select_pri" class="custom_select" style="width:70%">
 DATA
 	LoadDrawPrioritySelect();
 	print <<DATA;
@@ -1177,8 +1600,8 @@ DATA
             <tr>
               <td width="30%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspstatus:<td>
-                    <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;status:<td>
+                    <select name="select_status" id="select_status" class="custom_select" style="width:70%">
 DATA
 	LoadDrawStatusSelect();
 	print <<DATA;
@@ -1187,8 +1610,8 @@ DATA
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspexecution_type:<td>
-                    <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;execution_type:<td>
+                    <select name="select_exe" id="select_exe" class="custom_select" style="width:70%">
 DATA
 	LoadDrawExecutiontypeSelect();
 	print <<DATA;
@@ -1199,8 +1622,8 @@ DATA
             <tr>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsptestsuite:<td>
-                    <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;testsuite:<td>
+                    <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%">
 DATA
 	LoadDrawTestsuiteSelect();
 	print <<DATA;
@@ -1209,8 +1632,8 @@ DATA
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsptype:<td>
-                    <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;type:<td>
+                    <select name="select_type" id="select_type" class="custom_select" style="width:70%">
 DATA
 	LoadDrawTypeSelect();
 	print <<DATA;
@@ -1221,8 +1644,8 @@ DATA
             <tr>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
-                    <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbsptestset:<td>
-                      <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                    <td width="30%" height="50" align="left" class="custom_title">&nbsp;testset:<td>
+                      <select name="select_testset" id="select_testset" class="custom_select" style="width:70%">
 DATA
 	LoadDrawTestsetSelect();
 	print <<DATA;
@@ -1231,8 +1654,8 @@ DATA
               </table></td>
               <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="30%" height="50" align="left" class="custom_title">&nbsp&nbsp&nbsp&nbspcomponent:<td>
-                    <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_item();">
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;component:<td>
+                    <select name="select_com" id="select_com" class="custom_select" style="width:70%">
 DATA
 	LoadDrawComponentSelect();
 	print <<DATA;
@@ -1242,7 +1665,222 @@ DATA
             </tr>
           </table></td>
         </tr>
+DATA
+}
+
+#After press "Save", "Load", "Delete" button, refresh the page.
+sub UpdateLoadPageSelectItem {
+	@sort_package_name    = sort @package_name;
+	@reverse_package_name = reverse @sort_package_name;
+	if ( $_GET{'order'} ) {
+		if ( $_GET{'order'} eq "down" ) {
+			@package_name = @reverse_package_name;
+			$image        = "images/up_and_down_2.png";
+			$value        = "up";
+		}
+		elsif ( $_GET{'order'} eq "up" ) {
+			@package_name = @sort_package_name;
+			$image        = "images/up_and_down_1.png";
+			$value        = "down";
+		}
+	}
+
+	if ( $value eq "" ) {
+		$value = "up";
+	}
+	if ( $image eq "" ) {
+		$image = "images/up_and_down_2.png";
+	}
+
+	print "HTTP/1.0 200 OK" . CRLF;
+	print "Content-type: text/html" . CRLF . CRLF;
+
+	print_header( "$MTK_BRANCH Manager Main Page", "custom" );
+
+	AnalysisReadMe();
+
+	GetSelectItem();
+	print show_error_dlg("");
+	print <<DATA;
+	<div id="ajax_loading" style="display:none"></div>
+	<table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+	  <tr>
+	    <td><form id="tests_custom" name="tests_custom" method="post" action="tests_custom.pl">
+	      <table width="100%" height="50" border="0" cellspacing="0" cellpadding="0">  
+	        <tr>
+	          <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0" background="images/report_top_button_background.png">
+	            <tr>
+	              <td width="2.5%" height="50" nowrap="nowrap">&nbsp;</td>
+	              <td width="17%" height="50" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	                <tr>
+	                  <td width="47%" height="50" align="left" class="custom_title">Architecture:&nbsp</td>
+	                  <td width="53%" height="50"><select id="select_arc" name="select_arc" class="custom_select">
+	                    <option>X86</option>
+	                  </select>                  </td>
+	                </tr>
+	              </table></td>
+	              <td width="13%" height="50" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	                <tr>
+	                <td width="13%" height="50" nowrap="nowrap">&nbsp;</td>
+	                  <td width="37%" height="50" align="right" class="custom_title">Version:&nbsp</td>
+	                  <td width="50%" height="50" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_case_item();">
+DATA
+	LoadDrawVersionSelect();
+	print <<DATA;
+                  </select></td>
+                </tr>
+              </table></td>
+              <td width="2%" height="50" nowrap="nowrap">&nbsp;</td>
+              <td width="4%" height="50" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
+              <td width="4.5%" height="50" nowrap="nowrap"><a id="sort_packages" href="tests_custom.pl?order=$value"><img src="$image" width="38" height="38"/></a></td>        
+DATA
+	my $hidden_advanced_flag = 0;
+	if (   ( $advanced_value_category =~ /\bAny Category\b/ )
+		&& ( $advanced_value_priority       =~ /\bAny Priority\b/ )
+		&& ( $advanced_value_status         =~ /\bAny Status\b/ )
+		&& ( $advanced_value_execution_type =~ /\bAny Execution Type\b/ )
+		&& ( $advanced_value_test_suite     =~ /\bAny Test Suite\b/ )
+		&& ( $advanced_value_type           =~ /\bAny Type\b/ )
+		&& ( $advanced_value_test_set       =~ /\bAny Test Set\b/ )
+		&& ( $advanced_value_component      =~ /\bAny Component\b/ ) )
+	{
+
+		if ( @package_name == 0 ) {
+			print <<DATA;
+			<td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
+DATA
+		}
+		else {
+			print <<DATA;
+			<td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
+DATA
+		}
+		print <<DATA;
+	        <td width="42%" align="left" height="50" nowrap="nowrap">
+				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
+			</td>
+	         <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
+            </tr>
+          </table></td>
+        </tr>
         <tr>
+         <td id="list_advanced" style="display:none"><table width="1280" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+DATA
+	}
+	else {
+		print <<DATA;
+		<td width="12%" height="50" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Normal" onclick="javascript:hidden_Advanced_List();"/></td>
+        <td width="42%" align="left" height="50" nowrap="nowrap">
+			<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
+		</td>
+         <td width="3%" height="50" nowrap="nowrap">&nbsp;</td>
+            </tr>
+          </table></td>
+        </tr>
+        <tr>
+		<td id="list_advanced" style="display:"><table width="1280" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
+DATA
+	}
+
+	print <<DATA;
+            <tr>
+              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;category:</td><td>
+                    <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+DATA
+	LoadDrawCategorySelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;priority:<td>
+                    <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+DATA
+	LoadDrawPrioritySelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+            </tr>
+            <tr>
+              <td width="30%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;status:<td>
+                    <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+DATA
+	LoadDrawStatusSelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;execution_type:<td>
+                    <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+DATA
+	LoadDrawExecutiontypeSelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+            </tr>
+            <tr>
+              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;testsuite:<td>
+                    <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+DATA
+	LoadDrawTestsuiteSelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;type:<td>
+                    <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+DATA
+	LoadDrawTypeSelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+            </tr>
+            <tr>
+              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                  <tr>
+                    <td width="30%" height="50" align="left" class="custom_title">&nbsp;testset:<td>
+                      <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+DATA
+	LoadDrawTestsetSelect();
+	print <<DATA;
+                    </select>                    </td>
+                  </tr>
+              </table></td>
+              <td width="50%" height="50" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                 <tr>
+                  <td width="30%" height="50" align="left" class="custom_title">&nbsp;component:<td>
+                    <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+DATA
+	LoadDrawComponentSelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+            </tr>
+          </table></td>
+        </tr>
+DATA
+}
+
+sub UpdateLoadPage {
+	UpdateLoadPageSelectItem();
+	my ($load_profile_name) = @_;
+	print <<DATA;
+	<tr>
           <td></td>
         </tr>
         <tr>
@@ -1251,17 +1889,29 @@ DATA
               <td><table width="100%" height="50" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
                 <tr>
               <td width="4%" height="36" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
-              <td width="24%" height="50" class="custom_list_type_bottomright_title">&nbsp&nbsp&nbsp&nbspPackage Name </td>
-              <td width="24%" height="50" class="custom_list_type_bottomright_title">&nbsp&nbsp&nbsp&nbspCase Number </td>
-              <td width="24%" height="50" class="custom_list_type_bottomright_title">&nbsp&nbsp&nbsp&nbspVersion</td>
-              <td width="24%" height="50" class="custom_list_type_bottom_title">&nbsp&nbsp&nbsp&nbspOperation</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Package Name</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottom_title">&nbsp;Operation</td>
               <input type="hidden" id="package_name_number" name="package_name_number" value="$package_name_number">
                 </tr>
               </table></td>
             </tr>
 DATA
+	if ( @package_name == 0 ) {
+		print <<DATA;
+            <tr><table width="100%" height="300" border="0" id="update_null_page_div" align="center" class="backbackground_button" cellpadding="0" cellspacing="0" style="display:">
+        	<tr>
+        		<td width="100%" align="center" class="custom_list_type_bottomright_packagename" id="update_null_page" name="update_null_page">No packages, please click Update button , install packages, then click reload button to refresh page!</td>
+        	</tr>
+        </table>
+        </tr>
+DATA
+	}
 	LoadDrawPackageList();
-	print <<DATA;
+	DrawUninstallPackageList();
+	if ( @checkbox_packages > 0 ) {
+		print <<DATA;
             </tr>
           </table></td>
         </tr>
@@ -1277,7 +1927,7 @@ DATA
               </div></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" valign="top" class="backbackground_button"><div align="center">
-                <input name="Submit3" type="submit" class="large_button" value="Veiw" />
+                <input id="view_package_info" name="view_package_info" type="submit" class="large_button" value="View" title="View detailed information of selected packages" />
               </div></td>
               <td width="4%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="6%" class="backbackground_button">&nbsp;</td>
@@ -1290,17 +1940,13 @@ DATA
               	</tr>
               </table>
               </td>
-DATA
-}
-
-print <<DATA;
-              <td width="21%" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+			<td width="21%" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
 		        	<td height="7" class="backbackground_button"></td>
 		        </tr>
                 <tr>
                   <td>
-                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="" style="width: 14em;" onkeyup="showtips();if(event.keyCode==27)c();" onkeydown="enterTips()" autocomplete=off /></label></td>
+                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="$load_profile_name" style="width: 14em;" onkeyup="showtips();if(event.keyCode==27)c();" onkeydown="enterTips()" autocomplete=off /></label></td>
                 </tr>
                 <tr>
                   <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
@@ -1308,8 +1954,7 @@ print <<DATA;
                   </label>
                   </td>
                 </tr>
-              </table></td>
-              
+              </table></td>              
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button"  type="button" class="medium_button" value="Save" onclick="javascript:onSave();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
@@ -1320,11 +1965,75 @@ print <<DATA;
             </tr>
           </table></td>
         </tr>
-      </table>
+      </table>  
+DATA
+	}
+	else {
+		print <<DATA;
+            </tr>
+          </table></td>
+        </tr>
+        <tr>
+        <td height="4" width="100%" class="backbackground_button"></td>
+        </tr>
+        <tr>
+          <td><table width="100%" height="48" border="0" class="backbackground_button" cellpadding="0" cellspacing="0">
+            <tr>
+              <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="10%" valign="top"><div align="center">
+                <input type="submit" id="execute_profile" name="execute_profile" disabled="true" class="large_button" value="Execute"/>
+              </div></td>
+              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="9%" valign="top" class="backbackground_button"><div align="center">
+                <input id="view_package_info" name="view_package_info" disabled="true" type="submit" class="large_button" value="View" title="View detailed information of selected packages" />
+              </div></td>
+              <td width="4%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="6%" class="backbackground_button">&nbsp;</td>
+              <td width="11%" valign="top"><table>
+		        <tr>
+		        	<td height="1" class="backbackground_button"></td>
+		        </tr>
+              	<tr>
+              		<td nowrap="nowrap" class="custom_font">Profile name:</td>
+              	</tr>
+              </table>
+              </td>
+			<td width="21%" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+		        	<td height="7" class="backbackground_button"></td>
+		        </tr>
+                <tr>
+                  <td>
+                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="$load_profile_name" style="width: 14em;" onkeyup="showtips();if(event.keyCode==27)c();" onkeydown="enterTips()" autocomplete=off /></label></td>
+                </tr>
+                <tr>
+                  <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
+                   </select>
+                  </label>
+                  </td>
+                </tr>
+              </table></td>              
+              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button" disabled="true" type="button" class="medium_button" value="Save" onclick="javascript:onSave();"/></td>
+              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" type="button" class="medium_button" value="Load" onclick="javascript:onLoad();"/></td>
+              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
+              <td width="1%"><img src="images/environment-spacer.gif" width="16" height="1" /></td>
+            </tr>
+          </table></td>
+        </tr>
+      </table>  
+DATA
+	}
+}
+print <<DATA;
         </form>
     </td>
   </tr>
 </table>
+
+<script type="text/javascript" src="run_tests.js"></script>
 <script language="javascript" type="text/javascript">
 // <![CDATA[
 var profiles_list;      // List of user profiles.
@@ -1336,6 +2045,36 @@ DATA
 print $package_name_number. ";";
 
 print <<DATA;
+var package_name = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
+	if ( $count_num == $package_name_number - 1 ) {
+		print '"' . $package_name[$count_num] . '"';
+	}
+	else {
+		print '"' . $package_name[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+);
+DATA
+
+print <<DATA;
+var package_name_flag = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
+	if ( $count_num == $package_name_number - 1 ) {
+		print '"' . "a" . '"';
+	}
+	else {
+		print '"' . "a" . '"' . ",";
+	}
+}
+print <<DATA;
+);
+DATA
+
+print <<DATA;
 var msg = new Array(
 DATA
 my @files;
@@ -1345,14 +2084,14 @@ if ( opendir( DIR, $profile_dir_manager ) ) {
 	@files_temp = readdir(DIR);
 	closedir(DIR);
 }
- foreach(@files_temp){
-  	if($_ =~ /^\./){
-  		next;
-  	}
-  	else{
-  		push(@files,$_);
-  	}
-  }
+foreach (@files_temp) {
+	if ( $_ =~ /^\./ ) {
+		next;
+	}
+	else {
+		push( @files, $_ );
+	}
+}
 $files_count = @files;
 for ( $count_num = 0 ; $count_num < $files_count ; $count_num++ ) {
 	if ( $count_num == $files_count - 1 ) {
@@ -1397,21 +2136,6 @@ print <<DATA;
 DATA
 
 print <<DATA;
-var version_flag = new Array(
-DATA
-for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
-	if ( $count_num == $package_name_number - 1 ) {
-		print '"' . "a" . '"';
-	}
-	else {
-		print '"' . "a" . '"' . ",";
-	}
-}
-print <<DATA;
-	);
-DATA
-
-print <<DATA;
 var version = new Array(
 DATA
 for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
@@ -1420,21 +2144,6 @@ for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
 	}
 	else {
 		print '"' . $version[$count_num] . '"' . ",";
-	}
-}
-print <<DATA;
-	);
-DATA
-
-print <<DATA;
-var category_flag = new Array(
-DATA
-for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
-	if ( $count_num == $package_name_number - 1 ) {
-		print '"' . "a" . '"';
-	}
-	else {
-		print '"' . "a" . '"' . ",";
 	}
 }
 print <<DATA;
@@ -1472,21 +2181,6 @@ print <<DATA;
 DATA
 
 print <<DATA;
-var priority_flag = new Array(
-DATA
-for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
-	if ( $count_num == $package_name_number - 1 ) {
-		print '"' . "a" . '"';
-	}
-	else {
-		print '"' . "a" . '"' . ",";
-	}
-}
-print <<DATA;
-	);
-DATA
-
-print <<DATA;
 var priority_num = new Array(
 DATA
 for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
@@ -1510,21 +2204,6 @@ for ( $count_num = 0 ; $count_num < @priority ; $count_num++ ) {
 	}
 	else {
 		print '"' . $priority[$count_num] . '"' . ",";
-	}
-}
-print <<DATA;
-	);
-DATA
-
-print <<DATA;
-var status_flag = new Array(
-DATA
-for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
-	if ( $count_num == $package_name_number - 1 ) {
-		print '"' . "a" . '"';
-	}
-	else {
-		print '"' . "a" . '"' . ",";
 	}
 }
 print <<DATA;
@@ -1562,21 +2241,6 @@ print <<DATA;
 DATA
 
 print <<DATA;
-var execution_type_flag = new Array(
-DATA
-for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
-	if ( $count_num == $package_name_number - 1 ) {
-		print '"' . "a" . '"';
-	}
-	else {
-		print '"' . "a" . '"' . ",";
-	}
-}
-print <<DATA;
-	);
-DATA
-
-print <<DATA;
 var execution_type_num = new Array(
 DATA
 for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
@@ -1600,21 +2264,6 @@ for ( $count_num = 0 ; $count_num < @execution_type ; $count_num++ ) {
 	}
 	else {
 		print '"' . $execution_type[$count_num] . '"' . ",";
-	}
-}
-print <<DATA;
-	);
-DATA
-
-print <<DATA;
-var test_suite_flag = new Array(
-DATA
-for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
-	if ( $count_num == $package_name_number - 1 ) {
-		print '"' . "a" . '"';
-	}
-	else {
-		print '"' . "a" . '"' . ",";
 	}
 }
 print <<DATA;
@@ -1652,21 +2301,6 @@ print <<DATA;
 DATA
 
 print <<DATA;
-var type_flag = new Array(
-DATA
-for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
-	if ( $count_num == $package_name_number - 1 ) {
-		print '"' . "a" . '"';
-	}
-	else {
-		print '"' . "a" . '"' . ",";
-	}
-}
-print <<DATA;
-	);
-DATA
-
-print <<DATA;
 var type_num = new Array(
 DATA
 for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
@@ -1690,21 +2324,6 @@ for ( $count_num = 0 ; $count_num < @type ; $count_num++ ) {
 	}
 	else {
 		print '"' . $type[$count_num] . '"' . ",";
-	}
-}
-print <<DATA;
-	);
-DATA
-
-print <<DATA;
-var test_set_flag = new Array(
-DATA
-for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
-	if ( $count_num == $package_name_number - 1 ) {
-		print '"' . "a" . '"';
-	}
-	else {
-		print '"' . "a" . '"' . ",";
 	}
 }
 print <<DATA;
@@ -1742,21 +2361,6 @@ print <<DATA;
 DATA
 
 print <<DATA;
-var component_flag = new Array(
-DATA
-for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
-	if ( $count_num == $package_name_number - 1 ) {
-		print '"' . "a" . '"';
-	}
-	else {
-		print '"' . "a" . '"' . ",";
-	}
-}
-print <<DATA;
-	);
-DATA
-
-print <<DATA;
 var component_num = new Array(
 DATA
 for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
@@ -1787,11 +2391,204 @@ print <<DATA;
 DATA
 
 print <<DATA;
+var version_value = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
+	if ( $count_num == $case_count_total - 1 ) {
+		print '"' . $filter_version_value[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_version_value[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var suite_value = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
+	if ( $count_num == $case_count_total - 1 ) {
+		print '"' . $filter_suite_value[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_suite_value[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var set_value = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
+	if ( $count_num == $case_count_total - 1 ) {
+		print '"' . $filter_set_value[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_set_value[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var type_value = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
+	if ( $count_num == $case_count_total - 1 ) {
+		print '"' . $filter_type_value[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_type_value[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var status_value = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
+	if ( $count_num == $case_count_total - 1 ) {
+		print '"' . $filter_status_value[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_status_value[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var component_value = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
+	if ( $count_num == $case_count_total - 1 ) {
+		print '"' . $filter_component_value[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_component_value[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var execution_value = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
+	if ( $count_num == $case_count_total - 1 ) {
+		print '"' . $filter_execution_value[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_execution_value[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var priority_value = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
+	if ( $count_num == $case_count_total - 1 ) {
+		print '"' . $filter_priority_value[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_priority_value[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var category_value = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
+	if ( $count_num == $case_count_total - 1 ) {
+		print '"' . $filter_category_value[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_category_value[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var one_package_case_count_total = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
+	if ( $count_num == $package_name_number - 1 ) {
+		print '"' . $one_package_case_count_total[$count_num] . '"';
+	}
+	else {
+		print '"' . $one_package_case_count_total[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var filter_auto_count = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
+	if ( $count_num == $package_name_number - 1 ) {
+		print '"' . "0" . '"';
+	}
+	else {
+		print '"' . "0" . '"' . ",";
+	}
+}
+print <<DATA;
+);
+
+var filter_manual_count = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
+	if ( $count_num == $package_name_number - 1 ) {
+		print '"' . "0" . '"';
+	}
+	else {
+		print '"' . "0" . '"' . ",";
+	}
+}
+print <<DATA;
+);
+DATA
+
+print <<DATA;
+var filter_auto_count_string;
+var filter_manual_count_string;
+filter_case_item();
+DATA
+
+print <<DATA;
 var id = new Array(
 DATA
 
 print <<DATA;
 	);
+DATA
+
+print <<DATA;
+var uninstall_pkg_name;
+var uninstall_pkg_version;
+var install_pkg_update_flag;
+var uninstall_pkg_name_arr= new Array();
+var uninstall_pkg_version_arr = new Array();
+var install_pkg_update_flag_arr= new Array();
 DATA
 
 print <<DATA;
@@ -1820,11 +2617,15 @@ function rank()
 function hidden_Advanced_List()
 {
 	var advanced_list;
+	var button_advanced;
 	advanced_list = document.getElementById('list_advanced');
+	button_advanced = document.getElementById('button_adv');
 	if(advanced_list.style.display == ""){
 		advanced_list.style.display = "none";
+		button_advanced.value = "Advanced";
 	}else{
 		advanced_list.style.display = "";
+		button_advanced.value = "Normal";
 	}
 }
 
@@ -1848,6 +2649,41 @@ function count_checked() {
 	return num;
 }
 
+function count_checkbox() {
+	var num = 0;
+	var form = document.tests_custom;
+	for (var i=0; i<form.length; ++i) {
+		if ((form[i].type.toLowerCase() == 'checkbox') && (form[i].name != 'checkbox_all')) {
+			++num;
+		}
+	}
+	return num;
+}
+
+function update_state() {
+	var button;
+	var num_checked = count_checked();
+	var num_checkbox = count_checkbox();
+	button = document.getElementById('execute_profile');
+	if (button) {
+		button.disabled = (num_checked == 0);
+	}
+	button = document.getElementById('view_package_info');
+	if (button) {
+		button.disabled = (num_checked ==0);
+	}
+	button = document.getElementById('save_profile_button');
+	if (button) {
+		button.disabled = (num_checked == 0);
+	}
+	var elem = document.getElementById('checkbox_all');
+	if (num_checked == num_checkbox){
+		elem.checked = 1
+	} else {
+		elem.checked = 0
+	}
+}
+
 function check_uncheck(box, check) {
 	temp = box.onchange;
 	box.onchange = null;
@@ -1864,592 +2700,101 @@ function check_uncheck_all() {
 			if ((form[i].type.toLowerCase() == 'checkbox') && (form[i].name != 'checkbox_all'))
 				check_uncheck(form[i], checked);
 		}
+		update_state();
 	}
 }
 DATA
 
 print <<DATA;
-
-function filter_item(){
-	var view_version 		= document.getElementById('select_ver');
-	var view_category 		= document.getElementById('select_category');
-	var view_priority 		= document.getElementById('select_pri');
-	var view_status		= document.getElementById('select_status');
-	var view_execution_type 	= document.getElementById('select_exe');
-	var view_test_suite 		= document.getElementById('select_testsuite');
-	var view_type 			= document.getElementById('select_type');
-	var view_test_set 		= document.getElementById('select_testset');
-	var view_component 	= document.getElementById('select_com');
-	var id;
-	var j = 0; 
-	var i = 0;
-	var count_start = 0;
-	var count_end = 0;
-	if(view_version.value == "Any Version")
-	{
-		for(i  = 0;i < package_name_number ;i++)
-		{
-			version_flag[i] = "a";
-		}
-	}else
-	{
-		for(i  = 0;i < package_name_number ;i++)
-		{
-			if(view_version.value == version[i])
-			{
-				version_flag[i] = "a";
-			}else
-			{
-				version_flag[i] = "b";
-			}
-		}
-	}
-
-	if(view_category.value == "Any Category")
-	{
-		for(i  = 0;i < package_name_number ;i++)
-		{
-			category_flag[i]="a";
-		}
-	}else
-	{
-		for(var i = 0;i < package_name_number ;i++)
-		{
-			if(category_num[i] == 0)
-			{
-				category_flag[i]="b";
-				continue;
-			}
-			if(i == 0)
-			{
-				count_start = 0;
-				count_end = category_num[i];
-			}else
-			{
-				count_start += category_num[i-1];
-				count_end += category_num[i];
-			}
-			
-			if(count_start == count_end)
-			{
-				category_flag[i]="b";
-			}else
-			{
-				for( j = count_start; j < count_end; j++)
-				{
-					if(view_category.value != category[j]){
-						if(j == (count_end - 1))
-						{
-							category_flag[i]="b";
-						}
-					}
-					if(view_category.value == category[j])
-					{
-						category_flag[i]="a";
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	if(view_priority.value == "Any Priority")
-	{
-		for(i  = 0;i < package_name_number ;i++)
-		{
-			priority_flag[i]="a";
-		}
-	}else
-	{
-		for(var i = 0;i < package_name_number ;i++)
-		{
-			if(priority_num[i] == 0)
-			{
-				priority_flag[i]="b";
-				continue;
-			}
-			if(i == 0)
-			{
-				count_start = 0;
-				count_end = priority_num[i];
-			}else
-			{
-				count_start += priority_num[i-1];
-				count_end += priority_num[i];
-			}
-			
-			if(count_start == count_end)
-			{
-				priority_flag[i]="b";
-			}else
-			{
-				for( j = count_start; j < count_end; j++)
-				{
-					if(view_priority.value != priority[j]){
-						if(j == (count_end - 1))
-						{
-							priority_flag[i]="b";			
-						}
-					}
-					if(view_priority.value == priority[j])
-					{
-						priority_flag[i]="a";
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	if(view_status.value == "Any Status")
-	{
-		for(i  = 0;i < package_name_number ;i++)
-		{
-			status_flag[i]="a";
-		}
-	}else
-	{
-		for(var i = 0;i < package_name_number ;i++)
-		{
-			if(status_num[i] == 0)
-			{
-				status_flag[i]="b";
-				continue;
-			}
-			if(i == 0)
-			{
-				count_start = 0;
-				count_end = status_num[i];
-			}else
-			{
-				count_start += status_num[i-1];
-				count_end += status_num[i];
-			}
-			
-			if(count_start == count_end)
-			{
-				status_flag[i]="b";
-			}else
-			{
-				for( j = count_start; j < count_end; j++)
-				{   
-					if(view_status.value != status_s[j]){
-						if(j == (count_end - 1))
-						{
-							status_flag[i]="b";		
-						}
-					}
-					if(view_status.value == status_s[j])
-					{
-						status_flag[i]="a";
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	if(view_execution_type.value == "Any Execution Type")
-	{
-		for(i  = 0;i < package_name_number ;i++)
-		{
-			execution_type_flag[i]="a";	
-		}
-	}else
-	{
-		for(var i = 0;i < package_name_number ;i++)
-		{
-			if(execution_type_num[i] == 0)
-			{
-				execution_type_flag[i]="b";	
-				continue;
-			}
-			if(i == 0)
-			{
-				count_start = 0;
-				count_end = execution_type_num[i];
-			}else
-			{
-				count_start += execution_type_num[i-1];
-				count_end += execution_type_num[i];
-			}
-			
-			if(count_start == count_end)
-			{
-				execution_type_flag[i]="b";	
-			}else
-			{
-				for( j = count_start; j < count_end; j++)
-				{	
-					if(view_execution_type.value != execution_type[j]){
-						if(j == (count_end - 1))
-						{
-							execution_type_flag[i]="b";					
-						}
-					}
-					if(view_execution_type.value == execution_type[j])
-					{
-						execution_type_flag[i]="a";	
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	if(view_test_suite.value == "Any Test Suite")
-	{
-		for(i  = 0;i < package_name_number ;i++)
-		{
-			test_suite_flag[i]="a";	
-		}
-	}else
-	{
-		for(var i = 0;i < package_name_number ;i++)
-		{
-			if(test_suite_num[i] == 0)
-			{
-				test_suite_flag[i]="b";	
-				continue;
-			}
-			if(i == 0)
-			{
-				count_start = 0;
-				count_end = test_suite_num[i];
-			}else
-			{
-				count_start += test_suite_num[i-1];
-				count_end += test_suite_num[i];
-			}
-			
-			if(count_start == count_end)
-			{
-				test_suite_flag[i]="b";
-			}else
-			{
-				for( j = count_start; j < count_end; j++)
-				{
-					if(view_test_suite.value != test_suite[j]){
-						if(j == (count_end - 1))
-						{
-							test_suite_flag[i]="b";				
-						}
-					}
-					if(view_test_suite.value == test_suite[j])
-					{
-						test_suite_flag[i]="a";
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	if(view_type.value == "Any Type")
-	{
-		for(i  = 0;i < package_name_number ;i++)
-		{
-			type_flag[i]="a";
-		}
-	}else
-	{
-		for(var i = 0;i < package_name_number ;i++)
-		{
-			if(type_num[i] == 0)
-			{
-				type_flag[i]="b";
-				continue;
-			}
-			if(i == 0)
-			{
-				count_start = 0;
-				count_end = type_num[i];
-			}else
-			{
-				count_start += type_num[i-1];
-				count_end += type_num[i];
-			}
-			
-			if(count_start == count_end)
-			{
-				type_flag[i]="b";
-			}else
-			{
-				for( j = count_start; j < count_end; j++)
-				{ 
-					if(view_type.value != type[j]){
-						if(j == (count_end - 1))
-						{
-							type_flag[i]="b";			
-						}
-					}
-					if(view_type.value == type[j])
-					{
-						type_flag[i]="a";
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	if(view_test_set.value == "Any Test Set")
-	{
-		for(i  = 0;i < package_name_number ;i++)
-		{
-			test_set_flag[i]="a";
-		}
-	}else
-	{
-		for(var i = 0;i < package_name_number ;i++)
-		{
-			if(test_set_num[i] == 0)
-			{
-				test_set_flag[i]="b";
-				continue;
-			}
-			if(i == 0)
-			{
-				count_start = 0;
-				count_end = test_set_num[i];
-			}else
-			{
-				count_start += test_set_num[i-1];
-				count_end += test_set_num[i];
-			}
-			
-			if(count_start == count_end)
-			{
-				test_set_flag[i]="b";
-			}else
-			{
-				for( j = count_start; j < count_end; j++)
-				{
-					if(view_test_set.value != test_set[j]){
-						if(j == (count_end - 1))
-						{
-							test_set_flag[i]="b";				
-						}
-					}
-					if(view_test_set.value == test_set[j])
-					{
-						test_set_flag[i]="a";
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	if(view_component.value == "Any Component")
-	{
-		for(i  = 0;i < package_name_number ;i++)
-		{
-			component_flag[i]="a";
-		}
-	}else
-	{
-		for(var i = 0;i < package_name_number ;i++)
-		{
-			if(component_num[i] == 0)
-			{
-				component_flag[i]="b";
-				continue;
-			}
-			if(i == 0)
-			{
-				count_start = 0;
-				count_end = component_num[i];
-			}else
-			{
-				count_start += component_num[i-1];
-				count_end += component_num[i];
-			}
-			
-			if(count_start == count_end)
-			{
-				component_flag[i]="b";
-			}else
-			{
-				for( j = count_start; j < count_end; j++)
-				{
-					if(view_component.value != component[j]){
-						if(j == (count_end - 1))
-						{
-							component_flag[i]="b";				
-						}
-					}
-					if(view_component.value == component[j])
-					{
-						component_flag[i]="a";
-						break;
-					}
-				}
-			}
-		}
-	}
-	for(var i = 0;i < package_name_number ;i++)
-	{   
-		if((version_flag[i] == "a")
-		&&(category_flag[i] == "a")
-		&&(priority_flag[i] == "a")
-		&&(status_flag[i] == "a")
-		&&(execution_type_flag[i] == "a")
-		&&(test_suite_flag[i] == "a")
-		&&(type_flag[i] == "a")
-		&&(test_set_flag[i] == "a")
-		&&(component_flag[i] == "a")
-		)
-		{  
-			id = document.getElementById(main_list_id[i]);
-			id.style.display = "";
-			
-		}else
-		{
-			id = document.getElementById(main_list_id[i]);
-			id.style.display = "none";
-
-		}
-		id = document.getElementById(second_list_id[i]);
-		if(id.style.display == "")
-		{
-			id.style.display = "none";
-		}
-	}
-}
-
-DATA
-print <<DATA;
-function onSave() {
-	var sel_arc=document.getElementById("select_arc");
-	var sel_ver=document.getElementById("select_ver");
-	var sel_category=document.getElementById("select_category");
-	var sel_pri=document.getElementById("select_pri");
-	var sel_status=document.getElementById("select_status");
-	var sel_exe=document.getElementById("select_exe");
-	var sel_testsuite=document.getElementById("select_testsuite");
-	var sel_type=document.getElementById("select_type");
-	var sel_testset=document.getElementById("select_testset");
-	var sel_com=document.getElementById("select_com");
-	var checkbox_value="null";
-	var arc=sel_arc.value;
-	var ver=sel_ver.value;
-	var category=sel_category.value;
-	var pri=sel_pri.value;
-	var status=sel_status.value;
-	var exe=sel_exe.value;
-	var testsuite=sel_testsuite.value;
-	var type=sel_type.value;
-	var testset=sel_testset.value;
-	var com=sel_com.value;
-	var flag=0;
+function filter_case_item(){	
+	var advanced_value_version = document.getElementById('select_ver');
+	var advanced_value_category	= document.getElementById('select_category');
+	var advanced_value_priority = document.getElementById('select_pri');
+	var advanced_value_status = document.getElementById('select_status');
+	var advanced_value_execution_type = document.getElementById('select_exe');
+	var advanced_value_test_suite = document.getElementById('select_testsuite');
+	var advanced_value_type = document.getElementById('select_type');
+	var advanced_value_test_set = document.getElementById('select_testset');
+	var advanced_value_component = document.getElementById('select_com');
+	var flag_case = new Array("a","a","a","a","a","a");
 	
-	for(var count=0; count<package_name_number; count++){
-		var checkbox_package_name_tmp="checkbox_package_name"+count;
-		var checkbox_pacakage_name=document.getElementById(checkbox_package_name_tmp);
-		if(checkbox_pacakage_name.checked){
-			checkbox_value=checkbox_value+"*"+checkbox_pacakage_name.name;
-		}
-	}
-	
-	if (edit_profile_name.value == '') {
-		edit_profile_name.style.borderColor = 'white';
-		alert('Please, specify the profile name!');
-		return false;
-	}
-	else{
-		var save_pro_file = new Array(
-DATA
-	my $file;
-	my $dir_profile_name = $profile_dir_manager;
-	my $save_profile;
-	my @save_profile;
-	my $profile_count = 0;
-	
-	opendir DELPROFILE, $dir_profile_name
-	  or die "can not open $dir_profile_name";
-	foreach $file ( readdir DELPROFILE ) {
-		$save_profile = $file;
-		push( @save_profile, $save_profile );
-		$profile_count++;
-	}
-	for ( $count_num = 0 ; $count_num < $profile_count ; $count_num++ ) {
-		if ( $count_num == $profile_count - 1 ) {
-			print '"' . $save_profile[$count_num] . '"';
-		}
-		else {
-			print '"' . $save_profile[$count_num] . '"' . ",";
-		}
-	}
-print <<DATA;
-	);			
-		for (var pro_count=0; pro_count<$profile_count; pro_count++){
-			if (save_pro_file[pro_count] == edit_profile_name.value){
-				flag=1;
-			}
-		}
-		if(flag){
-			if(confirm("Profile: "+edit_profile_name.value+" exists, Would you like to overwirte it?")){
-					document.location="tests_custom.pl?save_profile_button="+edit_profile_name.value+"&checkbox="+checkbox_value+"&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
-			}
+	for (var i=0; i<package_name_number; i++) {	
+		var j;
+		flag_case[i] = "b";
+		filter_auto_count[i]=0;
+		filter_manual_count[i]=0;
+		if(i == "0"){
+			j=0;
 		}
 		else{
-			document.location="tests_custom.pl?save_profile_button="+edit_profile_name.value+"&checkbox="+checkbox_value+"&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
-		}
-	}
-}
-
-function onLoad() {
-	var flag=1;
-	if (edit_profile_name.value == '') {
-		edit_profile_name.style.borderColor = 'white';
-		alert('Please, specify the profile name!');
-		return false;
-	}
-	else{
-		var save_pro_file = new Array(
-DATA
-	my $file_load;
-	my $dir_profile_name_load = $profile_dir_manager;
-	my $load_profile;
-	my @load_profile;
-	my $profile_count_load = 0;
-	
-	opendir DELPROFILE, $dir_profile_name_load
-	  or die "can not open $dir_profile_name_load";
-	foreach $file_load ( readdir DELPROFILE ) {
-		$load_profile = $file_load;
-		push( @load_profile, $load_profile );
-		$profile_count_load++;
-	}
-	for ( $count_num = 0 ; $count_num < $profile_count_load ; $count_num++ ) {
-		if ( $count_num == $profile_count - 1 ) {
-			print '"' . $load_profile[$count_num] . '"';
-		}
-		else {
-			print '"' . $load_profile[$count_num] . '"' . ",";
-		}
-	}
-print <<DATA;
-	);			
-		for (var pro_count=0; pro_count<$profile_count; pro_count++){
-			if (save_pro_file[pro_count] == edit_profile_name.value){
-				flag=0;
+			j = parseInt(one_package_case_count_total[i-1])
+		}		
+		for(j; j < parseInt(one_package_case_count_total[i]); j++) {		
+			if (((advanced_value_version.value == "Any Version")||(advanced_value_version.value == version_value[j]))
+			&& ((advanced_value_test_suite.value == "Any Test Suite")||(advanced_value_test_suite.value == suite_value[j]))
+			&& ((advanced_value_test_set.value == "Any Test Set")||(advanced_value_test_set.value == set_value[j]))
+			&& ((advanced_value_type.value == "Any Type")||(advanced_value_type.value == type_value[j]))
+			&& ((advanced_value_status.value == "Any Status")||(advanced_value_status.value == status_value[j]))
+			&& ((advanced_value_component.value == "Any Component")||(advanced_value_component.value == component_value[j]))
+			&& ((advanced_value_execution_type.value == "Any Execution Type")||(advanced_value_execution_type.value == execution_value[j]))
+			&& ((advanced_value_priority.value == "Any Priority")||(advanced_value_priority.value == priority_value[j]))
+			&& ((advanced_value_category.value == "Any Category")||(category_value[j].indexOf(advanced_value_category.value))>0)
+			){					
+				flag_case[i]="a";
+				if(execution_value[j] == "auto"){
+					filter_auto_count[i]++;					
+				}
+				else{
+					filter_manual_count[i]++;
+				}
 			}
 		}
-		if(flag){
-			alert("Does not exist profile: "+edit_profile_name.value);
+	}
+	filter_auto_count_string = filter_auto_count.join(":");
+	filter_manual_count_string = filter_manual_count.join(":");
+			
+	for (var i=0; i<package_name_number; i++) {
+		if(flag_case[i] == "a"){
+			package_name_flag[i] = "a";
+			id = document.getElementById(main_list_id[i]);
+			id.style.display = "";
 		}
-		else {	
-			document.location="tests_custom.pl?load_profile_button="+edit_profile_name.value;
-			}
+		else{
+			package_name_flag[i] = "b";
+			id = document.getElementById(main_list_id[i]);
+			id.style.display = "none";	
+		}
+	}
+	for( var i=0; i<100; i++){
+		var id = "uninstall_"+i;
+		document.getElementById(id).style.display="none";
 	}
 }
-
 DATA
-print <<DATA;
 
-function onDelete() {	
+print <<DATA;
+function onCaseClick(count) {
+	var view_select_testcase_info = "view_area_case_info_"+count;
+	var select_testcase = document.getElementById(view_select_testcase_info);
+	for(var i=0; i<$case_value_flag_count; i++){
+		var view_no_select_testcase_info = "view_area_case_info_"+i;
+		var no_select_testcase = document.getElementById(view_no_select_testcase_info);
+		no_select_testcase.style.display="none";
+	}
+	select_testcase.style.display="";
+}
+DATA
+
+print <<DATA;
+function refreshPage() {
+	document.location="tests_custom.pl";
+}
+DATA
+
+print <<DATA;
+function onViewPackage(count){
+	var view_pkg_count="view_package_name_"+count;
+	var pkg_name=document.getElementById(view_pkg_count);
 	var sel_arc=document.getElementById("select_arc");
 	var sel_ver=document.getElementById("select_ver");
 	var sel_category=document.getElementById("select_category");
@@ -2460,7 +2805,8 @@ function onDelete() {
 	var sel_type=document.getElementById("select_type");
 	var sel_testset=document.getElementById("select_testset");
 	var sel_com=document.getElementById("select_com");
-	var checkbox_value="null";
+	
+	var pkg=pkg_name.value;
 	var arc=sel_arc.value;
 	var ver=sel_ver.value;
 	var category=sel_category.value;
@@ -2471,65 +2817,8 @@ function onDelete() {
 	var type=sel_type.value;
 	var testset=sel_testset.value;
 	var com=sel_com.value;
-	var flag=1;
 	
-	for(var count=0; count<package_name_number; count++){
-		var checkbox_package_name_tmp="checkbox_package_name"+count;
-		var checkbox_pacakage_name=document.getElementById(checkbox_package_name_tmp);
-		if(checkbox_pacakage_name.checked){
-			checkbox_value=checkbox_value+"*"+checkbox_pacakage_name.name;
-		}
-	}
-	
-	if (edit_profile_name.value == '') {
-		edit_profile_name.style.borderColor = 'white';
-		alert('Please, specify the profile name!');
-		return false;
-	}
-	else{
-		var delete_pro_file = new Array(
-DATA
-	my $file_del;
-	my $dir_profile_name_del = $profile_dir_manager;
-	my $delete_profile;
-	my @delete_profile;
-	my $profile_count_del = 0;
-	
-	opendir DELPROFILE, $dir_profile_name_del
-	  or die "can not open $dir_profile_name_del";
-	foreach $file_del ( readdir DELPROFILE ) {
-		$delete_profile = $file_del;
-		push( @delete_profile, $delete_profile );
-		$profile_count_del++;
-	}
-	for ( $count_num = 0 ; $count_num < $profile_count_del ; $count_num++ ) {
-		if ( $count_num == $profile_count_del - 1 ) {
-			print '"' . $delete_profile[$count_num] . '"';
-		}
-		else {
-			print '"' . $delete_profile[$count_num] . '"' . ",";
-		}
-	}
-print <<DATA;
-	);	
-		for (var pro_count=0; pro_count<$profile_count; pro_count++){
-			if (delete_pro_file[pro_count] == edit_profile_name.value){
-				flag=0;
-			}
-		}
-		if(flag){
-			alert("Does not exist profile: "+edit_profile_name.value);
-		}
-		else {
-			if(confirm("Can you confirm to delete Profile: "+edit_profile_name.value)){		
-				document.location="tests_custom.pl?delete_profile_button="+edit_profile_name.value+"&checkbox="+checkbox_value+"&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
-			}
-		}
-	}
-}
-
-function refreshPage() {
-	document.location="tests_custom.pl";
+	document.location="tests_custom.pl?view_single_package=1&view_"+pkg+"=1&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
 }
 DATA
 
@@ -2570,7 +2859,7 @@ function onDeletePackage(count) {
 	}
 	
 	
-	if(confirm("Can you confirm to delete "+pkg+"?")){
+	if(confirm("Do you want to delete "+pkg+"?")){
 		document.location="tests_custom.pl?delete_package=1&delete_"+pkg+"=1&checkbox="+checkbox_value+"&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
 	}
 }
@@ -2591,6 +2880,7 @@ function openLC(id) {
 }
 
 function showtips(){
+	var sel = document.getElementById('sel');
 	eo=event.srcElement;
 	sel.length=0;
 	var len=msg.length;
@@ -2612,6 +2902,7 @@ function showtips(){
 }
 
 function enterTips(){
+	var sel = document.getElementById('sel');
 	e=event.keyCode;
 	if(sel.style.display!='none'){
 		if(e==13){
@@ -2623,15 +2914,19 @@ function enterTips(){
 	}
 }
 function returnValue(){
+	var sel = document.getElementById('sel');
 	var txt=document.getElementById('edit_profile_name');
 	txt.value=sel.value;
 	c();
 }
+
 function c(){
+	var sel = document.getElementById('sel');
 	var txt=document.getElementById('edit_profile_name');
 	sel.style.display='none';
-	txt.focus();
+	//txt.focus();
 }
+
 document.onclick=function(){c()}
 
 </script>
@@ -2653,7 +2948,7 @@ sub AnalysisVersion {
 	my $temp_version;
 	my $temp_count = 0;
 	while ( $temp_count < $package_name_number ) {
-		$temp = `su tizen -c 'rpm -qa|grep $package_name[$temp_count]'`;
+		$temp = `rpm -qa|grep $package_name[$temp_count]`;
 		if ( $temp =~ /tests-(.*?)-/ ) {
 			$temp_version = $1;
 			push( @version, $temp_version );
@@ -2668,7 +2963,8 @@ sub CreateFilePath {
 		$read_me[$count] = "/opt/" . $package_name[$count] . "/README";
 		$licence_copyright[$count] =
 		  "/opt/" . $package_name[$count] . "/LICENSE";
-		$installation_path[$count] = "/opt/" . $package_name[$count] . "/";
+		$installation_path[$count] =
+		  "/usr/share/" . $package_name[$count] . "/";
 		$testsxml[$count] =
 		  "/usr/share/" . $package_name[$count] . "/tests.xml";
 		$count++;
@@ -2983,6 +3279,7 @@ sub AnalysisReadMe {
 	}
 }
 
+#After press "Save", "Load", "Delete" button, draw package list.
 sub LoadDrawPackageList {
 	my $count = 0;
 	my $display;
@@ -3005,19 +3302,19 @@ DATA
 			{
 				$flag = 1;
 				print <<DATA;
-				<td width="4%" height="50" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" checked=true /></td>	
+				<td width="4%" height="50" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" checked=true onclick="javascript:update_state()"/></td>	
 DATA
 			}
 			$count_chkbox++;
 		}
 		if ( $flag eq "0" ) {
 			print <<DATA;
-				<td width="4%" height="50" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" /></td>	
+				<td width="4%" height="50" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" onclick="javascript:update_state()"/></td>	
 DATA
 		}
 		print <<DATA;
-              <td width="24%" height="50" class="custom_list_type_bottomright_packagename" id="pn_$package_name[$count]"><a  onclick="javascript:show_CaseDetail('second_list_$package_name[$count]');">&nbsp&nbsp&nbsp&nbsp$package_name[$count]</a></td>
-              <td width="24%" height="50" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp&nbsp&nbsp&nbsp$case_number[3*$count]</td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_packagename" id="pn_$package_name[$count]"><a  onclick="javascript:show_CaseDetail('second_list_$package_name[$count]');">&nbsp;$package_name[$count]</a></td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp;$case_number[3*$count]</td>
               <td width="24%" height="50" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td width="22%" height="50" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="38" height="38" /></div></td>
@@ -3026,11 +3323,13 @@ DATA
               </table></td>
               <td width="24%" height="50" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_install.png" width="38" height="38" /></div></td>
-                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_update.png" width="38" height="38" /></div></td>
+                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_install_disable.png" width="38" height="38" /></div></td>
+                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_update_disable.png" id="update_$package_name[$count]" name="update_$package_name[$count]" width="38" height="38" /></div></td>
+					<input type="hidden" id="update_package_name_$count" name="update_package_name_$count" value="$package_name[$count]">
                   <td align="center" height="50" valign="middle"><div align="left"><img title="Delete package" src="images/operation_delete.png" id="delete_$package_name[$count]" name="delete_$package_name[$count]" style="cursor:pointer" width="38" height="38" onclick="javascript:onDeletePackage($count);"/></a></td>
                   <input type="hidden" id="pn_package_name_$count" name="pn_package_name_$count" value="$package_name[$count]">
-                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_view_tests.png" width="38" height="38" /></div></td>
+                  <td align="center" height="50" valign="middle"><div align="left"><img title="View Package" src="images/operation_view_tests.png" id="view_$package_name[$count]" name="view_$package_name[$count]" style="cursor:pointer" width="38" height="38" onclick="javascript:onViewPackage($count);"/></div></td>
+                	<input type="hidden" id="view_package_name_$count" name="view_package_name_$count" value="$package_name[$count]">
                 </tr>
               </table></td>
               </table>
@@ -3039,31 +3338,38 @@ DATA
             <tr id="second_list_$package_name[$count]" style="display:none">
               <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td width="40%" height="50" align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp&nbsp&nbsp&nbspIntroduction: </td>
-              <td width="60%" height="50" align="left" valign="middle" class="custom_list_type_bottom" id="intro_$package_name[$count]">$introduction[$count]</td>
+              <td width="40%" height="50" align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Introduction:</td>
+              <td width="60%" height="50" align="left" valign="middle" class="custom_list_type_bottom" id="intro_$package_name[$count]">
+              <table>
+              <tr>
+               <td width="0.1%" class="backbackground_button"></td>
+               <td width="99.9%" class="backbackground_button">$introduction[$count]</td>
+              <tr>
+              </table>
+              </td>
               </tr>
             <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp&nbsp&nbsp&nbspCase Number(auto manual): </td>
+              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Case Number(auto manual):</td>
               <td class="custom_list_type_bottom" height="50" id="cnam_$package_name[$count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
                 <tr>
-                  <td width="5%" height="50" align="left" valign="middle">$case_number[3*$count+1]</td>
-                  <td width="95%" height="50" align="left" valign="middle">&nbsp&nbsp&nbsp&nbsp$case_number[3*$count+2]</td>
+                  <td width="5%" height="50" align="left" valign="middle">&nbsp;$case_number[3*$count+1]</td>
+                  <td width="95%" height="50" align="left" valign="middle">&nbsp;$case_number[3*$count+2]</td>
                 </tr>
               </table></td>
               </tr>
             <tr>
-              <td align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp&nbsp&nbsp&nbspReadme:</td>
-              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">$read_me[$count]
+              <td align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Readme:</td>
+              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$read_me[$count]
                 <a href="/get.pl?file=$read_me[$count]"><image name="imageField" src="images/operation_open_file.png" align="middle" width="38" height="38" /></td>
               </tr>
             <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp&nbsp&nbsp&nbspLicence&amp;Copyright:</td>
-              <td width="5%" height="50" align="left" valign="middle" id=$licence_copyright[$count] class="custom_list_type_bottom">$licence_copyright[$count]
+              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Licence&amp;Copyright:</td>
+              <td width="5%" height="50" align="left" valign="middle" id=$licence_copyright[$count] class="custom_list_type_bottom">&nbsp;$licence_copyright[$count]
                 <a href="/get.pl?file=$licence_copyright[$count]"><image name="imageField2" src="images/operation_open_file.png" align="middle" width="38" height="38" /></td>
               </tr>
             <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp&nbsp&nbsp&nbspInstallation Path:</td>
-              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">$installation_path[$count]
+              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Installation Path:</td>
+              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$installation_path[$count]
                 <image name="imageField3" id=$installation_path[$count] src="images/operation_copy_url.png" width="38" height="38" onclick="javascript:copyUrl(id);" style="cursor:pointer"/></td>
               </tr>
             <tr>
@@ -3076,15 +3382,16 @@ DATA
 
 }
 
+#Enter custom page, draw package list.
 sub DrawPackageList {
 	my $count = 0;
 	while ( $count < $package_name_number ) {
 		print <<DATA;
             <tr id="main_list_$package_name[$count]">
               <td><table width="100%" height="50" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
-              <td width="4%" height="50" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" /></td>
-              <td width="24%" height="50" class="custom_list_type_bottomright_packagename" id="pn_$package_name[$count]"><a  onclick="javascript:show_CaseDetail('second_list_$package_name[$count]');">&nbsp&nbsp&nbsp&nbsp$package_name[$count]</a></td>
-              <td width="24%" height="50" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp&nbsp&nbsp&nbsp$case_number[3*$count]</td>
+              <td width="4%" height="50" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" onclick="javascript:update_state()"/></td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright_packagename" id="pn_$package_name[$count]"><a  onclick="javascript:show_CaseDetail('second_list_$package_name[$count]');">&nbsp;$package_name[$count]</a></td>
+              <td width="24%" height="50" align="left" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp;$case_number[3*$count]</td>
               <td width="24%" height="50" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td width="22%" height="50" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="38" height="38" /></div></td>
@@ -3093,11 +3400,13 @@ sub DrawPackageList {
               </table></td>
               <td width="24%" height="50" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_install.png" width="38" height="38" /></div></td>
-                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_update.png" width="38" height="38" /></div></td>
+                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_install_disable.png" width="38" height="38" /></div></td>	
+                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_update_disable.png" id="update_$package_name[$count]" name="update_$package_name[$count]" width="38" height="38"/></div></td>
+                  	<input type="hidden" id="update_package_name_$count" name="update_package_name_$count" value="$package_name[$count]">
                   <td align="center" height="50" valign="middle"><div align="left"><img title="Delete package" src="images/operation_delete.png" id="delete_$package_name[$count]" name="delete_$package_name[$count]" style="cursor:pointer" width="38" height="38" onclick="javascript:onDeletePackage($count);" /></a></td>
                   <input type="hidden" id="pn_package_name_$count" name="pn_package_name_$count" value="$package_name[$count]">
-                  <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_view_tests.png" width="38" height="38" /></div></td>
+                  <td align="center" height="50" valign="middle"><div align="left"><img title="View Package" src="images/operation_view_tests.png" id="view_$package_name[$count]" name="view_$package_name[$count]" style="cursor:pointer" width="38" height="38" onclick="javascript:onViewPackage($count);"/></div></td>
+                	<input type="hidden" id="view_package_name_$count" name="view_package_name_$count" value="$package_name[$count]">
                 </tr>
               </table></td>
               </table>
@@ -3106,31 +3415,38 @@ sub DrawPackageList {
             <tr id="second_list_$package_name[$count]" style="display:none">
               <td><table width="100%" height="50" border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td width="40%" height="50" align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp&nbsp&nbsp&nbspIntroduction:</td>
-              <td width="60%" height="50" align="left" valign="middle" class="custom_list_type_bottom" id="intro_$package_name[$count]">$introduction[$count]</td>
-              </tr>
+              <td width="40%" height="50" align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Introduction:</td>
+              <td width="60%" height="50" align="left" valign="middle" class="custom_list_type_bottom" id="intro_$package_name[$count]">
+              <table>
+              <tr>
+               <td width="0.1%" class="backbackground_button"></td>
+               <td width="99.9%" class="backbackground_button">$introduction[$count]</td>
+              <tr>
+              </table>
+              </td>
+             </tr>
             <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp&nbsp&nbsp&nbspCase Number(auto manual):</td>
+              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Case Number(auto manual):</td>
               <td class="custom_list_type_bottom" height="50" id="cnam_$package_name[$count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
                 <tr>
-                  <td width="5%" height="50" align="left" valign="middle">$case_number[3*$count+1]</td>
-                  <td width="95%" height="50" align="left" valign="middle">&nbsp&nbsp&nbsp&nbsp$case_number[3*$count+2]</td>
+                  <td width="5%" height="50" align="left" valign="middle">&nbsp;$case_number[3*$count+1]</td>
+                  <td width="95%" height="50" align="left" valign="middle">&nbsp;$case_number[3*$count+2]</td>
                 </tr>
               </table></td>
               </tr>
             <tr>
-              <td align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp&nbsp&nbsp&nbspReadme:</td>
-              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">$read_me[$count]
+              <td align="left" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Readme:</td>
+              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$read_me[$count]
                 <a href="/get.pl?file=$read_me[$count]"><image name="imageField" src="images/operation_open_file.png" align="middle" width="38" height="38" /></td>
               </tr>
             <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp&nbsp&nbsp&nbspLicence&amp;Copyright:</td>
-              <td width="5%" height="50" align="left" valign="middle" id=$licence_copyright[$count] class="custom_list_type_bottom">$licence_copyright[$count]
+              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Licence&amp;Copyright:</td>
+              <td width="5%" height="50" align="left" valign="middle" id=$licence_copyright[$count] class="custom_list_type_bottom">&nbsp;$licence_copyright[$count]
                 <a href="/get.pl?file=$licence_copyright[$count]"><image name="imageField2" src="images/operation_open_file.png" align="middle" width="38" height="38" /></td>
               </tr>
             <tr>
-              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp&nbsp&nbsp&nbspInstallation Path:</td>
-              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">$installation_path[$count]
+              <td align="left" height="50" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;Installation Path:</td>
+              <td width="5%" height="50" align="left" valign="middle" class="custom_list_type_bottom">&nbsp;$installation_path[$count]
                 <image name="imageField3" id=$installation_path[$count] src="images/operation_copy_url.png" width="38" height="38" onclick="javascript:copyUrl(id);" style="cursor:pointer"/></td>
               </tr>
             <tr>
@@ -3140,7 +3456,35 @@ sub DrawPackageList {
 DATA
 		$count++;
 	}
+}
 
+sub DrawUninstallPackageList {
+	for ( my $i = 0 ; $i < $UNINSTALL_PACKAGE_COUNT_MAX ; $i++ ) {
+		print <<DATA;
+		<tr id="uninstall_$i" style="display:none">
+	        <td><table width="100%" height="50" border="1" cellspacing="0" cellpadding="0" frame="below" rules="none">
+	        <td width="4%" height="50" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_$i" name="checkbox_$i" disabled="disabled"/></td>
+	        <td width="24%" height="50" align="left" class="custom_list_type_bottomright_uninstall_packagename" id="pn_$i" title="Uninstalled" style="cursor:default"></td>
+	        <td width="24%" height="50" align="left" class="custom_list_type_bottomright" id="cn_$i" name="cn_$i">&nbsp;- -</td>
+	        <td width="24%" height="50" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
+	        <tr>
+	         <td width="22%" height="50" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="38" height="38" /></div></td>
+	          <td width="78%" height="50" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$i"> </div></td>
+	          </tr>
+	        </table></td>
+	         <td width="24%" height="50" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	         <tr>
+	          <td align="center" height="50" valign="middle"><div align="left"><img title="Install package" src="images/operation_install.png" id="install_pkg_$i" name="install_pkg_$i" style="cursor:pointer" width="38" height="38" onclick="javascript:installPackage($i);"/></div></td>				
+	            <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_update_disable.png" id="update_uninstall_pkg_name_$i" name="update_uninstall_pkg_name_$i" width="38" height="38" /></div></td>
+	            <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_delete.png" id="delete_uninstall_pkg_name_$i" name="delete_uninstall_pkg_name_$i" width="38" height="38"/></a></td>
+	            <td align="center" height="50" valign="middle"><div align="left"><img src="images/operation_view_tests.png" id="view_uninstall_pkg_name_$i" name="view_uninstall_pkg_name_$i" width="38" height="38"/></div></td>
+	            </tr>
+	           </table></td>
+	           </table>
+			</td>
+	        </tr>
+DATA
+	}
 }
 
 sub LoadDrawVersionSelect {
@@ -3156,6 +3500,9 @@ DATA
 		}
 	}
 	else {
+		print <<DATA;
+		<option>Any Version</option>
+DATA
 		for ( ; $count < @version_item ; $count++ ) {
 			if ( $advanced_value_version =~ /\b$version_item[$count]\b/ ) {
 				print <<DATA;
@@ -3168,9 +3515,6 @@ DATA
 DATA
 			}
 		}
-		print <<DATA;
-		<option>Any Version</option>
-DATA
 	}
 }
 
@@ -3199,6 +3543,9 @@ DATA
 		}
 	}
 	else {
+		print <<DATA;
+		<option>Any Category</option>
+DATA
 		for ( ; $count < @category_item ; $count++ ) {
 			if ( $advanced_value_category =~ /\b$category_item[$count]\b/ ) {
 				print <<DATA;
@@ -3211,9 +3558,6 @@ DATA
 DATA
 			}
 		}
-		print <<DATA;
-		<option>Any Category</option>
-DATA
 	}
 }
 
@@ -3242,6 +3586,9 @@ DATA
 		}
 	}
 	else {
+		print <<DATA;
+		<option>Any Test Suite</option>
+DATA
 		for ( ; $count < @test_suite_item ; $count++ ) {
 			if ( $advanced_value_test_suite =~ /\b$test_suite_item[$count]\b/ )
 			{
@@ -3255,9 +3602,6 @@ DATA
 DATA
 			}
 		}
-		print <<DATA;
-		<option>Any Test Suite</option>
-DATA
 	}
 }
 
@@ -3286,6 +3630,9 @@ DATA
 		}
 	}
 	else {
+		print <<DATA;
+		<option>Any Test Set</option>
+DATA
 		for ( ; $count < @test_set_item ; $count++ ) {
 			if ( $advanced_value_test_set =~ /\b$test_set_item[$count]\b/ ) {
 				print <<DATA;
@@ -3298,9 +3645,6 @@ DATA
 DATA
 			}
 		}
-		print <<DATA;
-		<option>Any Test Set</option>
-DATA
 	}
 }
 
@@ -3329,6 +3673,9 @@ DATA
 		}
 	}
 	else {
+		print <<DATA;
+		<option>Any Status</option>
+DATA
 		for ( ; $count < @status_item ; $count++ ) {
 			if ( $advanced_value_status =~ /\b$status_item[$count]\b/ ) {
 				print <<DATA;
@@ -3341,9 +3688,6 @@ DATA
 DATA
 			}
 		}
-		print <<DATA;
-		<option>Any Status</option>
-DATA
 	}
 }
 
@@ -3372,6 +3716,9 @@ DATA
 		}
 	}
 	else {
+		print <<DATA;
+		<option>Any Type</option>
+DATA
 		for ( ; $count < @type_item ; $count++ ) {
 			if ( $advanced_value_type =~ /\b$type_item[$count]\b/ ) {
 				print <<DATA;
@@ -3384,9 +3731,6 @@ DATA
 DATA
 			}
 		}
-		print <<DATA;
-		<option>Any Type</option>
-DATA
 	}
 }
 
@@ -3415,6 +3759,9 @@ DATA
 		}
 	}
 	else {
+		print <<DATA;
+		<option>Any Priority</option>
+DATA
 		for ( ; $count < @priority_item ; $count++ ) {
 			if ( $advanced_value_priority =~ /\b$priority_item[$count]\b/ ) {
 				print <<DATA;
@@ -3427,9 +3774,6 @@ DATA
 DATA
 			}
 		}
-		print <<DATA;
-		<option>Any Priority</option>
-DATA
 	}
 }
 
@@ -3458,6 +3802,9 @@ DATA
 		}
 	}
 	else {
+		print <<DATA;
+		<option>Any Component</option>
+DATA
 		for ( ; $count < @component_item ; $count++ ) {
 			if ( $advanced_value_component =~ /\b$component_item[$count]\b/ ) {
 				print <<DATA;
@@ -3470,9 +3817,6 @@ DATA
 DATA
 			}
 		}
-		print <<DATA;
-		<option>Any Component</option>
-DATA
 	}
 }
 
@@ -3501,6 +3845,9 @@ DATA
 		}
 	}
 	else {
+		print <<DATA;
+		<option>Any Execution Type</option>
+DATA
 		for ( ; $count < @execution_type_item ; $count++ ) {
 			if ( $advanced_value_execution_type =~
 				/\b$execution_type_item[$count]\b/ )
@@ -3515,9 +3862,6 @@ DATA
 DATA
 			}
 		}
-		print <<DATA;
-		<option>Any Execution Type</option>
-DATA
 	}
 }
 
@@ -3667,6 +4011,7 @@ sub GetSelectItem {
 	@temp                = ();
 }
 
+# Get all the packages' name installed in device.
 sub GetPackageName {
 	if ( $_ =~ /^tests\.xml$/ ) {
 		my $relative = $File::Find::dir;
@@ -3676,526 +4021,144 @@ sub GetPackageName {
 	}
 }
 
-sub FilterItem {
-	my $count_temp_package  = 0;
-	my $count_temp_property = 0;
-	my $count_start         = 0;
-	my $count_end           = 0;
+# This function is used to analyze xml, filter the property values for each case.
+sub FilterCaseValue {
+	my $one_package_case_count_total = 0;
+	my $count_tmp                    = 0;
+	my @package_name_tmp             = @package_name;
 
-	if ( $advanced_value_version =~ /Any Version/ ) {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			$version_save_flag[$count_temp_property] = "a";
-		}
-	}
-	else {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			if ( $advanced_value_version =~
-				/\b$version[$count_temp_property]\b/ )
+	foreach (@package_name_tmp) {
+		my $package       = $_;
+		my $tests_xml_dir = $test_definition_dir . $package . "/tests.xml";
+
+		my $version_value = $version[$count_tmp];
+		my $suite_value;
+		my $set_value;
+		my $type_value;
+		my $case_value;
+		my $status_value;
+		my $component_value;
+		my $execution_value;
+		my $priority_value;
+		my $category_value;
+
+		open FILE, $tests_xml_dir or die $!;
+
+		while (<FILE>) {
+			if ( $_ =~ /suite.*name="(.*?)"/ ) {
+				$suite_value = $1;
+			}
+			if ( $_ =~ /set.*name="(.*?)"/ ) {
+				$set_value = $1;
+			}
+			if ( $_ =~
+/testcase.*purpose="(.*?)".*type="(.*?)".*status="(.*?)".*component="(.*?)".*execution_type="(.*?)".*priority="(.*?)"/
+			  )
 			{
-				$version_save_flag[$count_temp_property] = "a";
-			}
-			else {
-				$version_save_flag[$count_temp_property] = "b";
-			}
-		}
-	}
-
-	if ( $advanced_value_category =~ /Any Category/ ) {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			$category_save_flag[$count_temp_property] = "a";
-		}
-	}
-	else {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			if ( $category_num[$count_temp_property] == 0 ) {
-				$category_save_flag[$count_temp_property] = "b";
-				next;
-			}
-			if ( $count_temp_property == 0 ) {
-				$count_start = 0;
-				$count_end   = $category_num[$count_temp_property];
-			}
-			else {
-				$count_start += $category_num[ $count_temp_property - 1 ];
-				$count_end   += $category_num[$count_temp_property];
+				$type_value      = $2;
+				$status_value    = $3;
+				$component_value = $4;
+				$execution_value = $5;
+				$priority_value  = $6;
+				$category_value  = "null";
 			}
 
-			if ( $count_start == $count_end ) {
-				$category_save_flag[$count_temp_property] = "b";
+			if ( $_ =~ /\<category\>(.*?)\<\/category\>/ ) {
+				my $category_value_tmp;
+				$category_value_tmp = $1;
+				$category_value = $category_value . "&" . $category_value_tmp;
 			}
-			else {
-				for (
-					$count_temp_package = $count_start ;
-					$count_temp_package < $count_end ;
-					$count_temp_package++
-				  )
-				{
-					if ( $advanced_value_category ne
-						$category[$count_temp_package] )
-					{
-						if ( $count_temp_package == ( $count_end - 1 ) ) {
-							$category_save_flag[$count_temp_property] = "b";
-						}
-					}
-					if ( $advanced_value_category =~
-						/\b$category[$count_temp_package]\b/ )
-					{
-						$category_save_flag[$count_temp_property] = "a";
-						last;
-					}
-				}
+			if ( $_ =~ /\<\/testcase\>/ ) {
+				push( @filter_version_value,   $version_value );
+				push( @filter_suite_value,     $suite_value );
+				push( @filter_set_value,       $set_value );
+				push( @filter_type_value,      $type_value );
+				push( @filter_status_value,    $status_value );
+				push( @filter_component_value, $component_value );
+				push( @filter_execution_value, $execution_value );
+				push( @filter_priority_value,  $priority_value );
+				push( @filter_category_value,  $category_value );
+				$one_package_case_count_total++;
 			}
 		}
+		push( @one_package_case_count_total, $one_package_case_count_total );
+		$count_tmp++;
 	}
-
-	if ( $advanced_value_priority =~ /Any Priority/ ) {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			$priority_save_flag[$count_temp_property] = "a";
-		}
-	}
-	else {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			if ( $priority_num[$count_temp_property] == 0 ) {
-				$priority_save_flag[$count_temp_property] = "b";
-				next;
-			}
-			if ( $count_temp_property == 0 ) {
-				$count_start = 0;
-				$count_end   = $priority_num[$count_temp_property];
-			}
-			else {
-				$count_start += $priority_num[ $count_temp_property - 1 ];
-				$count_end   += $priority_num[$count_temp_property];
-			}
-
-			if ( $count_start == $count_end ) {
-				$priority_save_flag[$count_temp_property] = "b";
-			}
-			else {
-				for (
-					$count_temp_package = $count_start ;
-					$count_temp_package < $count_end ;
-					$count_temp_package++
-				  )
-				{
-					if ( $advanced_value_priority ne
-						$priority[$count_temp_package] )
-					{
-						if ( $count_temp_package == ( $count_end - 1 ) ) {
-							$priority_save_flag[$count_temp_property] = "b";
-						}
-					}
-					if ( $advanced_value_priority =~
-						/\b$priority[$count_temp_package]\b/ )
-					{
-						$priority_save_flag[$count_temp_property] = "a";
-						last;
-					}
-				}
-			}
-		}
-	}
-
-	if ( $advanced_value_status =~ /Any Status/ ) {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			$status_save_flag[$count_temp_property] = "a";
-		}
-	}
-	else {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			if ( $status_num[$count_temp_property] == 0 ) {
-				$status_save_flag[$count_temp_property] = "b";
-				next;
-			}
-			if ( $count_temp_property == 0 ) {
-				$count_start = 0;
-				$count_end   = $status_num[$count_temp_property];
-			}
-			else {
-				$count_start += $status_num[ $count_temp_property - 1 ];
-				$count_end   += $status_num[$count_temp_property];
-			}
-
-			if ( $count_start == $count_end ) {
-				$status_save_flag[$count_temp_property] = "b";
-			}
-			else {
-				for (
-					$count_temp_package = $count_start ;
-					$count_temp_package < $count_end ;
-					$count_temp_package++
-				  )
-				{
-					if (
-						$advanced_value_status ne $status[$count_temp_package] )
-					{
-						if ( $count_temp_package == ( $count_end - 1 ) ) {
-							$status_save_flag[$count_temp_property] = "b";
-						}
-					}
-					if ( $advanced_value_status =~
-						/\b$status[$count_temp_package]\b/ )
-					{
-						$status_save_flag[$count_temp_property] = "a";
-						last;
-					}
-				}
-			}
-		}
-	}
-
-	if ( $advanced_value_execution_type =~ /Any Execution Type/ ) {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			$execution_type_save_flag[$count_temp_property] = "a";
-		}
-	}
-	else {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			if ( $execution_type_num[$count_temp_property] == 0 ) {
-				$execution_type_save_flag[$count_temp_property] = "b";
-				next;
-			}
-			if ( $count_temp_property == 0 ) {
-				$count_start = 0;
-				$count_end   = $execution_type_num[$count_temp_property];
-			}
-			else {
-				$count_start += $execution_type_num[ $count_temp_property - 1 ];
-				$count_end   += $execution_type_num[$count_temp_property];
-			}
-
-			if ( $count_start == $count_end ) {
-				$execution_type_save_flag[$count_temp_property] = "b";
-			}
-			else {
-				for (
-					$count_temp_package = $count_start ;
-					$count_temp_package < $count_end ;
-					$count_temp_package++
-				  )
-				{
-					if ( $advanced_value_execution_type ne
-						$execution_type[$count_temp_package] )
-					{
-						if ( $count_temp_package == ( $count_end - 1 ) ) {
-							$execution_type_save_flag[$count_temp_property] =
-							  "b";
-						}
-					}
-					if ( $advanced_value_execution_type =~
-						/\b$execution_type[$count_temp_package]\b/ )
-					{
-						$execution_type_save_flag[$count_temp_property] = "a";
-						last;
-					}
-				}
-			}
-		}
-	}
-
-	if ( $advanced_value_test_suite =~ /Any Test Suite/ ) {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			$test_suite_save_flag[$count_temp_property] = "a";
-		}
-	}
-	else {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			if ( $test_suite_num[$count_temp_property] == 0 ) {
-				$test_suite_save_flag[$count_temp_property] = "b";
-				next;
-			}
-			if ( $count_temp_property == 0 ) {
-				$count_start = 0;
-				$count_end   = $test_suite_num[$count_temp_property];
-			}
-			else {
-				$count_start += $test_suite_num[ $count_temp_property - 1 ];
-				$count_end   += $test_suite_num[$count_temp_property];
-			}
-
-			if ( $count_start == $count_end ) {
-				$test_suite_save_flag[$count_temp_property] = "b";
-			}
-			else {
-				for (
-					$count_temp_package = $count_start ;
-					$count_temp_package < $count_end ;
-					$count_temp_package++
-				  )
-				{
-					if ( $advanced_value_test_suite ne
-						$test_suite[$count_temp_package] )
-					{
-						if ( $count_temp_package == ( $count_end - 1 ) ) {
-							$test_suite_save_flag[$count_temp_property] = "b";
-						}
-					}
-					if ( $advanced_value_test_suite =~
-						/\b$test_suite[$count_temp_package]\b/ )
-					{
-						$test_suite_save_flag[$count_temp_property] = "a";
-						last;
-					}
-				}
-			}
-		}
-	}
-
-	if ( $advanced_value_type =~ /\bAny\sType\b/ ) {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			$type_save_flag[$count_temp_property] = "a";
-		}
-	}
-	else {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			if ( $type_num[$count_temp_property] == 0 ) {
-				$type_save_flag[$count_temp_property] = "b";
-				next;
-			}
-			if ( $count_temp_property == 0 ) {
-				$count_start = 0;
-				$count_end   = $type_num[$count_temp_property];
-			}
-			else {
-				$count_start += $type_num[ $count_temp_property - 1 ];
-				$count_end   += $type_num[$count_temp_property];
-			}
-
-			if ( $count_start == $count_end ) {
-				$type_save_flag[$count_temp_property] = "b";
-			}
-			else {
-				for (
-					$count_temp_package = $count_start ;
-					$count_temp_package < $count_end ;
-					$count_temp_package++
-				  )
-				{
-					if ( $advanced_value_type ne $type[$count_temp_package] ) {
-						if ( $count_temp_package == ( $count_end - 1 ) ) {
-							$type_save_flag[$count_temp_property] = "b";
-						}
-					}
-					if ( $advanced_value_type =~
-						/\b$type[$count_temp_package]\b/ )
-					{
-						$type_save_flag[$count_temp_property] = "a";
-						last;
-					}
-				}
-			}
-		}
-	}
-
-	if ( $advanced_value_test_set =~ /Any Test Set/ ) {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			$test_set_save_flag[$count_temp_property] = "a";
-		}
-	}
-	else {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			if ( $test_set_num[$count_temp_property] == 0 ) {
-				$test_set_save_flag[$count_temp_property] = "b";
-				next;
-			}
-			if ( $count_temp_property == 0 ) {
-				$count_start = 0;
-				$count_end   = $test_set_num[$count_temp_property];
-			}
-			else {
-				$count_start += $test_set_num[ $count_temp_property - 1 ];
-				$count_end   += $test_set_num[$count_temp_property];
-			}
-
-			if ( $count_start == $count_end ) {
-				$test_set_save_flag[$count_temp_property] = "b";
-			}
-			else {
-				for (
-					$count_temp_package = $count_start ;
-					$count_temp_package < $count_end ;
-					$count_temp_package++
-				  )
-				{
-					if ( $advanced_value_test_set ne
-						$test_set[$count_temp_package] )
-					{
-						if ( $count_temp_package == ( $count_end - 1 ) ) {
-							$test_set_save_flag[$count_temp_property] = "b";
-						}
-					}
-					if ( $advanced_value_test_set =~
-						/\b$test_set[$count_temp_package]\b/ )
-					{
-						$test_set_save_flag[$count_temp_property] = "a";
-						last;
-					}
-				}
-			}
-		}
-	}
-
-	if ( $advanced_value_component =~ /Any Component/ ) {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			$component_save_flag[$count_temp_property] = "a";
-		}
-	}
-	else {
-		for (
-			$count_temp_property = 0 ;
-			$count_temp_property < $count_package_number_post ;
-			$count_temp_property++
-		  )
-		{
-			if ( $component_num[$count_temp_property] == 0 ) {
-				$component_save_flag[$count_temp_property] = "b";
-				next;
-			}
-			if ( $count_temp_property == 0 ) {
-				$count_start = 0;
-				$count_end   = $component_num[$count_temp_property];
-			}
-			else {
-				$count_start += $component_num[ $count_temp_property - 1 ];
-				$count_end   += $component_num[$count_temp_property];
-			}
-
-			if ( $count_start == $count_end ) {
-				$component_save_flag[$count_temp_property] = "b";
-			}
-			else {
-				for (
-					$count_temp_package = $count_start ;
-					$count_temp_package < $count_end ;
-					$count_temp_package++
-				  )
-				{
-					if ( $advanced_value_component ne
-						$component[$count_temp_package] )
-					{
-						if ( $count_temp_package == ( $count_end - 1 ) ) {
-							$component_save_flag[$count_temp_property] = "b";
-						}
-					}
-					if ( $advanced_value_component =~
-						/\b$component[$count_temp_package]\b/ )
-					{
-						$component_save_flag[$count_temp_property] = "a";
-						last;
-					}
-				}
-			}
-		}
-	}
-
-	for (
-		$count_temp_property = 0 ;
-		$count_temp_property < $count_package_number_post ;
-		$count_temp_property++
-	  )
-	{
-		if (   ( $version_save_flag[$count_temp_property] eq "a" )
-			&& ( $category_save_flag[$count_temp_property]       eq "a" )
-			&& ( $priority_save_flag[$count_temp_property]       eq "a" )
-			&& ( $status_save_flag[$count_temp_property]         eq "a" )
-			&& ( $execution_type_save_flag[$count_temp_property] eq "a" )
-			&& ( $test_suite_save_flag[$count_temp_property]     eq "a" )
-			&& ( $type_save_flag[$count_temp_property]           eq "a" )
-			&& ( $test_set_save_flag[$count_temp_property]       eq "a" )
-			&& ( $component_save_flag[$count_temp_property]      eq "a" ) )
-		{
-			$package_name_flag[$count_temp_property] = "a";
-		}
-		else {
-			$package_name_flag[$count_temp_property] = "b";
-		}
+	foreach (@filter_set_value) {
+		$case_count_total++;
 	}
 }
 
+# Get property values for each case with function FilterCaseValue();
+# This function is used to filter the right cases according to the options' values.
+sub FilterCase {
+	my $i;
+	my $filter_auto_count;
+	my $filter_manual_count;
+
+	for ( $i = 0 ; $i < $package_name_number ; $i++ ) {
+		my $j;
+		$package_name_flag[$i] = "b";
+		$filter_auto_count     = 0;
+		$filter_manual_count   = 0;
+
+		if ( $i eq "0" ) {
+			$j = 0;
+		}
+		else {
+			$j = $one_package_case_count_total[ $i - 1 ];
+		}
+		for ( $j ; $j < $one_package_case_count_total[$i] ; $j++ ) {
+			if (
+				(
+					( $advanced_value_version =~ /Any Version/ )
+					|| (
+						$advanced_value_version =~ /$filter_version_value[$j]/ )
+				)
+				&& ( ( $advanced_value_test_suite =~ /Any Test Suite/ )
+					|| ( $advanced_value_test_suite =~
+						/$filter_suite_value[$j]/ ) )
+				&& (   ( $advanced_value_test_set =~ /Any Test Set/ )
+					|| ( $advanced_value_test_set =~ /$filter_set_value[$j]/ ) )
+				&& (   ( $advanced_value_type =~ /Any Type/ )
+					|| ( $advanced_value_type =~ /$filter_type_value[$j]/ ) )
+				&& (   ( $advanced_value_status =~ /Any Status/ )
+					|| ( $advanced_value_status =~ /$filter_status_value[$j]/ )
+				)
+				&& (
+					( $advanced_value_component =~ /Any Component/ )
+					|| ( $advanced_value_component =~
+						/$filter_component_value[$j]/ )
+				)
+				&& (
+					( $advanced_value_execution_type =~ /Any Execution Type/ )
+					|| ( $advanced_value_execution_type =~
+						/$filter_execution_value[$j]/ )
+				)
+				&& (
+					( $advanced_value_priority =~ /Any Priority/ )
+					|| ( $advanced_value_priority =~
+						/$filter_priority_value[$j]/ )
+				)
+				&& (
+					( $advanced_value_category =~ /Any Category/ )
+					|| ( $filter_category_value[$j] =~
+						/$advanced_value_category/ )
+				)
+			  )
+			{
+				$package_name_flag[$i] = "a";
+				if ( $filter_execution_value[$j] eq "auto" ) {
+					$filter_auto_count++;
+				}
+				else {
+					$filter_manual_count++;
+				}
+			}
+		}
+		push( @filter_auto_count,   $filter_auto_count );
+		push( @filter_manual_count, $filter_manual_count );
+	}
+}
 print_footer("");
 

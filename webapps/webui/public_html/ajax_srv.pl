@@ -69,6 +69,15 @@ my $isWholeXML = 0;
 my $wholeXML;
 my $hasManual = "False";    # check if still got some manual result
 my %manualResult;           # to record manual result
+my $profile_dir_manager = $FindBin::Bin . "/../../../profiles/test/";
+my $ZYPPER_CMD          = "zypper -n --no-gpg-checks -p";
+my $DOWNLOAD_CMD        = "wget -r -l 1 -nd -A rpm --spider";
+my $CHECK_NETWORK       = "wget --spider --timeout=5 --tries=2";
+my $DOWNLOAD_PATH       = "";
+my $GREP_PATH = "";
+my @uninstall_package_name    = ();
+my @uninstall_package_version = ();
+my @package_version_latest;
 
 my $output_xml =
     "HTTP/1.0 200 OK" 
@@ -623,6 +632,76 @@ sub construct_progress_data($) {
 	return $res;
 }
 
+sub getUpdateInfoFromNetwork {
+	my @package_name = @_;
+	my $test =
+	  `$DOWNLOAD_CMD $DOWNLOAD_PATH 2>&1 | grep $GREP_PATH.*tests.*rpm`;
+	my @rpm = split /\.rpm/, $test;
+	my @install_flag;
+	my $temp_package_count = 0;
+	push( @update_package_flag, "0" );
+	if ( @package_name > 0 ) {
+		foreach (@package_name) {
+			my $temp_rpm_count            = 0;
+			my $package_name_tmp          = $_;
+			my $package_version_installed = `rpm -qa $_`;
+			$_ = $package_version_installed;
+			s/(.*)\-(.*)\-(.*)/$2/g;
+			s/\.//g;
+			push( @package_version_installed, $_ );
+			push( @package_version_latest,    $_ );
+
+			foreach (@rpm) {
+				$install_flag[$temp_rpm_count] = "b";
+				s/(.*)$GREP_PATH//g;
+				if ( $_ =~ /$package_name_tmp/ ) {
+					$install_flag[$temp_rpm_count] = "a";
+					s/(.*)\-(.*)\-(.*)/$2/g;
+					s/\.//g;
+					$package_version_latest[$temp_package_count] = $_;
+				}
+				$temp_rpm_count++;
+			}
+			$temp_package_count++;
+		}
+		for ( my $i = 0 ; $i < @rpm ; $i++ ) {
+			if ( $install_flag[$i] ne "a" ) {
+				$_ = $rpm[$i];
+				s/(.*)\-(.*)\-(.*)/$1/g;
+				push( @uninstall_package_name, $_ );
+				$_ = $rpm[$i];
+				s/(.*)\-(.*)\-.\.(.*)/$2/g;
+				push( @uninstall_package_version, $_ );
+			}
+		}
+		for ( my $count = 0 ; $count < @package_name ; $count++ ) {
+			if (
+				int( $package_version_installed[$count] ) ==
+				int( $package_version_latest[$count] ) )
+			{
+				$update_package_flag[$count] = "b";
+			}
+			else {
+				$update_package_flag[$count] = "a";
+			}
+		}
+	}
+	else {
+		for ( my $i = 0 ; $i < @rpm ; $i++ ) {
+			if ( $rpm[$i] =~ /tests/ ) {
+				my $rpm_temp = $rpm[$i];
+				$_ = $rpm_temp;
+				s/(.*)$GREP_PATH(.*)\-(.*)\-(.*)/$2/g;
+				push( @uninstall_package_name, $_ );
+				$rpm_temp = $rpm[$i];
+				$_        = $rpm_temp;
+				s/(.*)$GREP_PATH(.*)\-(.*)\-(.*)/$3/g;
+				push( @uninstall_package_version, $_ );
+			}
+		}
+	}
+}
+
 # Rereads the Manifest and constructs the XML reply to be sent to the client
 #sub get_manifest_data_reply() {
 #	my $res = '';
@@ -1056,6 +1135,222 @@ elsif ( $_GET{'action'} eq 'get_test_log' ) {
 			$error_text = "Error locking the status file!<br />$status_error";
 		}
 	}
+}
+
+elsif ( $_GET{'action'} eq 'update_page_with_uninstall_pkg' ) {
+	my @installed_package_list = split /\:/, $_GET{'installed_packages'};
+	my $check_network = `$CHECK_NETWORK $DOWNLOAD_PATH 2>&1 |grep 200`;
+	if ( $check_network =~ /200 OK/ ) {
+		getUpdateInfoFromNetwork(@installed_package_list);
+		$data .=
+"<uninstall_package_name>@uninstall_package_name</uninstall_package_name>\n";
+		$data .=
+"<uninstall_package_version>@uninstall_package_version</uninstall_package_version>\n";
+		$data .=
+		  "<update_package_flag>@update_package_flag</update_package_flag>\n";
+	}
+	else {
+		$check_network = "failed: Connection timed out!";
+		$data .=
+"<network_connection_timeout>$check_network</network_connection_timeout>\n";
+	}
+}
+
+#install package
+elsif ( $_GET{'action'} eq 'install_package' ) {
+	my $package_name  = $_GET{'package_name'};
+	my $package_count = $_GET{'package_count'};
+	my $temp          = `$ZYPPER_CMD $DOWNLOAD_PATH in $package_name`;
+	my $check_install_success_or_fail = `rpm -qa $package_name`;
+	if ($check_install_success_or_fail) {
+		$data .=
+"<install_package_name>install_$package_name</install_package_name>\n";
+	}
+	else {
+		$data .= "<install_package_name>$package_name</install_package_name>\n";
+	}
+	$data .= "<install_package_count>$package_count</install_package_count>\n";
+}
+
+#update package
+elsif ( $_GET{'action'} eq 'update_package' ) {
+	my $package_name = $_GET{'package_name'};
+	my $count        = $_GET{'package_count'};
+	my $version_old  = `rpm -qa $package_name`;
+	my $temp         = `$ZYPPER_CMD $DOWNLOAD_PATH up $package_name`;
+	my $version_new  = `rpm -qa $package_name`;
+	my $version;
+	$_ = $version_new;
+	s/(.*)\-(.*)\-(.*)/$2/g;
+	$version = $_;
+
+	if ( $version_old ne $version_new ) {
+		$data .=
+		  "<update_package_name>update_$package_name</update_package_name>\n";
+	}
+	else {
+		$data .= "<update_package_name>$package_name</update_package_name>\n";
+	}
+	$data .=
+"<update_package_latest_version>$version</update_package_latest_version>\n";
+}
+
+elsif ( $_GET{'action'} eq 'check_profile_isExist' ) {
+	my $file;
+	my $save_profile;
+	my $option                = $_GET{'option'};
+	my $profile_name          = $_GET{'profile_name'};
+	my $dir_profile_name      = $profile_dir_manager;
+	my $check_profile_isExist = 0;
+	my $data_isExist;
+	my $data_isNotExist;
+
+	opendir DELPROFILE, $dir_profile_name
+	  or die "can not open $dir_profile_name";
+	foreach $file ( readdir DELPROFILE ) {
+		$save_profile = $file;
+		if ( $save_profile eq $profile_name ) {
+			$check_profile_isExist = 1;
+		}
+	}
+	if ( $option eq "save" ) {
+		$data_isExist    = "save" . $profile_name;
+		$data_isNotExist = "save";
+	}
+	else {
+		$data_isExist    = "delete";
+		$data_isNotExist = "delete" . $profile_name;
+	}
+	if ($check_profile_isExist) {
+		$data .= "<check_profile_name>$data_isExist</check_profile_name>\n";
+	}
+	else {
+		$data .= "<check_profile_name>$data_isNotExist</check_profile_name>\n";
+	}
+	closedir DELPROFILE;
+}
+
+# save profile
+elsif ( $_GET{'action'} eq 'save_profile' ) {
+	my $file;
+	my $flag_i = 0;
+	my @select_packages;
+	my $save_profile_name = $_GET{'save_profile_name'};
+	my @advanced_value    = split /\*/, $_GET{"advanced"};
+	my @checkbox_value    = split /\*/, $_GET{"checkbox"};
+	my @auto_count        = split /\:/, $_GET{'auto_count'};
+	my @manual_count      = split /\:/, $_GET{'manual_count'};
+	my @package_name_flag = split /\*/, $_GET{"pkg_flag"};
+
+	my $dir_profile_name = $profile_dir_manager;
+
+	$advanced_value_architecture   = $advanced_value[0];
+	$advanced_value_version        = $advanced_value[1];
+	$advanced_value_category       = $advanced_value[2];
+	$advanced_value_priority       = $advanced_value[3];
+	$advanced_value_status         = $advanced_value[4];
+	$advanced_value_execution_type = $advanced_value[5];
+	$advanced_value_test_suite     = $advanced_value[6];
+	$advanced_value_type           = $advanced_value[7];
+	$advanced_value_test_set       = $advanced_value[8];
+	$advanced_value_component      = $advanced_value[9];
+
+	open OUT, '>' . $dir_profile_name . $save_profile_name;
+	print OUT "[Auto]\n";
+	while ( $flag_i < @package_name_flag ) {
+		if ( $package_name_flag[$flag_i] eq "a" ) {
+			if ( $checkbox_value[$flag_i] =~ /select/ ) {
+				$_ = $checkbox_value[$flag_i];
+				s/selectcheckbox_//g;
+				print OUT $_ . "("
+				  . $auto_count[$flag_i] . " "
+				  . $manual_count[$flag_i] . ")\n";
+				push( @select_packages, $checkbox_value[$flag_i] );
+			}
+		}
+		$flag_i++;
+	}
+	print OUT "[/Auto]\n";
+
+	print OUT "\n[Advanced-feature]\n";
+	print OUT "select_arc=" . $advanced_value_architecture . "\n";
+	print OUT "select_ver=" . $advanced_value_version . "\n";
+	print OUT "select_category=" . $advanced_value_category . "\n";
+	print OUT "select_pri=" . $advanced_value_priority . "\n";
+	print OUT "select_status=" . $advanced_value_status . "\n";
+	print OUT "select_exe=" . $advanced_value_execution_type . "\n";
+	print OUT "select_testsuite=" . $advanced_value_test_suite . "\n";
+	print OUT "select_type=" . $advanced_value_type . "\n";
+	print OUT "select_testset=" . $advanced_value_test_set . "\n";
+	print OUT "select_com=" . $advanced_value_component . "\n";
+
+	print OUT "\n";
+	foreach (@select_packages) {
+		s/selectcheckbox_//g;
+		print OUT "[select-packages]: " . $_ . "\n";
+	}
+	$data .=
+	  "<save_profile_success>$save_profile_name</save_profile_success>\n";
+}
+
+elsif ( $_GET{'action'} eq "check_package_isExist" ) {
+	my $file;
+	my $load_profile_name = $_GET{'load_profile_name'};
+	my $dir_profile_name  = $profile_dir_manager;
+	my @installed_packages;
+	my @packages_need;
+	my @packages_isExist_flag;
+
+	opendir LOADPROFILE, $dir_profile_name
+	  or die "can not open $dir_profile_name";
+	open IN, $profile_dir_manager . $load_profile_name or die $!;
+	foreach $file ( readdir LOADPROFILE ) {
+		if ( $file =~ /$load_profile_name/ ) {
+			my $temp;
+			my @temp;
+			while (<IN>) {
+				if ( $_ =~ /select-packages/ ) {
+					$temp = $_;
+					@temp = split /:/, $temp;
+					push( @packages_need, $temp[1] );
+				}
+			}
+		}
+	}
+	for ( my $i = 0 ; $i < @packages_need ; $i++ ) {
+		my $temp = `rpm -qa |grep $packages_need[$i]`;
+		if ($temp) {
+			$packages_isExist_flag[$i] = "1";
+		}
+		else {
+			$packages_isExist_flag[$i] = "0";
+		}
+	}
+	$data .= "<load_profile>1</load_profile>\n";
+	$data .= "<profile_name>$load_profile_name</profile_name>\n";
+	$data .= "<packages_need>@packages_need</packages_need>\n";
+	$data .=
+	  "<packages_isExist_flag>@packages_isExist_flag</packages_isExist_flag>\n";
+	closedir LOADPROFILE;
+}
+
+# delete profile
+elsif ( $_GET{'action'} eq "delete_profile" ) {
+	my $delete_profile_name = $_GET{'delete_profile_name'};
+	my $dir_profile_name    = $profile_dir_manager;
+	opendir DELPROFILE, $dir_profile_name
+	  or die "can not open $dir_profile_name";
+
+	foreach $file ( readdir DELPROFILE ) {
+		if ( $file =~ /\b$delete_profile_name\b/ ) {
+			$delete_profile = $file;
+			unlink $dir_profile_name . $delete_profile;
+			last;
+		}
+	}
+	closedir DELPROFILE;
+	$data .=
+	  "<delete_profile_success>$delete_profile_name</delete_profile_success>\n";
 }
 
 # write manual result back to the file
@@ -1715,33 +2010,34 @@ elsif ( $_GET{'action'} eq 'mantest_finish' ) {
 		$data .= "<man_result>$na_num manual case is NotRun</man_result>";
 	}
 }
-elsif ( $_GET{'action'} eq 'save_profile' ) {
-	if ( !-e $SERVER_PARAM{'APP_DATA'} . '/profiles/test/' ) {
-		system("mkdir $SERVER_PARAM{'APP_DATA'}/profiles/test");
-	}
-	my $profile_path =
-	  $SERVER_PARAM{'APP_DATA'} . '/profiles/test/' . $_GET{'profile'};
-	my $profile_js = $_POST{'jsonStr'};
-	save_profile( $profile_path, $profile_js );
-}
-elsif ( $_GET{'action'} eq 'delete_profile' ) {
-	my $profile =
-	  $SERVER_PARAM{'APP_DATA'} . '/profiles/test/"' . $_GET{'profile'} . '"';
-	my $rmcmd = "rm -f $profile";
-	my $ret   = `$rmcmd`;
 
-	$data .=
-	    "<profile_result>Profile "
-	  . $_GET{'profile'}
-	  . " remove Succeed</profile_result>";
+#elsif ( $_GET{'action'} eq 'save_profile' ) {
+#	if ( !-e $SERVER_PARAM{'APP_DATA'} . '/profiles/test/' ) {
+#		system("mkdir $SERVER_PARAM{'APP_DATA'}/profiles/test");
+#	}
+#	my $profile_path =
+#	  $SERVER_PARAM{'APP_DATA'} . '/profiles/test/' . $_GET{'profile'};
+#	my $profile_js = $_POST{'jsonStr'};
+#	save_profile( $profile_path, $profile_js );
+#}
+#elsif ( $_GET{'action'} eq 'delete_profile' ) {
+#	my $profile =
+#	  $SERVER_PARAM{'APP_DATA'} . '/profiles/test/"' . $_GET{'profile'} . '"';
+#	my $rmcmd = "rm -f $profile";
+#	my $ret   = `$rmcmd`;
 
-#       $data .= "<profile_result>User ".$rmcmd." delete Succeed</profile_result>";
-}
-elsif ( $_GET{'action'} eq 'load_profile' ) {
-	my $profile_path =
-	  $SERVER_PARAM{'APP_DATA'} . '/profiles/test/' . $_GET{'profile'};
-	load_profile($profile_path);
-}
+#	$data .=
+#	    "<profile_result>Profile "
+#	  . $_GET{'profile'}
+#	  . " remove Succeed</profile_result>";
+
+##       $data .= "<profile_result>User ".$rmcmd." delete Succeed</profile_result>";
+#}
+#elsif ( $_GET{'action'} eq 'load_profile' ) {
+#	my $profile_path =
+#	  $SERVER_PARAM{'APP_DATA'} . '/profiles/test/' . $_GET{'profile'};
+#	load_profile($profile_path);
+#}
 elsif ( $_GET{'action'} eq 'load_user' ) {
 	my $default_user =
 	  $SERVER_PARAM{'APP_DATA'} . '/profiles/user/user.profile';

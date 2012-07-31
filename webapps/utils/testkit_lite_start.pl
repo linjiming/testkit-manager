@@ -60,6 +60,8 @@ Misc::Init();
 use Subshell;
 use TestLog;
 
+my $isOnlyAuto = "FALSE";
+
 #----------------------------------------------------------------------------
 
 $SIG{__WARN__} = sub {
@@ -852,6 +854,7 @@ sub send_results {
 # Added by Shao-Feng, for reading the profile.
 my @thisTargetPackages;
 my @thisTargetFilter;
+my @targetFilter;
 
 sub initProfileInfo {
 	my $profile_path;
@@ -868,8 +871,8 @@ sub initProfileInfo {
 				$theEnd = "True";
 			}
 			if ( $theEnd eq "False" ) {
-
 				if ( $line !~ /Auto/ ) {
+					$line =~ s/\(\d* \d*\)//;
 					push( @thisTargetPackages, $line );
 				}
 			}
@@ -882,36 +885,45 @@ sub initProfileInfo {
 				if ( $line =~ /select_pri=(.*)/ ) {
 					if ( $1 ne "Any Priority" ) {
 						push( @thisTargetFilter, "--priority " . $1 );
+						push( @targetFilter,     'priority="' . $1 . '"' );
 					}
 				}
 				if ( $line =~ /select_status=(.*)/ ) {
 					if ( $1 ne "Any Status" ) {
 						push( @thisTargetFilter, "--status " . $1 );
+						push( @targetFilter,     'status="' . $1 . '"' );
 					}
 				}
 				if ( $line =~ /select_exe=(.*)/ ) {
 					if ( $1 eq "manual" ) {
 						push( @thisTargetFilter, "-M" );
 					}
+					if ( $1 eq "auto" ) {
+						$isOnlyAuto = "TRUE";
+					}
 				}
 				if ( $line =~ /select_testsuite=(.*)/ ) {
 					if ( $1 ne "Any Test Suite" ) {
 						push( @thisTargetFilter, "--testsuite " . $1 );
+						push( @targetFilter,     'suite name="' . $1 . '"' );
 					}
 				}
 				if ( $line =~ /select_type=(.*)/ ) {
 					if ( $1 ne "Any Type" ) {
 						push( @thisTargetFilter, "--type " . $1 );
+						push( @targetFilter,     'type="' . $1 . '"' );
 					}
 				}
 				if ( $line =~ /select_testset=(.*)/ ) {
 					if ( $1 ne "Any Test Set" ) {
 						push( @thisTargetFilter, "--testset " . $1 );
+						push( @targetFilter,     'set name="' . $1 . '"' );
 					}
 				}
 				if ( $line =~ /select_com=(.*)/ ) {
 					if ( $1 ne "Any Component" ) {
 						push( @thisTargetFilter, "--component " . $1 );
+						push( @targetFilter,     'component="' . $1 . '"' );
 					}
 				}
 			}
@@ -979,7 +991,7 @@ sub getBackupResultXMLCMD {
 
 	# write runconfig and info file under each report folder
 	chomp( my $time = `ls -t ../../../../lite | cut -f 1 | sed -n '1,1p'` );
-	writeResultInfo($time);
+	writeResultInfo( $time, $isOnlyAuto, @targetFilter );
 	inform "[Backup Result]:@copyCommands";
 	return \@copyCommands;
 }

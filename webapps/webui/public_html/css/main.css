@@ -8,11 +8,30 @@
 ** Michael Zeltner and Geir Bækholt)
 ** All you guys rock :)
 */
+/* start template page */
 .not_implemented {
 	font-family: Calibri;
 	font-size: 26px;
 	background-color: #fafafa;
 }
+/* start template page */
+
+/* start help page */
+.help_list {
+	font-family: Calibri;
+	font-size: 16px;
+	background-color: #fafafa;
+}
+
+.help_level_1 {
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.help_level_2 {
+	font-size: 18px;
+}
+/* end help page */
 
 /* start test report page */
 .report_list {
@@ -49,6 +68,20 @@
 	border-right: 1px solid #E2E3E3;
 }
 
+.report_list_outside_left_compare {
+	border-top: 0px;
+	border-bottom: 0px;
+	border-left: 0px;
+	border-right: 3px solid #E2E3E3;
+}
+
+.report_list_outside_left_compare_empty {
+	border-top: 0px;
+	border-bottom: 1px solid #E2E3E3;
+	border-left: 0px;
+	border-right: 3px solid #E2E3E3;
+}
+
 .report_list_outside_right {
 	border-top: 0px;
 	border-bottom: 1px solid #E2E3E3;
@@ -74,12 +107,14 @@
 	width: 119px;
 	height: 44px;
 	background-image: url(../images/button_medium.png);
+	text-shadow: 0px 1px #FFFFFF;
 }
 
 .bottom_button {
 	width: 95px;
 	height: 44px;
 	background-image: url(../images/button_small.png);
+	text-shadow: 0px 1px #FFFFFF;
 }
 
 .result_pass {
@@ -986,10 +1021,12 @@ p.revision_saved {
 	font-size: 26px;
 	color: #000000;
 	text-decoration: none;
+	text-shadow: 0px 1px #FFFFFF;
 }
 
 .link-level1:hover {
 	color: #ffffff;
+	text-shadow: 0px 0px #FFFFFF;
 }
 
 .link-level1-active {
@@ -997,16 +1034,40 @@ p.revision_saved {
 	font-size: 26px;
 	color: #045b17;
 	text-decoration: none;
+	text-shadow: 0px 1px #FFFFFF;
+}
+
+.link-level1-highlight {
+	background-image: url(../images/header_selected.png);
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.link-level1-not-highlight {
+	background-image: none;
 }
 
 .link-level1-active:hover {
 	color: #ffffff;
+	text-shadow: 0px 0px #FFFFFF;
 }
 
 .username {
 	font-family: Calibri;
 	font-size: 18px;
 	color: #045b17;
+}
+
+#about {
+	font-family: Calibri;
+	font-size: 16px;
+	background-image: url(../images/about_background.png);
+	z-index: 2;
+	position: absolute;
+	width: 510px;
+	height: 308px;
+	left: 760px;
+	top: 542px;
 }
 
 /* end header stuff */
@@ -1415,6 +1476,17 @@ tr.selectable:hover {
 	border-right: 1px solid #E2E3E3;
 }
 
+.custom_list_type_bottomright_uninstall_packagename {
+	font-family: Calibri;
+	font-size: 22px;
+	color: gray;
+	background-color: #FAFAFA;
+	border-top: 0px;
+	border-bottom: 1px solid #E2E3E3;
+	border-left: 0px;
+	border-right: 1px solid #E2E3E3;
+}
+
 .custom_list_type_right_packagename {
 	font-family: Calibri;
 	font-size: 22px;
@@ -1465,12 +1537,21 @@ tr.selectable:hover {
 	border-right: 1px solid #E2E3E3;
 }
 
+.small_button {
+	width: 95px;
+	height: 44px;
+	font-family: Calibri;
+	font-size: 22px;
+	background-image: url(../images/button_small.png);
+}
+
 .medium_button {
 	width: 119px;
 	height: 44px;
 	font-family: Calibri;
 	font-size: 22px;
 	background-image: url(../images/button_medium.png);
+	text-shadow: 0px 1px #FFFFFF;
 }
 
 .large_button {
@@ -1483,5 +1564,80 @@ tr.selectable:hover {
 
 .backbackground_button {
 	background-color: #FAFAFA;
+}
+
+.view_package_list_info {
+	border-top: 0px;
+	border-bottom: 1px solid #E2E3E3;
+	border-left: 0px;
+	border-right: 3px solid #E2E3E3;
+	font-family: Calibri;
+	font-size: 22px;
+}
+
+.view_case_name_list {
+	font-family: Calibri;
+	font-size: 18px;
+	color: #116795;
+}
+
+.view_case_detail_info {
+	border-top: 0px;
+	border-bottom: 1px solid #E2E3E3;
+	border-left: 3px solid #E2E3E3;
+	border-right: 0px;
+	font-family: Calibri;
+	font-size: 12px;
+}
+
+.view_no_match_testcase_message {
+	font-family: Calibri;
+	font-size: 30px;
+	color: #116795;
+	padding-top: 50%;
+	text-align: center;
+}
+
+.static_list_packagename {
+	font-family: Calibri;
+	font-size: 22px;
+	color: black;
+	background-color: #FAFAFA;
+	border-top: 1px solid #FAFAFA;
+	border-bottom: 1px solid #FAFAFA;
+	border-left: 0px;
+	border-right: 0px;
+}
+
+.static_list_count_bar {
+	font-family: Calibri;
+	font-size: 22px;
+	color: black;
+	background-color: #FAFAFA;
+	border-top: 1px solid #E2E3E3;
+	border-bottom: 1px solid #E2E3E3;
+	border-left: 10px solid #E2E3E3;
+	border-right: 0px;
+}
+
+.static_list_num {
+	font-family: Calibri;
+	font-size: 22px;
+	color: black;
+	background-color: #FAFAFA;
+	border-top: 1px solid #E2E3E3;
+	border-bottom: 1px solid #E2E3E3;
+	border-left: 0px;
+	border-right: 0px;
+}
+
+.static_chart_select {
+	font-family: Calibri;
+	font-size: 26px;
+	color: #116795;
+	border-top: 0px;
+	border-bottom: 1px solid #E2E3E3;
+	border-left: 0px;
+	border-right: 1px solid #E2E3E3;
 }
 /* end test custom page */

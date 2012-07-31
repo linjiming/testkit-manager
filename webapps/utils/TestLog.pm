@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 #
 # Copyright (C) 2012 Intel Corporation
-# 
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -45,10 +45,14 @@ my $test_definition_dir = "/usr/share/";
 # save time -> package_name -> package_dir
 my @time_package_dir = ();
 my $time             = "none";
-my $total            = 0;        # total case number from txt file
+my $isOnlyAuto       = "FALSE";
+my $total            = 0;         # total case number from txt file
+my @targetFilter;
 
 sub writeResultInfo {
-	my ($time_only) = @_;
+	my ( $time_only, $isOnlyAuto_temp, @targetFilter_temp ) = @_;
+	$isOnlyAuto   = $isOnlyAuto_temp;
+	@targetFilter = @targetFilter_temp;
 	if ( $time_only ne "" ) {
 		find( \&writeResultInfo_wanted, $result_dir_lite . "/" . $time_only );
 	}
@@ -140,8 +144,9 @@ sub writeResultInfo_wanted {
 		my $txt_result = $dir . "/tests.txt";
 		my $xml_result = $dir . "/tests.xml";
 
-		my $startCase = "FALSE";
-		my @xml       = ();
+		my $startCase          = "FALSE";
+		my @xml                = ();
+		my $manual_case_number = 0;
 
 		# if dir is not empty, create manual case list
 		if (
@@ -157,21 +162,32 @@ sub writeResultInfo_wanted {
 		{
 
 			# get all manual cases
-			my $content = "";
-			open FILE, $test_definition_dir . $package_name . "/tests.xml"
-			  or die "can't open "
-			  . $test_definition_dir
-			  . $package_name
-			  . "/tests.xml";
+			my $content      = "";
+			my $suite_name   = "";
+			my $set_name     = "";
+			my $case_content = "";
+			my $test_definition_xml =
+			  $test_definition_dir . $package_name . "/tests.xml";
+			open FILE, $test_definition_xml
+			  or die "can't open " . $test_definition_xml;
+			system( 'cp '
+				  . $test_definition_xml . ' '
+				  . $result_dir_manager
+				  . $time . '/'
+				  . $package_name
+				  . '_definition.xml' );
+
 			while (<FILE>) {
 				if ( $_ =~ /suite.*name="(.*?)".*/ ) {
 					push( @xml, $_ );
+					chomp( $suite_name = $_ );
 				}
 				if ( $_ =~ /<\/suite>/ ) {
 					push( @xml, $_ );
 				}
 				if ( $_ =~ /set.*name="(.*?)".*/ ) {
 					push( @xml, $_ );
+					chomp( $set_name = $_ );
 				}
 				if ( $_ =~ /<\/set>/ ) {
 					push( @xml, $_ );
@@ -179,12 +195,27 @@ sub writeResultInfo_wanted {
 				if ( $startCase eq "TRUE" ) {
 					push( @xml, $_ );
 				}
-				if ( $_ =~ /.*<testcase.*execution_type="manual".*/ ) {
-					$startCase = "TRUE";
-					push( @xml, $_ );
-					if ( $_ =~ /.*<testcase.*id="(.*?)".*/ ) {
-						my $temp_id = $1;
-						$content .= $temp_id . ":N/A\n";
+				if (   ( $_ =~ /.*<testcase.*execution_type="manual".*/ )
+					&& ( $isOnlyAuto eq "FALSE" ) )
+				{
+					chomp( $case_content = $_ );
+					my $allMatch = "TRUE";
+					my $xml_single_case =
+					  $suite_name . $set_name . $case_content;
+					foreach (@targetFilter) {
+						chomp( my $filter = $_ );
+						if ( $xml_single_case !~ /$filter/ ) {
+							$allMatch = "FALSE";
+						}
+					}
+					if ( $allMatch eq "TRUE" ) {
+						$manual_case_number++;
+						$startCase = "TRUE";
+						push( @xml, $_ );
+						if ( $_ =~ /.*<testcase.*id="(.*?)".*/ ) {
+							my $temp_id = $1;
+							$content .= $temp_id . ":N/A\n";
+						}
 					}
 				}
 				if ( $_ =~ /.*<\/testcase>.*/ ) {
@@ -222,7 +253,8 @@ sub writeResultInfo_wanted {
 		}
 
 		# get result info
-		my @totalVerdict = getTotalVerdict( $dir, $time, $package_name );
+		my @totalVerdict =
+		  getTotalVerdict( $dir, $time, $package_name, $manual_case_number );
 		my @verdict = getVerdict( $dir, $time, $package_name );
 		if ( ( @totalVerdict == 3 ) && ( @totalVerdict == 3 ) ) {
 			push( @time_package_dir, $package_name );
@@ -238,7 +270,7 @@ sub writeResultInfo_wanted {
 
 # parse tests_result.txt and get total, pass, fail number
 sub getTotalVerdict {
-	my ( $testkit_lite_result, $time, $package ) = @_;
+	my ( $testkit_lite_result, $time, $package, $manual_case_number ) = @_;
 	my $testkit_lite_result_txt = $testkit_lite_result . "/tests.txt";
 	system( "cp $testkit_lite_result_txt $result_dir_manager$time"
 		  . "/$package"
@@ -254,7 +286,12 @@ sub getTotalVerdict {
 				( $_ =~ /.*tests.result.xml\s*XML\s*(\d+)\s*(\d+)\s*(\d+)\s*/ )
 			  )
 			{
-				$total = int($1) + int($2) + int($3);
+				if ( $isOnlyAuto eq "TRUE" ) {
+					$total = int($1) + int($2);
+				}
+				else {
+					$total = int($1) + int($2) + $manual_case_number;
+				}
 				push( @totalVerdict, "Total:" . $total );
 				push( @totalVerdict, "Pass:" . $1 );
 				push( @totalVerdict, "Fail:" . $2 );

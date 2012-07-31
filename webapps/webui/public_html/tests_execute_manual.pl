@@ -56,7 +56,7 @@ if ( $_GET{'time'} ) {
         <tbody>
           <tr>
             <td width="25">&nbsp;</td>
-            <td style="font-size:24px">Manual execution for&nbsp;&nbsp;$time</td>
+            <td align="left" style="font-size:24px">Manual execution for&nbsp;&nbsp;$time</td>
             <td>&nbsp;</td>
           </tr>
         </tbody>
@@ -68,17 +68,17 @@ if ( $_GET{'time'} ) {
           <td width="480" valign="top" class="report_list_outside_left_bold"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
               <tr>
                 <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
-                <td class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('summary_case_');" style="color:#000000">Total</a></td>
+                <td align="left" class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('summary_case_');" style="color:#000000">Total</a></td>
                 <td class="report_list_one_row"></td>
               </tr>
               <tr>
                 <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
-                <td class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('T:auto');">&nbsp;&nbsp;$total_auto</a></td>
+                <td align="left" class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('T:auto');">&nbsp;&nbsp;$total_auto</a></td>
                 <td class="report_list_one_row"></td>
               </tr>
               <tr>
                 <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
-                <td class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('T:manual');">&nbsp;&nbsp;$total_manual</a></td>
+                <td align="left" class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('T:manual');">&nbsp;&nbsp;$total_manual</a></td>
                 <td class="report_list_one_row"></td>
               </tr>
 DATA
@@ -90,17 +90,17 @@ DATA
 		print <<DATA;
               <tr>
                 <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
-                <td class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('P:$package');" style="color:#000000">$package</a></td>
+                <td align="left" class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('P:$package');" style="color:#000000">$package</a></td>
                 <td class="report_list_one_row"></td>
               </tr>
               <tr>
                 <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
-                <td class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('T:auto_P:$package');">&nbsp;&nbsp;$auto_result</a></td>
-                <td class="report_list_one_row"></td>
+                <td align="left" class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('T:auto_P:$package');">&nbsp;&nbsp;$auto_result</a></td>
+                <td class="report_list_one_row"><div id="progress_bar_auto_$package"></div></td>
               </tr>
               <tr>
                 <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
-                <td class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('T:manual_P:$package');">&nbsp;&nbsp;$manual_result</a></td>
+                <td align="left" class="report_list_one_row"><a class="view_case_detail" onclick="javascript:filter('T:manual_P:$package');">&nbsp;&nbsp;$manual_result</a></td>
                 <td class="report_list_one_row"><div id="progress_bar_$package"></div></td>
               </tr>
 DATA
@@ -114,9 +114,9 @@ DATA
                       <tr>
                         <td height="50"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0" frame="bottom" rules="all">
                             <tr>
-                              <td width="32%" class="report_list_outside_left">&nbsp;Name</td>
-                              <td width="32%" class="report_list_one_row">&nbsp;Description</td>
-                              <td width="36%" class="report_list_outside_right">&nbsp;Result</td>
+                              <td align="left" width="32%" class="report_list_outside_left">&nbsp;Name</td>
+                              <td align="left" width="32%" class="report_list_one_row">&nbsp;Description</td>
+                              <td align="left" width="36%" class="report_list_outside_right">&nbsp;Result</td>
                             </tr>
                           </table></td>
                       </tr>
@@ -172,9 +172,9 @@ DATA
 				print <<DATA;
                         <td height="50"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0" frame="bottom" rules="all" style="table-layout:fixed">
                             <tr>
-                              <td width="32%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
-                              <td width="32%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                              <td width="36%" class="report_list_outside_right"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+                              <td align="left" width="32%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
+                              <td align="left" width="32%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                              <td align="left" width="36%" class="report_list_outside_right"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
 DATA
 				if ( $result eq "PASS" ) {
 					print <<DATA;
@@ -294,9 +294,9 @@ DATA
 				print <<DATA;
                         <td height="50"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0" frame="bottom" rules="all" style="table-layout:fixed">
                             <tr>
-                              <td width="32%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
-                              <td width="32%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                              <td width="36%" class="report_list_outside_right"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+                              <td align="left" width="32%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
+                              <td align="left" width="32%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                              <td align="left" width="36%" class="report_list_outside_right"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
 DATA
 				if ( $result eq "PASS" ) {
 					print <<DATA;
@@ -440,7 +440,7 @@ DATA
 var pb = new YAHOO.widget.ProgressBar().render('progress_bar_$package');
 pb.set('minValue',0);
 pb.set('maxValue',$max_value);
-pb.set('width',180);
+pb.set('width',150);
 pb.set('height',10);
 pb.set('value',0);
 
@@ -450,6 +450,21 @@ anim.duration = 1;
 anim.method = YAHOO.util.Easing.easeBothStrong;
 
 pb.set('value',$value);
+
+
+var pb = new YAHOO.widget.ProgressBar().render('progress_bar_auto_$package');
+pb.set('minValue',0);
+pb.set('maxValue',10);
+pb.set('width',150);
+pb.set('height',10);
+pb.set('value',0);
+
+pb.set('anim',true);
+var anim = pb.get('anim');
+anim.duration = 1;
+anim.method = YAHOO.util.Easing.easeBothStrong;
+
+pb.set('value',10);
 // ]]>
 </script>
 DATA

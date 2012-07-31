@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 #
 # Copyright (C) 2012 Intel Corporation
-# 
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -30,14 +30,13 @@ use Data::Dumper;
 use Digest::SHA qw(sha1_hex);
 
 # data which is going to be displayed
-my $result_dir_manager  = $FindBin::Bin . "/../../../results/";
-my $test_definition_dir = "/usr/share/";
-my @report_display      = ();
-my @select_dir          = ();
-my @package_list        = ();
+my $result_dir_manager = $FindBin::Bin . "/../../../results/";
+my $result_dir_lite    = $FindBin::Bin . "/../../../../lite/";
+my @report_display     = ();
+my @select_dir         = ();
+my @package_list       = ();
 my @test_type        = ();         #which test type are stored in the xml
 my $hasTestTypeError = "FALSE";    #have error when list all cases by test type
-my %result_list;                   #(total pass fail not run) for each package
 my %caseInfo;                      #parse all info items from xml
 my %manual_case_result;            #parse manual case result from txt file
 my %component_list
@@ -48,19 +47,273 @@ my @result_list_xml =
   ();    #put all xml and txt result into format --form report.1=@sim.xml
 my @result_list_txt =
   ();    #put all xml and txt result into format --form attachment.1=sim.txt
+my %result_list_tree;    #(total pass fail not run) for tree view
+my @same_package_list = ();    #extract same packages from selected reports
+my $max_package_number =
+  0;    #extract the maximum package number from selected reports
+my %all_package_list;    #store package distribution
 
 # clear text pipe
 autoflush_on();
 
 # press compare button
 if ( $_POST{'compare'} ) {
+	updateSelectDir(%_POST);
+	getSamePackage();
 
-	# TODO: finish code here
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 	print_header( "$MTK_BRANCH Manager Test Report", "report" );
 
-	print show_not_implemented("Compare");
+	if ( @same_package_list > 0 ) {
+		print <<DATA;
+<div id="message"></div>
+<table width="1280" border="0" cellspacing="0" cellpadding="0" class="report_list" style="table-layout:fixed">
+  <tr>
+    <td height="50"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+        <tr style="font-size:24px">
+DATA
+		for ( my $i = 0 ; $i < @select_dir ; $i++ ) {
+			my $time       = $select_dir[$i];
+			my $class_time = "report_list_outside_left_compare_empty";
+			print <<DATA;
+          <td class="$class_time" align="center">$time</td>
+DATA
+		}
+		print <<DATA;
+        </tr>
+      </table></td>
+  </tr>
+DATA
+		for ( keys(%all_package_list) ) {
+			my $package      = $_;
+			my @which_report = split( ':', $all_package_list{$_} );
+			my $package_temp = $package;
+			$package_temp =~ s/_tests.xml//;
+			print <<DATA;
+  <tr style="font-size:24px">
+    <td height="50" class="report_list_outside_left_compare" align="left" style="background-color:#89D6F2">&nbsp;Package Name: $package_temp</td>
+  </tr>
+  <tr>
+    <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+DATA
+			my %case_result;
+			my @color_change = ();
+			for ( my $i = 0 ; $i < @select_dir ; $i++ ) {
+				my $time            = $select_dir[$i];
+				my $class_td_border = "report_list_outside_left_compare";
+				my $class_name      = "report_list_outside_left";
+				my $class_result    = "report_list_one_row";
+
+				my $should_print = "FALSE";
+				foreach (@which_report) {
+					if ( $_ eq $i ) {
+						$should_print = "TRUE";
+					}
+				}
+				if ( $should_print eq "TRUE" ) {
+					print <<DATA;
+          <td valign="top" class="$class_td_border"><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
+              <tr style="font-size:24px">
+                <td width="80%" height="50" class="$class_name" align="left">&nbsp;Name</td>
+                <td width="20%" height="50" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">Result</td>
+              </tr>
+DATA
+
+					# print Auto case
+					my $startCase = "FALSE";
+					my $xml       = "none";
+					my $name      = "none";
+					my $result    = "none";
+					my $isAuto    = "FALSE";
+					my $xml_url =
+					  $result_dir_manager . $select_dir[$i] . '/' . $package;
+					open FILE, $xml_url or die $!;
+
+					while (<FILE>) {
+						if ( $startCase eq "TRUE" ) {
+							chomp( $xml .= $_ );
+						}
+						if ( $_ =~ /.*<testcase.*execution_type="auto".*/ ) {
+							$isAuto    = "TRUE";
+							$startCase = "TRUE";
+							chomp( $xml = $_ );
+
+							if ( $_ =~ /result="(.*?)"/ ) {
+								$result = $1;
+							}
+							if ( $_ =~ /testcase.*id="(.*?)".*/ ) {
+								$name = $1;
+							}
+						}
+						if (   ( $_ =~ /.*<\/testcase>.*/ )
+							&& ( $isAuto eq "TRUE" ) )
+						{
+							$startCase = "FALSE";
+							%caseInfo  = updateCaseInfo($xml);
+
+							my $id = 'ID_' . sha1_hex( $package_temp . $name );
+							if ( defined( $case_result{$id} ) ) {
+								if ( $case_result{$id} ne $result ) {
+									push( @color_change, $id );
+								}
+							}
+							else {
+								$case_result{$id} = $result;
+							}
+							$id .= '_' . $i;
+							print <<DATA;
+              <tr id = "$id">
+                <td width="80%" height="50" class="$class_name" align="left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_$id');">&nbsp;$name</a></td>
+                <td width="20%" height="50" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$result">$result</td>
+              </tr>
+DATA
+							print <<DATA;
+              <tr id="detailed_$id" style="display:none">
+                <td height="50" colspan="2">
+DATA
+							printDetailedCaseInfo( $name, 'auto', %caseInfo );
+							print <<DATA;
+                </td>
+              </tr>
+DATA
+						}
+					}
+
+					# print Manual case
+					my $isManual = "FALSE";
+					%manual_case_result =
+					  updateManualCaseResult( $select_dir[$i], $package_temp );
+					my $def_tests_xml_dir =
+					    $result_dir_manager 
+					  . $time . "/"
+					  . $package_temp
+					  . "_definition.xml";
+					open FILE, $def_tests_xml_dir or die $!;
+					while (<FILE>) {
+						if ( $startCase eq "TRUE" ) {
+							chomp( $xml .= $_ );
+						}
+						if ( $_ =~ /testcase.*execution_type="manual".*/ ) {
+							$startCase = "TRUE";
+							$isManual  = "TRUE";
+							chomp( $xml = $_ );
+
+							if ( $_ =~ /testcase.*id="(.*?)".*/ ) {
+								$name = $1;
+							}
+						}
+						if ( $_ =~ /testcase.*execution_type="auto".*/ ) {
+							$isManual = "FALSE";
+						}
+						if (   ( $_ =~ /.*<\/testcase>.*/ )
+							&& ( $isManual eq "TRUE" ) )
+						{
+							if ( defined $manual_case_result{$name} ) {
+								$startCase = "FALSE";
+								%caseInfo  = updateCaseInfo($xml);
+								my $id_textarea =
+								    "textarea__P:"
+								  . $package_temp . '__N:'
+								  . $name;
+								my $id_bugnumber =
+								    "bugnumber__P:"
+								  . $package_temp . '__N:'
+								  . $name;
+								$result = $manual_case_result{$name};
+								my $id =
+								  'ID_' . sha1_hex( $package_temp . $name );
+								if ( defined( $case_result{$id} ) ) {
+									if ( $case_result{$id} ne $result ) {
+										push( @color_change, $id );
+									}
+								}
+								else {
+									$case_result{$id} = $result;
+								}
+								$id .= '_' . $i;
+								print <<DATA;
+              <tr id = "$id">
+                <td width="80%" height="50" class="$class_name" align="left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_$id');">&nbsp;$name</a></td>
+                <td width="20%" height="50" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$result">$result</td>
+              </tr>
+DATA
+								print <<DATA;
+              <tr id="detailed_$id" style="display:none">
+                <td height="50" colspan="2">
+DATA
+								printDetailedCaseInfoWithComment( $name,
+									'manual', $time, $id_textarea,
+									$id_bugnumber, %caseInfo );
+								print <<DATA;
+                </td>
+              </tr>
+DATA
+							}
+						}
+					}
+				}
+				else {
+					$class_td_border = "report_list_outside_left_compare_empty";
+					print <<DATA;
+          <td valign="top" class="$class_td_border"><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
+              <tr style="font-size:24px">
+                <td width="80%" height="50" class="$class_name" align="left">&nbsp;Name</td>
+                <td width="20%" height="50" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">Result</td>
+              </tr>
+              <tr>
+                <td width="80%" height="50" class="$class_name" align="left">&nbsp;None</td>
+                <td width="20%" height="50" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">None</td>
+              </tr>
+DATA
+				}
+				print <<DATA;
+            </table></td>
+DATA
+				foreach (@color_change) {
+					my $total_number = @select_dir;
+					print <<DATA;
+<script language="javascript" type="text/javascript">
+// <![CDATA[
+for ( var i = 0; i < $total_number; i++) {
+	var error_tr = document.getElementById("$_" + "_" + i);
+	if (error_tr) {
+		error_tr.style.backgroundColor = "#D5B584";
+	}
+}
+// ]]>
+</script>
+DATA
+				}
+			}
+			print <<DATA;
+        </tr>
+      </table></td>
+  </tr>
+DATA
+		}
+		print <<DATA;
+</table>
+<script language="javascript" type="text/javascript">
+// <![CDATA[
+function show_case_detail(id) {
+	var display = document.getElementById(id).style.display;
+	if (display == "none") {
+		document.getElementById(id).style.display = "";
+	} else {
+		document.getElementById(id).style.display = "none";
+	}
+}
+// ]]>
+</script>
+DATA
+	}
+	else {
+		print show_error_dlg(
+			"No same package is found from the selected reports");
+		showReport();
+	}
 }
 
 # press delete button
@@ -68,7 +321,17 @@ elsif ( $_POST{'delete'} ) {
 	updateSelectDir(%_POST);
 	foreach (@select_dir) {
 		system("rm -rf $result_dir_manager$_");
+		system("rm -rf $result_dir_lite$_");
 	}
+
+	my $report_ori      = $result_dir_manager . '*s';
+	my $histtory_ori    = $result_dir_manager . 'HISTORY';
+	my $latest_ori      = $result_dir_manager . 'latest';
+	my $latest_ori_lite = $result_dir_lite . 'latest';
+	system("rm -rf $report_ori");
+	system("rm -rf $histtory_ori");
+	system("rm -rf $latest_ori");
+	system("rm -rf $latest_ori_lite");
 
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
@@ -80,12 +343,53 @@ elsif ( $_POST{'delete'} ) {
 # press mail button
 elsif ( $_POST{'mail'} ) {
 
-	# TODO: finish code here
+	updateSelectDir(%_POST);
+
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 	print_header( "$MTK_BRANCH Manager Test Report", "report" );
 
-	print show_not_implemented("Mail");
+	foreach (@select_dir) {
+		updateResultList($_);
+	}
+
+	my $hasEvolution = `which evolution 2>&1`;
+	if ( $hasEvolution =~ /which: no/ ) {
+		my $attach = "";
+		for ( my $i = 1 ; $i <= @result_list_xml ; $i++ ) {
+			$attach .= '<p>' . $result_list_xml[ $i - 1 ] . '</p>';
+		}
+		my $form_txt = "";
+		for ( my $i = 1 ; $i <= @result_list_txt ; $i++ ) {
+			$attach .= '<p>' . $result_list_txt[ $i - 1 ] . '</p>';
+		}
+		print show_error_dlg(
+"<p>Can't find Evolution in your system</p><p>Please send the following attachments manually:</p>"
+			  . $attach );
+	}
+	else {
+		my $form_xml = "";
+		for ( my $i = 1 ; $i <= @result_list_xml ; $i++ ) {
+			$form_xml .= '\&attach="' . $result_list_xml[ $i - 1 ] . '"';
+		}
+		my $form_txt = "";
+		for ( my $i = 1 ; $i <= @result_list_txt ; $i++ ) {
+			$form_txt .= '\&attach="' . $result_list_txt[ $i - 1 ] . '"';
+		}
+		my $command =
+'subject=Test%20report%20from%20testkit-manager\&body=Please%20check%20detailed%20report%20from%20the%20attachment'
+		  . $form_xml
+		  . $form_txt;
+		$command =~ s/:/%3A/g;
+		$command = "export DISPLAY=:0.0;su tizen -c 'evolution mailto:?" 
+		  . $command . "'";
+
+		use threads;
+		my $thr = threads->new( \&callSystem, $command );
+		print show_message_dlg("Please specify a receiver in the Evolution");
+	}
+
+	showReport();
 }
 
 # press submit button from submit server page
@@ -222,15 +526,15 @@ elsif ( $_POST{'submit'} ) {
           <td><table width="100%" border="1" cellpadding="0" cellspacing="0" class="report_list" frame="below" rules="all">
             <tr style="font-size:24px">
               <td width="4%" height="50" class="report_list_one_row">&nbsp;</td>
-              <td height="50" class="report_list_one_row">The following report(s) will be submitted to the QA report server:</td>
+              <td align="left" height="50" class="report_list_one_row">The following report(s) will be submitted to the QA report server:</td>
             </tr>
 DATA
 	my $number = 1;
 	foreach (@select_dir) {
 		print <<DATA;
             <tr>
-              <td width="4%" height="50" class="report_list_outside_left">&nbsp;&nbsp;&nbsp;$number.</td>
-              <td height="50" class="report_list_outside_right">$_<input type="text" name="$_" value="" style="display:none" /></td>
+              <td align="left" width="4%" height="50" class="report_list_outside_left">&nbsp;&nbsp;&nbsp;$number.</td>
+              <td align="left" height="50" class="report_list_outside_right">&nbsp;$_<input type="text" name="$_" value="" style="display:none" /></td>
             </tr>
 DATA
 		$number++;
@@ -327,9 +631,9 @@ sub showReport {
               <td width="4%" height="50" align="center" valign="middle" class="report_list_outside_left"><label>
                 <input type="checkbox" name="check_all" id="check_all" onclick="javascript:check_uncheck_all();" />
               </label></td>
-              <td width="24%" class="report_list_inside">&nbsp;Time</td>
-              <td width="12%" class="report_list_inside">&nbsp;User Name</td>
-              <td width="12%" class="report_list_inside">&nbsp;Platform</td>
+              <td align="left" width="24%" class="report_list_inside">&nbsp;Time</td>
+              <td align="left" width="12%" class="report_list_inside">&nbsp;User Name</td>
+              <td align="left" width="12%" class="report_list_inside">&nbsp;Platform</td>
               <td width="24%" class="report_list_inside"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td width="20%" align="center">Total</td>
@@ -342,7 +646,7 @@ sub showReport {
                   <td width="3%" align="center">&nbsp;</td>
                 </tr>
               </table></td>
-              <td width="24%" class="report_list_outside_right">&nbsp;Operation</td>
+              <td align="left" width="24%" class="report_list_outside_right">&nbsp;Operation</td>
             </tr>
 DATA
 
@@ -361,9 +665,9 @@ DATA
               <td width="4%" height="50" align="center" valign="middle" class="report_list_outside_left"><label>
                 <input type="checkbox" id="$time" name="$time" onclick="javascript:update_state();" />
               </label></td>
-              <td width="24%" class="report_list_inside">&nbsp;$time</td>
-              <td width="12%" class="report_list_inside">&nbsp;$user_name</td>
-              <td width="12%" class="report_list_inside">&nbsp;$platform</td>
+              <td align="left" width="24%" class="report_list_inside">&nbsp;$time</td>
+              <td align="left" width="12%" class="report_list_inside">&nbsp;$user_name</td>
+              <td align="left" width="12%" class="report_list_inside">&nbsp;$platform</td>
               <td width="24%" class="report_list_inside"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td width="20%" align="left">&nbsp;&nbsp;&nbsp;$total</td>
@@ -376,7 +680,7 @@ DATA
                   <td width="6%" align="center">&nbsp;</td>
                 </tr>
               </table></td>
-              <td width="24%" class="report_list_outside_right"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+              <td align="left" width="24%" class="report_list_outside_right"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td><a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="38" height="38" /></a></td>
                   <td><a href="tests_report.pl?time=$time&detailed=1"><img title="View Detailed Report" src="images/operation_view_detailed_report.png" alt="operation_view_detailed_report" width="38" height="38" border="0" /></a></td>
@@ -437,9 +741,21 @@ function count_checked() {
 	return num;
 }
 
+function count_checkbox() {
+	var num = 0;
+	var form = document.report_list;
+	for (var i=0; i<form.length; ++i) {
+		if ((form[i].type.toLowerCase() == 'checkbox') && (form[i].name != 'check_all')) {
+			++num;
+		}
+	}
+	return num;
+}
+
 function update_state() {
 	var button;
 	var num_checked = count_checked();
+	var num_checkbox = count_checkbox();
 	button = document.getElementById('delete_button');
 	if (button) {
 		button.disabled = (num_checked == 0);
@@ -459,6 +775,12 @@ function update_state() {
 	button = document.getElementById('export_button');
 	if (button) {
 		button.disabled = (num_checked == 0);
+	}
+	var elem = document.getElementById('check_all');
+	if (num_checked == num_checkbox){
+		elem.checked = 1
+	} else {
+		elem.checked = 0
 	}
 }
 
@@ -495,8 +817,6 @@ function confirm_remove() {
 </script>
 DATA
 }
-
-# TODO: write function mail_report(), submit_report() and export_report()
 
 sub showSummaryReport {
 	my ($time)         = @_;
@@ -548,49 +868,49 @@ sub showSummaryReport {
 	print <<DATA;
 <table width="1280" border="0" cellspacing="0" cellpadding="0" class="report_list">
   <tr style="font-size:24px">
-    <td height="50" background="images/report_top_button_background.png">&nbsp;Test Environment</td>
+    <td align="left" height="50" background="images/report_top_button_background.png">&nbsp;Test Environment</td>
   </tr>
   <tr>
     <td><table width="100%" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
       <tr>
-        <td width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Platform</td>
-        <td width="50%" height="50" class="report_list_outside_right">&nbsp;$platform</td>
+        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Platform</td>
+        <td align="left" width="50%" height="50" class="report_list_outside_right">&nbsp;$platform</td>
       </tr>
       <tr>
-        <td width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Package Manager </td>
-        <td width="50%" height="50"class="report_list_outside_right">&nbsp;$package_manager</td>
+        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Package Manager </td>
+        <td align="left" width="50%" height="50"class="report_list_outside_right">&nbsp;$package_manager</td>
       </tr>
       <tr>
-        <td width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Username</td>
-        <td width="50%" height="50"class="report_list_outside_right">&nbsp;$username</td>
+        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Username</td>
+        <td align="left" width="50%" height="50"class="report_list_outside_right">&nbsp;$username</td>
       </tr>
       <tr>
-        <td width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Hostname</td>
-        <td width="50%" height="50"class="report_list_outside_right">&nbsp;$hostname</td>
+        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Hostname</td>
+        <td align="left" width="50%" height="50"class="report_list_outside_right">&nbsp;$hostname</td>
       </tr>
       <tr>
-        <td width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Kernel</td>
-        <td width="50%" height="50"class="report_list_outside_right">&nbsp;$kernel</td>
+        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Kernel</td>
+        <td align="left" width="50%" height="50"class="report_list_outside_right">&nbsp;$kernel</td>
       </tr>
       <tr>
-        <td width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Operation System </td>
-        <td width="50%" height="50"class="report_list_outside_right">&nbsp;$operation_system</td>
+        <td align="left" width="50%" height="50" class="report_list_outside_left" style="font-size:24px">&nbsp;Operation System </td>
+        <td align="left" width="50%" height="50"class="report_list_outside_right">&nbsp;$operation_system</td>
       </tr>
     </table></td>
   </tr>
   <tr style="font-size:24px">
-    <td height="50" style="background-color:#88D6F2">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&detailed=1"><img title="View Detailed Report" src="images/operation_view_detailed_report.png" alt="operation_view_detailed_report" width="38" height="38" /></a></td>
+    <td align="left" height="50" style="background-color:#88D6F2">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&detailed=1"><img title="View Detailed Report" src="images/operation_view_detailed_report.png" alt="operation_view_detailed_report" width="38" height="38" /></a></td>
   </tr>
   <tr>
     <td><table width="100%" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
       <tr style="font-size:24px">
-        <td width="25%" height="50" class="report_list_outside_left">&nbsp;Package Name</td>
-        <td width="12%" height="50" class="report_list_inside">&nbsp;Type</td>
-        <td width="13%" height="50" class="report_list_inside">&nbsp;Status</td>
-        <td width="12%" height="50" class="report_list_outside_right">&nbsp;Total</td>
-        <td width="12%" height="50" class="report_list_one_row">&nbsp;Pass</td>
-        <td width="12%" height="50" class="report_list_one_row">&nbsp;Fail</td>
-        <td width="14%" height="50" class="report_list_one_row">&nbsp;Not run</td>
+        <td align="left" width="25%" height="50" class="report_list_outside_left">&nbsp;Package Name</td>
+        <td align="left" width="12%" height="50" class="report_list_inside">&nbsp;Type</td>
+        <td align="left" width="13%" height="50" class="report_list_inside">&nbsp;Status</td>
+        <td align="left" width="12%" height="50" class="report_list_outside_right">&nbsp;Total</td>
+        <td align="left" width="12%" height="50" class="report_list_one_row">&nbsp;Pass</td>
+        <td align="left" width="12%" height="50" class="report_list_one_row">&nbsp;Fail</td>
+        <td align="left" width="14%" height="50" class="report_list_one_row">&nbsp;Not run</td>
       </tr>
 DATA
 
@@ -644,43 +964,43 @@ DATA
 
 			print <<DATA;
       <tr>
-        <td width="25%" height="50" rowspan="2" class="report_list_outside_left">&nbsp;$package_name</td>
-        <td width="12%" height="25" class="report_list_inside">&nbsp;auto</td>
+        <td align="left" width="25%" height="50" rowspan="2" class="report_list_outside_left">&nbsp;$package_name</td>
+        <td align="left" width="12%" height="25" class="report_list_inside">&nbsp;auto</td>
 DATA
 			if ( $not_run_a eq "0" ) {
 				print <<DATA;
-        <td width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
+        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
 DATA
 			}
 			else {
 				print <<DATA;
-        <td width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
+        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
 DATA
 			}
 			print <<DATA;
-        <td width="12%" height="25" class="report_list_outside_right">&nbsp;$total_a</td>
-        <td width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$pass_a</td>
-        <td width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$fail_a</td>
-        <td width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$not_run_a</td>
+        <td align="left" width="12%" height="25" class="report_list_outside_right">&nbsp;$total_a</td>
+        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$pass_a</td>
+        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$fail_a</td>
+        <td align="left" width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$not_run_a</td>
       </tr>
       <tr>
-        <td width="12%" height="25" class="report_list_inside">&nbsp;manual</td>
+        <td align="left" width="12%" height="25" class="report_list_inside">&nbsp;manual</td>
 DATA
 			if ( $not_run_m eq "0" ) {
 				print <<DATA;
-        <td width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
+        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
 DATA
 			}
 			else {
 				print <<DATA;
-        <td width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
+        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
 DATA
 			}
 			print <<DATA;
-        <td width="12%" height="25" class="report_list_outside_right">&nbsp;$total_m</td>
-        <td width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$pass_m</td>
-        <td width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$fail_m</td>
-        <td width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$not_run_m</td>
+        <td align="left" width="12%" height="25" class="report_list_outside_right">&nbsp;$total_m</td>
+        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$pass_m</td>
+        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$fail_m</td>
+        <td align="left" width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$not_run_m</td>
       </tr>
 DATA
 			@data = ();
@@ -695,51 +1015,51 @@ DATA
 	}
 	print <<DATA;
       <tr>
-        <td width="25%" height="50" rowspan="2" class="report_list_outside_left">&nbsp;Total</td>
-        <td width="12%" height="25" class="report_list_inside">&nbsp;auto</td>
+        <td align="left" width="25%" height="50" rowspan="2" class="report_list_outside_left">&nbsp;Total</td>
+        <td align="left" width="12%" height="25" class="report_list_inside">&nbsp;auto</td>
 DATA
 	if ( $whole_not_run_a eq "0" ) {
 		print <<DATA;
-        <td width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
+        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
 DATA
 	}
 	else {
 		print <<DATA;
-        <td width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
+        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
 DATA
 	}
 	print <<DATA;
-        <td width="12%" height="25" class="report_list_outside_right">&nbsp;$whole_total_a</td>
-        <td width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$whole_pass_a</td>
-        <td width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$whole_fail_a</td>
-        <td width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$whole_not_run_a</td>
+        <td align="left" width="12%" height="25" class="report_list_outside_right">&nbsp;$whole_total_a</td>
+        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$whole_pass_a</td>
+        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$whole_fail_a</td>
+        <td align="left" width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$whole_not_run_a</td>
       </tr>
       <tr>
-        <td width="12%" height="25" class="report_list_inside">&nbsp;manual</td>
+        <td align="left" width="12%" height="25" class="report_list_inside">&nbsp;manual</td>
 DATA
 	if ( $whole_not_run_m eq "0" ) {
 		print <<DATA;
-        <td width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
+        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;complete</td>
 DATA
 	}
 	else {
 		print <<DATA;
-        <td width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
+        <td align="left" width="13%" height="25" class="report_list_inside">&nbsp;incomplete</td>
 DATA
 	}
 	print <<DATA;
-        <td width="12%" height="25" class="report_list_outside_right">&nbsp;$whole_total_m</td>
-        <td width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$whole_pass_m</td>
-        <td width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$whole_fail_m</td>
-        <td width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$whole_not_run_m</td>
+        <td align="left" width="12%" height="25" class="report_list_outside_right">&nbsp;$whole_total_m</td>
+        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #137717">&nbsp;$whole_pass_m</td>
+        <td align="left" width="12%" height="25" class="report_list_one_row" style="color: #830300">&nbsp;$whole_fail_m</td>
+        <td align="left" width="14%" height="25" class="report_list_one_row" style="color: #A65604">&nbsp;$whole_not_run_m</td>
       </tr>
     </table></td>
   </tr>
   <tr style="font-size:24px">
-    <td height="50" style="background-color:#88D6F2">&nbsp;Test Log</td>
+    <td align="left" height="50" style="background-color:#88D6F2">&nbsp;Test Log</td>
   </tr>
   <tr>
-    <td height="50">
+    <td align="left" height="50">
     <label>
     <input name="log_path" id="log_path" type="text" style="display:none" value="$result_dir" />
     </label>
@@ -773,7 +1093,7 @@ sub showDetailedReport {
       <td><form id="detailed_report" name="detailed_report" method="post" action="tests_report.pl">
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
           <tr>
-            <td height="50" background="images/report_top_button_background.png"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
+            <td align="left" height="50" background="images/report_top_button_background.png"><table width="100%" height="50" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 <td width="2%">&nbsp;</td>
                 <td style="font-size:24px">View by:
@@ -811,19 +1131,19 @@ sub showDetailedReport {
                   <div id="view_area_package_reg" style="display:none"></div>
                   <table width="100%" border="0" cellspacing="0" cellpadding="0">
                     <tr style="font-size:24px">
-                      <td height="50" class="report_list_one_row">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="38" height="38" /></td>
+                      <td align="left" height="50" class="report_list_one_row">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="38" height="38" /></td>
                     </tr>
                     <tr>
                       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
                           <tr style="font-size:24px">
-                            <td width="33%" height="50" class="report_list_outside_left">&nbsp;Name</td>
-                            <td width="34%" height="50" class="report_list_one_row">&nbsp;Description</td>
+                            <td align="left" width="33%" height="50" class="report_list_outside_left">&nbsp;Name</td>
+                            <td align="left" width="34%" height="50" class="report_list_one_row">&nbsp;Description</td>
                             <td width="33%" height="50" class="report_list_outside_right" align="center">Result</td>
                           </tr>
 DATA
 
 	# print auto case for package view
-	updatePackageListWithResult($time);
+	@package_list = updatePackageList($time);
 	foreach (@package_list) {
 		my $package        = $_;
 		my $id             = "none";
@@ -873,6 +1193,11 @@ DATA
 				  . '_T:auto_R:'
 				  . $result;
 
+				#update result number for package tree view
+				my @package_suite_set =
+				  ( 'P_' . $package, 'SU_' . $suite, 'SE_' . $set );
+				updateTreeResult( $result, @package_suite_set );
+
 				if ( $result eq "FAIL" ) {
 					print '<tr id="case_package_' . $id . '">';
 					print "\n";
@@ -883,8 +1208,8 @@ DATA
 					print "\n";
 				}
 				print <<DATA;
-                            <td width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
-                            <td width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
                             <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_package_$name" style="display:none">
@@ -901,8 +1226,9 @@ DATA
 		# print manual case for package view
 		%manual_case_result = updateManualCaseResult( $time, $package );
 		$execution_type = "manual";
-		my $isManual          = "FALSE";
-		my $def_tests_xml_dir = $test_definition_dir . $package . "/tests.xml";
+		my $isManual = "FALSE";
+		my $def_tests_xml_dir =
+		  $result_dir_manager . $time . "/" . $package . "_definition.xml";
 		open FILE, $def_tests_xml_dir or die $!;
 		while (<FILE>) {
 			if ( $startCase eq "TRUE" ) {
@@ -926,46 +1252,55 @@ DATA
 				$isManual = "FALSE";
 			}
 			if ( ( $_ =~ /.*<\/testcase>.*/ ) && ( $isManual eq "TRUE" ) ) {
-				$startCase   = "FALSE";
-				%caseInfo    = updateCaseInfo($xml);
-				$result      = $manual_case_result{$name};
-				$description = $caseInfo{"description"};
+				$startCase = "FALSE";
+				%caseInfo  = updateCaseInfo($xml);
+				if ( defined $manual_case_result{$name} ) {
+					$result      = $manual_case_result{$name};
+					$description = $caseInfo{"description"};
 
-				my $id_textarea  = "textarea__P:" . $package . '__N:' . $name;
-				my $id_bugnumber = "bugnumber__P:" . $package . '__N:' . $name;
+					my $id_textarea =
+					  "textarea__P:" . $package . '__N:' . $name;
+					my $id_bugnumber =
+					  "bugnumber__P:" . $package . '__N:' . $name;
 
-				$id =
-				    "P:" 
-				  . $package . '_SU:' 
-				  . $suite . '_SE:' 
-				  . $set
-				  . '_T:manual_R:'
-				  . $result;
+					$id =
+					    "P:" 
+					  . $package . '_SU:' 
+					  . $suite . '_SE:' 
+					  . $set
+					  . '_T:manual_R:'
+					  . $result;
 
-				if ( $result eq "FAIL" ) {
-					print '<tr id="case_package_' . $id . '">';
-					print "\n";
-				}
-				else {
-					print '<tr id="case_package_' . $id
-					  . '" style="display:none">';
-					print "\n";
-				}
+					#update result number for package tree view
+					my @package_suite_set =
+					  ( 'P_' . $package, 'SU_' . $suite, 'SE_' . $set );
+					updateTreeResult( $result, @package_suite_set );
 
-				print <<DATA;
-                            <td width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
-                            <td width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+					if ( $result eq "FAIL" ) {
+						print '<tr id="case_package_' . $id . '">';
+						print "\n";
+					}
+					else {
+						print '<tr id="case_package_' . $id
+						  . '" style="display:none">';
+						print "\n";
+					}
+
+					print <<DATA;
+                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
                             <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_package_$name" style="display:none">
                             <td height="50" colspan="3">
 DATA
-				printDetailedCaseInfoWithComment( $name, $execution_type, $time,
-					$id_textarea, $id_bugnumber, %caseInfo );
-				print <<DATA;
+					printDetailedCaseInfoWithComment( $name, $execution_type,
+						$time, $id_textarea, $id_bugnumber, %caseInfo );
+					print <<DATA;
                             </td>
                           </tr>
 DATA
+				}
 			}
 		}
 	}
@@ -977,19 +1312,19 @@ DATA
                   <div id="view_area_component_reg" style="display:none"></div>
                   <table width="100%" border="0" cellspacing="0" cellpadding="0">
                     <tr style="font-size:24px">
-                      <td height="50" class="report_list_one_row">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="38" height="38" /></td>
+                      <td align="left" height="50" class="report_list_one_row">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="38" height="38" /></td>
                     </tr>
                     <tr>
                       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
                           <tr style="font-size:24px">
-                            <td width="33%" height="50" class="report_list_outside_left">&nbsp;Name</td>
-                            <td width="34%" height="50" class="report_list_one_row">&nbsp;Description</td>
+                            <td align="left" width="33%" height="50" class="report_list_outside_left">&nbsp;Name</td>
+                            <td align="left" width="34%" height="50" class="report_list_one_row">&nbsp;Description</td>
                             <td width="33%" height="50" class="report_list_outside_right" align="center">Result</td>
                           </tr>
 DATA
 
 	# print auto case for component view
-	updatePackageListWithResult($time);
+	@package_list = updatePackageList($time);
 	foreach (@package_list) {
 		my $package        = $_;
 		my $id             = "none";
@@ -1036,6 +1371,9 @@ DATA
 				$id =
 				  join( "_", @component_item_temp ) . '_T:auto_R:' . $result;
 
+				#update result number for component tree view
+				updateTreeResult( $result, @component_item_temp );
+
 				if ( $result eq "FAIL" ) {
 					print '<tr id="case_component_' . $id . '">';
 					print "\n";
@@ -1046,8 +1384,8 @@ DATA
 					print "\n";
 				}
 				print <<DATA;
-                            <td width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
-                            <td width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
                             <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_component_$name" style="display:none">
@@ -1064,8 +1402,9 @@ DATA
 		# print manual case for component view
 		%manual_case_result = updateManualCaseResult( $time, $package );
 		$execution_type = "manual";
-		my $isManual          = "FALSE";
-		my $def_tests_xml_dir = $test_definition_dir . $package . "/tests.xml";
+		my $isManual = "FALSE";
+		my $def_tests_xml_dir =
+		  $result_dir_manager . $time . "/" . $package . "_definition.xml";
 		open FILE, $def_tests_xml_dir or die $!;
 		while (<FILE>) {
 			if ( $startCase eq "TRUE" ) {
@@ -1086,45 +1425,54 @@ DATA
 				$startCase   = "FALSE";
 				%caseInfo    = updateCaseInfo($xml);
 				$description = $caseInfo{"description"};
-				$result      = $manual_case_result{$name};
-				$component   = $caseInfo{"component"};
+				if ( defined $manual_case_result{$name} ) {
+					$result    = $manual_case_result{$name};
+					$component = $caseInfo{"component"};
 
-				my @component_item = split( "\/", $component );
-				my @component_item_temp = ();
-				for ( my $i = 0 ; $i < @component_item ; $i++ ) {
-					push( @component_item_temp,
-						"level-" . ( $i + 1 ) . ":" . $component_item[$i] );
-				}
+					my @component_item = split( "\/", $component );
+					my @component_item_temp = ();
+					for ( my $i = 0 ; $i < @component_item ; $i++ ) {
+						push( @component_item_temp,
+							"level-" . ( $i + 1 ) . ":" . $component_item[$i] );
+					}
 
-				my $id_textarea  = "textarea__P:" . $package . '__N:' . $name;
-				my $id_bugnumber = "bugnumber__P:" . $package . '__N:' . $name;
+					my $id_textarea =
+					  "textarea__P:" . $package . '__N:' . $name;
+					my $id_bugnumber =
+					  "bugnumber__P:" . $package . '__N:' . $name;
 
-				$id =
-				  join( "_", @component_item_temp ) . '_T:manual_R:' . $result;
+					$id =
+					    join( "_", @component_item_temp )
+					  . '_T:manual_R:'
+					  . $result;
 
-				if ( $result eq "FAIL" ) {
-					print '<tr id="case_component_' . $id . '">';
-					print "\n";
-				}
-				else {
-					print '<tr id="case_component_' . $id
-					  . '" style="display:none">';
-					print "\n";
-				}
-				print <<DATA;
-                            <td width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
-                            <td width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+					#update result number for component tree view
+					updateTreeResult( $result, @component_item_temp );
+
+					if ( $result eq "FAIL" ) {
+						print '<tr id="case_component_' . $id . '">';
+						print "\n";
+					}
+					else {
+						print '<tr id="case_component_' . $id
+						  . '" style="display:none">';
+						print "\n";
+					}
+					print <<DATA;
+                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
                             <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_component_$name" style="display:none">
                             <td height="50" colspan="3">
 DATA
-				printDetailedCaseInfoWithComment( $name, $execution_type, $time,
-					$id_textarea, $id_bugnumber, %caseInfo );
-				print <<DATA;
+					printDetailedCaseInfoWithComment( $name, $execution_type,
+						$time, $id_textarea, $id_bugnumber, %caseInfo );
+					print <<DATA;
                             </td>
                           </tr>
 DATA
+				}
 			}
 		}
 	}
@@ -1136,19 +1484,19 @@ DATA
                   <div id="view_area_test_type_reg" style="display:none"></div>
                   <table width="100%" border="0" cellspacing="0" cellpadding="0">
                     <tr style="font-size:24px">
-                      <td height="50" class="report_list_one_row">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="38" height="38" /></td>
+                      <td align="left" height="50" class="report_list_one_row">&nbsp;Test Result for&nbsp;&nbsp;$time&nbsp;&nbsp;<a href="tests_report.pl?time=$time&summary=1"><img title="View Summary Report" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="38" height="38" /></td>
                     </tr>
                     <tr>
                       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
                           <tr style="font-size:24px">
-                            <td width="33%" height="50" class="report_list_outside_left">&nbsp;Name</td>
-                            <td width="34%" height="50" class="report_list_one_row">&nbsp;Description</td>
+                            <td align="left" width="33%" height="50" class="report_list_outside_left">&nbsp;Name</td>
+                            <td align="left" width="34%" height="50" class="report_list_one_row">&nbsp;Description</td>
                             <td width="33%" height="50" class="report_list_outside_right" align="center">Result</td>
                           </tr>
 DATA
 
 	# print auto case for test type view
-	updatePackageListWithResult($time);
+	@package_list = updatePackageList($time);
 	foreach (@package_list) {
 		my $package        = $_;
 		my $id             = "none";
@@ -1194,39 +1542,57 @@ DATA
 				$spec        = $caseInfo{"spec"};
 				$test_type   = $caseInfo{"test_type"};
 
-				my $spec_name         = "none";
-				my $web_API_interface = "none";
-				my $method            = "none";
+				my @spec_hex = ();
 				if ( $spec ne "none" ) {
 					my @temp_spec = split( ":", $spec );
-					$spec_name         = shift(@temp_spec);
-					$web_API_interface = shift(@temp_spec);
-					$method            = shift(@temp_spec);
+
+					# remove "::" error
+					for ( my $i = 0 ; $i < @temp_spec ; $i++ ) {
+						$temp_spec[$i] =~ s/^\s*//;
+						$temp_spec[$i] =~ s/\s*$//;
+						if ( $temp_spec[$i] eq "" ) {
+							$temp_spec[$i] = "none";
+							print
+'<p style="font-size:18px">&nbsp;<span style="color:red">'
+							  . $name
+							  . '</span> got "::" in [SPEC]</p>';
+						}
+					}
+
+					my @temp_spec_back = @temp_spec;
+					for ( my $i = 0 ; $i < @temp_spec ; $i++ ) {
+						push( @spec_hex,
+							sha1_hex( join( ":", @temp_spec_back ) ) );
+						pop(@temp_spec_back);
+					}
 				}
-				if (   !defined($spec_name)
-					or !defined($web_API_interface)
-					or !defined($method) )
-				{
-					$hasTestTypeError  = "TRUE";
-					$spec_name         = "none";
-					$web_API_interface = "none";
-					$method            = "none";
+				elsif ( $test_type eq "compliance" ) {
 					print
 					  '<p style="font-size:18px">&nbsp;<span style="color:red">'
 					  . $name
-					  . '</span> got wrong SPEC syntax</p>';
+					  . '</span> got no [SPEC] in xml</p>';
 				}
+
 				$id =
 				    "P:" 
 				  . $package . '_SU:' 
 				  . $suite . '_SE:' 
-				  . $set . '_SN:'
-				  . $spec_name . '_W:'
-				  . $web_API_interface . '_M:'
-				  . $method . '_TT:'
+				  . $set . '_SP_'
+				  . join( "_SP_", @spec_hex ) . '_TT:'
 				  . $test_type
 				  . '_T:auto_R:'
 				  . $result;
+
+				#update result number for test type tree view
+				my @spec_hex_temp = @spec_hex;
+				for ( my $i = 0 ; $i < @spec_hex ; $i++ ) {
+					$spec_hex_temp[$i] = 'SP_' . $spec_hex_temp[$i];
+				}
+				push( @spec_hex_temp, 'TT_' . $test_type );
+				push( @spec_hex_temp, 'TT_' . $test_type . 'P_' . $package );
+				push( @spec_hex_temp, 'TT_' . $test_type . 'SU_' . $suite );
+				push( @spec_hex_temp, 'TT_' . $test_type . 'SE_' . $set );
+				updateTreeResult( $result, @spec_hex_temp );
 
 				if ( $result eq "FAIL" ) {
 					print '<tr id="case_test_type_' . $id . '">';
@@ -1238,8 +1604,8 @@ DATA
 					print "\n";
 				}
 				print <<DATA;
-                            <td width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
-                            <td width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
                             <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_test_type_$name" style="display:none">
@@ -1256,8 +1622,9 @@ DATA
 		# print manual case for test type view
 		%manual_case_result = updateManualCaseResult( $time, $package );
 		$execution_type = "manual";
-		my $isManual          = "FALSE";
-		my $def_tests_xml_dir = $test_definition_dir . $package . "/tests.xml";
+		my $isManual = "FALSE";
+		my $def_tests_xml_dir =
+		  $result_dir_manager . $time . "/" . $package . "_definition.xml";
 		open FILE, $def_tests_xml_dir or die $!;
 		while (<FILE>) {
 			if ( $startCase eq "TRUE" ) {
@@ -1281,74 +1648,96 @@ DATA
 				$isManual = "FALSE";
 			}
 			if ( ( $_ =~ /.*<\/testcase>.*/ ) && ( $isManual eq "TRUE" ) ) {
-				$startCase   = "FALSE";
-				%caseInfo    = updateCaseInfo($xml);
-				$result      = $manual_case_result{$name};
-				$description = $caseInfo{"description"};
-				$spec        = $caseInfo{"spec"};
-				$test_type   = $caseInfo{"test_type"};
+				$startCase = "FALSE";
+				%caseInfo  = updateCaseInfo($xml);
+				if ( defined $manual_case_result{$name} ) {
+					$result      = $manual_case_result{$name};
+					$description = $caseInfo{"description"};
+					$spec        = $caseInfo{"spec"};
+					$test_type   = $caseInfo{"test_type"};
 
-				my $spec_name         = "none";
-				my $web_API_interface = "none";
-				my $method            = "none";
-				if ( $spec ne "none" ) {
-					my @temp_spec = split( ":", $spec );
-					$spec_name         = shift(@temp_spec);
-					$web_API_interface = shift(@temp_spec);
-					$method            = shift(@temp_spec);
-				}
-				if (   !defined($spec_name)
-					or !defined($web_API_interface)
-					or !defined($method) )
-				{
-					$hasTestTypeError  = "TRUE";
-					$spec_name         = "none";
-					$web_API_interface = "none";
-					$method            = "none";
-					print
-					  '<p style="font-size:18px">&nbsp;<span style="color:red">'
-					  . $name
-					  . '</span> got wrong SPEC syntax</p>';
-				}
+					my @spec_hex = ();
+					if ( $spec ne "none" ) {
+						my @temp_spec = split( ":", $spec );
 
-				my $id_textarea  = "textarea__P:" . $package . '__N:' . $name;
-				my $id_bugnumber = "bugnumber__P:" . $package . '__N:' . $name;
+						# remove "::" error
+						for ( my $i = 0 ; $i < @temp_spec ; $i++ ) {
+							$temp_spec[$i] =~ s/^\s*//;
+							$temp_spec[$i] =~ s/\s*$//;
+							if ( $temp_spec[$i] eq "" ) {
+								$temp_spec[$i] = "none";
+								print
+'<p style="font-size:18px">&nbsp;<span style="color:red">'
+								  . $name
+								  . '</span> got "::" in [SPEC]</p>';
+							}
+						}
 
-				$id =
-				    "P:" 
-				  . $package . '_SU:' 
-				  . $suite . '_SE:' 
-				  . $set . '_SN:'
-				  . $spec_name . '_W:'
-				  . $web_API_interface . '_M:'
-				  . $method . '_TT:'
-				  . $test_type
-				  . '_T:manual_R:'
-				  . $result;
+						my @temp_spec_back = @temp_spec;
+						for ( my $i = 0 ; $i < @temp_spec ; $i++ ) {
+							push( @spec_hex,
+								sha1_hex( join( ":", @temp_spec_back ) ) );
+							pop(@temp_spec_back);
+						}
+					}
+					elsif ( $test_type eq "compliance" ) {
+						print
+'<p style="font-size:18px">&nbsp;<span style="color:red">'
+						  . $name
+						  . '</span> got no [SPEC] in xml</p>';
+					}
 
-				if ( $result eq "FAIL" ) {
-					print '<tr id="case_test_type_' . $id . '">';
-					print "\n";
-				}
-				else {
-					print '<tr id="case_test_type_' . $id
-					  . '" style="display:none">';
-					print "\n";
-				}
-				print <<DATA;
-                            <td width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
-                            <td width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+					my $id_textarea =
+					  "textarea__P:" . $package . '__N:' . $name;
+					my $id_bugnumber =
+					  "bugnumber__P:" . $package . '__N:' . $name;
+
+					$id =
+					    "P:" 
+					  . $package . '_SU:' 
+					  . $suite . '_SE:' 
+					  . $set . '_SP_'
+					  . join( "_SP_", @spec_hex ) . '_TT:'
+					  . $test_type
+					  . '_T:manual_R:'
+					  . $result;
+
+					#update result number for test type tree view
+					my @spec_hex_temp = @spec_hex;
+					for ( my $i = 0 ; $i < @spec_hex ; $i++ ) {
+						$spec_hex_temp[$i] = 'SP_' . $spec_hex_temp[$i];
+					}
+					push( @spec_hex_temp, 'TT_' . $test_type );
+					push( @spec_hex_temp,
+						'TT_' . $test_type . 'P_' . $package );
+					push( @spec_hex_temp, 'TT_' . $test_type . 'SU_' . $suite );
+					push( @spec_hex_temp, 'TT_' . $test_type . 'SE_' . $set );
+					updateTreeResult( $result, @spec_hex_temp );
+
+					if ( $result eq "FAIL" ) {
+						print '<tr id="case_test_type_' . $id . '">';
+						print "\n";
+					}
+					else {
+						print '<tr id="case_test_type_' . $id
+						  . '" style="display:none">';
+						print "\n";
+					}
+					print <<DATA;
+                            <td align="left" width="33%" height="50" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a class="view_case_detail" onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="34%" height="50" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
                             <td width="33%" height="50" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_test_type_$name" style="display:none">
                             <td height="50" colspan="3">
 DATA
-				printDetailedCaseInfoWithComment( $name, $execution_type, $time,
-					$id_textarea, $id_bugnumber, %caseInfo );
-				print <<DATA;
+					printDetailedCaseInfoWithComment( $name, $execution_type,
+						$time, $id_textarea, $id_bugnumber, %caseInfo );
+					print <<DATA;
                             </td>
                           </tr>
 DATA
+				}
 			}
 		}
 	}
@@ -1386,19 +1775,20 @@ var tree;
 		tree = new YAHOO.widget.TreeView("tree_area_package");
 DATA
 
-	updatePackageListWithResult($time);
+	@package_list = updatePackageList($time);
 	my $package_number = 1;
 	foreach (@package_list) {
-		my $package       = $_;
-		my $tests_xml_dir = $test_definition_dir . $package . "/tests.xml";
+		my $package = $_;
+		my $tests_xml_dir =
+		  $result_dir_manager . $time . "/" . $package . "_definition.xml";
 		print 'var package_'
 		  . $package_number
 		  . ' = new YAHOO.widget.TextNode("'
 		  . $package
-		  . $result_list{$package}
+		  . getHTMLResult( 'P_' . $package )
 		  . '", tree.getRoot(), false);';
 		print "\n";
-		print 'package_' . $package_number . '.title="package";';
+		print 'package_' . $package_number . '.title="P:' . $package . '";';
 		print "\n";
 		open FILE, $tests_xml_dir or die $!;
 		my $suite_number = 0;
@@ -1411,11 +1801,12 @@ DATA
 				  . $suite_number
 				  . ' = new YAHOO.widget.TextNode("'
 				  . $1
+				  . getHTMLResult( 'SU_' . $1 )
 				  . '", package_'
 				  . $package_number
 				  . ', false);';
 				print "\n";
-				print 'suite_' . $suite_number . '.title="suite"';
+				print 'suite_' . $suite_number . '.title="SU:' . $1 . '";';
 				print "\n";
 			}
 			if ( $_ =~ /set.*name="(.*?)"/ ) {
@@ -1423,11 +1814,12 @@ DATA
 				  . $set_number
 				  . ' = new YAHOO.widget.TextNode("'
 				  . $1
+				  . getHTMLResult( 'SE_' . $1 )
 				  . '", suite_'
 				  . $suite_number
 				  . ', false);';
 				print "\n";
-				print 'set_' . $set_number . '.title="set";';
+				print 'set_' . $set_number . '.title="SE:' . $1 . '";';
 				print "\n";
 			}
 		}
@@ -1443,19 +1835,8 @@ DATA
 				select_result.selectedIndex = 0;
 				select_type.selectedIndex = 0;
 				// filter leaves
-				var label = node.label;
-				var reg = "";
-				if (node.title == "package") {
-					var match = /[a-zA-z\-]*/;
-					var result = match.exec(label);
-					reg = "P:" + result;
-				}
-				if (node.title == "suite") {
-					reg = "SU:" + label;
-				}
-				if (node.title == "set") {
-					reg = "SE:" + label;
-				}
+				var title = node.title;
+				var reg = title;
 				document.getElementById("view_area_package_reg").innerHTML = reg;
 				var page = document.all;
 				for ( var i = 0; i < page.length; i++) {
@@ -1526,6 +1907,7 @@ DATA
 				  . $component
 				  . ' = new YAHOO.widget.TextNode("'
 				  . $component
+				  . getHTMLResult( 'level-' . $i . ':' . $component )
 				  . '", tree.getRoot(), false);';
 			}
 			else {
@@ -1534,6 +1916,7 @@ DATA
 				  . $component
 				  . ' = new YAHOO.widget.TextNode("'
 				  . $component
+				  . getHTMLResult( 'level-' . $i . ':' . $component )
 				  . '", level_'
 				  . ( $i - 1 ) . '_'
 				  . $parent
@@ -1544,9 +1927,9 @@ DATA
 			  . $i . '_'
 			  . $component
 			  . '.title="level-'
-			  . $i . '";';
+			  . $i . ':'
+			  . $component . '";';
 			print "\n";
-
 		}
 	}
 
@@ -1559,9 +1942,8 @@ DATA
 				select_result.selectedIndex = 0;
 				select_type.selectedIndex = 0;
 				// filter leaves
-				var label = node.label;
 				var title = node.title;
-				var reg = title + ":" + label;
+				var reg = title;
 				
 				document.getElementById("view_area_component_reg").innerHTML = reg;
 				var page = document.all;
@@ -1624,29 +2006,34 @@ DATA
 			  . $test_type
 			  . ' = new YAHOO.widget.TextNode("'
 			  . $test_type
+			  . getHTMLResult( 'TT_' . $test_type )
 			  . '", tree.getRoot(), false);';
 			print "\n";
-			print 'test_type_' . $test_type . '.title="test type"';
+			print 'test_type_' . $test_type . '.title="TT:' . $test_type . '"';
 			print "\n";
-			updatePackageListWithResult($time);
+			@package_list = updatePackageList($time);
 			my $package_number = 1;
 			foreach (@package_list) {
 				my $package = $_;
 				my $tests_xml_dir =
-				  $test_definition_dir . $package . "/tests.xml";
+				    $result_dir_manager 
+				  . $time . "/" 
+				  . $package
+				  . "_definition.xml";
 				print 'var package_'
 				  . $package_number
 				  . ' = new YAHOO.widget.TextNode("'
 				  . $package
+				  . getHTMLResult( 'TT_' . $test_type . "P_" . $package )
 				  . '", test_type_'
 				  . $test_type
 				  . ', false);';
 				print "\n";
 				print 'package_'
 				  . $package_number
-				  . '.title="'
-				  . $test_type
-				  . ':package";';
+				  . '.title="TT:'
+				  . $test_type . '__P:'
+				  . $package . '";';
 				print "\n";
 				open FILE, $tests_xml_dir or die $!;
 				my $suite_number = 0;
@@ -1659,15 +2046,16 @@ DATA
 						  . $suite_number
 						  . ' = new YAHOO.widget.TextNode("'
 						  . $1
+						  . getHTMLResult( 'TT_' . $test_type . "SU_" . $1 )
 						  . '", package_'
 						  . $package_number
 						  . ', false);';
 						print "\n";
 						print 'suite_'
 						  . $suite_number
-						  . '.title="'
-						  . $test_type
-						  . ':suite";';
+						  . '.title="TT:'
+						  . $test_type . '__SU:'
+						  . $1 . '";';
 						print "\n";
 					}
 					if ( $_ =~ /set.*name="(.*?)"/ ) {
@@ -1675,15 +2063,16 @@ DATA
 						  . $set_number
 						  . ' = new YAHOO.widget.TextNode("'
 						  . $1
+						  . getHTMLResult( 'TT_' . $test_type . "SE_" . $1 )
 						  . '", suite_'
 						  . $suite_number
 						  . ', false);';
 						print "\n";
 						print 'set_'
 						  . $set_number
-						  . '.title="'
-						  . $test_type
-						  . ':set";';
+						  . '.title="TT:'
+						  . $test_type . '__SE:'
+						  . $1 . '";';
 						print "\n";
 					}
 				}
@@ -1697,10 +2086,11 @@ DATA
 	if ( ( $haveCompliance eq "TRUE" ) && ( $hasTestTypeError eq "FALSE" ) ) {
 
 		# create compliance node
-		print
-'var test_type_compliance = new YAHOO.widget.TextNode("compliance", tree.getRoot(), false);';
+		print 'var test_type_compliance = new YAHOO.widget.TextNode("compliance'
+		  . getHTMLResult('TT_compliance')
+		  . '", tree.getRoot(), false);';
 		print "\n";
-		print 'test_type_compliance.title="test type"';
+		print 'test_type_compliance.title="TT:compliance";';
 		print "\n";
 		updateSpecList($time);
 		my $spec_depth = keys %spec_list;
@@ -1715,50 +2105,35 @@ DATA
 				my $item        = shift(@temp_inside);
 				my $parent      = shift(@temp_inside);
 
-				my $temp_item   = sha1_hex($item);
-				my $temp_parent = sha1_hex($parent);
-
-				# add specName
 				if ( $i == 1 ) {
-					print 'var SN_'
-					  . $temp_item
+					print 'var SP_'
+					  . sha1_hex($parent)
 					  . ' = new YAHOO.widget.TextNode("'
 					  . $item
+					  . getHTMLResult( 'SP_' . sha1_hex($parent) )
 					  . '", test_type_compliance, false);';
 					print "\n";
-					print 'SN_' . $temp_item . '.title="specName";';
+					print 'SP_'
+					  . sha1_hex($parent)
+					  . '.title="SP_'
+					  . sha1_hex($parent) . '";';
 					print "\n";
 				}
-
-				# add webAPIInterface
-				if ( $i == 2 ) {
-					print 'var W_'
-					  . $temp_item . '_SN_'
-					  . $temp_parent
+				else {
+					print 'var SP_'
+					  . sha1_hex( $parent . ':' . $item )
 					  . ' = new YAHOO.widget.TextNode("'
 					  . $item
-					  . '", SN_'
-					  . $temp_parent
+					  . getHTMLResult(
+						'SP_' . sha1_hex( $parent . ':' . $item ) )
+					  . '", SP_'
+					  . sha1_hex($parent)
 					  . ', false);';
 					print "\n";
-					print 'W_'
-					  . $temp_item . '_SN_'
-					  . $temp_parent
-					  . '.title="webAPIInterface";';
-					print "\n";
-				}
-
-				# add method
-				if ( $i == 3 ) {
-					my $parent_parent      = pop(@temp_inside);
-					my $temp_parent_parent = sha1_hex($parent_parent);
-					print 'var method = new YAHOO.widget.TextNode("' 
-					  . $item . '", W_'
-					  . $temp_parent . '_SN_'
-					  . $temp_parent_parent
-					  . ', false);';
-					print "\n";
-					print 'method.title="method";';
+					print 'SP_'
+					  . sha1_hex( $parent . ':' . $item )
+					  . '.title="SP_'
+					  . sha1_hex( $parent . ':' . $item ) . '";';
 					print "\n";
 				}
 			}
@@ -1774,45 +2149,21 @@ DATA
 				select_result.selectedIndex = 0;
 				select_type.selectedIndex = 0;
 				// filter leaves
-				var label = node.label;
+				var title = node.title;
 				var reg = "";
 				var reg_test_type = "";
 				var have_test_type = "";
-				if (node.title == "specName") {
-					have_test_type = "FALSE";
-					reg = "SN:" + label;
-				}
-				if (node.title == "webAPIInterface") {
-					have_test_type = "FALSE";
-					reg = "W:" + label;
-				}
-				if (node.title == "method") {
-					have_test_type = "FALSE";
-					reg = "M:" + label;
-				}
-				if (node.title == "test type") {
-					have_test_type = "FALSE";
-					reg = "TT:" + label;
-				}
-				if (node.title.indexOf("package") >= 0) {
+				if ((title.indexOf("P:") >= 0) || (title.indexOf("SU:") >= 0)
+						|| (title.indexOf("SE:") >= 0)) {
 					have_test_type = "TRUE";
-					var reg_both = node.title.split(":");
+					var reg_both = node.title.split("__");
 					reg_test_type = reg_both[0];
-					reg = "P:" + label
+					reg = reg_both[1];
+				} else {
+					have_test_type = "FALSE";
+					reg = title;
 				}
-				if (node.title.indexOf("suite") >= 0) {
-					have_test_type = "TRUE";
-					var reg_both = node.title.split(":");
-					reg_test_type = reg_both[0];
-					reg = "SU:" + label;
-				}
-				if (node.title.indexOf("set") >= 0) {
-					have_test_type = "TRUE";
-					var reg_both = node.title.split(":");
-					reg_test_type = reg_both[0];
-					reg = "SE:" + label;
-				}
-				document.getElementById("view_area_test_type_reg").innerHTML = reg;
+				document.getElementById("view_area_test_type_reg").innerHTML = title;
 				var page = document.all;
 				for ( var i = 0; i < page.length; i++) {
 					var temp_id = page[i].id;
@@ -2012,27 +2363,79 @@ function filter() {
 					}
 				} else {
 					if ((reg_result == "R:All") && (reg_type == "T:All")) {
-						if (temp_id.indexOf(reg_view) >= 0) {
-							page[i].style.display = "";
+						if ((reg_view.indexOf("P:") >= 0) || (reg_view.indexOf("SU:") >= 0)
+								|| (reg_view.indexOf("SE:") >= 0)) {
+							var reg_both = reg_view.split("__");
+							reg_test_type = reg_both[0];
+							reg = reg_both[1];
+					
+							if ((temp_id.indexOf(reg_test_type) >= 0)
+									&& (temp_id.indexOf(reg) >= 0)) {
+								page[i].style.display = "";
+							}
+						} else {
+							if (temp_id.indexOf(reg_view) >= 0) {
+								page[i].style.display = "";
+							}
 						}
 					}
 					if ((reg_result == "R:All") && (reg_type != "T:All")) {
-						if ((temp_id.indexOf(reg_view) >= 0)
-								&& (temp_id.indexOf(reg_type) >= 0)) {
-							page[i].style.display = "";
+						if ((reg_view.indexOf("P:") >= 0) || (reg_view.indexOf("SU:") >= 0)
+								|| (reg_view.indexOf("SE:") >= 0)) {
+							var reg_both = reg_view.split("__");
+							reg_test_type = reg_both[0];
+							reg = reg_both[1];
+					
+							if ((temp_id.indexOf(reg_test_type) >= 0)
+									&& (temp_id.indexOf(reg) >= 0)
+									&& (temp_id.indexOf(reg_type) >= 0)) {
+								page[i].style.display = "";
+							}
+						} else {
+							if ((temp_id.indexOf(reg_view) >= 0)
+									&& (temp_id.indexOf(reg_type) >= 0)) {
+								page[i].style.display = "";
+							}
 						}
 					}
 					if ((reg_result != "R:All") && (reg_type == "T:All")) {
-						if ((temp_id.indexOf(reg_view) >= 0)
-								&& (temp_id.indexOf(reg_result) >= 0)) {
-							page[i].style.display = "";
+						if ((reg_view.indexOf("P:") >= 0) || (reg_view.indexOf("SU:") >= 0)
+								|| (reg_view.indexOf("SE:") >= 0)) {
+							var reg_both = reg_view.split("__");
+							reg_test_type = reg_both[0];
+							reg = reg_both[1];
+					
+							if ((temp_id.indexOf(reg_test_type) >= 0)
+									&& (temp_id.indexOf(reg) >= 0)
+									&& (temp_id.indexOf(reg_result) >= 0)) {
+								page[i].style.display = "";
+							}
+						} else {
+							if ((temp_id.indexOf(reg_view) >= 0)
+									&& (temp_id.indexOf(reg_result) >= 0)) {
+								page[i].style.display = "";
+							}
 						}
 					}
 					if ((reg_result != "R:All") && (reg_type != "T:All")) {
-						if ((temp_id.indexOf(reg_view) >= 0)
-								&& (temp_id.indexOf(reg_result) >= 0)
-								&& (temp_id.indexOf(reg_type) >= 0)) {
-							page[i].style.display = "";
+						if ((reg_view.indexOf("P:") >= 0) || (reg_view.indexOf("SU:") >= 0)
+								|| (reg_view.indexOf("SE:") >= 0)) {
+							var reg_both = reg_view.split("__");
+							reg_test_type = reg_both[0];
+							reg = reg_both[1];
+					
+							if ((temp_id.indexOf(reg_test_type) >= 0)
+									&& (temp_id.indexOf(reg) >= 0)
+									&& (temp_id.indexOf(reg_result) >= 0)
+									&& (temp_id.indexOf(reg_type) >= 0)) {
+								page[i].style.display = "";
+							}
+						} else {
+							if ((temp_id.indexOf(reg_view) >= 0)
+									&& (temp_id.indexOf(reg_result) >= 0)
+									&& (temp_id.indexOf(reg_type) >= 0)) {
+								page[i].style.display = "";
+							}
 						}
 					}
 				}
@@ -2121,9 +2524,22 @@ function update_case_display(view) {
 						page[i].style.display = "";
 					}
 				} else {
-					if ((temp_id.indexOf("R:FAIL") >= 0)
-							&& (temp_id.indexOf(reg_view) >= 0)) {
-						page[i].style.display = "";
+					if ((reg_view.indexOf("P:") >= 0) || (reg_view.indexOf("SU:") >= 0)
+							|| (reg_view.indexOf("SE:") >= 0)) {
+						var reg_both = reg_view.split("__");
+						reg_test_type = reg_both[0];
+						reg = reg_both[1];
+				
+						if ((temp_id.indexOf(reg_test_type) >= 0)
+								&& (temp_id.indexOf(reg) >= 0)
+								&& (temp_id.indexOf("R:FAIL") >= 0)) {
+							page[i].style.display = "";
+						}
+					} else {
+						if ((temp_id.indexOf(reg_view) >= 0)
+								&& (temp_id.indexOf("R:FAIL") >= 0)) {
+							page[i].style.display = "";
+						}
 					}
 				}
 			}
@@ -2142,46 +2558,6 @@ function show_case_detail(id) {
 // ]]>
 </script>
 DATA
-}
-
-sub updatePackageListWithResult {
-	@package_list = ();
-	undef %result_list;
-	my ($time)  = @_;
-	my $package = "";
-	my $total   = "none";
-	my $pass    = "none";
-	my $fail    = "none";
-	my $not_run = "none";
-	open FILE, $result_dir_manager . $time . "/info" or die $!;
-
-	while (<FILE>) {
-		if ( $_ =~ /Package:(.*)/ ) {
-			$package = $1;
-			push( @package_list, $1 );
-		}
-		if ( $_ =~ /Total:(.*)/ ) {
-			$total = $1;
-		}
-		if ( $_ =~ /Pass:(.*)/ ) {
-			$pass = $1;
-		}
-		if ( $_ =~ /Fail:(.*)/ ) {
-			$fail    = $1;
-			$not_run = int($total) - int($pass) - int($fail);
-			my $result =
-			    '(' 
-			  . $total
-			  . ' <span class=\'result_pass\'>'
-			  . $pass
-			  . '</span> <span class=\'result_fail\'>'
-			  . $fail
-			  . '</span> <span class=\'result_not_run\'>'
-			  . $not_run
-			  . '</span>)';
-			$result_list{$package} = $result;
-		}
-	}
 }
 
 sub updateTestTypeList {
@@ -2303,6 +2679,15 @@ sub updateSpecList_wanted {
 				$spec_name =~ s/>/]/g;
 				my @spec_item = split( ":", $spec_name );
 
+				# remove additional space
+				for ( my $i = 0 ; $i < @spec_item ; $i++ ) {
+					$spec_item[$i] =~ s/^\s*//;
+					$spec_item[$i] =~ s/\s*$//;
+					if ( $spec_item[$i] eq "" ) {
+						$spec_item[$i] = "none";
+					}
+				}
+
 				for ( my $i = 0 ; $i < @spec_item ; $i++ ) {
 
 					# already got some specs at this level
@@ -2313,22 +2698,8 @@ sub updateSpecList_wanted {
 							my @temp_spec_list =
 							  split( "__", $spec_temp );
 							foreach (@temp_spec_list) {
-								if ( $spec_item[$i] . "::root" eq $_ ) {
-									$hasOne = "TURE";
-								}
-							}
-							if ( $hasOne eq "FALSE" ) {
-								$spec_list{ $i + 1 } =
-								  $spec_temp . "__" . $spec_item[$i] . "::root";
-							}
-						}
-						elsif ( $i == 1 ) {
-							my $hasOne = "FALSE";
-							my @temp_spec_list =
-							  split( "__", $spec_temp );
-							foreach (@temp_spec_list) {
 								if (  $spec_item[$i] . "::"
-									. $spec_item[ $i - 1 ] eq $_ )
+									. $spec_item[$i] eq $_ )
 								{
 									$hasOne = "TURE";
 								}
@@ -2337,18 +2708,17 @@ sub updateSpecList_wanted {
 								$spec_list{ $i + 1 } =
 								    $spec_temp . "__"
 								  . $spec_item[$i] . "::"
-								  . $spec_item[ $i - 1 ];
+								  . $spec_item[$i];
 							}
 						}
 						else {
 							my $hasOne = "FALSE";
 							my @temp_spec_list =
 							  split( "__", $spec_temp );
+							my $parent =
+							  join( ":", @spec_item[ 0 .. ( $i - 1 ) ] );
 							foreach (@temp_spec_list) {
-								if (  $spec_item[$i] . "::"
-									. $spec_item[ $i - 1 ] . "::"
-									. $spec_item[ $i - 2 ] eq $_ )
-								{
+								if ( $spec_item[$i] . "::" . $parent eq $_ ) {
 									$hasOne = "TURE";
 								}
 							}
@@ -2356,24 +2726,20 @@ sub updateSpecList_wanted {
 								$spec_list{ $i + 1 } =
 								    $spec_temp . "__"
 								  . $spec_item[$i] . "::"
-								  . $spec_item[ $i - 1 ] . "::"
-								  . $spec_item[ $i - 2 ];
+								  . $parent;
 							}
 						}
 					}
 					else {
 						if ( $i == 0 ) {
-							$spec_list{ $i + 1 } = $spec_item[$i] . "::root";
-						}
-						elsif ( $i == 1 ) {
 							$spec_list{ $i + 1 } =
-							  $spec_item[$i] . "::" . $spec_item[ $i - 1 ];
+							  $spec_item[$i] . "::" . $spec_item[$i];
 						}
 						else {
+							my $parent =
+							  join( ":", @spec_item[ 0 .. ( $i - 1 ) ] );
 							$spec_list{ $i + 1 } =
-							    $spec_item[$i] . "::"
-							  . $spec_item[ $i - 1 ] . "::"
-							  . $spec_item[ $i - 2 ];
+							  $spec_item[$i] . "::" . $parent;
 						}
 					}
 				}
@@ -2462,5 +2828,92 @@ sub getReportDisplayData_wanted {
 		push( @report_display, $pass );
 		push( @report_display, $fail );
 		push( @report_display, ( int($total) - int($pass) - int($fail) ) );
+	}
+}
+
+sub updateTreeResult {
+	my ( $result, @component_item ) = @_;
+	foreach (@component_item) {
+		if ( defined $result_list_tree{$_} ) {
+			my @result = split( ":", $result_list_tree{$_} );
+			$result[0] = int( $result[0] ) + 1;
+			if ( $result =~ /PASS/ ) {
+				$result[1] = int( $result[1] ) + 1;
+			}
+			if ( $result =~ /FAIL/ ) {
+				$result[2] = int( $result[2] ) + 1;
+			}
+			if ( $result =~ /N\/A/ ) {
+				$result[3] = int( $result[3] ) + 1;
+			}
+			$result_list_tree{$_} = join( ":", @result );
+		}
+		else {
+			if ( $result =~ /PASS/ ) {
+				$result_list_tree{$_} = "1:1:0:0";
+			}
+			if ( $result =~ /FAIL/ ) {
+				$result_list_tree{$_} = "1:0:1:0";
+			}
+			if ( $result =~ /N\/A/ ) {
+				$result_list_tree{$_} = "1:0:0:1";
+			}
+		}
+	}
+}
+
+sub getHTMLResult {
+	my ($name) = @_;
+	my $resultHTML;
+	if ( defined $result_list_tree{$name} ) {
+		my @result = split( ":", $result_list_tree{$name} );
+		$resultHTML = '('
+		  . $result[0]
+		  . ' <span class=\'result_pass\'>'
+		  . $result[1]
+		  . '</span> <span class=\'result_fail\'>'
+		  . $result[2]
+		  . '</span> <span class=\'result_not_run\'>'
+		  . $result[3]
+		  . '</span>)';
+	}
+	else {
+		$resultHTML =
+		    '(' . '0'
+		  . ' <span class=\'result_pass\'>' . '0'
+		  . '</span> <span class=\'result_fail\'>' . '0'
+		  . '</span> <span class=\'result_not_run\'>' . '0'
+		  . '</span>)';
+	}
+	return $resultHTML;
+}
+
+sub getSamePackage {
+	my %allPackage;
+	my $number = 0;
+	foreach (@select_dir) {
+		updateResultList($_);
+		if ( $max_package_number < @result_list_xml ) {
+			$max_package_number = @result_list_xml;
+		}
+		foreach (@result_list_xml) {
+			my $package = $_;
+			$package =~ s/\/.*\///;
+			if ( defined( $allPackage{$package} ) ) {
+				$allPackage{$package}++;
+				$all_package_list{$package} .= ':' . $number;
+			}
+			else {
+				$allPackage{$package}       = 1;
+				$all_package_list{$package} = $number;
+			}
+		}
+		@result_list_xml = ();
+		$number++;
+	}
+	foreach ( keys(%allPackage) ) {
+		if ( $allPackage{$_} == @select_dir ) {
+			push( @same_package_list, $_ );
+		}
 	}
 }
