@@ -62,7 +62,7 @@ function updateTestTimer() {
 }
 
 function stopTests() {
-	if (confirm('Are you sure you want to terminate test execution?')) {
+	if (confirm('Are you sure to terminate test execution?')) {
 		if (stop_button)
 			stop_button.disabled = true;
 		exec_info.innerHTML = 'Tests are stopping&hellip;';
@@ -108,12 +108,31 @@ function startTests(profile_name) {
 }
 
 function startRefresh() {
-	exec_info.innerHTML = 'Tests are running &hellip;';
+	exec_info.innerHTML = 'Test cases are running &hellip;';
 	exec_status.innerHTML = '&nbsp;&nbsp;&nbsp;<img src="images/ajax_progress.gif" width="16" height="16" alt="" />';
 	cmdlog.innerHTML = '';
 	cmdlog.style.color = 'black';
 	log_contents = '';
 	last_line = '';
+	start_button.disabled = true;
+	stop_button.disabled = false;
+	for ( var i = 0; i < test_profile.length; i++) {
+		if (test_profile.options[i].value == "temp_profile") {
+			test_profile.options[i].selected = true;
+		}
+	}
+	var view = test_profile.value;
+	var page = document.getElementsByTagName("*");
+	for ( var i = 0; i < page.length; i++) {
+		var temp_id = page[i].id;
+		if (temp_id.indexOf("progress_bar_") >= 0) {
+			page[i].style.display = "none";
+			if (temp_id == "progress_bar_" + view) {
+				page[i].style.display = "";
+			}
+		}
+	}
+	test_profile.disabled = true;
 	ajax_call_get('action=get_test_log&start=0');
 	updateTestTimer();
 }
@@ -187,10 +206,22 @@ function ajaxProcessResult(responseXML) {
 	if (responseXML.getElementsByTagName('network_connection_timeout').length > 0) {
 		document.getElementById('error_msg_area').style.display = "";
 		document.getElementById('error_msg_text').innerHTML = "failed: Connection timed out";
+		document.getElementById('progress_waiting').style.display = "none";
+		document.getElementById('select_arc').disabled = false;
+		document.getElementById('select_ver').disabled = false;
+		document.getElementById('sort_packages').onclick = function() {
+			return sortPackages();
+		}
+		document.getElementById('sort_packages').style.cursor = "pointer";
+		document.getElementById('button_adv').disabled = false;
+		document.getElementById('update_package_list').disabled = false;
+		document.getElementById('load_profile_button').disabled = false;
+		document.getElementById('delete_profile_button').disabled = false;
 	}
 
 	if (responseXML.getElementsByTagName('no_package_update_or_install').length > 0) {
 		alert("No packages need to install or update!");
+
 		document.getElementById('update_package_list').disabled = false;
 		document.getElementById('select_arc').disabled = false;
 		document.getElementById('select_ver').disabled = false;
@@ -201,6 +232,7 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('button_adv').disabled = false;
 		document.getElementById('load_profile_button').disabled = false;
 		document.getElementById('delete_profile_button').disabled = false;
+		document.getElementById('progress_waiting').style.display = "none";
 
 	}
 
@@ -231,11 +263,24 @@ function ajaxProcessResult(responseXML) {
 			}
 		}
 		document.getElementById('update_package_list').disabled = false;
-		document.getElementById('update_package_list').value = "Reload";
-		document.getElementById('update_package_list').title = "Refresh current page and load only installed packages, so you can start testing.";
+		document.getElementById('select_arc').disabled = false;
+		document.getElementById('select_ver').disabled = false;
+		document.getElementById('sort_packages').onclick = function() {
+			return sortPackages();
+		}
+		document.getElementById('sort_packages').style.cursor = "pointer";
+		document.getElementById('button_adv').disabled = false;
+		document.getElementById('update_package_list').disabled = false;
+		document.getElementById('load_profile_button').disabled = false;
+		document.getElementById('delete_profile_button').disabled = false;
+		// document.getElementById('update_package_list').value = "Reload";
+		// document.getElementById('update_package_list').title = "Refresh
+		// current page and load only installed packages, so you can start
+		// testing.";
 		document.getElementById('update_package_list').onclick = function() {
 			document.getElementById('update_package_list').disabled = true;
-			document.location = "tests_custom.pl";
+			// document.location = "tests_custom.pl";
+			return onUpdatePackages();
 		};
 		for ( var i = 0; i < uninstall_pkg_name_arr.length; i++) {
 			var id = "uninstall_" + i;
@@ -248,6 +293,7 @@ function ajaxProcessResult(responseXML) {
 				document.getElementById(pkg_ver_id).innerHTML = uninstall_pkg_version_arr[i];
 			}
 		}
+		document.getElementById('progress_waiting').style.display = "none";
 		// Update packages successfully!;
 	}
 	if (responseXML.getElementsByTagName('execute_profile_name').length > 0) {
@@ -266,7 +312,7 @@ function ajaxProcessResult(responseXML) {
 		if (count == "0") {
 			msg.push(tid);
 		}
-		alert("Save profile successfully!");
+		alert("Profile saved successfully.");
 	}
 	if (responseXML.getElementsByTagName('load_profile').length > 0) {
 		var packages_isExist_flag_arr = new Array();
@@ -304,7 +350,7 @@ function ajaxProcessResult(responseXML) {
 			}
 		}
 		edit_profile_name.value = "";
-		alert("Delete profile successfully!");
+		alert("Profile deleted successfully.");
 	}
 	if (responseXML.getElementsByTagName('check_profile_name').length > 0) {
 		tid = responseXML.getElementsByTagName('check_profile_name')[0].childNodes[0].nodeValue;
@@ -367,7 +413,7 @@ function ajaxProcessResult(responseXML) {
 			if (webapi_flag == "yes") {
 				alert("Profile should not contain both webapi and non-webapi packages!");
 			} else {
-				if (confirm("Do you want to save this profile?")) {
+				if (confirm("Are you sure to save this profile?")) {
 					ajax_call_get('action=save_profile&save_profile_name='
 							+ edit_profile_name.value + '&checkbox='
 							+ checkbox_value.join("*") + '&advanced='
@@ -382,7 +428,7 @@ function ajaxProcessResult(responseXML) {
 				alert("Profile should not contain both webapi and non-webapi packages!");
 			} else {
 				if (confirm("Profile: " + tid.slice(4)
-						+ " exists, do you want to overwirte it?")) {
+						+ " exists. Are you sure to overwirte it?")) {
 					ajax_call_get('action=save_profile&save_profile_name='
 							+ edit_profile_name.value + '&checkbox='
 							+ checkbox_value.join("*") + '&advanced='
@@ -396,7 +442,7 @@ function ajaxProcessResult(responseXML) {
 			ajax_call_get('action=delete_profile&delete_profile_name='
 					+ edit_profile_name.value);
 		} else {
-			alert("Profile: " + tid.slice(6) + " does not exist!");
+			alert("Profile " + tid.slice(6) + " does not exist.");
 		}
 	}
 	if (responseXML.getElementsByTagName('install_package_name').length > 0) {
@@ -422,6 +468,7 @@ function ajaxProcessResult(responseXML) {
 			document.getElementById(install_pkg_id).vspace = "0";
 			document.getElementById(install_pkg_id).style.cursor = "default";
 			document.getElementById(install_pkg_id).onclick = "";
+			document.location = "tests_custom.pl";
 			// Install package successfully!
 		} else {
 			alert("Install package fail\n" + tid);
@@ -457,6 +504,7 @@ function ajaxProcessResult(responseXML) {
 			document.getElementById(update_pic_id).style.cursor = "default";
 			document.getElementById(update_pic_id).onclick = "";
 			document.getElementById(version_id).innerHTML = version_latest;
+			document.location = "tests_custom.pl";
 			// Update package successfully!
 		} else {
 			var version_id = "ver_" + flag;
@@ -492,6 +540,17 @@ function ajaxProcessResult(responseXML) {
 					output += responseXML.getElementsByTagName('output')[i].childNodes[j].nodeValue;
 			}
 			updateCmdLog(output);
+			// change color for total progress bar
+			var r_mul, re_mul;
+			re_mul = new RegExp("testing now", "g");
+			r_mul = output.match(re_mul);
+			if (r_mul) {
+				document.getElementById('text_' + global_profile_name + '_all').style.color = "#137717";
+				document.getElementById('text_progress_' + global_profile_name
+						+ '_all').style.color = "#137717";
+				global_package_name = "all";
+			}
+			// change color for detailed progress bar
 			for ( var i = 0; i < package_list.length; i++) {
 				var r, re;
 				re = new RegExp("execute suite: " + package_list[i], "g");
@@ -512,26 +571,11 @@ function ajaxProcessResult(responseXML) {
 							+ global_profile_name + '_' + global_package_name).style.color = "#137717";
 				}
 			}
-
-			// change color for multiple webapi cases
-			var r_mul, re_mul;
-			re_mul = new RegExp("testing now", "g");
-			r_mul = output.match(re_mul);
-			if (r_mul) {
-				document.getElementById('text_' + global_profile_name + '_all').style.color = "#137717";
-				document.getElementById('text_progress_' + global_profile_name
-						+ '_all').style.color = "#137717";
-				global_package_name = "all";
-			}
-
+			// update progress bar
 			var r, re;
-			re = new RegExp("Case", "g");
+			re = new RegExp("execute case:", "g");
 			r = output.match(re);
-			// leave for filter webapi
-			var r_webapi, re_webapi;
-			re_webapi = new RegExp("TIZEN GetFeatures", "g");
-			r_webapi = output.match(re_webapi);
-			if (r || r_webapi) {
+			if (r) {
 				var case_number_before = global_case_number;
 				if (r) {
 					global_case_number = global_case_number + r.length;
@@ -602,7 +646,7 @@ function ajaxProcessResult(responseXML) {
 					exec_info.innerHTML = 'Redirect to report page';
 					document.location = 'tests_report.pl?time='
 							+ responseXML.getElementsByTagName('redirect')[0].childNodes[0].nodeValue
-							+ '&detailed=1';
+							+ '&summary=1';
 				}
 			}
 		}
@@ -642,7 +686,7 @@ function installPackage(count) {
 	var install_pkg_count = "pn_" + count;
 	var install_pkg_pic = "install_pkg_" + count;
 	var pkg_name = document.getElementById(install_pkg_count);
-	if (confirm('Do you want to install ' + pkg_name.innerHTML + "?")) {
+	if (confirm('Are you sure to install ' + pkg_name.innerHTML + "?")) {
 		document.getElementById(install_pkg_pic).src = "images/ajax_progress.gif";
 		document.getElementById(install_pkg_pic).onclick = "";
 		document.getElementById(install_pkg_pic).style.cursor = "default";
@@ -656,6 +700,7 @@ function installPackage(count) {
 }
 
 function onUpdatePackages() {
+	document.getElementById('progress_waiting').style.display = "";
 	document.getElementById('list_advanced').style.display = "none";
 	document.getElementById('select_arc').disabled = true;
 	document.getElementById('select_ver').disabled = true;
@@ -682,7 +727,7 @@ function updatePackage(count) {
 	var package_name_id = "pn_" + pkg_name.value;
 	var package_name = document.getElementById(package_name_id).innerHTML;
 	var update_pkg_pic = "update_" + pkg_name.value;
-	if (confirm('Do you want to update ' + package_name + "?")) {
+	if (confirm('Are you sure to update ' + package_name + "?")) {
 		document.getElementById(update_pkg_pic).src = "images/ajax_progress.gif";
 		document.getElementById(update_pkg_pic).style.cursor = "default";
 		document.getElementById(update_pkg_pic).onclick = "";
@@ -753,7 +798,7 @@ function onExecute() {
 	if (webapi_flag == "yes") {
 		alert("Can not execute both webapi and non-webapi packages at the same time!");
 	} else {
-		if (confirm("Do you want to execute this profile?")) {
+		if (confirm("Are you sure to execute this profile?")) {
 			ajax_call_get('action=execute_profile&checkbox='
 					+ checkbox_value.join("*") + '&advanced=' + advanced
 					+ "&auto_count=" + filter_auto_count_string
@@ -782,7 +827,7 @@ function onLoad() {
 	var flag = 1;
 	if (edit_profile_name.value == '') {
 		edit_profile_name.style.borderColor = 'white';
-		alert('Please, specify the profile name!');
+		alert('Specify the profile name.');
 		return false;
 	} else {
 		for ( var count = 0; count < msg.length; count++) {
@@ -791,7 +836,7 @@ function onLoad() {
 			}
 		}
 		if (flag) {
-			alert("Does not exist profile: " + edit_profile_name.value);
+			alert("Profile " + edit_profile_name.value + " does not exist.");
 		} else {
 			document.getElementById('load_profile_button').disabled = true;
 			ajax_call_get('action=check_package_isExist&load_profile_name='
@@ -804,7 +849,7 @@ function onDelete() {
 	var edit_profile_name = document.getElementById("edit_profile_name");
 	if (edit_profile_name.value == '') {
 		edit_profile_name.style.borderColor = 'white';
-		alert('Please, specify the profile name!');
+		alert('Specify the profile name.');
 		return false;
 	} else {
 		ajax_call_get('action=check_profile_isExist&profile_name='
@@ -851,10 +896,11 @@ function saveManual() {
 }
 
 function finishManual() {
-	var truthBeTold = window.confirm("Unsaved result will be lost. Continue?");
+	var truthBeTold = window
+			.confirm("Unsaved result will be lost. Do you want to continue?");
 	if (truthBeTold) {
 		var time = document.getElementById('time').innerHTML;
-		document.location = 'tests_report.pl?time=' + time + '&detailed=1';
+		document.location = 'tests_report.pl?time=' + time + '&summary=1';
 	}
 }
 

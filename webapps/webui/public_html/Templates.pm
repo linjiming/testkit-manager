@@ -44,7 +44,7 @@ $Common::debug_inform_sub = sub { };
 	  $cert_sys_host $cert_sys_base
 	  &print_header &print_footer
 	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg
-	  &updatePackageList &updateCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &syncDefination &compare_version &check_network &get_repo
+	  &updatePackageList &updateCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &syncDefination &compare_version &check_network &get_repo &xml2xsl
 	  ),
 	@Common::EXPORT,
 	@Manifest::EXPORT
@@ -338,6 +338,8 @@ our $configuration_file  = $FindBin::Bin . "/../../../CONF";
 our $DOWNLOAD_CMD        = "wget -r -l 1 -nd -A rpm --spider";
 
 my $CHECK_NETWORK = "wget --spider --timeout=5 --tries=2";
+my $result_xsl_dir =
+  "/opt/testkit/manager/webapps/webui/public_html/css/resultstyle.xsl";
 
 sub updatePackageList {
 	my @package_list = ();
@@ -1262,6 +1264,25 @@ sub check_network {
 			}
 		}
 	}
+}
+
+sub xml2xsl {
+	my ($result_xml_dir) = @_;
+
+	# import required modules
+	use XML::XSLT;
+
+	# create an instance of XSL::XSLT processor
+	my $xslt = XML::XSLT->new($result_xsl_dir);
+
+	# transform XML file and print output
+	my $result = $xslt->serve($result_xml_dir);
+	$result =~ s/.*(<div id="testcasepage".*<\/div>).*/$1/s;
+
+	# free up some memory
+	$xslt->dispose();
+
+	return $result;
 }
 
 1;

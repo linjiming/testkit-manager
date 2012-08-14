@@ -392,15 +392,15 @@ DATA
                     <tr>
                       <td width="28%"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                           <tr>
-                            <td align="center"><input type="submit" name="button_save" value="SAVE" class="bottom_button" onclick="javascript:saveManual();"></td>
-                            <td align="center"><input type="submit" name="button_finish" value="FINISH" class="bottom_button" onclick="javascript:finishManual();"></td>
+                            <td align="center"><input type="submit" name="button_save" value="Save" class="bottom_button" onclick="javascript:saveManual();"></td>
+                            <td align="center"><input type="submit" name="button_finish" value="Finish" class="bottom_button" onclick="javascript:finishManual();"></td>
                           </tr>
                         </table></td>
                       <td width="28%">&nbsp;</td>
                       <td width="44%"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                           <tr>
-                            <td align="center"><input type="submit" name="button_pass" value="PASS" class="bottom_button" onclick="javascript:passAll();"></td>
-                            <td align="center"><input type="submit" name="button_fail" value="FAIL" class="bottom_button" onclick="javascript:failAll();"></td>
+                            <td align="center"><input type="submit" name="button_pass" value="Pass" class="bottom_button" onclick="javascript:passAll();"></td>
+                            <td align="center"><input type="submit" name="button_fail" value="Fail" class="bottom_button" onclick="javascript:failAll();"></td>
                             <td align="center"><input type="submit" name="button_block" value="N/A" class="bottom_button" onclick="javascript:blockAll();"></td>
                           </tr>
                         </table></td>
@@ -583,27 +583,29 @@ sub updateProgressBarResult {
 
 		my $auto_result_text;
 		if ( $fail_auto > 0 ) {
-			$auto_result_text = '<span class=\'result_fail\'>Auto Test</span>';
+			$auto_result_text =
+			  '<span class=\'result_fail\'>Auto Test&nbsp;</span>';
 		}
 		elsif ( $block_auto > 0 ) {
 			$auto_result_text =
-			  '<span class=\'result_not_run\'>Auto Test</span>';
+			  '<span class=\'result_not_run\'>Auto Test&nbsp;</span>';
 		}
 		else {
-			$auto_result_text = '<span class=\'result_pass\'>Auto Test</span>';
+			$auto_result_text =
+			  '<span class=\'result_pass\'>Auto Test&nbsp;</span>';
 		}
 		my $manual_result_text;
 		if ( $fail_manual > 0 ) {
 			$manual_result_text =
-			  '<span class=\'result_fail\'>Manual Test</span>';
+			  '<span class=\'result_fail\'>Manual Test&nbsp;</span>';
 		}
 		elsif ( $block_manual > 0 ) {
 			$manual_result_text =
-			  '<span class=\'result_not_run\'>Manual Test</span>';
+			  '<span class=\'result_not_run\'>Manual Test&nbsp;</span>';
 		}
 		else {
 			$manual_result_text =
-			  '<span class=\'result_pass\'>Manual Test</span>';
+			  '<span class=\'result_pass\'>Manual Test&nbsp;</span>';
 		}
 		my $auto_result =
 		    $auto_result_text
@@ -640,28 +642,28 @@ sub updateProgressBarResult {
 	my $total_auto_result_text;
 	if ( $fail_a > 0 ) {
 		$total_auto_result_text =
-		  '<span class=\'result_fail\'>Auto Test</span>';
+		  '<span class=\'result_fail\'>Auto Test&nbsp;</span>';
 	}
 	elsif ( $block_a > 0 ) {
 		$total_auto_result_text =
-		  '<span class=\'result_not_run\'>Auto Test</span>';
+		  '<span class=\'result_not_run\'>Auto Test&nbsp;</span>';
 	}
 	else {
 		$total_auto_result_text =
-		  '<span class=\'result_pass\'>Auto Test</span>';
+		  '<span class=\'result_pass\'>Auto Test&nbsp;</span>';
 	}
 	my $total_manual_result_text;
 	if ( $fail_m > 0 ) {
 		$total_manual_result_text =
-		  '<span class=\'result_fail\'>Manual Test</span>';
+		  '<span class=\'result_fail\'>Manual Test&nbsp;</span>';
 	}
 	elsif ( $block_m > 0 ) {
 		$total_manual_result_text =
-		  '<span class=\'result_not_run\'>Manual Test</span>';
+		  '<span class=\'result_not_run\'>Manual Test&nbsp;</span>';
 	}
 	else {
 		$total_manual_result_text =
-		  '<span class=\'result_pass\'>Manual Test</span>';
+		  '<span class=\'result_pass\'>Manual Test&nbsp;</span>';
 	}
 	my $total_auto =
 	    $total_auto_result_text

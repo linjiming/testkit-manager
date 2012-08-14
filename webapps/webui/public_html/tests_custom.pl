@@ -144,6 +144,8 @@ my @uninstall_package_name      = ();
 my @uninstall_package_version   = ();
 my $UNINSTALL_PACKAGE_COUNT_MAX = "100";
 my $sort_flag                   = 0;
+my $refresh_flag                = 1;
+my $view_page_no_filter_flag    = 1;
 
 # press delete package button
 if ( $_GET{"delete_package"} ) {
@@ -229,10 +231,12 @@ if ( $_GET{"delete_package"} ) {
 		$flag_i++;
 	}
 
-	UpdateLoadPage("");
+	UpdatePage();
 }
 
 elsif ( $_GET{'view_single_package'} ) {
+	$refresh_flag             = 0;
+	$view_page_no_filter_flag = 0;
 	syncDefination();
 	my $get_value  = $_GET{"advanced"};
 	my @get_value  = split /\*/, $get_value;
@@ -289,6 +293,8 @@ elsif ( $_GET{'view_single_package'} ) {
 
 # press view button
 elsif ( $_POST{'view_package_info'} ) {
+	$refresh_flag             = 0;
+	$view_page_no_filter_flag = 0;
 	syncDefination();
 	my %hash = %_POST;
 	my $key;
@@ -342,6 +348,8 @@ elsif ( $_POST{'view_package_info'} ) {
 }
 
 elsif ( $_POST{'view_filter_package_list'} ) {
+	$refresh_flag             = 0;
+	$view_page_no_filter_flag = 0;
 	syncDefination();
 	$advanced_value_version      = $_POST{"select_ver"};
 	$advanced_value_architecture = $_POST{"select_arc"};
@@ -372,6 +380,7 @@ elsif ( $_POST{'view_filter_package_list'} ) {
 
 #press load button
 elsif ( $_GET{'load_profile_button'} ) {
+	$refresh_flag = 0;
 	syncDefination();
 	my $file;
 	my $flag_i            = 0;
@@ -516,7 +525,7 @@ sub UpdatePage {
 	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
 	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                  <td width="47%" height="30" align="right" class="custom_title">Architecture:&nbsp</td>
+	                  <td width="47%" height="30" align="right" class="custom_title">Architecture &nbsp</td>
 	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
 	                    <option>X86</option>
 	                  </select>                  </td>
@@ -525,7 +534,7 @@ sub UpdatePage {
 	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
 	                <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="30" align="right" class="custom_title">Version:&nbsp</td>
+	                  <td width="37%" height="30" align="right" class="custom_title">Version &nbsp</td>
 	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_case_item();">
 DATA
 	DrawVersionSelect();
@@ -534,13 +543,14 @@ DATA
                 </tr>
               </table></td>
               <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
-              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
+              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name &nbsp</td>
               <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" src="images/up_and_down_1.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
               <td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
-              <td width="42%" height="30" align="left" nowrap="nowrap">
-				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
+              <td width="12%" height="30" align="left" nowrap="nowrap">
+				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
 			  </td>
-              <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
+			  <td width="4.5%" height="30" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" width="14" height="14"/></a></td>
+              <td width="33%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
@@ -549,7 +559,7 @@ DATA
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;category:</td><td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Category</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawCategorySelect();
@@ -559,7 +569,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;priority:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Priority<td>
                     <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawPrioritySelect();
@@ -571,7 +581,7 @@ DATA
             <tr>
               <td width="30%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;status:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Status<td>
                     <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawStatusSelect();
@@ -581,7 +591,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;execution_type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Execution Type<td>
                     <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawExecutiontypeSelect();
@@ -593,7 +603,7 @@ DATA
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;testsuite:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Suite<td>
                     <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawTestsuiteSelect();
@@ -603,7 +613,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Type<td>
                     <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawTypeSelect();
@@ -615,7 +625,7 @@ DATA
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
-                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;testset:<td>
+                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Set<td>
                       <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawTestsetSelect();
@@ -625,7 +635,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;component:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Component<td>
                     <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawComponentSelect();
@@ -739,7 +749,7 @@ sub UpdateNullPage {
 	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
 	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                  <td width="47%" height="30" align="right" class="custom_title">Architecture:&nbsp</td>
+	                  <td width="47%" height="30" align="right" class="custom_title">Architecture&nbsp</td>
 	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
 	                    <option>X86</option>
 	                  </select>                  </td>
@@ -748,19 +758,20 @@ sub UpdateNullPage {
 	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
 	                <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="30" align="right" class="custom_title">Version:&nbsp</td>
+	                  <td width="37%" height="30" align="right" class="custom_title">Version&nbsp</td>
 	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" value="Any Version" class="custom_select" onchange="javascript:filter_case_item();">
                   </select></td>
                 </tr>
               </table></td>
               <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
-              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
+              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name&nbsp</td>
               <td width="4.5%" height="30" nowrap="nowrap"><a id="sort_packages" href="tests_custom.pl?order=$value"><img src="$image" width="23" height="23"/></a></td>
               <td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
-              <td width="42%" align="left" height="30" nowrap="nowrap">
-				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
+              <td width="12%" align="left" height="30" nowrap="nowrap">
+				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
 			  </td>
-              <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
+			  <td width="4.5%" height="30" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" width="14" height="14"/></a></td>
+              <td width="33%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
@@ -769,14 +780,14 @@ sub UpdateNullPage {
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;category:</td><td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Category</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" value="Any Category" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;priority:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Priority<td>
                     <select name="select_pri" id="select_pri" class="custom_select" value="And Priority" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
@@ -785,14 +796,14 @@ sub UpdateNullPage {
             <tr>
               <td width="30%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;status:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Status<td>
                     <select name="select_status" id="select_status" class="custom_select" value="Any Status" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;execution_type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Execution Type<td>
                     <select name="select_exe" id="select_exe" class="custom_select" value="Any Execution Type" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
@@ -801,14 +812,14 @@ sub UpdateNullPage {
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;testsuite:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Suite<td>
                     <select name="select_testsuite" id="select_testsuite" class="custom_select" value="Any Test Suite" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Type<td>
                     <select name="select_type" id="select_type" class="custom_select" value="Any Type" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
@@ -817,14 +828,14 @@ sub UpdateNullPage {
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
-                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;testset:<td>
+                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Set<td>
                       <select name="select_testset" id="select_testset" class="custom_select" value="Any Test Set" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                   </tr>
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;component:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Component<td>
                     <select name="select_com" id="select_com" class="custom_select" value="Any Component" style="width:70%" onchange="javascript:filter_case_item();">
                     </select>                    </td>
                 </tr>
@@ -1020,22 +1031,41 @@ DATA
 						}
 					}
 					if ( $flag_set eq "m" ) {
-						if ( $_ =~ /testcase.*purpose="(.*?)".*id="(.*?)"/ ) {
-							$xml_temp      = "none";
-							$case_value    = $2;
-							$testcase_id   = $2;
+						if ( $_ =~ /testcase.*purpose="(.*?)"/ ) {
+							if ( $_ =~ /id="(.*?)"/ ) {
+								$case_value  = $1;
+								$testcase_id = $1;
+							}
+							$xml_temp = "none";
+
 							$flag_case     = "s";
 							$flag_category = "s";
-							if ( $_ =~
-/testcase.*purpose="(.*?)".*type="(.*?)".*status="(.*?)".*component="(.*?)".*execution_type="(.*?)".*priority="(.*?)".*id="(.*?)"/
-							  )
-							{
-								my $tmp2 = $2;
-								my $tmp3 = $3;
-								my $tmp4 = $4;
-								my $tmp5 = $5;
-								my $tmp6 = $6;
-								my $tmp7 = $7;
+							my $tmp2;
+							my $tmp3;
+							my $tmp4;
+							my $tmp5;
+							my $tmp6;
+							my $tmp7;
+
+							if ( $_ =~ /type="(.*?)"/ ) {
+								$tmp2 = $1;
+							}
+							if ( $_ =~ /status="(.*?)"/ ) {
+								$tmp3 = $1;
+							}
+							if ( $_ =~ /component="(.*?)"/ ) {
+								$tmp4 = $1;
+							}
+							if ( $_ =~ /execution_type="(.*?)"/ ) {
+								$tmp5 = $1;
+							}
+							if ( $_ =~ /priority="(.*?)"/ ) {
+								$tmp6 = $1;
+							}
+							if ( $_ =~ /id="(.*?)"/ ) {
+								$tmp7 = $1;
+							}
+							if ( $_ =~ /testcase.*purpose="(.*?)"/ ) {
 								$testcase_execution_type = $tmp5;
 
 								if (
@@ -1390,7 +1420,7 @@ sub UpdateViewPageSelectItem {
 	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
 	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                  <td width="47%" height="30" align="left" class="custom_title">Architecture:&nbsp</td>
+	                  <td width="47%" height="30" align="left" class="custom_title">Architecture&nbsp</td>
 	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
 	                    <option>X86</option>
 	                  </select>                  </td>
@@ -1399,7 +1429,7 @@ sub UpdateViewPageSelectItem {
 	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
 	                  <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="30" align="right" class="custom_title">Version:&nbsp</td>
+	                  <td width="37%" height="30" align="right" class="custom_title">Version&nbsp</td>
 	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" class="custom_select">
 DATA
 	LoadDrawVersionSelect();
@@ -1453,7 +1483,7 @@ DATA
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;category:</td><td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Category</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%">
 DATA
 	LoadDrawCategorySelect();
@@ -1463,7 +1493,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;priority:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Priority<td>
                     <select name="select_pri" id="select_pri" class="custom_select" style="width:70%">
 DATA
 	LoadDrawPrioritySelect();
@@ -1475,7 +1505,7 @@ DATA
             <tr>
               <td width="30%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;status:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Status<td>
                     <select name="select_status" id="select_status" class="custom_select" style="width:70%">
 DATA
 	LoadDrawStatusSelect();
@@ -1485,7 +1515,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;execution_type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Execution Type<td>
                     <select name="select_exe" id="select_exe" class="custom_select" style="width:70%">
 DATA
 	LoadDrawExecutiontypeSelect();
@@ -1497,7 +1527,7 @@ DATA
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;testsuite:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Suite<td>
                     <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%">
 DATA
 	LoadDrawTestsuiteSelect();
@@ -1507,7 +1537,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Type<td>
                     <select name="select_type" id="select_type" class="custom_select" style="width:70%">
 DATA
 	LoadDrawTypeSelect();
@@ -1519,7 +1549,7 @@ DATA
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
-                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;testset:<td>
+                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Set<td>
                       <select name="select_testset" id="select_testset" class="custom_select" style="width:70%">
 DATA
 	LoadDrawTestsetSelect();
@@ -1529,7 +1559,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;component:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Component<td>
                     <select name="select_com" id="select_com" class="custom_select" style="width:70%">
 DATA
 	LoadDrawComponentSelect();
@@ -1567,7 +1597,7 @@ sub UpdateLoadPageSelectItem {
 	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
 	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
-	                  <td width="47%" height="30" align="left" class="custom_title">Architecture:&nbsp</td>
+	                  <td width="47%" height="30" align="left" class="custom_title">Architecture&nbsp</td>
 	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
 	                    <option>X86</option>
 	                  </select>                  </td>
@@ -1576,7 +1606,7 @@ sub UpdateLoadPageSelectItem {
 	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	                <tr>
 	                <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="30" align="right" class="custom_title">Version:&nbsp</td>
+	                  <td width="37%" height="30" align="right" class="custom_title">Version&nbsp</td>
 	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawVersionSelect();
@@ -1585,7 +1615,7 @@ DATA
                 </tr>
               </table></td>
               <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
-              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name:&nbsp</td>
+              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name&nbsp</td>
 DATA
 	if ( !$sort_flag ) {
 		print <<DATA;
@@ -1620,9 +1650,10 @@ DATA
 		}
 		print <<DATA;
 	        <td width="42%" align="left" height="30" nowrap="nowrap">
-				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
+				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
 			</td>
-	         <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
+			<td width="4.5%" height="30" nowrap="nowrap"><img id="progress_waiting" src="" width="14" height="14"/></a></td>
+			<td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
@@ -1634,9 +1665,10 @@ DATA
 		print <<DATA;
 		<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Normal" onclick="javascript:hidden_Advanced_List();"/></td>
         <td width="42%" align="left" height="30" nowrap="nowrap">
-			<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan download repos, and list packages either uninstalled or have a higher version." onclick="javascript:onUpdatePackages();"/>
+			<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
 		</td>
-         <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
+		<td width="4.5%" height="30" nowrap="nowrap"><img id="progress_waiting" src="" width="14" height="14"/></a></td>
+		<td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
@@ -1649,7 +1681,7 @@ DATA
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;category:</td><td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Category</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawCategorySelect();
@@ -1659,7 +1691,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;priority:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Priority<td>
                     <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawPrioritySelect();
@@ -1671,7 +1703,7 @@ DATA
             <tr>
               <td width="30%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;status:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Status<td>
                     <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawStatusSelect();
@@ -1681,7 +1713,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;execution_type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Execution Type<td>
                     <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawExecutiontypeSelect();
@@ -1693,7 +1725,7 @@ DATA
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;testsuite:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Suite<td>
                     <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawTestsuiteSelect();
@@ -1703,7 +1735,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;type:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Type<td>
                     <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawTypeSelect();
@@ -1715,7 +1747,7 @@ DATA
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
-                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;testset:<td>
+                    <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Set<td>
                       <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawTestsetSelect();
@@ -1725,7 +1757,7 @@ DATA
               </table></td>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;component:<td>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Component<td>
                     <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	LoadDrawComponentSelect();
@@ -2509,6 +2541,16 @@ print <<DATA;
 DATA
 
 print <<DATA;
+var refresh_flag = 
+DATA
+print $refresh_flag. ";";
+
+print <<DATA;
+var view_page_no_filter_flag = 
+DATA
+print $view_page_no_filter_flag. ";";
+
+print <<DATA;
 var filter_auto_string;
 var filter_manual_string;
 var filter_auto_count_string;
@@ -2516,7 +2558,13 @@ var filter_manual_count_string;
 var filter_auto_count_reverse_string;
 var filter_manual_count_reverse_string;
 
-filter_case_item();
+if(view_page_no_filter_flag){
+	filter_case_item();
+}
+
+if(refresh_flag){
+	onUpdatePackages();
+}
 DATA
 
 print <<DATA;
@@ -2944,7 +2992,7 @@ function onDeletePackage(count) {
 	}
 	
 	
-	if(confirm("Do you want to delete "+pkg+"?")){
+	if(confirm("Are you sure to delete "+pkg+"?")){
 		document.location="tests_custom.pl?delete_package=1&delete_"+pkg+"=1&sort_flag="+sort_flag+"&checkbox="+checkbox_value+"&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
 	}
 }
@@ -2980,7 +3028,7 @@ function showtips(e) {
 	}
 	if (flag == 0) {
 		sel.style.display = '';
-		sel.add(new Option("No match profile"));
+		sel.add(new Option("No matching profile"));
 		sel.selectedIndex = 0;
 	}
 }
@@ -3010,7 +3058,9 @@ function c(){
 	//txt.focus();
 }
 
-document.onclick=function(){c()}
+if(view_page_no_filter_flag){
+	document.onclick=function(){c()}
+}
 
 </script>
 DATA
@@ -3368,7 +3418,7 @@ sub AnalysisReadMe {
 			$temp = $1;
 		}
 		else {
-			$temp = "NO Introduction";
+			$temp = "None";
 		}
 		push( @introduction, $temp );
 		$temp    = "";
@@ -3453,7 +3503,7 @@ DATA
               </td>
              </tr>
             <tr id="sec_list_case_number$count">
-              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number(auto manual):</td>
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number (auto manual):</td>
               <td class="custom_list_type_bottom" height="30" id="cnam_$package_name[$count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
                 <tr>
                   <td width="5%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$count+1]</td>
@@ -3463,7 +3513,7 @@ DATA
               </tr>
               
              <tr id="sec_list_case_number_reverse$count" style="display:none">
-              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number(auto manual):</td>
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number (auto manual):</td>
               <td class="custom_list_type_bottom" height="30" id="cnam_$package_name[$sort_count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
                 <tr>
                   <td width="5%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$sort_count+1]</td>
@@ -3568,7 +3618,7 @@ sub DrawPackageList {
               </td>
              </tr>
             <tr id="sec_list_case_number$count">
-              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number(auto manual):</td>
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number (auto manual):</td>
               <td class="custom_list_type_bottom" height="30" id="cnam_$package_name[$count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
                 <tr>
                   <td width="5%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$count+1]</td>
@@ -3578,7 +3628,7 @@ sub DrawPackageList {
               </tr>
               
              <tr id="sec_list_case_number_reverse$count" style="display:none">
-              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number(auto manual):</td>
+              <td align="left" height="30" valign="middle" nowrap="nowrap" class="custom_list_type_bottomright">&nbsp;&nbsp;Case Number (auto manual):</td>
               <td class="custom_list_type_bottom" height="30" id="cnam_$package_name[$sort_count]"><table width="100%" border="0" cellpadding="0" cellspacing="0" class="custom_font">
                 <tr>
                   <td width="5%" height="30" align="left" valign="middle">&nbsp;$case_number[3*$sort_count+1]</td>

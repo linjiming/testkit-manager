@@ -1534,11 +1534,7 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 		my $name   = shift(@temp_2);
 		my $result = shift(@temp_2);
 		my $auto_case_result_xml =
-		    $FindBin::Bin
-		  . "/../../../results/"
-		  . $time . "/"
-		  . $package
-		  . "_tests.xml";
+		  $result_dir_manager . $time . "/" . $package . "_tests.xml";
 		$name =~ s/\s/\\ /g;
 		my $cmd_getLine =
 		  'grep id=\\"' . $name . '\\" ' . $auto_case_result_xml . ' -n';
@@ -1548,12 +1544,43 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 			my $line_number  = $1;
 			my $line_content = $2;
 			$line_content =~ s/\s/\\ /g;
-			$line_content =~ s/result=".*"/result="$result"/;
+			if ( $line_content =~ /result=".*"/ ) {
+				$line_content =~ s/result=".*"/result="$result"/;
+			}
+			else {
+				$line_content =~
+s/execution_type="manual"/execution_type="manual" result="$result"/;
+			}
 
 			system( "sed -i '"
 				  . $line_number . "c "
 				  . $line_content . "' "
 				  . $auto_case_result_xml );
+		}
+
+		# write result also back to test.result.xml
+		my $tests_result_xml =
+		  $result_dir_manager . $time . "/tests.result.xml";
+		$cmd_getLine =
+		  'grep id=\\"' . $name . '\\" ' . $tests_result_xml . ' -n';
+		$grepResult = `$cmd_getLine`;
+
+		if ( $grepResult =~ /\s*(\d*)\s*:(.*>)/ ) {
+			my $line_number  = $1;
+			my $line_content = $2;
+			$line_content =~ s/\s/\\ /g;
+			if ( $line_content =~ /result=".*"/ ) {
+				$line_content =~ s/result=".*"/result="$result"/;
+			}
+			else {
+				$line_content =~
+s/execution_type="manual"/execution_type="manual" result="$result"/;
+			}
+
+			system( "sed -i '"
+				  . $line_number . "c "
+				  . $line_content . "' "
+				  . $tests_result_xml );
 		}
 
 		# record a copy of manual cases, so we can store comment and bug number
@@ -1563,18 +1590,14 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 			#write result back to file
 			if (
 				!(
-					  -e $FindBin::Bin
-					. "/../../../results/"
-					. $package
-					. "_manual_case_tests.txt"
+					-e $result_dir_manager . $package . "_manual_case_tests.txt"
 				)
 			  )
 			{
 				my $manual_result;
 				open $manual_result,
 				    ">"
-				  . $FindBin::Bin
-				  . "/../../../results/"
+				  . $result_dir_manager
 				  . $package
 				  . "_manual_case_tests.txt"
 				  or die $!;
@@ -1583,11 +1606,7 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 
 			my $manual_result;
 			open $manual_result,
-			    ">>"
-			  . $FindBin::Bin
-			  . "/../../../results/"
-			  . $package
-			  . "_manual_case_tests.txt"
+			  ">>" . $result_dir_manager . $package . "_manual_case_tests.txt"
 			  or die $!;
 			print {$manual_result} $name_result . "\n";
 			close $manual_result;
@@ -1595,8 +1614,7 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 			#write comment and bug number back to file
 			if (
 				!(
-					  -e $FindBin::Bin
-					. "/../../../results/"
+					  -e $result_dir_manager 
 					. $package
 					. "_manual_case_tests_comment_bug_number.txt"
 				)
@@ -1605,8 +1623,7 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 				my $manual_result;
 				open $manual_result,
 				    ">"
-				  . $FindBin::Bin
-				  . "/../../../results/"
+				  . $result_dir_manager
 				  . $package
 				  . "_manual_case_tests_comment_bug_number.txt"
 				  or die $!;
@@ -1617,8 +1634,7 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 			my $name = shift @temp_name;
 			open $manual_result_comment_bug_number,
 			    ">>"
-			  . $FindBin::Bin
-			  . "/../../../results/"
+			  . $result_dir_manager
 			  . $package
 			  . "_manual_case_tests_comment_bug_number.txt"
 			  or die $!;
@@ -1630,25 +1646,22 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 		}
 	}
 	system( 'mv -f '
-		  . $FindBin::Bin
-		  . "/../../../results/*_manual_case_tests.txt "
-		  . $FindBin::Bin
-		  . "/../../../results/"
+		  . $result_dir_manager
+		  . "*_manual_case_tests.txt "
+		  . $result_dir_manager
 		  . $time
 		  . "/" );
 	system( 'mv -f '
-		  . $FindBin::Bin
-		  . "/../../../results/*_manual_case_tests_comment_bug_number.txt "
-		  . $FindBin::Bin
-		  . "/../../../results/"
+		  . $result_dir_manager
+		  . "*_manual_case_tests_comment_bug_number.txt "
+		  . $result_dir_manager
 		  . $time
 		  . "/" );
 	updateManualState($time);
 	updateAutoState($time);
 
 	# create tar file
-	my $result_dir_manager = $FindBin::Bin . "/../../../results/";
-	my $tar_cmd_delete     = "rm -f " . $result_dir_manager . $time . "/*.tgz";
+	my $tar_cmd_delete = "rm -f " . $result_dir_manager . $time . "/*.tgz";
 	my $tar_cmd_create =
 	    "tar -czPf "
 	  . $result_dir_manager
@@ -2288,13 +2301,10 @@ else {
 sub updateAutoState {
 	my ($time) = @_;
 	undef %autoResult;
-	find( \&updateAutoState_wanted, "../../../results/" . $time . "/" );
+	find( \&updateAutoState_wanted, $result_dir_manager . $time . "/" );
 
-	open FILE, $FindBin::Bin . "/../../../results/" . $time . "/info"
-	  or die "Can't open "
-	  . $FindBin::Bin
-	  . "/../../../results/"
-	  . $time . "/info";
+	open FILE, $result_dir_manager . $time . "/info"
+	  or die "Can't open " . $result_dir_manager . $time . "/info";
 
 	my $package_name;
 	my $inside;
@@ -2366,8 +2376,8 @@ sub updateAutoState_wanted {
 			my $fail  = 0;
 			my $block = 0;
 			my $total = 0;
-			open FILE, $FindBin::Bin . "/" . $dir
-			  or die "Can't open " . $FindBin::Bin . "/" . $dir;
+			open FILE, $dir
+			  or die "Can't open " . $dir;
 			while (<FILE>) {
 
 				# just count auto case
@@ -2394,13 +2404,10 @@ sub updateAutoState_wanted {
 sub updateManualState {
 	my ($time) = @_;
 	undef %manualResult;
-	find( \&updateManualState_wanted, "../../../results/" . $time . "/" );
+	find( \&updateManualState_wanted, $result_dir_manager . $time . "/" );
 
-	open FILE, $FindBin::Bin . "/../../../results/" . $time . "/info"
-	  or die "Can't open "
-	  . $FindBin::Bin
-	  . "/../../../results/"
-	  . $time . "/info";
+	open FILE, $result_dir_manager . $time . "/info"
+	  or die "Can't open " . $result_dir_manager . $time . "/info";
 
 	my $package_name;
 	my $inside;
@@ -2471,8 +2478,8 @@ sub updateManualState_wanted {
 		my $fail         = 0;
 		my $block        = 0;
 		my $total        = 0;
-		open FILE, $FindBin::Bin . "/" . $dir
-		  or die "Can't open " . $FindBin::Bin . "/" . $dir;
+		open FILE, $dir
+		  or die "Can't open " . $dir;
 		while (<FILE>) {
 			if ( $_ =~ /:N\/A/ ) {
 				$hasManual = "True";

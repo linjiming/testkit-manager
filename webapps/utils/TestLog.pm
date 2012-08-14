@@ -50,7 +50,6 @@ my $total            = 0;         # total case number from txt file
 my @targetFilter;
 my $dir_root     = "none";
 my $combined_xml = "none";
-my $combined_txt = "none";
 
 sub writeResultInfo {
 	my ( $time_only, $isOnlyAuto_temp, @targetFilter_temp ) = @_;
@@ -139,15 +138,14 @@ sub writeResultInfo_wanted {
 	if (   ( $dir =~ /.*\/[0-9:\.\-]+\/usr\/share\/([\w\d\-]+)$/ )
 		or ( $dir =~ /.*\/[0-9:\.\-]+\/usr\/local\/share\/([\w\d\-]+)$/ ) )
 	{
+		system("cp $combined_xml $result_dir_manager$time/tests.result.xml");
+		system(
+"cp /opt/testkit/manager/webapps/webui/public_html/css/resultstyle.xsl $result_dir_manager$time"
+		);
+		system(
+"cp /opt/testkit/manager/webapps/webui/public_html/css/tests.css $result_dir_manager$time"
+		);
 		my $package_name = $1;
-		if ( -e $dir . "/tests.result.txt" ) {
-			system( 'mv ' . $dir . "/tests.result.txt " . $dir . "/tests.txt" );
-			my $testkit_lite_result_txt = $dir . "/tests.txt";
-			system( "cp $testkit_lite_result_txt $result_dir_manager$time"
-				  . "/$package_name"
-				  . "_tests.txt" );
-
-		}
 		if ( -e $dir . "/tests.result.xml" ) {
 			system( 'mv ' . $dir . "/tests.result.xml " . $dir . "/tests.xml" );
 			my $testkit_lite_result_xml = $dir . "/tests.xml";
@@ -155,7 +153,6 @@ sub writeResultInfo_wanted {
 				  . "/$package_name"
 				  . "_tests.xml" );
 		}
-		my $txt_result = $dir . "/tests.txt";
 		my $xml_result = $dir . "/tests.xml";
 
 		my $startCase          = "FALSE";
@@ -164,8 +161,7 @@ sub writeResultInfo_wanted {
 
 		# if dir is not empty, create manual case list
 		if (
-			   ( -e $txt_result )
-			&& ( -e $xml_result )
+			( -e $xml_result )
 			&& !(
 				  -e $result_dir_manager 
 				. $time . "/"
@@ -310,25 +306,30 @@ sub writeResultInfo_wanted {
 # parse tests_result.txt and get total, pass, fail number
 sub getTotalVerdict {
 	my ( $testkit_lite_result, $time, $package, $manual_case_number ) = @_;
-	my $testkit_lite_result_txt = $testkit_lite_result . "/tests.txt";
+	my $testkit_lite_result_xml = $testkit_lite_result . "/tests.xml";
 
-	# parse tests_result.txt
+	# parse tests_result.xml
 	my @totalVerdict = ();
-	if ( -e $testkit_lite_result_txt ) {
-		open FILE, $testkit_lite_result_txt or die $!;
+	$total = 0;
+	my $pass = 0;
+	my $fail = 0;
+	if ( -e $testkit_lite_result_xml ) {
+		open FILE, $testkit_lite_result_xml or die $!;
 		while (<FILE>) {
-			if (   ( $_ =~ /.*tests.xml\s*XML\s*(\d+)\s*(\d+)\s*(\d+)\s*/ )
-				or
-				( $_ =~ /.*tests.result.xml\s*XML\s*(\d+)\s*(\d+)\s*(\d+)\s*/ )
-			  )
-			{
-				$total = int($1) + int($2) + int($3);
-				push( @totalVerdict, "Total:" . $total );
-				push( @totalVerdict, "Pass:" . $1 );
-				push( @totalVerdict, "Fail:" . $2 );
+			if ( $_ =~ /.*<testcase.*>.*/ ) {
+				$total += 1;
+				if ( $_ =~ /.*result="PASS".*/ ) {
+					$pass += 1;
+				}
+				elsif ( $_ =~ /.*result="FAIL".*/ ) {
+					$fail += 1;
+				}
 			}
 		}
 	}
+	push( @totalVerdict, "Total:" . $total );
+	push( @totalVerdict, "Pass:" . $pass );
+	push( @totalVerdict, "Fail:" . $fail );
 	return @totalVerdict;
 }
 
@@ -414,55 +415,21 @@ sub changeDirStructure_wanted {
 		if ( $dir !~ /[0-9:\.\-]+\/opt/ ) {
 			my $time = $1;
 			$combined_xml = "none";
-			$combined_txt = "none";
-			find( \&findXmlTxt_wanted, $result_dir_lite . "/" . $time );
-			if ( ( $combined_xml ne "none" ) && ( $combined_txt ne "none" ) ) {
+			find( \&findXml_wanted, $result_dir_lite . "/" . $time );
+			if ( $combined_xml ne "none" ) {
 				$dir_root = $result_dir_lite . "/" . $time;
 				rewriteXmlFile($combined_xml);
-				rewriteTxtFile($combined_txt);
 			}
 		}
 	}
 }
 
-sub findXmlTxt_wanted {
+sub findXml_wanted {
 	my $dir = $File::Find::name;
 	if (   ( $dir =~ /tests\..{6}\.result\.xml/ )
 		or ( $dir =~ /tests\.result\.xml/ ) )
 	{
 		$combined_xml = $dir;
-	}
-	if (   ( $dir =~ /tests\..{6}\.result\.txt/ )
-		or ( $dir =~ /tests\.result\.txt/ ) )
-	{
-		$combined_txt = $dir;
-	}
-}
-
-sub rewriteTxtFile {
-	my ($combined_txt) = @_;
-	open FILE, $combined_txt
-	  or die "can't open " . $combined_txt;
-	my $title        = "none";
-	my $content      = "none";
-	my $package_name = "none";
-	while (<FILE>) {
-		if ( $_ =~ /TestReport/ ) {
-			$title = $_;
-		}
-		if ( $_ =~ /TYPE\s*PASS\s*FAIL\s*N\/A/ ) {
-			$title .= "\n" . $_;
-		}
-		if ( $_ =~ /---(.*)\s*SUITE\s*(\d+)\s*(\d+)\s*(\d+)\s*/ ) {
-			$package_name = $1;
-			$package_name =~ s/^\s*//;
-			$package_name =~ s/\s*$//;
-			$content = $title . $_;
-			my $package_name_dec = $package_name . "/tests.result.xml";
-			$content =~ s/$package_name/$package_name_dec/;
-			$content =~ s/\s{15}SUITE/XML/;
-			writeTxtResult( $package_name, $content );
-		}
 	}
 }
 
@@ -599,21 +566,6 @@ sub mkdirWriteXmlResult {
 	close $file;
 }
 
-sub writeTxtResult {
-	my ( $package_name, $content ) = @_;
-
-	my $file;
-	open $file,
-	  ">" . $dir_root . "/usr/share/" . $package_name . "/tests.result.txt"
-	  or die "Failed to open file "
-	  . $dir_root
-	  . "/usr/share/"
-	  . $package_name
-	  . "/tests.result.txt for writing: $!";
-	print {$file} $content;
-	close $file;
-}
-
 sub syncDefination {
 	system( "rm -rf $defination_dir" . "*" );
 	my $cmd_defination = "sdb shell ls /usr/share/*/tests.xml";
@@ -627,7 +579,7 @@ sub syncDefination {
 		if ( $defination =~ /share\/(.*)\/tests.xml/ ) {
 			my $package_name = $1;
 			system("mkdir $defination_dir$package_name");
-			system( "sdb pull $defination $defination_dir$package_name" );
+			system("sdb pull $defination $defination_dir$package_name");
 		}
 	}
 }

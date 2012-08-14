@@ -2,13 +2,13 @@
 
 Summary: Testkit Manager
 Name: testkit-manager
-Version: 2.2.0
-Release: 3
+Version: 2.2.1
+Release: 1
 License: GPLv2
 Group: System/Libraries
 Source: %name-%version.tar.gz
 BuildRoot: %_tmppath/%name-%version-buildroot
-Requires: perl-libxml-perl perl-App-cpanminus perl-XML-Simple
+Requires: perl-libxml-perl perl-App-cpanminus perl-XML-Simple perl-XML-LibXSLT
 
 %description
 This is testkit manager with WebUI
@@ -32,7 +32,14 @@ make install DESTDIR=$RPM_BUILD_ROOT
 /opt/testkit/manager
 
 %changelog
-* Thu Jul 26 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.0-3
+* Thu Aug 3 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.1-1
+- merging the update and reload function
+- support one page 'list view'
+- polish UI text
+- remove test.result.txt from result folder
+- load 'temp_profile' when go back to execute page from other pages
+
+Thu Jul 26 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.0-3
 - disable install an update icon during the installation or updating progress
 - add detailed error information during the installation or updating progress
 - resize page to 60%

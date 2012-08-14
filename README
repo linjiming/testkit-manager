@@ -4,7 +4,7 @@ It manages the auto tests execution remotely, and provides unified webUI to help
 
 dependency:
 ===========
-perl-libxml-perl perl-App-cpanminus perl-XML-Simple
+perl-libxml-perl perl-App-cpanminus perl-XML-Simple perl-XML-LibXSLT
 
 
 Installation:
@@ -15,6 +15,7 @@ Step 1: install dependence packages on host
     sudo apt-get install libdigest-sha-perl
     sudo apt-get install libjson-perl
     sudo apt-get install libio-pty-easy-perl
+    sudo apt-get install libxml-xslt-perl
     sudo apt-get install cpanminus
     cpanm JSON
     sudo apt-get install rpm
@@ -23,6 +24,7 @@ Step 1: install dependence packages on host
     sudo yum install perl-libxml-perl
     sudo yum install perl-App-cpanminus
     sudo yum install perl-XML-Simple
+    sudo yum install perl-XML-LibXSLT
 
 Step 2: install testkit-manger on host
   Host (ubuntu11.10)
@@ -57,7 +59,6 @@ Startup:
 Limitation:
 ===========
 1. only support devices that have 'sdb' communication module
-2. test result summary of total/pass/fail number on REPORT page is not accurate sometimes
-3. can¡¯t run both core and web api test packages in one test run
-4. when leave the execution page during test running, and then you go back, the page may not display profile info correctly
-5. repo URL doesn't support whitespace and other special characters
+2. can¡¯t run both core and web api test packages in one test run
+3. when leave the execution page during test running, and then you go back, the page may not display profile info correctly
+4. repo URL doesn't support whitespace and other special characters

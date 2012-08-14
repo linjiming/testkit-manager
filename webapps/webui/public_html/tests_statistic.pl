@@ -131,7 +131,7 @@ print <<DATA;
           <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
             <tr>
                <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="package_bar_chart" src="images/package_bar_chart_selected.png" title="Package Chart" style="cursor:default" width="73" height="30"  onclick=""/></td>
-               <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="package_tree_diagram" src="images/package_tree_diagram.png" title="Tree Diagram (This diaram is generated only for webapi packages, the branches are extracted from [Spec] filed inside the tests.xml file)" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawTree();"/></td>
+               <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="package_tree_diagram" src="images/package_tree_diagram.png" title="Tree Diagram (This diaram is generated only for WebAPI packages. The branches are extracted from [Spec] filed inside the tests.xml file.)" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawTree();"/></td>
                <td width="94%" align="left" height="30"  nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawComponent();"/></td>                      
             </tr>
           </table></td>
@@ -142,7 +142,7 @@ print <<DATA;
             <tr>
               <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-					<td width="30%" height="30" ="50" align="left" class="custom_title">&nbsp;category:</td><td>
+					<td width="30%" height="30" ="50" align="left" class="custom_title">&nbsp;Category</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 DrawCategorySelect();
@@ -154,7 +154,7 @@ print <<DATA;
               </table></td>
               <td width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-					<td width="30%" height="30"  align="left" class="custom_title">&nbsp;type:</td><td>
+					<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Type</td><td>
                     <select name="select_type" align="20px" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 DrawTypeSelect();
@@ -169,7 +169,7 @@ print <<DATA;
             <tr>
               <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;status:</td><td>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Status</td><td>
                     <select name="select_status" align="20px" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 DrawStatusSelect();
@@ -181,7 +181,7 @@ print <<DATA;
               </table></td>
               <td width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;priority:</td><td>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Priority</td><td>
                     <select name="select_priority" align="20px" id="select_priority" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 DrawPrioritySelect();
@@ -196,7 +196,7 @@ print <<DATA;
             <tr>
               <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;testsuite:</td><td>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Test suite</td><td>
                     <select name="select_testsuite" align="20px" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 DrawTestsuiteSelect();
@@ -215,7 +215,7 @@ print <<DATA;
               
               <td id="select_package_td" width="50%" nowrap="nowrap" class="custom_list_type_bottom" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;package:</td><td>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Package</td><td>
                     <select name="select_package" align="20px" id="select_package" class="custom_select" style="width:70%" onchange="javascript:draw_package_tree();">
 DATA
 DrawPackageSelect();

@@ -165,7 +165,7 @@ print <<DATA;
         <tbody>
           <tr>
             <td width="15">&nbsp;</td>
-            <td width="252" style="font-size:14px">Profile name:
+            <td width="252" style="font-size:14px">Profile name
 DATA
 if (    ($found)
 	and ( $have_testkit_lite eq "TRUE" )
@@ -174,18 +174,18 @@ if (    ($found)
 	print <<DATA;
             <select name="test_profile" id="test_profile" style="width: 11em;" onchange="javascript:filter_progress_bar();">$profiles_list</select></td>
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="START" id="start_button" value="Start Test" class="top_button" onclick="javascript:startTests('');"></td>
+            <td width="71"><input type="submit" name="START" id="start_button" value="Start" class="bottom_button" onclick="javascript:startTests('');"></td>
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="STOP" id="stop_button" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
+            <td width="71"><input type="submit" name="STOP" id="stop_button" value="Stop" disabled="disabled" class="bottom_button" onclick="javascript:stopTests();"></td>
 DATA
 }
 else {
 	print <<DATA;
             <select name="test_profile_no" id="test_profile_no" style="width: 12em;" size="1" disabled="disabled"><option>&lt;No profiles present&gt;</option></select></td>
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="START" id="start_button" value="Start Test" disabled="disabled" class="top_button" onclick="javascript:startTests('');"></td>
+            <td width="71"><input type="submit" name="START" id="start_button" value="Start" disabled="disabled" class="bottom_button" onclick="javascript:startTests('');"></td>
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="STOP" id="stop_button" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
+            <td width="71"><input type="submit" name="STOP" id="stop_button" value="Stop" disabled="disabled" class="bottom_button" onclick="javascript:stopTests();"></td>
 DATA
 }
 print <<DATA;
@@ -243,12 +243,12 @@ DATA
               </tr>
               <tr>
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$auto_text_id">Auto Test</span><span id="$progress_id">($auto_all)</span></td>
+                <td align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$auto_text_id">Auto Test&nbsp;</span><span id="$progress_id">($auto_all)</span></td>
                 <td class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
               <tr>
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row">&nbsp;&nbsp;Manual Test($manual_all)</td>
+                <td align="left" class="report_list_one_row">&nbsp;&nbsp;Manual Test&nbsp;($manual_all)</td>
                 <td class="report_list_one_row"></td>
               </tr>
 DATA
@@ -272,12 +272,12 @@ DATA
               </tr>
               <tr>
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$auto_text_id">Auto Test</span><span id="$progress_id">($auto)</span></td>
+                <td align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$auto_text_id">Auto Test&nbsp;</span><span id="$progress_id">($auto)</span></td>
                 <td align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
               <tr>
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row">&nbsp;&nbsp;Manual Test($manual)</td>
+                <td align="left" class="report_list_one_row">&nbsp;&nbsp;Manual Test&nbsp;($manual)</td>
                 <td class="report_list_one_row"></td>
               </tr>
 DATA
@@ -364,7 +364,7 @@ $progress_bar_max_value_list_array =
 print <<DATA;
 <script language="javascript" type="text/javascript">
 // <![CDATA[
-var global_profile_name;
+var global_profile_name = "temp_profile";
 var global_package_name = "none";
 var global_case_number = 0;
 var package_list = new Array$package_list_array;

@@ -57,3 +57,12 @@ testkit-manager 2.2.0:
   - resize page to 60%
   - add support for firefox
   - update HELP page
+
+testkit-manager 2.2.1:
+===================
+* Thu Aug 3 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.1-1
+  - merging the update and reload function
+  - support one page 'list view'
+  - polish UI text
+  - remove test.result.txt from result folder
+  - load 'temp_profile' when go back to execute page from other pages

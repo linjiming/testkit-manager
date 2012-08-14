@@ -48,26 +48,10 @@ print <<DATA;
           <tr>
             <td align="left"><ol>
                 <li><a href="#overview">Overview</a></li>
-                <li><a href="#custom_tests">Custom Tests</a>
-                  <ol>
-                    <li><a href="#filter_function">Filter function</a></li>
-                    <li><a href="#how_to_use_profiles">How to use profiles</a></li>
-                    <li><a href="#useful_features_custom">Useful features</a></li>
-                  </ol>
-                </li>
-                <li><a href="#how_to_execute">How to Execute</a>
-                  <ol>
-                    <li><a href="#execute_auto_cases">Execute auto cases</a></li>
-                    <li><a href="#execute_manual_cases">Execute manual cases</a></li>
-                  </ol>
-                </li>
-                <li><a href="#how_to_view_report">How to View Report</a>
-                  <ol>
-                    <li><a href="#how_to_view_summary_reports">How to view summary reports</a></li>
-                    <li><a href="#how_to_view_detailed_reports">How to view detailed reports</a></li>
-                    <li><a href="#useful_features_report">Useful features</a></li>
-                  </ol>
-                </li>
+                <li><a href="#building_test_case">Building Test Case</a></li>
+                <li><a href="#customzing_tests">Customzing Tests</a></li>
+                <li><a href="#executing_test_cases">Executing Test Cases</a></li>
+                <li><a href="#viewing_report">Viewing Report</a></li>
               </ol></td>
           </tr>
         </table>
@@ -87,28 +71,58 @@ print <<DATA;
               </table></td>
           </tr>
           <tr>
-            <td><p>Testkit-manager is a GUI (Graphical User Interface), which is developed as an auto-testing tool. It uses "testkit-lite" as execution tool for running case. With this tool, we can filter cases that we want to run with several properties' value, the filtered cases can be run automatically and the report will be generated after finishing running. We can also submit report and view report with this tool.</p>
-              <p>Some major features are listed as bellow:</p>
+            <td><p>Testkit-Manager, a Graphical User Interface (GUI) front-end in browser, manages auto test cases execution remotely and provides unified web UI to help manual tests execution. </p>
+              <p>Testkit-Manager has the following features: </p>
               <ol>
-                <li>We can filter cases with the property value of the case, such as version, category, priority, status, execution type, test suite, type, test set and component. And we can view the detailed information of the cases that we have filtered.</li>
-                <li>We can save profile which contains test case information that we have filtered, load profile and delete profile which we have saved, and execute profile which we have loaded.</li>
-                <li>We can install packages, update packages and delete packages.</li>
-                <li>We can execute both auto cases and manual cases which we have filtered, and add test result for manual cases.</li>
-                <li>After executing test cases, the tool will generate a report automatically, we can view report, compare report, delete report, submit report and export report.</li>
+                <li>You can filter test cases as per their property value, including architecture, version, category, priority, status, execution type, test suite, type, test set, and component. After that, you can view the detailed information of the test cases.</li>
+                <li>You can save the detailed test case information as a profile, and load, delete, or execute the profile.</li>
+                <li>You can install, update, and delete test case packages.</li>
+                <li>You can execute both auto test cases and manual test cases as well as add test result to manual test cases.</li>
+                <li>After executing test cases, Testkit-Manager generates a report automatically. After that, you can view, compare, delete, submit, and export the report.</li>
               </ol></td>
           </tr>
         </table>
       </div></td>
     <td width="2%">&nbsp;</td>
   </tr>
-  <tr>
+  
+
+<tr>
     <td width="2%">&nbsp;</td>
-    <td align="left"><div id="custom_tests">
+    <td align="left"><div id="building_test_case">
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
           <tr>
             <td class="report_list_one_row help_level_1"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td>Custom Tests</td>
+                  <td>Building Test Case</td>
+                  <td align="right" class="help_list" style="font-weight:normal">[<a href="#">top</a>]</td>
+                </tr>
+              </table></td>
+          </tr>
+          <tr>
+            <td>
+              <p>To build a test case, perform the following steps: </p>
+              <ol>
+                <li>\'git clone git\@github.com:testkit/testkit-manager.git\'</li>
+                <li>\'cd testkit-manager; ./autogen; ./configure; make; make install\'</li>
+                <li>Download WebAPI test suite by git clone ssh://username\@tizendev.org:29418/test/webapi.git.</li>
+                <li>Build and install the WebAPI test suite.</li>
+                </ol></td>
+          </tr>
+        </table>
+      </div></td>
+    <td width="2%">&nbsp;</td>
+  </tr>
+  
+  
+  <tr>
+    <td width="2%">&nbsp;</td>
+    <td align="left"><div id="customzing_tests">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+          <tr>
+            <td class="report_list_one_row help_level_1"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td>Customizing Tests</td>
                   <td align="right" class="help_list" style="font-weight:normal">[<a href="#">top</a>]</td>
                 </tr>
               </table></td>
@@ -121,30 +135,35 @@ print <<DATA;
                         <tr>
                           <td class="report_list_one_row help_level_2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                               <tr>
-                                <td>Filter function</td>
+                                <td>Filtering Test Cases</td>
                                 <td align="right" class="help_list" style="font-weight:normal">[<a href="#">top</a>]</td>
                               </tr>
                             </table></td>
                         </tr>
                         <tr>
-                          <td><p>There are ten properties for testcase as below. We can filter the cases that we want to test by filter function according to these properties' value.</p>
-                            <p>1.Architecture	2.Version	3.Category	4.Priority	5.Status</p>
-                            <p>6.Execution Type	7.Test suite	8.Type	9.Test set	10.Component</p>
+                          <td><p>You can filter test cases according to their property values:</p>
+                            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1.Architecture	2.Version	3.Category	4.Priority	5.Status</p>
+                            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6.Execution Type	7.Test suite	8.Type	9.Test set	10.Component</p>
+                            <p>To filter test cases, perform the following steps:</p>  
                             <ol>
-                              <li>Click icon "Custom", and then the page as below will display, options &lt;Architecture&gt;, &lt;Version&gt; and button &lt;Advanced&gt; will display at the top of this page.</li>
+                              <li>Log in to http://localhost:8899.</li>
+                              <li>Click the CUSTOM tab. The tab page refreshes, displaying &lt;Architecture&gt;, &lt;Version&gt; and &lt;Advanced&gt; on top, as shown in Figure 3-1.</li>
                               <img src="images/pic_3_1.png" width="600" height="355" />
-                              <li>Click button &lt;Advanced&gt;, the hidden options will display.</li>
+                              <li>Click Advanced. Options display, as shown in Figure 3-2.</li>
                               <img src="images/pic_3_2.png" width="600" height="458" />
-                              <li>Take &lt;category&gt; option and &lt;priority&gt; option for example:</li>
+                              <li>Take the category and priority options for example.</li>
+                              Note: Assume that all the 10 options\' value are initial values \"Any ***\". All the installed test case packages display.
                               <ol>
-                                <li>At first, consuming that all the ten options' value are init values which are "Any ***", then all the packages installed in the device will display.</li>
-                                <li>Select &lt;category&gt; option with value "Netbook". The packages, which include testcase whose category is "Netbook" , will  display.</li>
+                                <li>Select Netbook from the category checkbox. </li>
+                                The test case packages display, which include test cases whose category is Netbook, as shown in Figure 3-3.
                                 <img src="images/pic_3_3.png" width="600" height="261" />
-                                <li>Then, select &lt;priority&gt; option with value "P1", the packages displayed in step (2), which also include testcase whose priority is "P1", will  display.</li>
+                                <li>Select P1 from the priority check box. </li>
+                                The test case packages display, which include the test cases whose category is Netbook and whose priority is P1, as shown in Figure 3-4.
                                 <img src="images/pic_3_4.png" width="600" height="263" />
-                                <li>Select other options in the same way.</li>
+                            
                               </ol>
-                              <li>Among these displayed packages, we can click "checkbox" to choose the packages that we want to test.</li>
+                              Note: You can select other options in the same way. All the required test case packages display.
+                              <li>Select a test case package to test, as shown in Figure 3-5.</li>
                               <img src="images/pic_3_5.png" width="600" height="261" />
                             </ol></td>
                         </tr>
@@ -157,65 +176,74 @@ print <<DATA;
                         <tr>
                           <td class="report_list_one_row help_level_2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                               <tr>
-                                <td>How to use profiles</td>
+                                <td>Using Profile</td>
                                 <td align="right" class="help_list" style="font-weight:normal">[<a href="#">top</a>]</td>
                               </tr>
                             </table></td>
                         </tr>
                         <tr>
-                          <td><p>Profiles are used to save the information of test cases which we have filtered for testing in future, we can load profile and delete profile which we have saved, and execute profile which we have loaded.</p>
+                          <td><p>A profile saves the information of filtered test cases for future test. You can load, execute, or delete a profile.</p>
                             <ol>
-                              <li>Save profiles:</li>
+                              <li>Saving Profile</li>
+                              To save a profile, perform the following steps:
                               <ol>
-                                <li>Filter packages as introduced in 3.1</li>
-                                <li>Input &lt;Profile name :&gt; in the context [8]. We add a "auto search" function for this context.  When we input one profile name, it will automatically search files under the path://***/testkit-manager/profiles/test/ to check whether the profile name has existed.</li>
+                                <li>Filter test case packages. For details, section 3.1.</li>
+                                <li>Enter the Profile name. </li>
+                                Note: The \"auto search\" function is added for this context. After a profile name is entered, the function will automatically search files under //***/testkit-manager/profiles/test/ to check whether the profile name exists.  
                                 <img src="images/pic_3_6.png" width="600" height="301" />
-                                <li>If the "auto search" shows "No match profile"[9], then click button &lt;Save&gt;, and the profile will be saved under path://***/testkit-manager/profiles/test/.</li>
+                                <li>If the \"auto search\" function shows \"No match profile\", as shown in Figure 3-6, click Save. </li>
+                                The profile is saved under //***/testkit-manager/profiles/test/.
                                 <img src="images/pic_3_7.png" width="600" height="303" />
-                                <li>
-                                  <p>If the "auto search" shows the matched profile name, it represents that there has been profiles whose name are similar to or the same as that you input. [10].</p>
-                                  <p>When you select one profile name which has been saved before and then click button &lt;Save&gt;, one confirmation will pop up with content "Profile: &lt;profile name input&gt; exists, Would you like to overwirte it?".</p>
-                                </li>
+                                <li>If the \"auto search\" function shows the matched profile name, it indicates that there have been profiles whose name is similar to or the same as the entered profile name, as shown in Figure 3-7. </li>
+                                Click Save. A dialog box pops up, reading \"Profile <profile name input> exists, Would you like to overwrite it?\"
                                 <img src="images/pic_3_8.png" width="360" height="121" />
-                                <p>click OK return true, profile "temp_profile" will cover the profile saved before.</p>
-                                <p>Click Cancel return false, profile won't be saved.</p>
+                                <p>click OK return true. The profile temp_profile overwrites the existing one. </p>
+                                <p>Click Cancel return false. The profile temp_profile is not saved.</p>
                                 <li>
-                                  <p>Notes:</p>
-                                  <p>The profile name can't be empty. When click button &lt;Save&gt; without profile name, one alert will popup with content "Please, specify the profile name!".</p>
+                                  <p>Note:</p>
+                                  <p>Do not leave Profile name blank. If you click Save without entering a profile name, an alert pops up, reading \"Please, specify the profile name!\". Click OK.</p>
                                 </li>
                                 <img src="images/pic_3_9.png" width="363" height="122" />
                               </ol>
-                              <li>Load profiles:</li>
-                              <p>We can load profile which we have saved, and run the profile.</p>
-                              <ol>
-                                <li>As picture 3-10, fill in the profile name, and click button &lt;Load&gt;.</li>
+                              <li>Loading Profile </li>
+                              <p>Enter the profile name and click Load, as shown in Figure 3-10.</p>
                                 <img src="images/pic_3_10.png" width="600" height="357" />
-                                <li>As picture 3-11, the profile "temp_profile" will be loaded.</li>
+                             <p>The profile temp_profile is loaded, as shown in Figure 3-11.</p>
                                 <img src="images/pic_3_11.png" width="600" height="260" />
-                                <li>Notes:</li>
+                                <p>Notes:</p>
                                 <ol>
-                                  <li>If the "auto search" shows the matched profile name, it represents that there has been profiles whose name are similar to or the same as what you input..  Then you can select one profile you want to run and click button &lt;Load&gt;. The profile will be loaded and the page will be automatically refreshed to the page saved before.</li>
-                                  <li>The profile name can't be empty. When click button &lt;Save&gt; without profile name, one alert will pop up with content "Please, specify the profile name!".</li>
-                                  <li>When profile is loaded, if all the eight options' value listed by button &lt;Advanced&gt; are "Any ***", the page will be refreshed without eight options displaying. if one of the eight options has values such as category="Netbook", the page will be refreshed with eight options displayed.</li>
+                                  <li>If the \"auto search\" function shows the matched profile name, it indicates that there have been profiles whose name is similar to or the same as the input profile name. Select a profile and click Load. The profile is loaded and the page automatically refreshes.</li>
+                                  <li>Do not leave Profile name blank. If you click Save without entering a profile name, an alert pops up, reading \"Please, specify the profile name!\"</li>
+                                  <li>After a profile is loaded: </li>
+                                  <p>If all the eight options\' values under the Advanced tab are \"Any ***\", the page refreshes without displaying the eight options.</p>
+								 <p>If one of the eight options has values such as category=\"Netbook\", the page refreshes with the eight options displayed.</p>
+                                  
                                 </ol>
-                              </ol>
-                              <li>Delete profiles:</li>
-                              <p>We can delete profile which we have saved.</p>
+                              <li>Deleting Profile </li>
+                              <p>To delete a profile that has been saved, perform the following steps:</p>
                               <ol>
-                                <li>If the "auto search" shows "No match profile", If click button &lt;Delete&gt; at this moment, one alert will popup with content "Does not exist profile: &lt;the profile input&gt;!".</li>
-                                <li>If the "auto search" shows the matched profile name, it represents that there has been profiles whose name are similar to or the same as what you input..  Then you can select one profile you want to delete and click button &lt;Delete&gt;. One confirmation will pop up.</li>
+                                <li>If the \"auto search\" function shows \"No match profile\", click Delete. An alert pops up, reading \"Does not exist profile: <the profile input>!\"</li>
+                                <li>If the \"auto search\" function shows the matched profile name, it indicates that there have been profiles whose name is similar to or the same as the input profile name. Select a profile and click Delete. One confirmation dialog box pops up. </li>
                               </ol>
-                              <li>Execute profiles:</li>
-                              <p>There are two ways to execute profiles:  execute existing profile and execute temporary profile.</p>
+                              <li>Executing Profile </li>
+                              <p>Execute an existing profile:</p>
                               <ol>
                                 <li>
-                                  <p>Execute existing profile:</p>
-                                  <p>Input profile name, then click button &lt;Load&gt;, the profile will be loaded and the page will be automatically refreshed to the page saved before. After that click button &lt;Execute&gt;. The page will jump to execute page and the profile is executed.</p>
+                                  <p>Type the profile name and click Load. </p>
+                                  <p>The profile is loaded and the page automatically refreshes. </p>
                                 </li>
                                 <li>
-                                  <p>Execute temporary profile:</p>
-                                  <p>Use Filter function introduced in part 1 and select the packages you want to run, then click button &lt;Execute&gt;. The page will jump to execute page and the profile is executed.</p>
+                                  <p>Click Execute. The page refreshes and the profile is executed.</p>
+                                  </li>
+                              </ol>
+                              <p>Execute a temporary profile:</p>
+                               <ol>
+                                <li>
+                                  <p>Select a test case package. For details, see section 3.1.  </p>
                                 </li>
+                                <li>
+                                  <p>Click Execute. The page refreshes and the profile is executed.</p>
+                                  </li>
                               </ol>
                             </ol></td>
                         </tr>
@@ -235,23 +263,27 @@ print <<DATA;
                         </tr>
                         <tr>
                           <td><ol>
-                              <li>View case information</li>
+                              <li>Viewing Test Case Information</li>
+                              <p>To view test case information, perform the following steps:</p>
                               <ol>
-                                <li>Click button &lt;view&gt;, the page will be refreshed as bellow:</li>
+                                <li>Click view. The page refreshes, as shown in Figure 3-12.</li>
                                 <img src="images/pic_3_12.png" width="600" height="433" />
-                                <li>Click the case name, the detailed case info will display in the right of the page.</li>
+                                <li>Click the test case name. The detailed test case information displays in the right pane of the page.</li>
                               </ol>
-                              <li>Sort packages</li>
-                              <p>Click button with arrow icon, the packages will be sorted. Click this button again and the packages will be reversely sorted.</p>
+                              <li>Sorting Test Case Packages</li>
+                              <p>Click button with arrow icon. The test case packages are sorted. </p>
+                              <p>Note: You can click the arrow icon again. The test case packages are reversely sorted.</p>
+                              <p>Figure 3-12 shows the details.</p>
                               <img src="images/pic_3_13.png" width="600" height="359" />
-                              <li>Delete packages</li>
-                              <p>Click button with delete icon in picture 3-14, and one confirmation will pop up.</p>
+                              <li>Deleting Test Case Package </li>
+                              <p>Click the delete icon, as shown in Figure 3-14. </p>
                               <img src="images/pic_3_14.png" width="600" height="357" />
-                              <li>List package information</li>
-                              <p>Click package name, and detailed packages information will be listed.</p>
+                              <p>A dialog box is displayed, asking for your confirmation. Click OK.</p>
+                              <li>Listing Test Case Package Information</li>
+                              <p>Click the test case package name. The detailed information displays, as shown in Figure 3-15.</p>
                               <img src="images/pic_3_15.png" width="600" height="483" />
                               <li>Update package list from repo</li>
-                              <p>Click Update button ,testkit-manager will scan package list from repo, and list all the packages that not installed , we can click install icon to install theses packages. At the same time, if there are newer version for the package which has been installed from repo, the update icon for this package will enabled.We can click update icon to update this package to the latest  version.</p>
+                              <p>Click Update button ,testkit-manager will scan package list from repo, and list all the packages that not installed , we can click install icon to install these packages. At the same time, if there are newer version for the package which has been installed from repo, the update icon for this package will be enabled.We can click update icon to update this package to the latest  version, as shown in Figure 3-16.</p>
                               <img src="images/pic_3_16.png" width="600" height="861" />
                             </ol></td>
                         </tr>
@@ -266,12 +298,12 @@ print <<DATA;
   </tr>
   <tr>
     <td width="2%">&nbsp;</td>
-    <td align="left"><div id="how_to_execute">
+    <td align="left"><div id="executing_test_cases">
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
           <tr>
             <td class="report_list_one_row help_level_1"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td>How to execute</td>
+                  <td>Executing Test Cases</td>
                   <td align="right" class="help_list" style="font-weight:normal">[<a href="#">top</a>]</td>
                 </tr>
               </table></td>
@@ -284,23 +316,22 @@ print <<DATA;
                         <tr>
                           <td class="report_list_one_row help_level_2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                               <tr>
-                                <td>Execute auto cases</td>
+                                <td>Executing Auto Test Cases</td>
                                 <td align="right" class="help_list" style="font-weight:normal">[<a href="#">top</a>]</td>
                               </tr>
                             </table></td>
                         </tr>
                         <tr>
-                          <td><p>There are two ways to execute cases:</p>
+                          <td><p>You can use either of the following two ways to execute test cases:</p>
                             <ul>
-                              <li>Filter cases or load profile, and click button &lt;Execute&gt; in custom page.</li>
-                              <li>Select profile to run in execute page.</li>
+                              <li>Filter test cases or load profile (with auto test cases), and click Execute on the CUSTOM page.</li>
+                              <li>Select a profile and click Execute on the EXECUTE page.</li>
                             </ul>
-                            <ol>
-                              <li>After click button &lt;Execute&gt;, the profile will run with log on the screen. When finish running, the report will be generated automatically.</li>
+                            <p>The profile runs with log. When the profile finishes running, a test report generates automatically.</p>
                               <img src="images/pic_4_1.png" width="504" height="298" />
-                              <li>When the profile (without manual cases) has finished running, the page will directly jump to "Report page".</li>
-                              <img src="images/pic_4_2.png" width="621" height="131" />
-                            </ol></td>
+                              <p>Then, the REPORT page refreshes and displays, as shown in Figure 4-2.</p>
+                               <img src="images/pic_4_2.png" width="621" height="131" />
+                               </td>
                         </tr>
                       </table>
                     </div></td>
@@ -311,25 +342,24 @@ print <<DATA;
                         <tr>
                           <td class="report_list_one_row help_level_2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                               <tr>
-                                <td>Execute manual cases</td>
+                                <td>Executing Manual Test Cases</td>
                                 <td align="right" class="help_list" style="font-weight:normal">[<a href="#">top</a>]</td>
                               </tr>
                             </table></td>
                         </tr>
                         <tr>
-                          <td><ol>
-                              <li>When the profile (with manual cases) has finished running, the page will be refreshed as Picture 4-3, then we can add the result of manual cases.</li>
+                          <td>
+                              <p>When the profile (with manual test cases) finishes running, the page refreshes, as shown in Figure 4-3. Then, you can add the result of manual test cases: </p>
                               <img src="images/pic_4_3.png" width="556" height="353" />
                               <ul>
-                                <li>Click &lt;Manual Test&gt; and all the manual cases will display on the right of the page.</li>
-                                <li>Test case manually and get the results, then select real result for pass/fail or N/A.</li>
-                                <li>Then Click button &lt;SAVE&gt;.</li>
-                                <li>By the way, the buttons &lt;PASS&gt; (&lt;FAIL&gt;, &lt;N/A&gt;) is used for selecting all the manual cases displayed in the page to pass (fail, N/A).</li>
-                                <li>Click button &lt;FINISH&gt; to complete execution.</li>
+                                <li>Click Manual Test. All the manual test cases display on the right pane of the page.</li>
+                                <li>Run the test cases manually, obtain the results, and then select PASS, FAIL, or N/A for the test results.</li>
+                                <li>Click SAVE.</li>
+                                <li>Click FINISH to complete the execution. </li>
                               </ul>
-                              <li>After adding the result of manual cases, the page will be refreshed as Picture 4-4.</li>
+                              <p>After that, the page refreshes, as shown in Figure 4-4.</p>
                               <img src="images/pic_4_4.png" width="628" height="131" />
-                            </ol></td>
+                            </td>
                         </tr>
                       </table>
                     </div></td>
@@ -342,12 +372,12 @@ print <<DATA;
   </tr>
   <tr>
     <td width="2%">&nbsp;</td>
-    <td align="left"><div id="how_to_view_report">
+    <td align="left"><div id="viewing_report">
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
           <tr>
             <td class="report_list_one_row help_level_1"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td>How to view report</td>
+                  <td>Viewing Report</td>
                   <td align="right" class="help_list" style="font-weight:normal">[<a href="#">top</a>]</td>
                 </tr>
               </table></td>
@@ -360,24 +390,31 @@ print <<DATA;
                         <tr>
                           <td class="report_list_one_row help_level_2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                               <tr>
-                                <td>How to view summary reports</td>
+                                <td>Viewing Summary Reports</td>
                                 <td align="right" class="help_list" style="font-weight:normal">[<a href="#">top</a>]</td>
                               </tr>
                             </table></td>
                         </tr>
                         <tr>
-                          <td><ol>
-                              <li>Click view summary icon to view summary reports.</li>
+                          <td>
+                              <p>Click the view icon to view summary reports, as shown in Figure 5-1.</p>
                               <img src="images/pic_5_1.png" width="609" height="224" />
-                              <li>The page will be refreshed as picture 5-2.</li>
+                              <p>The page refreshes, as shown in Figure 5-2. </p>
                               <img src="images/pic_5_2.png" width="582" height="385" />
-                              <p>According to picture 5-2, we can view summary information such as test environment information, case' total numbers, pass/fail/block numbers, and test log. We can also use three buttons below:</p>
+                              <p>You can view summary information, including: </p>
                               <ul>
-                                <li>Click view detailed report icon to view detailed reports.</li>
-                                <li>Click download icon to download consolidated log.</li>
-                                <li>Click copy URL icon to copy URL to the clipboard and you can paste it to anywhere.</li>
+                                <li>Test environment</li>
+                                <li>Total number of test cases</li>
+                                <li>Number of passed, failed, and blocked test cases.</li>
+                                <li>Test log.</li>
                               </ul>
-                            </ol></td>
+                              <p>You can also click: </p>
+                              <ul>
+                                <li>button to view detailed reports</li>
+                                <li>button to download consolidated log</li>
+                                <li>button copy uniform resource locator (URL) to clipboard and paste it anywhere</li>
+                              </ul>
+                            </td>
                         </tr>
                       </table>
                     </div></td>
@@ -388,24 +425,24 @@ print <<DATA;
                         <tr>
                           <td class="report_list_one_row help_level_2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                               <tr>
-                                <td>How to view detailed reports</td>
+                                <td>Viewing Detailed Reports</td>
                                 <td align="right" class="help_list" style="font-weight:normal">[<a href="#">top</a>]</td>
                               </tr>
                             </table></td>
                         </tr>
                         <tr>
-                          <td><ol>
-                              <li>Click view detailed icon to view detailed reports.</li>
+                          <td>
+                          <p>To view detailed reports, perform the following steps:</p>
+                          <ol>
+                              <li>Click view detailed report icon , as shown in Figure 5-3.</li>
                               <img src="images/pic_5_3.png" width="627" height="238" />
-                              <li>The page will refreshed as picture 5-4, you can view by three types including "Packages", "Component" or "Test type".</li>
+                              <p>The page refreshes, as shown in Figure 5-4. </p>
+                              <li>Select Package from the View by: drop-down list box.</li>
+                              <p>Note: You can view the detailed reports by \"Packages\", \"Component\", or \"Test type\". The following steps use \"Packages\" as an example.</p>
                               <img src="images/pic_5_4.png" width="628" height="134" />
-                              <li>Take "View by Package" for example, and we can filter a report with option &lt;Result&gt; and &lt;Type&gt; with related values in picture 5-5</li>
+                              <li>Filter a test report by selecting Result and Type, as shown in Figure 5-5.</li>
                               <img src="images/pic_5_5.png" width="628" height="148" />
-                              <li>According to picture 5-6:</li>
-                              <ul>
-                                <li>Click Case name, and you can view detailed case information.</li>
-                                <li>Click view summary report icon, and you can view summary report.</li>
-                              </ul>
+                              <li>Click the test case name to view its detailed information. Or, Click   to view summary report.</li>
                               <img src="images/pic_5_6.png" width="627" height="557" />
                             </ol></td>
                         </tr>
@@ -418,51 +455,61 @@ print <<DATA;
                         <tr>
                           <td class="report_list_one_row help_level_2"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                               <tr>
-                                <td>Useful features</td>
+                                <td>Useful Features</td>
                                 <td align="right" class="help_list" style="font-weight:normal">[<a href="#">top</a>]</td>
                               </tr>
                             </table></td>
                         </tr>
                         <tr>
                           <td><ol>
-                              <li>Submit report</li>
-                              <p>Use button &lt;Submit&gt; to submit report to QA tools. Use button &lt;Delete&gt; to delete reports.</p>
+                              <li>Submitting Report</li>
+                              <p>To submit a test report to QA test tools, perform the following steps:</p>
                               <ol>
-                                <li>Log in http://localhost:8899/</li>
-                                <li>Click icon "Report", then the page as below will display.</li>
+                                <li>Log in to http://localhost:8899/.</li>
+                                <li>Click the REPORT tab. </li>
+                                <p>The REPORT tab page displays, as shown in Figure 5-7.</p>
                                 <img src="images/pic_5_7.png" width="628" height="237" />
-                                <li>According to Picture 5-7, click the checkbox in the report page (one report or several reports can be selected), then the buttons will display (black) from hidden states (gray).</li>
-                                <li>Click button &lt;Submit&gt;, the page will be refreshed as below:</li>
+                                <li>Select one or multiple check boxes. </li>
+                                <p>The buttons Mail, Submit, and Export become available.</p>
+                                <li>Click Submit. </li>
+                                <p>The page refreshes, as shown in Figure 5-8.</p>
                                 <img src="images/pic_5_8.png" width="627" height="134" />
-                                <p>According to Picture 5-8:</p>
                                 <ol>
-                                  <li>Input server name in context &lt;Input Server Name&gt;</li>
-                                  <p>Input Token in context &lt;Input Token&gt;. The token is a string which records your account and password information. You can get token after logging in QA tools with your account.</p>
-                                  <li>Input the report date in context &lt;Input Image Date&gt;. We use %2E represent ".". Take "20120319.5" for example, we should input "20120319%2E5".</li>
+                                  <li>Type server name in context Input Server Name. </li>
+                                  <li>Type token in context Input Token. </li>
+                                  <p>Note: The token is a string which records account and password. You can obtain it after logging in to QA test tools.</p>
+                                  <li>Type the report date in context Input Image Date.  </li>
+                                  <p>Note: %2E is used to indicate \".\". For example, type 20120319%2E5 for "20120319.5".</p>
                                   <img src="images/pic_5_9.png" width="627" height="134" />
-                                  <li>Select values for the three options &lt;target&gt; &lt;test type&gt; &lt;hwproduct&gt; in picture 5-10</li>
+                                  <li>Select values from the target, testtype, and hwproduct combo boxes, as shown in Figure 5-10.</li>
                                   <img src="images/pic_5_10.png" width="627" height="310" />
-                                  <li>After these steps, click button &lt;Submit&gt;, and the report(s) will be submitted to the QA tools.</li>
+                                  <li>Click Submit, as shown in Figure 5-11. The report is submitted to the QA test tools.</li>
                                   <img src="images/pic_5_11.png" width="627" height="133" />
                                 </ol>
                               </ol>
-                              <li>Delete report</li>
+                              <li>Deleting Report</li>
+                              <p>To delete a test report, perform the following steps:</p>
                               <ol>
-                                <li>Check the report you want to delete with checkbox. (one or more reports can be checked)</li>
+                                <li>Select one or multiple test reports, as shown in Figure 5-12.</li>
                                 <img src="images/pic_5_12.png" width="628" height="233" />
-                                <li>Click button &lt;Delete&gt; and one alert will popup as below:</li>
+                                <li>Click Delete. An alert pops up, as shown in Figure 5-13.</li>
                                 <img src="images/pic_5_13.png" width="351" height="120" />
-                                <p>Click OK, report(s) will be deleted.</p>
-                                <p>Click Cancel, report(s) won't be deleted.</p>
+                                <p>Click OK. The report is deleted.</p>
+                                <p>Click Cancel. The report is not deleted.</p>
                               </ol>
-                              <li>Complete report with manual cases</li>
-                              <p>Packages include some manual cases whose results need submitting manually to the report.</p>
+                              <li>Complete Report with Manual Test Cases</li>
+                              <p>The test case packages include manual test cases whose results need to be submitted to the report manually.</p>
+                              <p>As Figure 5-14 tells:</p>
+                              <ul>
+                                <li>If the number of "Not run" test cases is 0, the   button becomes unavailable with the title "Execution Complete".</li>
+                                <li>If the number of "Not run" test cases is not 0, the   button becomes available with the title "Continue Execution".</li>
+                             </ul>
+                             	<img src="images/pic_5_14.png" width="627" height="214" />
                               <ol>
-                                <li>According to picture 5-14, If the "Not run" case number is 0, the button is gray (The button is disable and can't be clicked) with title "Execution Complete". If the "Not run" case number is not 0, the button is colorful (the button is enable and can be clicked) with title "Continue Execution"</li>
-                                <img src="images/pic_5_14.png" width="627" height="214" />
-                                <li>Click execute manual button, and the page will be refreshed as picture 5-15. then we can modify the result of manual cases.</li>
+                                <li>Click  . The page refreshes, as shown in Figure 5-15. Then, you can select the result of manual test cases.</li>
                                 <img src="images/pic_5_15.png" width="556" height="353" />
-                                <li>The result won't be edited after this step. Refresh the report page, and you will find the button is gray.</li>
+                                <p>Caution: Use caution in the following step, for the result cannot be changed after it.</p>
+                                <li>Click FINISH to refresh the REPORT tab page. The   button becomes unavailable.</li>
                               </ol>
                             </ol></td>
                         </tr>

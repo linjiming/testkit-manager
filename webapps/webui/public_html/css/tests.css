@@ -1,0 +1,134 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/* @group General styles */
+
+/* @group reset */
+
+#test_tool html, body h1, p, table,caption,tbody,tfoot,thead,tr,th,td
+{
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-weight: inherit;
+	font-style: inherit;
+	font-size: 0.96em;
+	font-family: arial;
+	vertical-align: baseline;
+}
+
+#testcasepage p {
+	text-align: left;
+}
+
+#testcasepage table {
+	border-collapse: separate;
+	border-spacing: 0;
+	margin-bottom: 1.4em;
+}
+
+#testcasepage th,td {
+	text-align: left;
+	font-weight: normal;
+}
+
+#testcasepage table,td,th {
+	vertical-align: middle;
+}
+
+#cases table {
+	width: 101%;
+}
+
+#title table {
+	width: 101%;
+}
+
+#device table {
+	width: 50%;
+}
+
+#summary table {
+	width: 50%;
+}
+
+#title table tr td {
+	border-bottom: none;
+}
+
+#testcasepage th {
+	border-bottom: 1px solid #000;
+	background-color:  	#AAAAAA;
+	border-left: 1px solid #000;
+	border-top: 1px solid #000;
+}
+
+#testcasepage th a,th {
+	color: #000;
+}
+
+#testcasepage th {
+	font-weight: bold;
+	vertical-align: bottom;
+}
+
+#testcasepage th:last-child {
+	border-right: 1px solid #000;
+}
+
+#testcasepage td:last-child {
+	border-right: 1px solid;
+}
+
+#testcasepage th,td,caption {
+	padding: 4px 10px 4px 5px;
+}
+
+#testcasepage td {
+	border-left: 1px solid;
+	font-weight: normal;
+	border-bottom: 1px solid;
+}
+
+#testcasepage td.title{
+	background-color: #FFF;
+}
+
+#testcasepage td.yellow_rate {
+	background-color: #ffcc00;
+}
+
+#testcasepage td.green_rate {
+	background-color: #33cc33;
+}
+
+#testcasepage td.dgreen_rate {
+	background-color: #339933;
+}
+
+#testcasepage td.red_rate {
+	background-color: #FF3333;
+}
+
+#title tr td:first-child {
+	border-left: none;
+}
+
+/* @group basic typography */
+#testcasepage h1,h2,h3 {
+	font-family: Arial, sans-serif;
+	font-weight: bold;
+}
+
+#testcasepage h1 {
+	font-size: 2em;
+	line-height: 1;
+	color: #000;
+	margin-bottom: 0.75em;
+	padding-top: 0.25em;
+}
+
+#testcasepage h1 em {
+	font-style: normal;
+	color: #909090;
+}
