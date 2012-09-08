@@ -994,8 +994,7 @@ elsif ( $_GET{'action'} eq 'run_tests' ) {
 
 				  # Test run was forcibly stopped; show status, do not redirect.
 								elsif ( $status->{'STATUS'} eq 'Terminated' ) {
-									$data .=
-"<tr_status>&lt;span style=\"color: red;\"&gt;The test has been stopped.&lt;/span&gt;</tr_status>\n";
+									$data .= "<tr_status>1</tr_status>\n";
 								}
 
 						# Test run has crashed; show status and do not redirect.
@@ -1128,14 +1127,18 @@ elsif ( $_GET{'action'} eq 'get_test_log' ) {
 							{
 								$time = $1;
 							}
-							updateManualState($time);
-							if ( $hasManual eq "False" ) {
-								$data .= "<redirect>$time</redirect>\n";
+							$data .= "<redirect>$time</redirect>\n";
+							my @device = `sdb devices`;
+							if ( $device[1] =~ /device/ ) {
+								updateManualState($time);
+								if ( $hasManual eq "True" ) {
+									$data .=
+									  "<redirect_manual>1</redirect_manual>\n";
+								}
 							}
 							else {
-								$data .= "<redirect>$time</redirect>\n";
 								$data .=
-								  "<redirect_manual>1</redirect_manual>\n";
+								  "<lose_connection>1</lose_connection>\n";
 							}
 						}
 
@@ -1346,7 +1349,7 @@ elsif ( $_GET{'action'} eq 'execute_profile' ) {
 	$advanced_value_test_set       = $advanced_value[8];
 	$advanced_value_component      = $advanced_value[9];
 
-	open OUT, '>' . $dir_profile_name . "temp_profile";
+	open OUT, '>' . $dir_profile_name . "temp_plan";
 	print OUT "[Auto]\n";
 	while ( $flag_i < @package_name_flag ) {
 		if ( $package_name_flag[$flag_i] eq "a" ) {
@@ -1380,7 +1383,7 @@ elsif ( $_GET{'action'} eq 'execute_profile' ) {
 		s/selectcheckbox_//g;
 		print OUT "[select-packages]: " . $_ . "\n";
 	}
-	$data .= "<execute_profile_name>temp_profile</execute_profile_name>\n";
+	$data .= "<execute_profile_name>temp_plan</execute_profile_name>\n";
 }
 
 # save profile
@@ -1705,14 +1708,23 @@ elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests
 								last;
 							}
 						}
-						while (1) {
-							my $kill_result = `sdb shell killall wrt-client`;
-							if ( $kill_result =~ /no process killed/ ) {
-								last;
+						my $cmd           = "sdb shell 'wrt-launcher -l'";
+						my @package_items = `$cmd`;
+						foreach (@package_items) {
+							my $package_id = "none";
+							if ( $_ =~ /^\s+(\d+)\s+(\d+)/ ) {
+								$package_id = $2;
+							}
+							if ( $package_id ne "none" ) {
+								my $cmd =
+"sdb shell 'ps aux | grep $package_id/bin/$package_id | sed -n '1,1p''";
+								my $pid = `$cmd`;
+								if ( $pid =~ /app\s*(\d*)\s*/ ) {
+									system("sdb shell kill $1");
+								}
 							}
 						}
-						$data .=
-						  '<stopped id="' . $_GET{'tree'} . '">1</stopped>';
+						$data .= '<stopped>1</stopped>';
 					}
 					else {
 						$error_text =

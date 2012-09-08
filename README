@@ -46,8 +46,9 @@ Step 4: connect device
 Configure Repository of Test Packages:
 ========
 Edit configuration file '/opt/testkit/manager/CONF' to configure the repo address
-  This step is optional if you can access the default remote repo of test packages
-  If you want to use the test packages offline, you need download test packages in your host, and put the package path to this configure file as local repo address
+  This step is optional if you can access the default local repo of test packages
+  If you want to use the test packages offline, you need download test packages in your host,
+  and put the package path to this configure file as local repo address
 
 
 Startup:
@@ -59,6 +60,3 @@ Startup:
 Limitation:
 ===========
 1. only support devices that have 'sdb' communication module
-2. can¡¯t run both core and web api test packages in one test run
-3. when leave the execution page during test running, and then you go back, the page may not display profile info correctly
-4. repo URL doesn't support whitespace and other special characters

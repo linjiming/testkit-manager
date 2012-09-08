@@ -685,14 +685,14 @@ DATA
               <td width="9%" valign="top" class="backbackground_button"><div align="center">
                 <input type="submit" id="view_package_info" name="view_package_info" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" />
               </div></td>
-              <td width="4%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="7%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="6%" class="backbackground_button">&nbsp;</td>
-              <td width="11%" valign="top"><table>
+              <td width="8%" valign="top"><table>
 		        <tr>
-		        	<td height="0.6" class="backbackground_button"></td>
+		        	<td height="1" class="backbackground_button"></td>
 		        </tr>
               	<tr>
-              		<td nowrap="nowrap" class="custom_font">Profile name:</td>
+              		<td nowrap="nowrap" class="custom_font">Test Plan</td>
               	</tr>
               </table>
               </td>
@@ -882,9 +882,9 @@ DATA
               <td width="9%" class="backbackground_button"><div align="center">
                 <input id="view_package_info" name="view_package_info" type="submit" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" />
               </div></td>
-              <td width="4%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="7%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="6%" class="backbackground_button">&nbsp;</td>
-              <td width="11%" nowrap="nowrap" class="custom_font">Profile name:</td>
+              <td width="8%" nowrap="nowrap" class="custom_font">Test Plan</td>
               <td width="21%" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
 		        	<td height="7" class="backbackground_button"></td>
@@ -900,7 +900,6 @@ DATA
                   </td>
                 </tr>
               </table></td>
-              
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button"  type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:onSave();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
@@ -1825,14 +1824,14 @@ DATA
               <td width="9%" valign="top" class="backbackground_button"><div align="center">
                 <input id="view_package_info" name="view_package_info" type="submit" class="large_button" value="View" title="View detailed information of selected packages" />
               </div></td>
-              <td width="4%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="7%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="6%" class="backbackground_button">&nbsp;</td>
-              <td width="11%" valign="top"><table>
+              <td width="8%" valign="top"><table>
 		        <tr>
-		        	<td height="0.6" class="backbackground_button"></td>
+		        	<td height="1" class="backbackground_button"></td>
 		        </tr>
               	<tr>
-              		<td nowrap="nowrap" class="custom_font">Profile name:</td>
+              		<td nowrap="nowrap" class="custom_font">Test Plan</td>
               	</tr>
               </table>
               </td>
@@ -1883,14 +1882,14 @@ DATA
               <td width="9%" valign="top" class="backbackground_button"><div align="center">
                 <input id="view_package_info" name="view_package_info" disabled="true" type="submit" class="large_button" value="View" title="View detailed information of selected packages" />
               </div></td>
-              <td width="4%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
+              <td width="7%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="6%" class="backbackground_button">&nbsp;</td>
-              <td width="11%" valign="top"><table>
+              <td width="8%" valign="top"><table>
 		        <tr>
 		        	<td height="1" class="backbackground_button"></td>
 		        </tr>
               	<tr>
-              		<td nowrap="nowrap" class="custom_font">Profile name:</td>
+              		<td nowrap="nowrap" class="custom_font">Test Plan</td>
               	</tr>
               </table>
               </td>
@@ -3028,7 +3027,7 @@ function showtips(e) {
 	}
 	if (flag == 0) {
 		sel.style.display = '';
-		sel.add(new Option("No matching profile"));
+		sel.add(new Option("no matching test plan"));
 		sel.selectedIndex = 0;
 	}
 }

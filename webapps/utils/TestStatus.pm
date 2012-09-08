@@ -161,29 +161,14 @@ sub read_status() {
 				push @status_warnings, "STOP_TIME should be present in section parameters only (line: $line_num).";
 			}
 		}
-		elsif ($line =~ m/^ESTIMATE_DURATION\s*=\s*(\d+)$/) {
-			if (defined($ts_idx)) {
-				$res->{'TEST_SUITES'}->[$ts_idx]->{'ESTIMATE_DURATION'} = $1;
-			}
-			else {
-				$res->{'ESTIMATE_DURATION'} = $1;
-			}
+		elsif ($line =~ m/^TEST_PLAN\s*=\s*(.+)$/) {
+			$res->{'TEST_PLAN'} = $1;
 		}
-		elsif ($line =~ m/^CURRENT_PERCENT\s*=\s*(\d+)$/) {
-			if (defined($ts_idx)) {
-				$res->{'TEST_SUITES'}->[$ts_idx]->{'CURRENT_PERCENT'} = $1;
-			}
-			else {
-				$res->{'CURRENT_PERCENT'} = $1;
-			}
+		elsif ($line =~ m/^CURRENT_PACKAGE\s*=\s*(.+)$/) {
+			$res->{'CURRENT_PACKAGE'} = $1;
 		}
-		elsif ($line =~ m/^PREPARE_PERCENT\s*=\s*(\d+)$/) {
-			if (defined($ts_idx)) {
-				$res->{'TEST_SUITES'}->[$ts_idx]->{'PREPARE_PERCENT'} = $1;
-			}
-			else {
-				push @status_warnings, "PREPARE_PERCENT should be present in section parameters only (line: $line_num).";
-			}
+		elsif ($line =~ m/^CURRENT_RUN_NUMBER\s*=\s*(\d+)$/) {
+			$res->{'CURRENT_RUN_NUMBER'} = $1;
 		}
 		elsif ($line =~ m/^STATUS\s*=\s*(.+)$/) {
 			if (defined($ts_idx)) {

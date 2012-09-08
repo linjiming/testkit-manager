@@ -2,7 +2,7 @@
 
 Summary: Testkit Manager
 Name: testkit-manager
-Version: 2.2.1
+Version: 2.2.2
 Release: 1
 License: GPLv2
 Group: System/Libraries
@@ -32,7 +32,19 @@ make install DESTDIR=$RPM_BUILD_ROOT
 /opt/testkit/manager
 
 %changelog
-* Thu Aug 3 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.1-1
+* Thu Aug 16 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.2-1
+- support run both core and web api test packages in one test run
+- remove internal URL from CONF
+- change profile to test plan
+- remove login region
+- rename Custom to Plan
+- improve repo format
+- fill test plan name into result XML
+- restore execution info when return from other pages
+- remove shaofeng's email address
+- save test plan with both core and webapi packages
+
+Thu Aug 3 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.1-1
 - merging the update and reload function
 - support one page 'list view'
 - polish UI text

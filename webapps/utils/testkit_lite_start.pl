@@ -36,7 +36,9 @@ use IO::Handle;    # for autoflush();
 use FindBin;
 use File::Basename qw(dirname basename);
 
-my $profile_name;    # profile name of this execution
+my $profile_name;       # profile name of this execution
+my $current_package;    # package name of current run
+my $current_run_number = 0;    # how many cases has run for the running pacakge
 
 sub BEGIN {
 
@@ -44,7 +46,7 @@ sub BEGIN {
 	# from the same directory where this script is located.
 	unshift @INC, $FindBin::Bin;
 
-	$| = 1;          # Immediate flush of all output
+	$| = 1;                    # Immediate flush of all output
 
 	# Certain utilities used for system administration (and other privileged
 	# commands) may be stored in /sbin, /usr/sbin, and /usr/local/sbin.
@@ -606,9 +608,7 @@ sub write_status {
 	if ( $globals->{'auto'} == 1 ) {
 
 		# Tests to run:
-		$content .= "\n[" . "Testkit-lite" . "]\n";
-
-		$content .= "NAME = Testkit-lite\n";
+		$content .= "\n[" . "testkit-manager" . "]\n";
 
 		my $status =
 		  $globals->{'testkitdone'} ? $globals->{'testkitdone'} : 'Prepare';
@@ -620,13 +620,12 @@ sub write_status {
 		  if defined $globals->{'prepare_time'};
 		$content .= "STOP_TIME = " . $globals->{'finish_time'} . "\n"
 		  if defined $globals->{'finish_time'};
-
-		$content .= "PREPARE_PERCENT = " . " #Reserved\n";
-		my $progress = ".";
-		$progress = $globals->{'testkit_lite_progress'},
-		  if defined $globals->{'testkit_lite_progress'};
-		$content .= "CURRENT_PERCENT = " . $progress . " \n";
-		$content .= "ESTIMATE_DURATION = ";
+		$content .= "TEST_PLAN = " . $globals->{'test_plan'} . "\n"
+		  if defined $globals->{'test_plan'};
+		$content .= "CURRENT_PACKAGE = " . $globals->{'current_package'} . "\n"
+		  if defined $globals->{'current_package'};
+		$content .= "CURRENT_RUN_NUMBER = " . $globals->{'current_run_number'}
+		  if defined $globals->{'current_run_number'};
 	}
 
 	return write_string_as_file( '!' . $globals->{'status_file'}, $content );
@@ -681,6 +680,9 @@ sub Check_subshell_off {
 	$globals->{'prepare_time'} = time();
 
 	# write test_status file under results
+	my $test_plan_name = $profile_name;
+	$test_plan_name =~ s/\/.*profiles\/test\///;
+	$globals->{'test_plan'} = $test_plan_name;
 	write_status();
 
 	# indicate the ajax server test is started
@@ -886,6 +888,7 @@ sub initProfileInfo {
 					}
 					if ( $1 eq "auto" ) {
 						$isOnlyAuto = "TRUE";
+						push( @thisTargetFilter, "-A" );
 					}
 				}
 				if ( $line =~ /select_testsuite=(.*)/ ) {
@@ -998,9 +1001,9 @@ sub getBackupResultXMLCMD {
 sub syncLiteResult {
 	my $result_dir_lite = $FindBin::Bin . "/../../lite";
 	system("rm -rf $result_dir_lite/*");
-	system( "sdb shell 'cd /opt/testkit/lite; tar -czvf /tmp/lite.tar.gz .'" );
-	system( "sdb pull /tmp/lite.tar.gz $result_dir_lite" );
-	system( "sdb shell rm -rf /tmp/lite.tar.gz" );
+	system("sdb shell 'cd /opt/testkit/lite; tar -czvf /tmp/lite.tar.gz .'");
+	system("sdb pull /tmp/lite.tar.gz $result_dir_lite");
+	system("sdb shell rm -rf /tmp/lite.tar.gz");
 	system("cd $result_dir_lite;tar -xzvf $result_dir_lite/lite.tar.gz");
 	system("rm -rf $result_dir_lite/lite.tar.gz");
 }
@@ -1061,7 +1064,8 @@ sub syncLiteResult {
 		}
 	}
 	else {
-		$subshell->Spawn("exit\n");
+		$subshell->Spawn("echo 'no package found, exit...'; sleep 10");
+		kill 'TERM', $$;    # send the TERM signal to itself.
 	}
 
 	# write status
@@ -1075,23 +1079,33 @@ sub syncLiteResult {
 
 	sub check_run_done {
 		my ($line) = @_;
-
 		defined $line or $line = "";
 
 		if ( $line =~ /^Testkit-lite FINISHED!$/ ) {
 			return 1;
 		}
 
-		if ( $line =~ /Testkit-lite PROGRESS: (\d+)%/ ) {
-			$globals->{'testkit_lite_progress'} = $1;
+		if ( $line =~ /execute suite:(.*)/ ) {
+			my $current_package_temp = $1;
+			$current_package_temp =~ s/^\s//;
+			$current_package_temp =~ s/\s$//;
+			$current_package                 = $current_package_temp;
+			$globals->{'current_package'}    = $current_package;
+			$current_run_number              = 0;
+			$globals->{'current_run_number'} = $current_run_number;
 			write_status();
-			return 0;
+		}
+		if ( $line =~ /execute case:/ ) {
+			my @matches = $line =~ /execute case:/g;
+			$current_run_number += @matches;
+			$globals->{'current_run_number'} = $current_run_number;
+			write_status();
 		}
 	}
 
 	# monitor test status
 	while ( my $line = $subshell->Read(50) ) {
-		last, if ( check_run_done($line) );
+		check_run_done($line);
 	}
 
 	$subshell->WaitForSubshell();
@@ -1105,81 +1119,87 @@ sub syncLiteResult {
 
 # backup report and send email
 {
+	my $profile_content =
+	  &readProfile( $globals->{'testkit_dir'} . "/tests/testkit" );
+	if ( $profile_content ne "" ) {
 
-	# write status
-	$globals->{'testkitdone'} = 'Making report';
-	write_status();
+		# write status
+		$globals->{'testkitdone'} = 'Making report';
+		$globals->{'finish_time'} = time();
+		write_status();
 
-	# backup test result file
-	if ( -f $globals->{'testlog_dir'} . "/runtest/latest/tests.summary" ) {
-		inform "[CMD]:cp -f "
-		  . $globals->{'testlog_dir'}
-		  . "/runtest/latest/tests.summary "
-		  . $globals->{'result_dir'}
-		  . "\/autotest.res";
-		cmd(    "cp -f "
+		# backup test result file
+		if ( -f $globals->{'testlog_dir'} . "/runtest/latest/tests.summary" ) {
+			inform "[CMD]:cp -f "
 			  . $globals->{'testlog_dir'}
 			  . "/runtest/latest/tests.summary "
 			  . $globals->{'result_dir'}
-			  . "\/autotest.res" );
-	}
-	else {
+			  . "\/autotest.res";
+			cmd(    "cp -f "
+				  . $globals->{'testlog_dir'}
+				  . "/runtest/latest/tests.summary "
+				  . $globals->{'result_dir'}
+				  . "\/autotest.res" );
+		}
+		else {
 
 #fail "can not find ".$globals->{'testlog_dir'}."/runtest/latest/autotest.res";
 #inform  "can not find ".$globals->{'testlog_dir'}."/runtest/latest/autotest.res";
-	}
+		}
 
-	# backup the result XML file
-	my $backXmlCmds =
-	  &getBackupResultXMLCMD( $globals->{'testkit_dir'} . "/tests/testkit",
-		$globals->{'result_dir'} );
-	foreach (@$backXmlCmds) {
+		# backup the result XML file
+		my $backXmlCmds =
+		  &getBackupResultXMLCMD( $globals->{'testkit_dir'} . "/tests/testkit",
+			$globals->{'result_dir'} );
+		foreach (@$backXmlCmds) {
 
-		# don't execute predefined cmd
-		#cmd($_);
-	}
-	cmd("rm -rf $globals->{'result_dir'}/../latest");
-	cmd("ln -s $globals->{'result_dir'} $globals->{'result_dir'}/../latest");
+			# don't execute predefined cmd
+			#cmd($_);
+		}
+		cmd("rm -rf $globals->{'result_dir'}/../latest");
+		cmd( "ln -s $globals->{'result_dir'} $globals->{'result_dir'}/../latest"
+		);
 
-	# Make whole report to send out
-	if ( $globals->{'result_dir'} ) {
+		# Make whole report to send out
+		if ( $globals->{'result_dir'} ) {
 
-		# don't need this part
-		#		rebuild_report(
-		#			$globals->{'report'},
-		#			$globals->{'result_dir'},
-		#			$globals->{'original_profile_path'}
-		#		);
-		#
-		#		#Create tar ball
-		#		{
-		#			$globals->{'results_tarball'} =
-		#			    $globals->{'result_dir'} . "/"
-		#			  . $globals->{'testrun_id'} . ".tgz";
-		#
-		#			my $tmp_file =
-		#			  $globals->{'temp_dir'} . "/"
-		#			  . extract_filename( $globals->{'results_tarball'} );
-		#			cmd(    "cd "
-		#				  . shq( extract_dir( $globals->{'result_dir'} ) )
-		#				  . " && tar czf "
-		#				  . shq($tmp_file) . " "
-		#				  . shq( extract_filename( $globals->{'result_dir'} ) )
-		#				  . " && mv "
-		#				  . shq($tmp_file) . " "
-		#				  . shq( $globals->{'results_tarball'} ) );
-		#		}
+			# don't need this part
+			#		rebuild_report(
+			#			$globals->{'report'},
+			#			$globals->{'result_dir'},
+			#			$globals->{'original_profile_path'}
+			#		);
+			#
+			#		#Create tar ball
+			#		{
+			#			$globals->{'results_tarball'} =
+			#			    $globals->{'result_dir'} . "/"
+			#			  . $globals->{'testrun_id'} . ".tgz";
+			#
+			#			my $tmp_file =
+			#			  $globals->{'temp_dir'} . "/"
+			#			  . extract_filename( $globals->{'results_tarball'} );
+			#			cmd(    "cd "
+			#				  . shq( extract_dir( $globals->{'result_dir'} ) )
+			#				  . " && tar czf "
+			#				  . shq($tmp_file) . " "
+			#				  . shq( extract_filename( $globals->{'result_dir'} ) )
+			#				  . " && mv "
+			#				  . shq($tmp_file) . " "
+			#				  . shq( $globals->{'results_tarball'} ) );
+			#		}
 
-		#No more need to Send mail
-		#if ( $globals->{'mailto'} ) {
-		# Send results by e-mail
-		#is_ok send_results( $globals->{'results_tarball'} )
-		#      or complain $Error::Last;
-		#}
+			#No more need to Send mail
+			#if ( $globals->{'mailto'} ) {
+			# Send results by e-mail
+			#is_ok send_results( $globals->{'results_tarball'} )
+			#      or complain $Error::Last;
+			#}
 
-	}
-	else {
-		warning "please set testrun_id in reporting mode!";
+		}
+		else {
+			warning "please set testrun_id in reporting mode!";
+		}
 	}
 }
 

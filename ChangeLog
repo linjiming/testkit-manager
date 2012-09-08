@@ -66,3 +66,17 @@ testkit-manager 2.2.1:
   - polish UI text
   - remove test.result.txt from result folder
   - load 'temp_profile' when go back to execute page from other pages
+
+testkit-manager 2.2.2:
+===================
+* Thu Aug 16 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.2-1
+  - support run both core and web api test packages in one test run
+  - remove internal URL from CONF
+  - change profile to test plan
+  - remove login region
+  - rename Custom to Plan
+  - improve repo format
+  - fill test plan name into result XML
+  - restore execution info when return from other pages
+  - remove shaofeng's email address
+  - save test plan with both core and webapi packages

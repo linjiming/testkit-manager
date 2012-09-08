@@ -65,12 +65,37 @@ function stopTests() {
 	if (confirm('Are you sure to terminate test execution?')) {
 		if (stop_button)
 			stop_button.disabled = true;
+		var page = document.getElementsByTagName("*");
 		exec_info.innerHTML = 'Tests are stopping&hellip;';
 		ajax_call_get('action=stop_tests&tree=tests');
 	}
 }
 
-function startTestsPrepareGUI() {
+function startTestsPrepareGUI(clean_progress_bar) {
+	if (clean_progress_bar) {
+		var page = document.getElementsByTagName("*");
+		for ( var i = 0; i < page.length; i++) {
+			var temp_id = page[i].id;
+			if (temp_id.indexOf("text_progress") >= 0) {
+				var reg = new RegExp("text_progress");
+				var bar_id = temp_id.replace(reg, "bar");
+				var text_id = temp_id.replace(reg, "text");
+				var max_value = 0;
+				for ( var j = 0; j < progress_bar_max_value_list.length; j++) {
+					if (progress_bar_max_value_list[j].indexOf(bar_id) >= 0) {
+						var reg_both = progress_bar_max_value_list[j]
+								.split("::");
+						max_value = parseInt(reg_both[1]);
+					}
+				}
+				document.getElementById(temp_id).innerHTML = "(" + max_value
+						+ ")";
+				document.getElementById(temp_id).style.color = "";
+				document.getElementById(text_id).style.color = "";
+				document.getElementById(bar_id).innerHTML = "";
+			}
+		}
+	}
 	if (start_button)
 		start_button.disabled = true;
 	if (stop_button)
@@ -86,28 +111,32 @@ function startTestsPrepareGUI() {
 }
 
 function startTests(profile_name) {
+	var profile_name_temp = profile_name;
 	if (!profile_name || profile_name == '') {
 		var profile = document.getElementById('test_profile');
 		if (profile) {
 			if (profile.value) {
 				profile_name = profile.value;
 			} else {
-				alert('Profile is not specified!');
+				alert('Test plan is not specified!');
 				return;
 			}
 		} else {
-			alert("Internal error: Cannot find 'profile' form field! Please, contact the authors.!");
+			alert("Internal error: Cannot find 'test_profile' field from the page! Please, contact the authors.!");
 			return;
 		}
 	}
-	global_profile_name = profile_name;
-	startTestsPrepareGUI();
+	if (profile_name_temp == '') {
+		startTestsPrepareGUI(true);
+	} else {
+		startTestsPrepareGUI(false);
+	}
 	// alert("RunTest.js: " + profile_name);
 	ajax_call_get('action=run_tests&profile='
 			+ encodeURIComponent(profile_name));
 }
 
-function startRefresh() {
+function startRefresh(profile_name) {
 	exec_info.innerHTML = 'Test cases are running &hellip;';
 	exec_status.innerHTML = '&nbsp;&nbsp;&nbsp;<img src="images/ajax_progress.gif" width="16" height="16" alt="" />';
 	cmdlog.innerHTML = '';
@@ -116,9 +145,12 @@ function startRefresh() {
 	last_line = '';
 	start_button.disabled = true;
 	stop_button.disabled = false;
-	for ( var i = 0; i < test_profile.length; i++) {
-		if (test_profile.options[i].value == "temp_profile") {
-			test_profile.options[i].selected = true;
+	if (profile_name && profile_name != "") {
+		global_profile_name = profile_name;
+		for ( var i = 0; i < test_profile.length; i++) {
+			if (test_profile.options[i].value == profile_name) {
+				test_profile.options[i].selected = true;
+			}
 		}
 	}
 	var view = test_profile.value;
@@ -204,8 +236,10 @@ function ajaxProcessResult(responseXML) {
 	 * progress_width + '%'; }
 	 */
 	if (responseXML.getElementsByTagName('network_connection_timeout').length > 0) {
+		network_status = responseXML
+				.getElementsByTagName('network_connection_timeout')[0].childNodes[0].nodeValue;
 		document.getElementById('error_msg_area').style.display = "";
-		document.getElementById('error_msg_text').innerHTML = "failed: Connection timed out";
+		document.getElementById('error_msg_text').innerHTML = network_status;
 		document.getElementById('progress_waiting').style.display = "none";
 		document.getElementById('select_arc').disabled = false;
 		document.getElementById('select_ver').disabled = false;
@@ -220,7 +254,7 @@ function ajaxProcessResult(responseXML) {
 	}
 
 	if (responseXML.getElementsByTagName('no_package_update_or_install').length > 0) {
-		alert("No packages need to install or update!");
+		alert("No package needs to be installed or updated.");
 
 		document.getElementById('update_package_list').disabled = false;
 		document.getElementById('select_arc').disabled = false;
@@ -244,6 +278,7 @@ function ajaxProcessResult(responseXML) {
 		install_pkg_update_flag = responseXML
 				.getElementsByTagName('update_package_flag')[0].childNodes[0].nodeValue;
 		uninstall_pkg_name_arr = uninstall_pkg_name.split(" ");
+		var pkg_len = uninstall_pkg_name_arr.length;
 		uninstall_pkg_version_arr = uninstall_pkg_version.split(" ")
 		install_pkg_update_flag_arr = install_pkg_update_flag.split(" ");
 		for ( var i = 0; i < install_pkg_update_flag_arr.length; i++) {
@@ -293,6 +328,10 @@ function ajaxProcessResult(responseXML) {
 				document.getElementById(pkg_ver_id).innerHTML = uninstall_pkg_version_arr[i];
 			}
 		}
+		for ( var i = pkg_len; i < 100; i++) {
+			var id = "uninstall_" + i;
+			document.getElementById(id).style.display = "none";
+		}
 		document.getElementById('progress_waiting').style.display = "none";
 		// Update packages successfully!;
 	}
@@ -312,7 +351,7 @@ function ajaxProcessResult(responseXML) {
 		if (count == "0") {
 			msg.push(tid);
 		}
-		alert("Profile saved successfully.");
+		alert("Test plan is saved successfully.");
 	}
 	if (responseXML.getElementsByTagName('load_profile').length > 0) {
 		var packages_isExist_flag_arr = new Array();
@@ -334,7 +373,7 @@ function ajaxProcessResult(responseXML) {
 			}
 		}
 		if (load_flag == 0) {
-			alert("The following packages from the profile are not installed:\n"
+			alert("The following packages from the test plan are not installed:\n"
 					+ message_not_load);
 			document.getElementById('load_profile_button').disabled = false;
 		} else {
@@ -350,7 +389,7 @@ function ajaxProcessResult(responseXML) {
 			}
 		}
 		edit_profile_name.value = "";
-		alert("Profile deleted successfully.");
+		alert("Test plan is deleted successfully.");
 	}
 	if (responseXML.getElementsByTagName('check_profile_name').length > 0) {
 		tid = responseXML.getElementsByTagName('check_profile_name')[0].childNodes[0].nodeValue;
@@ -410,24 +449,19 @@ function ajaxProcessResult(responseXML) {
 			}
 		}
 		if (tid == "save") {
-			if (webapi_flag == "yes") {
-				alert("Profile should not contain both webapi and non-webapi packages!");
-			} else {
-				if (confirm("Are you sure to save this profile?")) {
-					ajax_call_get('action=save_profile&save_profile_name='
-							+ edit_profile_name.value + '&checkbox='
-							+ checkbox_value.join("*") + '&advanced='
-							+ advanced + "&auto_count="
-							+ filter_auto_count_string + "&manual_count="
-							+ filter_manual_count_string + "&pkg_flag="
-							+ package_name_flag.join("*"));
-				}
+			if (confirm("Are you sure to save this test plan?")) {
+				ajax_call_get('action=save_profile&save_profile_name='
+						+ edit_profile_name.value + '&checkbox='
+						+ checkbox_value.join("*") + '&advanced=' + advanced
+						+ "&auto_count=" + filter_auto_count_string
+						+ "&manual_count=" + filter_manual_count_string
+						+ "&pkg_flag=" + package_name_flag.join("*"));
 			}
 		} else if ((tid != "save") && (tid.indexOf("save") == 0)) {
 			if (webapi_flag == "yes") {
-				alert("Profile should not contain both webapi and non-webapi packages!");
+				alert("Test plan should not contain both webapi and non-webapi packages!");
 			} else {
-				if (confirm("Profile: " + tid.slice(4)
+				if (confirm("Test plan: " + tid.slice(4)
 						+ " exists. Are you sure to overwirte it?")) {
 					ajax_call_get('action=save_profile&save_profile_name='
 							+ edit_profile_name.value + '&checkbox='
@@ -442,7 +476,7 @@ function ajaxProcessResult(responseXML) {
 			ajax_call_get('action=delete_profile&delete_profile_name='
 					+ edit_profile_name.value);
 		} else {
-			alert("Profile " + tid.slice(6) + " does not exist.");
+			alert("Test plan " + tid.slice(6) + " does not exist.");
 		}
 	}
 	if (responseXML.getElementsByTagName('install_package_name').length > 0) {
@@ -531,7 +565,7 @@ function ajaxProcessResult(responseXML) {
 		}
 	}
 	if (responseXML.getElementsByTagName('started').length > 0) {
-		setTimeout('startRefresh()', 100);
+		setTimeout('startRefresh("")', 100);
 	} else {
 		if (responseXML.getElementsByTagName('output').length > 0) {
 			var output = '';
@@ -540,49 +574,90 @@ function ajaxProcessResult(responseXML) {
 					output += responseXML.getElementsByTagName('output')[i].childNodes[j].nodeValue;
 			}
 			updateCmdLog(output);
-			// change color for total progress bar
-			var r_mul, re_mul;
-			re_mul = new RegExp("testing now", "g");
-			r_mul = output.match(re_mul);
-			if (r_mul) {
-				document.getElementById('text_' + global_profile_name + '_all').style.color = "#137717";
-				document.getElementById('text_progress_' + global_profile_name
-						+ '_all').style.color = "#137717";
-				global_package_name = "all";
-			}
-			// change color for detailed progress bar
-			for ( var i = 0; i < package_list.length; i++) {
+			if (need_update_progress_bar) {
+				// change color for progress bar
+				for ( var i = 0; i < package_list.length; i++) {
+					var r, re;
+					re = new RegExp("execute suite: " + package_list[i], "g");
+					r = output.match(re);
+					if (r) {
+						global_package_name = package_list[i];
+						global_case_number = 0;
+						var page = document.getElementsByTagName("*");
+						for ( var i = 0; i < page.length; i++) {
+							var temp_id = page[i].id;
+							if (temp_id.indexOf("text_") >= 0) {
+								page[i].style.color = "";
+							}
+						}
+						document.getElementById('text_' + global_profile_name
+								+ '_' + global_package_name).style.color = "#137717";
+						document.getElementById('text_progress_'
+								+ global_profile_name + '_'
+								+ global_package_name).style.color = "#137717";
+					}
+				}
+				// update progress bar
 				var r, re;
-				re = new RegExp("execute suite: " + package_list[i], "g");
+				re = new RegExp("execute case:", "g");
 				r = output.match(re);
 				if (r) {
-					global_package_name = package_list[i];
-					global_case_number = 0;
-					var page = document.getElementsByTagName("*");
-					for ( var i = 0; i < page.length; i++) {
-						var temp_id = page[i].id;
-						if (temp_id.indexOf("text_") >= 0) {
-							page[i].style.color = "";
+					var case_number_before = global_case_number;
+					if (r) {
+						global_case_number = global_case_number + r.length;
+					} else {
+						global_case_number = global_case_number
+								+ r_webapi.length;
+					}
+					if (global_package_name != "none") {
+						var max_value = 0;
+						for ( var i = 0; i < progress_bar_max_value_list.length; i++) {
+							if (progress_bar_max_value_list[i].indexOf('bar_'
+									+ global_profile_name + '_'
+									+ global_package_name) >= 0) {
+								var reg_both = progress_bar_max_value_list[i]
+										.split("::");
+								max_value = parseInt(reg_both[1]);
+							}
+						}
+						if (global_case_number >= max_value) {
+							global_case_number = max_value;
+						}
+						if (max_value > 0) {
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_'
+									+ global_package_name).innerHTML = "&nbsp;&nbsp;"
+									+ global_case_number + "/" + max_value;
+							document.getElementById('bar_'
+									+ global_profile_name + '_'
+									+ global_package_name).innerHTML = "";
+							var pb = new YAHOO.widget.ProgressBar()
+									.render('bar_' + global_profile_name + '_'
+											+ global_package_name);
+							pb.set('minValue', 0);
+							pb.set('maxValue', max_value);
+							pb.set('width', 90);
+							pb.set('height', 6);
+							pb.set('value', case_number_before);
+
+							pb.set('anim', true);
+							var anim = pb.get('anim');
+							anim.duration = 1;
+							anim.method = YAHOO.util.Easing.easeBothStrong;
+
+							pb.set('value', global_case_number);
 						}
 					}
+				}
+			} else {
+				need_update_progress_bar = true;
+				if (global_package_name != 'none') {
+					// change color for progress bar
 					document.getElementById('text_' + global_profile_name + '_'
 							+ global_package_name).style.color = "#137717";
 					document.getElementById('text_progress_'
 							+ global_profile_name + '_' + global_package_name).style.color = "#137717";
-				}
-			}
-			// update progress bar
-			var r, re;
-			re = new RegExp("execute case:", "g");
-			r = output.match(re);
-			if (r) {
-				var case_number_before = global_case_number;
-				if (r) {
-					global_case_number = global_case_number + r.length;
-				} else {
-					global_case_number = global_case_number + r_webapi.length;
-				}
-				if (global_package_name != "none") {
+					// update progress bar
 					var max_value = 0;
 					for ( var i = 0; i < progress_bar_max_value_list.length; i++) {
 						if (progress_bar_max_value_list[i].indexOf('bar_'
@@ -610,13 +685,6 @@ function ajaxProcessResult(responseXML) {
 						pb.set('maxValue', max_value);
 						pb.set('width', 90);
 						pb.set('height', 6);
-						pb.set('value', case_number_before);
-
-						pb.set('anim', true);
-						var anim = pb.get('anim');
-						anim.duration = 1;
-						anim.method = YAHOO.util.Easing.easeBothStrong;
-
 						pb.set('value', global_case_number);
 					}
 				}
@@ -631,22 +699,30 @@ function ajaxProcessResult(responseXML) {
 					"ajax_call_get('action=get_test_log&start=" + sz + "&tid="
 							+ tid + "')", refresh_delay);
 		} else {
-			if (responseXML.getElementsByTagName('tr_status').length > 0) {
-				exec_info.innerHTML = 'Tests are finished';
-				exec_status.innerHTML = responseXML
-						.getElementsByTagName('tr_status')[0].childNodes[0].nodeValue;
+			if ((responseXML.getElementsByTagName('tr_status').length > 0)
+					|| (responseXML.getElementsByTagName('stopped').length > 0)) {
+				exec_info.innerHTML = 'The test has been stopped.';
+				exec_status.innerHTML = '';
 				stopRefresh();
 			}
 			if (responseXML.getElementsByTagName('redirect').length > 0) {
-				if (responseXML.getElementsByTagName('redirect_manual').length > 0) {
-					document.location = 'tests_execute_manual.pl?time='
-							+ responseXML.getElementsByTagName('redirect')[0].childNodes[0].nodeValue;
-				} else {
+				if (responseXML.getElementsByTagName('lose_connection').length > 0) {
 					stopRefresh();
-					exec_info.innerHTML = 'Redirect to report page';
-					document.location = 'tests_report.pl?time='
-							+ responseXML.getElementsByTagName('redirect')[0].childNodes[0].nodeValue
-							+ '&summary=1';
+					exec_info.innerHTML = 'Lost connection to the device';
+					exec_status.innerHTML = '';
+					if (start_button)
+						start_button.disabled = true;
+				} else {
+					if (responseXML.getElementsByTagName('redirect_manual').length > 0) {
+						document.location = 'tests_execute_manual.pl?time='
+								+ responseXML.getElementsByTagName('redirect')[0].childNodes[0].nodeValue;
+					} else {
+						stopRefresh();
+						exec_info.innerHTML = 'Redirect to report page';
+						document.location = 'tests_report.pl?time='
+								+ responseXML.getElementsByTagName('redirect')[0].childNodes[0].nodeValue
+								+ '&summary=1';
+					}
 				}
 			}
 		}
@@ -795,27 +871,23 @@ function onExecute() {
 			checkbox_value[count] = checkbox_package_name.name;
 		}
 	}
-	if (webapi_flag == "yes") {
-		alert("Can not execute both webapi and non-webapi packages at the same time!");
-	} else {
-		if (confirm("Are you sure to execute this profile?")) {
-			ajax_call_get('action=execute_profile&checkbox='
-					+ checkbox_value.join("*") + '&advanced=' + advanced
-					+ "&auto_count=" + filter_auto_count_string
-					+ "&manual_count=" + filter_manual_count_string
-					+ "&pkg_flag=" + package_name_flag.join("*"));
-		}
+	if (confirm("Are you sure to execute this test plan?")) {
+		ajax_call_get('action=execute_profile&checkbox='
+				+ checkbox_value.join("*") + '&advanced=' + advanced
+				+ "&auto_count=" + filter_auto_count_string + "&manual_count="
+				+ filter_manual_count_string + "&pkg_flag="
+				+ package_name_flag.join("*"));
 	}
 }
 
 function onSave() {
 	var edit_profile_name = document.getElementById("edit_profile_name");
-	var reg = /^[a-zA-Z]+\w*$/;
+	var reg = /^[a-zA-Z]+\w{0,19}$/;
 	var str = edit_profile_name.value;
 	var result = reg.exec(str);
 	if (!result) {
 		edit_profile_name.style.borderColor = 'white';
-		alert('Please check the profile name. It should be started with a letter and follows by letters, numbers or "_"');
+		alert('Test plan name should start with a letter and follow by letters, numbers or "_",\nand maximum length is 20 characters');
 		return false;
 	} else {
 		ajax_call_get('action=check_profile_isExist&profile_name='
@@ -827,7 +899,7 @@ function onLoad() {
 	var flag = 1;
 	if (edit_profile_name.value == '') {
 		edit_profile_name.style.borderColor = 'white';
-		alert('Specify the profile name.');
+		alert('Specify the test plan name.');
 		return false;
 	} else {
 		for ( var count = 0; count < msg.length; count++) {
@@ -836,7 +908,7 @@ function onLoad() {
 			}
 		}
 		if (flag) {
-			alert("Profile " + edit_profile_name.value + " does not exist.");
+			alert("Test plan " + edit_profile_name.value + " does not exist.");
 		} else {
 			document.getElementById('load_profile_button').disabled = true;
 			ajax_call_get('action=check_package_isExist&load_profile_name='
@@ -849,7 +921,7 @@ function onDelete() {
 	var edit_profile_name = document.getElementById("edit_profile_name");
 	if (edit_profile_name.value == '') {
 		edit_profile_name.style.borderColor = 'white';
-		alert('Specify the profile name.');
+		alert('Specify the test plan name.');
 		return false;
 	} else {
 		ajax_call_get('action=check_profile_isExist&profile_name='

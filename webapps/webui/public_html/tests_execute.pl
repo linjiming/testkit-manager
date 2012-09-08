@@ -27,9 +27,13 @@ use Templates;
 use TestStatus;
 use Data::Dumper;
 
-my $js_init           = '';
-my $selected_profile  = "none";
-my $have_progress_bar = "TRUE";
+my $js_init                  = "";
+my $global_profile_init      = "var global_profile_name = 'temp_plan';";
+my $global_package_name_init = "var global_package_name = 'none';";
+my $global_case_number_init  = "var global_case_number = 0;";
+my $need_update_progress_bar = "var need_update_progress_bar = true;";
+my $selected_profile         = "none";
+my $have_progress_bar        = "TRUE";
 my %profile_list;    #parse and save all information from profile files
 my @progress_bar_max_value     = ();     #save all auto progress bar's max value
 my @package_list               = ();     #save all the packages
@@ -43,8 +47,6 @@ check_testkit_lite();
 if ( $_GET{'profile'} ) {
 	if ( ( $have_testkit_lite eq "TRUE" ) and ( $have_testkit_lite eq "TRUE" ) )
 	{
-
-		# Start tests via AJAX
 		$js_init = "startTests('$_GET{'profile'}');\n";
 	}
 }
@@ -53,7 +55,17 @@ else {
 	{
 		my $status = read_status();
 		if ( $status->{'IS_RUNNING'} ) {
-			$js_init = "startRefresh();\n";
+			my $TEST_PLAN       = ( $status->{'TEST_PLAN'}       or "" );
+			my $CURRENT_PACKAGE = ( $status->{'CURRENT_PACKAGE'} or "none" );
+			my $CURRENT_RUN_NUMBER = ( $status->{'CURRENT_RUN_NUMBER'} or 0 );
+			$global_profile_init =
+			  'var global_profile_name = "' . $TEST_PLAN . '";';
+			$global_package_name_init =
+			  'var global_package_name = "' . $CURRENT_PACKAGE . '";';
+			$global_case_number_init =
+			  'var global_case_number = ' . $CURRENT_RUN_NUMBER . ';';
+			$need_update_progress_bar = "var need_update_progress_bar = false;";
+			$js_init                  = "startRefresh('$TEST_PLAN');\n";
 		}
 	}
 }
@@ -165,14 +177,23 @@ print <<DATA;
         <tbody>
           <tr>
             <td width="15">&nbsp;</td>
-            <td width="252" style="font-size:14px">Profile name
+            <td width="252" style="font-size:14px">Test Plan
 DATA
-if (    ($found)
-	and ( $have_testkit_lite eq "TRUE" )
+if ($found) {
+	print <<DATA;
+            <select name="test_profile" id="test_profile" style="width: 11em;" onchange="javascript:filter_progress_bar();">$profiles_list</select></td>
+DATA
+}
+else {
+	print <<DATA;
+            <select name="test_profile_no" id="test_profile_no" style="width: 12em;" size="1" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+DATA
+}
+
+if (    ( $have_testkit_lite eq "TRUE" )
 	and ( $have_correct_testkit_lite eq "TRUE" ) )
 {
 	print <<DATA;
-            <select name="test_profile" id="test_profile" style="width: 11em;" onchange="javascript:filter_progress_bar();">$profiles_list</select></td>
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
             <td width="71"><input type="submit" name="START" id="start_button" value="Start" class="bottom_button" onclick="javascript:startTests('');"></td>
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
@@ -181,13 +202,13 @@ DATA
 }
 else {
 	print <<DATA;
-            <select name="test_profile_no" id="test_profile_no" style="width: 12em;" size="1" disabled="disabled"><option>&lt;No profiles present&gt;</option></select></td>
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
             <td width="71"><input type="submit" name="START" id="start_button" value="Start" disabled="disabled" class="bottom_button" onclick="javascript:startTests('');"></td>
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
             <td width="71"><input type="submit" name="STOP" id="stop_button" value="Stop" disabled="disabled" class="bottom_button" onclick="javascript:stopTests();"></td>
 DATA
 }
+
 print <<DATA;
             <td>&nbsp;</td>
           </tr>
@@ -252,8 +273,8 @@ DATA
                 <td class="report_list_one_row"></td>
               </tr>
 DATA
-
-	foreach (@package_number) {
+	my @package_number_order = reverse(@package_number);
+	foreach (@package_number_order) {
 		my @temp         = split( ":", $_ );
 		my $package_name = $temp[0];
 		my $auto         = $temp[1];
@@ -348,6 +369,7 @@ function filter_progress_bar() {
 			page[i].style.display = "none";
 			if (temp_id == "progress_bar_" + view) {
 				page[i].style.display = "";
+				global_profile_name = view;
 			}
 		}
 	}
@@ -364,9 +386,10 @@ $progress_bar_max_value_list_array =
 print <<DATA;
 <script language="javascript" type="text/javascript">
 // <![CDATA[
-var global_profile_name = "temp_profile";
-var global_package_name = "none";
-var global_case_number = 0;
+$global_profile_init
+$global_package_name_init
+$global_case_number_init
+$need_update_progress_bar
 var package_list = new Array$package_list_array;
 var progress_bar_max_value_list = new Array$progress_bar_max_value_list_array;
 // ]]>

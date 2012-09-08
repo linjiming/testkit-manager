@@ -32,11 +32,11 @@ print_header( "$MTK_BRANCH Manager Main Page", "" );
 
 print <<DATA;
 <map name="home_menu" id="home_menu">
-  <area href="tests_report.pl" alt="Report" title="Report" shape="rect" coords="316,8,506,150" />
-  <area href="tests_custom.pl" alt="Custom" title="Custom" shape="rect" coords="20,53,203,199" />
-  <area href="tests_help.pl" alt="Help" title="Help" shape="rect" coords="509,102,700,248" />
-  <area href="tests_execute.pl" alt="Execute" title="Execute" shape="rect" coords="204,175,378,317" />
-  <area href="tests_statistic.pl" alt="Statistic" title="Statistic" shape="rect" coords="379,266,570,411" />
+  <area href="tests_report.pl" alt="Report" title="Vie Test Report" shape="rect" coords="316,8,506,150" />
+  <area href="tests_custom.pl" alt="Plan" title="Create Test Plan" shape="rect" coords="20,53,203,199" />
+  <area href="tests_help.pl" alt="Help" title="View Help Document" shape="rect" coords="509,102,700,248" />
+  <area href="tests_execute.pl" alt="Execute" title="Execute Test Plan" shape="rect" coords="204,175,378,317" />
+  <area href="tests_statistic.pl" alt="Statistic" title="View Test Packages' Statistics" shape="rect" coords="379,266,570,411" />
   <area href="#about" alt="About" title="About" shape="rect" coords="674,402,766,442" onclick="javascript:showAbout()" />
 </map>
 <img src="images/home_menu.png" width="768" height="444" alt="home_menu" usemap="#home_menu" />

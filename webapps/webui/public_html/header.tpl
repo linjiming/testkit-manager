@@ -9,7 +9,7 @@
 <style type="text/css" media="screen,projection">/*<![CDATA[*/ @import "css/main.css"; /*]]>*/</style>
     <link rel="stylesheet" type="text/css" media="print" href="css/commonPrint.css" />
     <link rel="stylesheet" type="text/css" href="css/report.css" />
-    <!--<link rel="stylesheet" type="text/css" href="css/tests.css" />-->
+    <link rel="stylesheet" type="text/css" href="css/tests.css" />
     <!--[if lt IE 5.5000]><style type="text/css">@import "css/IE50Fixes.css";</style><![endif]-->
     <!--[if IE 5.5000]><style type="text/css">@import "css/IE55Fixes.css";</style><![endif]-->
     <!--[if IE 6]><style type="text/css">@import "css/IE60Fixes.css";</style><![endif]-->
@@ -58,34 +58,21 @@
     <td width="25%" align="center" valign="middle"><a href="index.pl"><img title="$$$MTK_BRANCH$$$ Manager Homepage" src="images/$$$MTK_BRANCH_LC$$$-manager-logo.png" alt="$$$MTK_BRANCH$$$ Manager Homepage" width="125" height="46" /></a></td>
     <td width="50%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0" style='$$$NAVIGATION_BAR_SHOW$$$'>
       <tr>
-        <td colspan="10">&nbsp;</td>
+        <td height="36">&nbsp;</td>
       </tr>
-      
-      <tr>
-        <td width="16%" height="30" align="center" class='link-level1$$$CUSTOM_STYLE$$$-not-highlight'><a href='tests_custom.pl' class='link-level1$$$CUSTOM_STYLE$$$'>CUSTOM</a></td>
-        <td width="5%" height="30" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="12" /></td>
+      <tr valign="center">
+        <td width="16%" height="30" align="center" class='link-level1$$$CUSTOM_STYLE$$$-not-highlight'><a href='tests_custom.pl' class='link-level1$$$CUSTOM_STYLE$$$'>PLAN</a></td>
+        <td width="5%" height="30" align="center"><img src="images/splitter_header.png" width="2" height="12" /></td>
         <td width="16%" height="30" align="center" class='link-level1$$$EXECUTE_STYLE$$$-not-highlight'><a href='tests_execute.pl' class='link-level1$$$EXECUTE_STYLE$$$'>EXECUTE</a></td>
-        <td width="5%" height="30" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="12" /></td>
+        <td width="5%" height="30" align="center"><img src="images/splitter_header.png" width="2" height="12" /></td>
         <td width="16%" height="30" align="center" class='link-level1$$$REPORT_STYLE$$$-not-highlight'><a href='tests_report.pl' class='link-level1$$$REPORT_STYLE$$$'>REPORT</a></td>
-        <td width="5%" height="30" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="12" /></td>
+        <td width="5%" height="30" align="center"><img src="images/splitter_header.png" width="2" height="12" /></td>
         <td width="16%" height="30" align="center" class='link-level1$$$STATISTIC_STYLE$$$-not-highlight'><a href='tests_statistic.pl' class='link-level1$$$STATISTIC_STYLE$$$'>STATISTIC</a></td>
-        <td width="5%" height="30" align="center" valign="middle"><img src="images/splitter_header.png" width="2" height="12" /></td>
+        <td width="5%" height="30" align="center"><img src="images/splitter_header.png" width="2" height="12" /></td>
         <td width="16%" height="30" align="center" class='link-level1$$$HELP_STYLE$$$-not-highlight'><a href='tests_help.pl' class='link-level1$$$HELP_STYLE$$$'>HELP</a></td>
       </tr>
-      <tr>
-        <td height="6" colspan="10" align="center">&nbsp;</td>
-      </tr>
     </table></td>
-    <td width="25%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0">
-      <tr>
-        <td width="45%" height="50%" align="right"><img src="images/user_profile_photo.png" alt="user_profile_photo" width="28" height="28" /></td>
-        <td width="55%" align="left" ><span class="username">Welcome $$$USER_NAME$$$</span></td>
-      </tr>
-      
-      <tr>
-        <td height="50%" colspan="3">&nbsp;</td>
-      </tr>
-    </table></td>
+    <td width="25%">&nbsp;</td>
   </tr>
 </table>
     <!-- END masthead -->

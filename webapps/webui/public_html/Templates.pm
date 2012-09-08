@@ -191,10 +191,6 @@ sub print_header($$) {
 	my $navigation_bar_show = ( ( $id eq '' ) ? 'display: none;' : '' );
 	$header =~ s/\$\$\$NAVIGATION_BAR_SHOW\$\$\$/$navigation_bar_show/g;
 
-	# Get user name
-	my $username = `w | sed -n '3,3p' | cut -d ' ' -f 1`;
-	$header =~ s/\$\$\$USER_NAME\$\$\$/$username/g;
-
 	print $header;
 }
 
@@ -339,7 +335,7 @@ our $DOWNLOAD_CMD        = "wget -r -l 1 -nd -A rpm --spider";
 
 my $CHECK_NETWORK = "wget --spider --timeout=5 --tries=2";
 my $result_xsl_dir =
-  "/opt/testkit/manager/webapps/webui/public_html/css/resultstyle.xsl";
+  "/opt/testkit/manager/webapps/webui/public_html/css/testresult.xsl";
 
 sub updatePackageList {
 	my @package_list = ();
@@ -1216,30 +1212,40 @@ sub get_repo {
 		}
 	}
 	if ( $repo_url eq "none" ) {
-		return "none";
+		return "none, Can't find 'repo_url =' in the configuration file.";
 	}
 	else {
-		my @repo      = split( "=", $repo_url );
-		my $repo_type = $repo[0];
-		my $repo_url  = $repo[1];
+		my @repo = split( "=", $repo_url );
+		my $repo_url = $repo[1];
 		$repo_url =~ s/^\s*//;
 		$repo_url =~ s/\s*$//;
-		if ( $repo_type =~ /remote/ ) {
-			return "remote::$repo_url";
+		if ( $repo_url !~ /\/$/ ) {
+			$repo_url = $repo_url . "/";
 		}
-		elsif ( $repo_type =~ /local/ ) {
-			return "local::$repo_url";
+		if ( $repo_url =~ /^[a-zA-Z0-9\-\_\:\.\/ ]*$/ ) {
+			$repo_url =~ s/ /\\ /g;
+			if ( $repo_url =~ /^http:\/\// ) {
+				return "remote::$repo_url";
+			}
+			elsif ( $repo_url =~ /^\// ) {
+				return "local::$repo_url";
+			}
+			else {
+				return
+				  "none, Repo URL should either starts with 'http://' or '/'.";
+			}
 		}
 		else {
-			return "none";
+			return
+"none, Format of the repo URL is not correct. It only supports 'a-z', 'A-Z', '0-9', '-', '_', ':', '.', '/' and ' '";
 		}
 	}
 }
 
 sub check_network {
 	my $repo = get_repo();
-	if ( $repo =~ /none/ ) {
-		return "Can't find repo URL in the configuration file";
+	if ( $repo =~ /none, (.*)/ ) {
+		return "$1";
 	}
 	else {
 		my @repo_all  = split( "::", $repo );
@@ -1251,17 +1257,19 @@ sub check_network {
 				return "OK";
 			}
 			else {
-				return "Can't connect to repo $repo_url";
+				return "Can't connect to the remote repo $repo_url";
 			}
 		}
 		if ( $repo_type =~ /local/ ) {
-			my $network = `ls $repo_url`;
+			my $network = `ls $repo_url 2>&1`;
 			if ( $network =~ /No such file or directory/ ) {
 				return "Can't find local repo $repo_url";
 			}
-			else {
-				return "OK";
+			$network = `find $repo_url 2>&1`;
+			if ( $network =~ /Not a directory/ ) {
+				return "Local repo $repo_url is not a directory";
 			}
+			return "OK";
 		}
 	}
 }

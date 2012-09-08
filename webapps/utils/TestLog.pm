@@ -29,6 +29,7 @@ use Common;
 use File::Find;
 use FindBin;
 use Data::Dumper;
+use TestStatus;
 
 # Export symbols
 require Exporter;
@@ -139,13 +140,23 @@ sub writeResultInfo_wanted {
 		or ( $dir =~ /.*\/[0-9:\.\-]+\/usr\/local\/share\/([\w\d\-]+)$/ ) )
 	{
 		system("cp $combined_xml $result_dir_manager$time/tests.result.xml");
+		my $status = read_status();
+		my $test_plan_name =
+		  ( $status->{'TEST_PLAN'} or "Empty test_plan_name" );
 		system(
-"cp /opt/testkit/manager/webapps/webui/public_html/css/resultstyle.xsl $result_dir_manager$time"
+"sed -i 's/Empty test_plan_name/$test_plan_name/' $result_dir_manager$time/tests.result.xml"
+		);
+		system(
+"cp /opt/testkit/manager/webapps/webui/public_html/css/testcase.xsl $result_dir_manager$time"
+		);
+		system(
+"cp /opt/testkit/manager/webapps/webui/public_html/css/testresult.xsl $result_dir_manager$time"
 		);
 		system(
 "cp /opt/testkit/manager/webapps/webui/public_html/css/tests.css $result_dir_manager$time"
 		);
 		my $package_name = $1;
+
 		if ( -e $dir . "/tests.result.xml" ) {
 			system( 'mv ' . $dir . "/tests.result.xml " . $dir . "/tests.xml" );
 			my $testkit_lite_result_xml = $dir . "/tests.xml";
@@ -239,7 +250,7 @@ sub writeResultInfo_wanted {
 							if ( $grepResult =~ /\s*(\d*)\s*:(.*>)/ ) {
 								my $line_number  = $1;
 								my $line_content = $2;
-								if ( $line_content =~ /result="(.*)"/ ) {
+								if ( $line_content =~ /result="(.*?)"/ ) {
 									my $result = $1;
 									$content .= $temp_id . ":$result\n";
 								}
@@ -435,79 +446,25 @@ sub findXml_wanted {
 
 sub rewriteXmlFile {
 	my ($combined_xml) = @_;
-	open FILE, $combined_xml
-	  or die "can't open " . $combined_xml;
 	my $need_manual_carriage_return = "FALSE";
-	while (<FILE>) {
-		if ( $_ =~ /<\/suite><\/test_definition>/ ) {
-			$need_manual_carriage_return = "TRUE";
-		}
-	}
 	open FILE, $combined_xml
 	  or die "can't open " . $combined_xml;
 	my $content      = "none";
 	my $package_name = "none";
 	while (<FILE>) {
-		if ( $need_manual_carriage_return eq "TRUE" ) {
-			if ( $_ =~ /<suite name="(.*?)">/ ) {
+		if ( $_ =~ /<suite name="(.*?)">/ ) {
+			$package_name = $1;
+			$content      = $_;
+		}
 
-			# get the start part of the result, and get the initial package name
-				if ( $_ =~
-					/.*<test_definition name=".*?">(<suite name=".*?">.*)/ )
-				{
-					$content = $1;
-					if ( $_ =~ /<suite name="(.*?)">/ ) {
-						$package_name = $1;
-					}
-				}
-
-				# get the middle part of the result
-				if ( $_ =~ /(.*<\/suite>)<suite name=".*?">.*/ ) {
-					$content .= "\n" . $1;
-					mkdirWriteXmlResult( $package_name, $content,
-						$need_manual_carriage_return );
-					if ( $_ =~ /<suite name="(.*?)">/ ) {
-						$package_name = $1;
-					}
-				}
-			}
-
-			# get the end part of the result
-			elsif ( $_ =~ /(.*<\/suite>)<\/test_definition>.*/ ) {
-				$content .= "\n" . $1;
-				mkdirWriteXmlResult( $package_name, $content,
-					$need_manual_carriage_return );
-			}
-			else {
-				$content .= "\n" . $_;
-			}
+		# write to file for every end of a suite
+		elsif ( $_ =~ /<\/suite>/ ) {
+			$content .= $_;
+			mkdirWriteXmlResult( $package_name, $content,
+				$need_manual_carriage_return );
 		}
 		else {
-			if ( $_ =~ /<suite name="(.*?)">/ ) {
-				$package_name = $1;
-
-				# get first package name
-				if ( $_ =~
-					/.*<test_definition name=".*?">(<suite name=".*?">.*)/ )
-				{
-					$content = $1 . "\n";
-				}
-
-				# get package name in the middle
-				else {
-					$content = $_;
-				}
-			}
-
-			# write to file for every end of a suite
-			elsif ( $_ =~ /<\/suite>/ ) {
-				$content .= $_;
-				mkdirWriteXmlResult( $package_name, $content,
-					$need_manual_carriage_return );
-			}
-			else {
-				$content .= $_;
-			}
+			$content .= $_;
 		}
 	}
 }
