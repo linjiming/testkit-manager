@@ -107,7 +107,7 @@ if (-f $LOCK_FILE) {
 my $web_server = "$testkit/webui/dc-server.pl";
 $web_server =~ s/\'/\'\\\'\'/g;
 #my $cmd = "mkdir -p '$app_data/results' >/dev/null 2>&1; mkdir -p '$app_data/log' >/dev/null 2>&1; '$web_server' $port &";
-my $cmd = "mkdir -p '$testkit/../tests' >/dev/null 2>&1; mkdir -p '$testkit/../lite' >/dev/null 2>&1; chmod 777 '$testkit/../lite'; mkdir -p '$testkit/../package' >/dev/null 2>&1; chmod 777 '$testkit/../package'; mkdir -p '$testkit/../defination' >/dev/null 2>&1; chmod 777 '$testkit/../defination'; mkdir -p '$testkit/../profiles' >/dev/null 2>&1; mkdir -p '$testkit/../results' >/dev/null 2>&1; mkdir -p '$testkit/../log/server_log' >/dev/null 2>&1; '$web_server' $port &";
+my $cmd = "mkdir -p '$testkit/../tests' >/dev/null 2>&1; mkdir -p '$testkit/../lite' >/dev/null 2>&1; chmod 777 '$testkit/../lite'; mkdir -p '$testkit/../package' >/dev/null 2>&1; chmod 777 '$testkit/../package'; mkdir -p '$testkit/../definition' >/dev/null 2>&1; chmod 777 '$testkit/../definition'; mkdir -p '$testkit/../profiles' >/dev/null 2>&1; mkdir -p '$testkit/../results' >/dev/null 2>&1; mkdir -p '$testkit/../log/server_log' >/dev/null 2>&1; '$web_server' $port &";
 if ($ask_pwd) {
 	print "    Please enter the root password when prompted.\n";
 	$cmd = "$sudo_cmd '$cmd'";

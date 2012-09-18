@@ -65,7 +65,7 @@ if ( $_GET{'time'} ) {
   <tr>
     <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
-          <td width="288" valign="top" class="report_list_outside_left_bold"><table width="100%" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
+          <td width="35%" valign="top" class="report_list_outside_left_bold"><table width="100%" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
               <tr id="background_summary_case_">
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row"><a onclick="javascript:filter('summary_case_');" style="color:#000000">Total</a></td>
@@ -73,12 +73,12 @@ if ( $_GET{'time'} ) {
               </tr>
               <tr id="background_T:auto">
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:auto');" title="(Total Pass Fail Not_run)">&nbsp;&nbsp;$total_auto</a></td>
+                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:auto');" title="(Total Pass Fail Block N/A)">&nbsp;&nbsp;$total_auto</a></td>
                 <td class="report_list_one_row"></td>
               </tr>
               <tr id="background_T:manual" style="background-color:#BAE9FD">
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:manual');" title="(Total Pass Fail Not_run)">&nbsp;&nbsp;$total_manual</a></td>
+                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:manual');" title="(Total Pass Fail Block N/A)">&nbsp;&nbsp;$total_manual</a></td>
                 <td class="report_list_one_row"></td>
               </tr>
 DATA
@@ -95,28 +95,28 @@ DATA
               </tr>
               <tr id="background_T:auto_P:$package">
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:auto_P:$package');" title="(Total Pass Fail Not_run)">&nbsp;&nbsp;$auto_result</a></td>
+                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:auto_P:$package');" title="(Total Pass Fail Block N/A)">&nbsp;&nbsp;$auto_result</a></td>
                 <td class="report_list_one_row"><div id="progress_bar_auto_$package"></div></td>
               </tr>
               <tr id="background_T:manual_P:$package">
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:manual_P:$package');" title="(Total Pass Fail Not_run)">&nbsp;&nbsp;$manual_result</a></td>
+                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:manual_P:$package');" title="(Total Pass Fail Block N/A)">&nbsp;&nbsp;$manual_result</a></td>
                 <td class="report_list_one_row"><div id="progress_bar_$package"></div></td>
               </tr>
 DATA
 	}
 	print <<DATA;
             </table></td>
-          <td width="480" valign="top" class="report_list_outside_right_bold"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+          <td width="65%" valign="top" class="report_list_outside_right_bold"><table width="100%" border="0" cellspacing="0" cellpadding="0">
               <tr>
                 <td width="100%"><div style="height:450px;overflow:auto;text-wrap:none;">
                     <table width="100%" border="0" cellspacing="0" cellpadding="0">
                       <tr>
                         <td><table width="100%" border="1" cellpadding="0" cellspacing="0" style="table-layout:fixed" frame="below" rules="all">
                             <tr>
-                              <td height="30" align="left" width="28%" class="report_list_outside_left">&nbsp;Name</td>
-                              <td align="left" width="28%" class="report_list_one_row">&nbsp;Description</td>
-                              <td align="left" width="44%" class="report_list_outside_right">&nbsp;Result</td>
+                              <td height="30" align="left" width="30%" class="report_list_outside_left">&nbsp;Name</td>
+                              <td align="left" width="30%" class="report_list_one_row">&nbsp;Description</td>
+                              <td align="center" width="40%" class="report_list_outside_right">&nbsp;Result</td>
                             </tr>
                           </table></td>
                       </tr>
@@ -181,9 +181,9 @@ DATA
 				print <<DATA;
                         <td><table width="100%" border="1" cellpadding="0" cellspacing="0" frame="below" rules="all" style="table-layout:fixed">
                             <tr>
-                              <td align="left" height="30" width="28%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
-                              <td align="left" width="28%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                              <td align="left" width="44%" class="report_list_outside_right"><table width="100%" border="0" cellpadding="0" cellspacing="0">
+                              <td align="left" height="30" width="30%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
+                              <td align="left" width="30%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                              <td align="center" width="40%" class="report_list_outside_right"><table width="100%" border="0" cellpadding="0" cellspacing="0">
 DATA
 				if ( $result eq "PASS" ) {
 					print <<DATA;
@@ -191,13 +191,16 @@ DATA
                                   <tr>
                                     <td>&nbsp;
                                       <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS" checked>
-                                      PASS</td>
+                                      P</td>
                                     <td>&nbsp;
                                       <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
-                                      FAIL</td>
+                                      F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
-                                      N/A</td>
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      B</td>
+                                    <td>&nbsp;
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      N</td>
                                   </tr>
                                   </form>
 DATA
@@ -208,13 +211,36 @@ DATA
                                   <tr>
                                     <td>&nbsp;
                                       <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
-                                      PASS</td>
+                                      P</td>
                                     <td>&nbsp;
                                       <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL" checked>
-                                      FAIL</td>
+                                      F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
-                                      N/A</td>
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      B</td>
+                                    <td>&nbsp;
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      N</td>
+                                  </tr>
+                                  </form>
+DATA
+				}
+				if ( $result eq "BLOCK" ) {
+					print <<DATA;
+                                  <form>
+                                  <tr>
+                                    <td>&nbsp;
+                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
+                                      P</td>
+                                    <td>&nbsp;
+                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
+                                      F</td>
+                                    <td>&nbsp;
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK" checked>
+                                      B</td>
+                                    <td>&nbsp;
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      N</td>
                                   </tr>
                                   </form>
 DATA
@@ -225,13 +251,16 @@ DATA
                                   <tr>
                                     <td>&nbsp;
                                       <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
-                                      PASS</td>
+                                      P</td>
                                     <td>&nbsp;
                                       <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
-                                      FAIL</td>
+                                      F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="N/A" checked>
-                                      N/A</td>
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      B</td>
+                                    <td>&nbsp;
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A" checked>
+                                      N</td>
                                   </tr>
                                   </form>
 DATA
@@ -307,9 +336,9 @@ DATA
 				print <<DATA;
                         <td><table width="100%" border="1" cellpadding="0" cellspacing="0" frame="below" rules="all" style="table-layout:fixed">
                             <tr>
-                              <td height="30" align="left" width="28%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
-                              <td align="left" width="28%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                              <td align="left" width="44%" class="report_list_outside_right"><table width="100%" border="0" cellpadding="0" cellspacing="0">
+                              <td height="30" align="left" width="30%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
+                              <td align="left" width="30%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                              <td align="center" width="40%" class="report_list_outside_right"><table width="100%" border="0" cellpadding="0" cellspacing="0">
 DATA
 				if ( $result eq "PASS" ) {
 					print <<DATA;
@@ -317,13 +346,16 @@ DATA
                                   <tr>
                                     <td>&nbsp;
                                       <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS" checked>
-                                      PASS</td>
+                                      P</td>
                                     <td>&nbsp;
                                       <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
-                                      FAIL</td>
+                                      F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
-                                      N/A</td>
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      B</td>
+                                    <td>&nbsp;
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      N</td>
                                   </tr>
                                   </form>
 DATA
@@ -334,13 +366,36 @@ DATA
                                   <tr>
                                     <td>&nbsp;
                                       <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
-                                      PASS</td>
+                                      P</td>
                                     <td>&nbsp;
                                       <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL" checked>
-                                      FAIL</td>
+                                      F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
-                                      N/A</td>
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      B</td>
+                                    <td>&nbsp;
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      N</td>
+                                  </tr>
+                                  </form>
+DATA
+				}
+				if ( $result eq "BLOCK" ) {
+					print <<DATA;
+                                  <form>
+                                  <tr>
+                                    <td>&nbsp;
+                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
+                                      P</td>
+                                    <td>&nbsp;
+                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
+                                      F</td>
+                                    <td>&nbsp;
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK" checked>
+                                      B</td>
+                                    <td>&nbsp;
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      N</td>
                                   </tr>
                                   </form>
 DATA
@@ -351,13 +406,16 @@ DATA
                                   <tr>
                                     <td>&nbsp;
                                       <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
-                                      PASS</td>
+                                      P</td>
                                     <td>&nbsp;
                                       <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
-                                      FAIL</td>
+                                      F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="N/A" checked>
-                                      N/A</td>
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      B</td>
+                                    <td>&nbsp;
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A" checked>
+                                      N</td>
                                   </tr>
                                   </form>
 DATA
@@ -390,18 +448,19 @@ DATA
               <tr>
                 <td height="30"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                     <tr>
-                      <td width="28%"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+                      <td width="30%"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                           <tr>
-                            <td align="center"><input type="submit" name="button_save" value="Save" class="bottom_button" onclick="javascript:saveManual();"></td>
-                            <td align="center"><input type="submit" name="button_finish" value="Finish" class="bottom_button" onclick="javascript:finishManual();"></td>
+                            <td align="center"><input type="submit" name="button_save" title="Save modification of case results" value="Save" class="bottom_button" onclick="javascript:saveManual();"></td>
+                            <td align="center"><input type="submit" name="button_finish" value="Finish" title="Finish editing result, and go to report page" class="bottom_button" onclick="javascript:finishManual();"></td>
                           </tr>
                         </table></td>
-                      <td width="28%">&nbsp;</td>
-                      <td width="44%"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+                      <td width="20%">&nbsp;</td>
+                      <td width="50%"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                           <tr>
-                            <td align="center"><input type="submit" name="button_pass" value="Pass" class="bottom_button" onclick="javascript:passAll();"></td>
-                            <td align="center"><input type="submit" name="button_fail" value="Fail" class="bottom_button" onclick="javascript:failAll();"></td>
-                            <td align="center"><input type="submit" name="button_block" value="N/A" class="bottom_button" onclick="javascript:blockAll();"></td>
+                            <td align="center"><input type="submit" name="button_pass" value="Pass" title="Set all cases' result to PASS" class="bottom_button" onclick="javascript:passAll();"></td>
+                            <td align="center"><input type="submit" name="button_fail" value="Fail" title="Set all cases' result to FAIL" class="bottom_button" onclick="javascript:failAll();"></td>
+                            <td align="center"><input type="submit" name="button_block" value="Block" title="Set all cases' result to BLOCK" class="bottom_button" onclick="javascript:blockAll();"></td>
+                            <td align="center"><input type="submit" name="button_not_run" value="N/A" title="Set all cases' result to N/A" class="bottom_button" onclick="javascript:notrunAll();"></td>
                           </tr>
                         </table></td>
                     </tr>
@@ -461,7 +520,7 @@ DATA
 var pb = new YAHOO.widget.ProgressBar().render('progress_bar_$package');
 pb.set('minValue',0);
 pb.set('maxValue',$max_value);
-pb.set('width',90);
+pb.set('width',40);
 pb.set('height',6);
 pb.set('value',0);
 
@@ -484,7 +543,7 @@ DATA
 var pb = new YAHOO.widget.ProgressBar().render('progress_bar_auto_$package');
 pb.set('minValue',0);
 pb.set('maxValue',$max_value);
-pb.set('width',90);
+pb.set('width',40);
 pb.set('height',6);
 pb.set('value',0);
 
@@ -511,29 +570,33 @@ else {
 print_footer("");
 
 sub updateProgressBarResult {
-	my ($time)  = @_;
-	my $total_a = 0;
-	my $pass_a  = 0;
-	my $fail_a  = 0;
-	my $block_a = 0;
-	my $total_m = 0;
-	my $pass_m  = 0;
-	my $fail_m  = 0;
-	my $block_m = 0;
+	my ($time)    = @_;
+	my $total_a   = 0;
+	my $pass_a    = 0;
+	my $fail_a    = 0;
+	my $block_a   = 0;
+	my $not_run_a = 0;
+	my $total_m   = 0;
+	my $pass_m    = 0;
+	my $fail_m    = 0;
+	my $block_m   = 0;
+	my $not_run_m = 0;
 	@package_list = updatePackageList($time);
 
 	foreach (@package_list) {
 		my $package = $_;
 
 		my $result;
-		my $total_auto   = 0;
-		my $pass_auto    = 0;
-		my $fail_auto    = 0;
-		my $block_auto   = 0;
-		my $total_manual = 0;
-		my $pass_manual  = 0;
-		my $fail_manual  = 0;
-		my $block_manual = 0;
+		my $total_auto     = 0;
+		my $pass_auto      = 0;
+		my $fail_auto      = 0;
+		my $block_auto     = 0;
+		my $not_run_auto   = 0;
+		my $total_manual   = 0;
+		my $pass_manual    = 0;
+		my $fail_manual    = 0;
+		my $block_manual   = 0;
+		my $not_run_manual = 0;
 
 		# parse auto result
 		my $tests_xml_dir =
@@ -550,8 +613,11 @@ sub updateProgressBarResult {
 					if ( $result eq "FAIL" ) {
 						$fail_auto++;
 					}
-					if ( $result eq "N/A" ) {
+					if ( $result eq "BLOCK" ) {
 						$block_auto++;
+					}
+					if ( $result eq "N/A" ) {
+						$not_run_auto++;
 					}
 				}
 			}
@@ -568,18 +634,23 @@ sub updateProgressBarResult {
 			if ( $result eq "FAIL" ) {
 				$fail_manual++;
 			}
-			if ( $result eq "N/A" ) {
+			if ( $result eq "BLOCK" ) {
 				$block_manual++;
 			}
+			if ( $result eq "N/A" ) {
+				$not_run_manual++;
+			}
 		}
-		$total_a += $total_auto;
-		$total_m += $total_manual;
-		$pass_a  += $pass_auto;
-		$pass_m  += $pass_manual;
-		$fail_a  += $fail_auto;
-		$fail_m  += $fail_manual;
-		$block_a += $block_auto;
-		$block_m += $block_manual;
+		$total_a   += $total_auto;
+		$total_m   += $total_manual;
+		$pass_a    += $pass_auto;
+		$pass_m    += $pass_manual;
+		$fail_a    += $fail_auto;
+		$fail_m    += $fail_manual;
+		$block_a   += $block_auto;
+		$block_m   += $block_manual;
+		$not_run_a += $not_run_auto;
+		$not_run_m += $not_run_manual;
 
 		my $auto_result_text;
 		if ( $fail_auto > 0 ) {
@@ -587,6 +658,10 @@ sub updateProgressBarResult {
 			  '<span class=\'result_fail\'>Auto Test&nbsp;</span>';
 		}
 		elsif ( $block_auto > 0 ) {
+			$auto_result_text =
+			  '<span class=\'result_block\'>Auto Test&nbsp;</span>';
+		}
+		elsif ( $not_run_auto > 0 ) {
 			$auto_result_text =
 			  '<span class=\'result_not_run\'>Auto Test&nbsp;</span>';
 		}
@@ -600,6 +675,10 @@ sub updateProgressBarResult {
 			  '<span class=\'result_fail\'>Manual Test&nbsp;</span>';
 		}
 		elsif ( $block_manual > 0 ) {
+			$manual_result_text =
+			  '<span class=\'result_block\'>Manual Test&nbsp;</span>';
+		}
+		elsif ( $not_run_manual > 0 ) {
 			$manual_result_text =
 			  '<span class=\'result_not_run\'>Manual Test&nbsp;</span>';
 		}
@@ -615,8 +694,10 @@ sub updateProgressBarResult {
 		  . $pass_auto
 		  . '</span> <span class=\'result_fail\'>'
 		  . $fail_auto
-		  . '</span> <span class=\'result_not_run\'>'
+		  . '</span> <span class=\'result_block\'>'
 		  . $block_auto
+		  . '</span> <span class=\'result_not_run\'>'
+		  . $not_run_auto
 		  . '</span><span style="color:#000000">)</span>';
 		my $manual_result =
 		    $manual_result_text
@@ -626,18 +707,20 @@ sub updateProgressBarResult {
 		  . $pass_manual
 		  . '</span> <span class=\'result_fail\'>'
 		  . $fail_manual
-		  . '</span> <span class=\'result_not_run\'>'
+		  . '</span> <span class=\'result_block\'>'
 		  . $block_manual
+		  . '</span> <span class=\'result_not_run\'>'
+		  . $not_run_manual
 		  . '</span><span style="color:#000000">)</span>';
 		$progress_bar_result{ $package . "_auto" }   = $auto_result;
 		$progress_bar_result{ $package . "_manual" } = $manual_result;
 
 		$progress_bar_result{ $package . "_manual_maxValue" } = $total_manual;
 		$progress_bar_result{ $package . "_manual_value" } =
-		  ( $pass_manual + $fail_manual );
+		  ( $pass_manual + $fail_manual + $block_manual );
 		$progress_bar_result{ $package . "_auto_maxValue" } = $total_auto;
 		$progress_bar_result{ $package . "_auto_value" } =
-		  ( $pass_auto + $fail_auto );
+		  ( $pass_auto + $fail_auto + $block_auto );
 	}
 	my $total_auto_result_text;
 	if ( $fail_a > 0 ) {
@@ -645,6 +728,10 @@ sub updateProgressBarResult {
 		  '<span class=\'result_fail\'>Auto Test&nbsp;</span>';
 	}
 	elsif ( $block_a > 0 ) {
+		$total_auto_result_text =
+		  '<span class=\'result_block\'>Auto Test&nbsp;</span>';
+	}
+	elsif ( $not_run_a > 0 ) {
 		$total_auto_result_text =
 		  '<span class=\'result_not_run\'>Auto Test&nbsp;</span>';
 	}
@@ -658,6 +745,10 @@ sub updateProgressBarResult {
 		  '<span class=\'result_fail\'>Manual Test&nbsp;</span>';
 	}
 	elsif ( $block_m > 0 ) {
+		$total_manual_result_text =
+		  '<span class=\'result_block\'>Manual Test&nbsp;</span>';
+	}
+	elsif ( $not_run_m > 0 ) {
 		$total_manual_result_text =
 		  '<span class=\'result_not_run\'>Manual Test&nbsp;</span>';
 	}
@@ -673,8 +764,10 @@ sub updateProgressBarResult {
 	  . $pass_a
 	  . '</span> <span class=\'result_fail\'>'
 	  . $fail_a
-	  . '</span> <span class=\'result_not_run\'>'
+	  . '</span> <span class=\'result_block\'>'
 	  . $block_a
+	  . '</span> <span class=\'result_not_run\'>'
+	  . $not_run_a
 	  . '</span><span style="color:#000000">)</span>';
 	my $total_manual =
 	    $total_manual_result_text
@@ -684,8 +777,10 @@ sub updateProgressBarResult {
 	  . $pass_m
 	  . '</span> <span class=\'result_fail\'>'
 	  . $fail_m
-	  . '</span> <span class=\'result_not_run\'>'
+	  . '</span> <span class=\'result_block\'>'
 	  . $block_m
+	  . '</span> <span class=\'result_not_run\'>'
+	  . $not_run_m
 	  . '</span><span style="color:#000000">)</span>';
 	$progress_bar_result{"total_auto"}   = $total_auto;
 	$progress_bar_result{"total_manual"} = $total_manual;

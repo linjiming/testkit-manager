@@ -148,6 +148,10 @@ input::-moz-focus-inner {
 	color: #830300;
 }
 
+.result_block {
+	color: #FF6347;
+}
+
 .result_not_run {
 	color: #A65604;
 }

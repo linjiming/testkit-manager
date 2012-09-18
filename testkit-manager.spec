@@ -2,8 +2,8 @@
 
 Summary: Testkit Manager
 Name: testkit-manager
-Version: 2.2.2
-Release: 1
+Version: 2.2.3
+Release: 2
 License: GPLv2
 Group: System/Libraries
 Source: %name-%version.tar.gz
@@ -32,7 +32,17 @@ make install DESTDIR=$RPM_BUILD_ROOT
 /opt/testkit/manager
 
 %changelog
-* Thu Aug 16 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.2-1
+* Thu Sep 7 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.3-2
+- update report page's UI and alien it with case view
+- change use XSLT.pm to LibXSLT.pm
+
+Thu Aug 30 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.3-1
+- change pack result to noarch rpm
+- add list view for cases
+- modify title and UI text
+- add support for Block result
+
+Thu Aug 16 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.2-1
 - support run both core and web api test packages in one test run
 - remove internal URL from CONF
 - change profile to test plan

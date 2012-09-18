@@ -44,7 +44,7 @@ $Common::debug_inform_sub = sub { };
 	  $cert_sys_host $cert_sys_base
 	  &print_header &print_footer
 	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg
-	  &updatePackageList &updateCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &syncDefination &compare_version &check_network &get_repo &xml2xsl
+	  &updatePackageList &updateCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &syncDefinition &compare_version &check_network &get_repo &xml2xsl &xml2xsl_case
 	  ),
 	@Common::EXPORT,
 	@Manifest::EXPORT
@@ -327,7 +327,7 @@ DATA
 
 our $result_dir_manager  = "/opt/testkit/manager/results/";
 our $result_dir_lite     = "/opt/testkit/manager/lite/";
-our $test_definition_dir = "/opt/testkit/manager/defination/";
+our $test_definition_dir = "/opt/testkit/manager/definition/";
 our $opt_dir             = "/opt/testkit/manager/package/";
 our $profile_dir_manager = $FindBin::Bin . "/../../../profiles/test/";
 our $configuration_file  = $FindBin::Bin . "/../../../CONF";
@@ -336,6 +336,8 @@ our $DOWNLOAD_CMD        = "wget -r -l 1 -nd -A rpm --spider";
 my $CHECK_NETWORK = "wget --spider --timeout=5 --tries=2";
 my $result_xsl_dir =
   "/opt/testkit/manager/webapps/webui/public_html/css/testresult.xsl";
+my $case_xsl_dir =
+  "/opt/testkit/manager/webapps/webui/public_html/css/testcase.xsl";
 
 sub updatePackageList {
 	my @package_list = ();
@@ -975,7 +977,11 @@ sub updateManualCaseResult {
 	  $result_dir_manager . $time . "/" . $package . "_manual_case_tests.txt"
 	  or die $!;
 	while (<FILE>) {
-		if ( ( $_ =~ /PASS/ ) or ( $_ =~ /FAIL/ ) or ( $_ =~ /N\/A/ ) ) {
+		if (   ( $_ =~ /PASS/ )
+			or ( $_ =~ /FAIL/ )
+			or ( $_ =~ /BLOCK/ )
+			or ( $_ =~ /N\/A/ ) )
+		{
 			my @temp = split( ":", $_ );
 			$manual_case_result{ pop(@temp) } = pop(@temp);
 		}
@@ -1044,7 +1050,7 @@ sub install_package {
 				);
 			}
 		}
-		syncDefination();
+		syncDefinition();
 		my $check_cmd     = "sdb shell 'rpm -qa | grep " . $package_name . "'";
 		my $check_install = `$check_cmd`;
 		if ( $check_install =~ /$package_name/ ) {
@@ -1077,25 +1083,25 @@ sub install_package {
 	}
 }
 
-sub syncDefination {
+sub syncDefinition {
 
-	# sync xml defination file
+	# sync xml definition file
 	system( "rm -rf $test_definition_dir" . "*" );
 	system( "rm -rf $opt_dir" . "*" );
-	my $cmd_defination = "sdb shell ls /usr/share/*/tests.xml";
-	my @definations    = `$cmd_defination`;
-	if ( $definations[0] !~ /No such file or directory/ ) {
-		foreach (@definations) {
-			my $defination = "";
+	my $cmd_definition = "sdb shell ls /usr/share/*/tests.xml";
+	my @definitions    = `$cmd_definition`;
+	if ( $definitions[0] !~ /No such file or directory/ ) {
+		foreach (@definitions) {
+			my $definition = "";
 			if ( $_ =~ /(\/usr\/share\/.*\/tests.xml)/ ) {
-				$defination = $1;
+				$definition = $1;
 			}
-			$defination =~ s/\s*$//;
-			if ( $defination =~ /share\/(.*)\/tests.xml/ ) {
+			$definition =~ s/\s*$//;
+			if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
 				my $package_name = $1;
 				system("mkdir $test_definition_dir$package_name");
 				system(
-					"sdb pull $defination $test_definition_dir$package_name");
+					"sdb pull $definition $test_definition_dir$package_name");
 				system("mkdir $opt_dir$package_name");
 				system("echo 'No readme info' > $opt_dir$package_name/README");
 				system(
@@ -1278,17 +1284,42 @@ sub xml2xsl {
 	my ($result_xml_dir) = @_;
 
 	# import required modules
-	use XML::XSLT;
+	use XML::LibXSLT;
+	use XML::LibXML;
 
 	# create an instance of XSL::XSLT processor
-	my $xslt = XML::XSLT->new($result_xsl_dir);
+	my $xslt = XML::LibXSLT->new();
+	my $source = XML::LibXML->load_xml( location => $result_xml_dir );
+	my $style_doc =
+	  XML::LibXML->load_xml( location => $result_xsl_dir, no_cdata => 1 );
+	my $stylesheet = $xslt->parse_stylesheet($style_doc);
 
 	# transform XML file and print output
-	my $result = $xslt->serve($result_xml_dir);
+	my $results = $stylesheet->transform($source);
+	my $result  = $stylesheet->output_as_bytes($results);
 	$result =~ s/.*(<div id="testcasepage".*<\/div>).*/$1/s;
 
-	# free up some memory
-	$xslt->dispose();
+	return $result;
+}
+
+sub xml2xsl_case {
+	my ($case_xml_dir) = @_;
+
+	# import required modules
+	use XML::LibXSLT;
+	use XML::LibXML;
+
+	# create an instance of XSL::XSLT processor
+	my $xslt = XML::LibXSLT->new();
+	my $source = XML::LibXML->load_xml( location => $case_xml_dir );
+	my $style_doc =
+	  XML::LibXML->load_xml( location => $case_xsl_dir, no_cdata => 1 );
+	my $stylesheet = $xslt->parse_stylesheet($style_doc);
+
+	# transform XML file and print output
+	my $results = $stylesheet->transform($source);
+	my $result  = $stylesheet->output_as_bytes($results);
+	$result =~ s/.*(<div id="testcasepage".*<\/div>).*/$1/s;
 
 	return $result;
 }

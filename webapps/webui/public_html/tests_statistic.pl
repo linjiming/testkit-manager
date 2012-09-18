@@ -83,10 +83,10 @@ my @filter_category_value         = ();
 my $case_count_total              = 0;
 my @one_package_case_count_total  = ();
 my @one_webapi_package_item_count = ();
-my $defination_dir                = $FindBin::Bin . "/../../../defination/";
-my $test_definition_dir           = $defination_dir;
+my $definition_dir                = $FindBin::Bin . "/../../../definition/";
+my $test_definition_dir           = $definition_dir;
 
-syncDefination();
+syncDefinition();
 
 ScanPackages();
 CountPackages();
@@ -1485,7 +1485,7 @@ sub GetPackageName {
 }
 
 sub ScanPackages {
-	$testSuitesPath = $defination_dir;
+	$testSuitesPath = $definition_dir;
 	find( \&GetPackageName, $testSuitesPath );
 }
 
@@ -1499,7 +1499,7 @@ sub CreateFilePath {
 	my $count = 0;
 	while ( $count < $package_name_number ) {
 		$testsxml[$count] =
-		  $defination_dir . $package_name[$count] . "/tests.xml";
+		  $definition_dir . $package_name[$count] . "/tests.xml";
 		$count++;
 	}
 }

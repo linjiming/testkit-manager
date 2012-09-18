@@ -195,17 +195,17 @@ if (    ( $have_testkit_lite eq "TRUE" )
 {
 	print <<DATA;
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="START" id="start_button" value="Start" class="bottom_button" onclick="javascript:startTests('');"></td>
+            <td width="71"><input type="submit" name="START" id="start_button" title="Start testing" value="Start" class="bottom_button" onclick="javascript:startTests('');"></td>
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="STOP" id="stop_button" value="Stop" disabled="disabled" class="bottom_button" onclick="javascript:stopTests();"></td>
+            <td width="71"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop" disabled="disabled" class="bottom_button" onclick="javascript:stopTests();"></td>
 DATA
 }
 else {
 	print <<DATA;
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="START" id="start_button" value="Start" disabled="disabled" class="bottom_button" onclick="javascript:startTests('');"></td>
+            <td width="71"><input type="submit" name="START" id="start_button" title="Start to test" value="Start" disabled="disabled" class="bottom_button" onclick="javascript:startTests('');"></td>
             <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="STOP" id="stop_button" value="Stop" disabled="disabled" class="bottom_button" onclick="javascript:stopTests();"></td>
+            <td width="71"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop" disabled="disabled" class="bottom_button" onclick="javascript:stopTests();"></td>
 DATA
 }
 

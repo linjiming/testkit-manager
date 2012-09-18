@@ -145,12 +145,10 @@ function startRefresh(profile_name) {
 	last_line = '';
 	start_button.disabled = true;
 	stop_button.disabled = false;
-	if (profile_name && profile_name != "") {
-		global_profile_name = profile_name;
-		for ( var i = 0; i < test_profile.length; i++) {
-			if (test_profile.options[i].value == profile_name) {
-				test_profile.options[i].selected = true;
-			}
+	global_profile_name = profile_name;
+	for ( var i = 0; i < test_profile.length; i++) {
+		if (test_profile.options[i].value == profile_name) {
+			test_profile.options[i].selected = true;
 		}
 	}
 	var view = test_profile.value;
@@ -328,7 +326,9 @@ function ajaxProcessResult(responseXML) {
 				document.getElementById(pkg_ver_id).innerHTML = uninstall_pkg_version_arr[i];
 			}
 		}
-		for ( var i = pkg_len; i < 100; i++) {
+		var uninstall_package_count_max = document
+				.getElementById('uninstall_package_count_max').value;
+		for ( var i = pkg_len; i < uninstall_package_count_max; i++) {
 			var id = "uninstall_" + i;
 			document.getElementById(id).style.display = "none";
 		}
@@ -458,19 +458,14 @@ function ajaxProcessResult(responseXML) {
 						+ "&pkg_flag=" + package_name_flag.join("*"));
 			}
 		} else if ((tid != "save") && (tid.indexOf("save") == 0)) {
-			if (webapi_flag == "yes") {
-				alert("Test plan should not contain both webapi and non-webapi packages!");
-			} else {
-				if (confirm("Test plan: " + tid.slice(4)
-						+ " exists. Are you sure to overwirte it?")) {
-					ajax_call_get('action=save_profile&save_profile_name='
-							+ edit_profile_name.value + '&checkbox='
-							+ checkbox_value.join("*") + '&advanced='
-							+ advanced + "&auto_count="
-							+ filter_auto_count_string + "&manual_count="
-							+ filter_manual_count_string + "&pkg_flag="
-							+ package_name_flag.join("*"));
-				}
+			if (confirm("Test plan: " + tid.slice(4)
+					+ " exists. Are you sure to overwirte it?")) {
+				ajax_call_get('action=save_profile&save_profile_name='
+						+ edit_profile_name.value + '&checkbox='
+						+ checkbox_value.join("*") + '&advanced=' + advanced
+						+ "&auto_count=" + filter_auto_count_string
+						+ "&manual_count=" + filter_manual_count_string
+						+ "&pkg_flag=" + package_name_flag.join("*"));
 			}
 		} else if (tid == "delete") {
 			ajax_call_get('action=delete_profile&delete_profile_name='
@@ -505,6 +500,11 @@ function ajaxProcessResult(responseXML) {
 			document.location = "tests_custom.pl";
 			// Install package successfully!
 		} else {
+			var package_name_number = document
+					.getElementById('package_name_number').value;
+			var uninstall_package_count_max = document
+					.getElementById('uninstall_package_count_max').value;
+
 			alert("Install package fail\n" + tid);
 			document.getElementById(install_pkg_id).src = "images/operation_install.png";
 			document.getElementById(install_pkg_id).style.cursor = "pointer";
@@ -517,6 +517,61 @@ function ajaxProcessResult(responseXML) {
 					installPackage(num);
 				};
 			}(install_package_count);
+
+			for ( var i = 0; i < uninstall_package_count_max; i++) {
+				var install_pkg_id_tmp = "install_pkg_" + i;
+				var temp = install_package_count - i;
+				if (temp) {
+					document.getElementById(install_pkg_id_tmp).onclick = function(
+							num) {
+						return function() {
+							installPackage(num);
+						};
+					}(i);
+					document.getElementById(install_pkg_id_tmp).style.cursor = "pointer";
+				}
+			}
+
+			for ( var i = 0; i < package_name_number; i++) {
+				var update_pkg_count_tmp = "update_package_name_" + i;
+				var pkg_name_tmp = document
+						.getElementById(update_pkg_count_tmp);
+				var update_pkg_pic_tmp = "update_" + pkg_name_tmp.value;
+
+				var del_pkg_count_tmp = "pn_package_name_" + i;
+				var del_pkg_name_tmp = document
+						.getElementById(del_pkg_count_tmp);
+				var del_pkg_pic_tmp = "delete_" + del_pkg_name_tmp.value;
+
+				var view_pkg_count_tmp = "view_package_name_" + i;
+				var view_pkg_name_tmp = document
+						.getElementById(view_pkg_count_tmp);
+				var view_pkg_pic_tmp = "view_" + view_pkg_name_tmp.value;
+
+				document.getElementById(update_pkg_pic_tmp).onclick = function(
+						num) {
+					return function() {
+						updatePackage(num);
+					};
+				}(i);
+
+				document.getElementById(del_pkg_pic_tmp).onclick = function(num) {
+					return function() {
+						onDeletePackage(num);
+					};
+				}(i);
+
+				document.getElementById(view_pkg_pic_tmp).onclick = function(
+						num) {
+					return function() {
+						onViewPackage(num);
+					};
+				}(i);
+
+				document.getElementById(update_pkg_pic_tmp).style.cursor = "pointer";
+				document.getElementById(del_pkg_pic_tmp).style.cursor = "pointer";
+				document.getElementById(view_pkg_pic_tmp).style.cursor = "pointer";
+			}
 		}
 	}
 
@@ -542,6 +597,11 @@ function ajaxProcessResult(responseXML) {
 			// Update package successfully!
 		} else {
 			var version_id = "ver_" + flag;
+			var package_name_number = document
+					.getElementById('package_name_number').value;
+			var uninstall_package_count_max = document
+					.getElementById('uninstall_package_count_max').value;
+
 			alert("Update package fail\n" + tid);
 			update_pic_id = "update_" + flag;
 			document.getElementById(update_pic_id).src = "images/operation_update.png";
@@ -550,12 +610,67 @@ function ajaxProcessResult(responseXML) {
 			document.getElementById(update_pic_id).width = "23";
 			document.getElementById(update_pic_id).hspace = "0";
 			document.getElementById(update_pic_id).vspace = "0";
+			document.getElementById(version_id).innerHTML = version_latest;
 			document.getElementById(update_pic_id).onclick = function(num) {
 				return function() {
 					updatePackage(num);
 				};
 			}(update_package_count);
-			document.getElementById(version_id).innerHTML = version_latest;
+
+			for ( var i = 0; i < package_name_number; i++) {
+				var update_pkg_count_tmp = "update_package_name_" + i;
+				var pkg_name_tmp = document
+						.getElementById(update_pkg_count_tmp);
+				var update_pkg_pic_tmp = "update_" + pkg_name_tmp.value;
+
+				var del_pkg_count_tmp = "pn_package_name_" + i;
+				var del_pkg_name_tmp = document
+						.getElementById(del_pkg_count_tmp);
+				var del_pkg_pic_tmp = "delete_" + del_pkg_name_tmp.value;
+
+				var view_pkg_count_tmp = "view_package_name_" + i;
+				var view_pkg_name_tmp = document
+						.getElementById(view_pkg_count_tmp);
+				var view_pkg_pic_tmp = "view_" + view_pkg_name_tmp.value;
+
+				var temp = update_package_count - i;
+				if (temp) {
+					document.getElementById(update_pkg_pic_tmp).onclick = function(
+							num) {
+						return function() {
+							updatePackage(num);
+						};
+					}(i);
+					document.getElementById(update_pkg_pic_tmp).style.cursor = "pointer";
+				}
+
+				document.getElementById(del_pkg_pic_tmp).onclick = function(num) {
+					return function() {
+						onDeletePackage(num);
+					};
+				}(i);
+
+				document.getElementById(view_pkg_pic_tmp).onclick = function(
+						num) {
+					return function() {
+						onViewPackage(num);
+					};
+				}(i);
+
+				document.getElementById(del_pkg_pic_tmp).style.cursor = "pointer";
+				document.getElementById(view_pkg_pic_tmp).style.cursor = "pointer";
+			}
+
+			for ( var i = 0; i < uninstall_package_count_max; i++) {
+				var install_pkg_id_tmp = "install_pkg_" + i;
+				document.getElementById(install_pkg_id_tmp).onclick = function(
+						num) {
+					return function() {
+						installPackage(num);
+					};
+				}(i);
+				document.getElementById(install_pkg_id_tmp).style.cursor = "pointer";
+			}
 		}
 	}
 	if (responseXML.getElementsByTagName('save_manual_redirect').length > 0) {
@@ -565,7 +680,8 @@ function ajaxProcessResult(responseXML) {
 		}
 	}
 	if (responseXML.getElementsByTagName('started').length > 0) {
-		setTimeout('startRefresh("")', 100);
+		var profile_name = responseXML.getElementsByTagName('started')[0].childNodes[0].nodeValue;
+		setTimeout('startRefresh("' + profile_name + '")', 100);
 	} else {
 		if (responseXML.getElementsByTagName('output').length > 0) {
 			var output = '';
@@ -762,6 +878,10 @@ function installPackage(count) {
 	var install_pkg_count = "pn_" + count;
 	var install_pkg_pic = "install_pkg_" + count;
 	var pkg_name = document.getElementById(install_pkg_count);
+	var package_name_number = document.getElementById('package_name_number').value;
+	var uninstall_package_count_max = document
+			.getElementById('uninstall_package_count_max').value;
+
 	if (confirm('Are you sure to install ' + pkg_name.innerHTML + "?")) {
 		document.getElementById(install_pkg_pic).src = "images/ajax_progress.gif";
 		document.getElementById(install_pkg_pic).onclick = "";
@@ -770,6 +890,35 @@ function installPackage(count) {
 		document.getElementById(install_pkg_pic).width = "14";
 		document.getElementById(install_pkg_pic).hspace = "5";
 		document.getElementById(install_pkg_pic).vspace = "5";
+		for ( var i = 0; i < uninstall_package_count_max; i++) {
+			var install_pkg_id_tmp = "install_pkg_" + i;
+			var temp = count - i;
+			if (temp) {
+				document.getElementById(install_pkg_id_tmp).onclick = "";
+				document.getElementById(install_pkg_id_tmp).style.cursor = "default";
+			}
+		}
+
+		for ( var i = 0; i < package_name_number; i++) {
+			var update_pkg_count_tmp = "update_package_name_" + i;
+			var pkg_name_tmp = document.getElementById(update_pkg_count_tmp);
+			var update_pkg_pic_tmp = "update_" + pkg_name_tmp.value;
+
+			var del_pkg_count_tmp = "pn_package_name_" + i;
+			var del_pkg_name_tmp = document.getElementById(del_pkg_count_tmp);
+			var del_pkg_pic_tmp = "delete_" + del_pkg_name_tmp.value;
+
+			var view_pkg_count_tmp = "view_package_name_" + i;
+			var view_pkg_name_tmp = document.getElementById(view_pkg_count_tmp);
+			var view_pkg_pic_tmp = "view_" + view_pkg_name_tmp.value;
+
+			document.getElementById(update_pkg_pic_tmp).onclick = "";
+			document.getElementById(update_pkg_pic_tmp).style.cursor = "default";
+			document.getElementById(del_pkg_pic_tmp).onclick = "";
+			document.getElementById(del_pkg_pic_tmp).style.cursor = "default";
+			document.getElementById(view_pkg_pic_tmp).onclick = "";
+			document.getElementById(view_pkg_pic_tmp).style.cursor = "default";
+		}
 		ajax_call_get('action=install_package&package_name='
 				+ pkg_name.innerHTML + '&package_count=' + count);
 	}
@@ -803,6 +952,10 @@ function updatePackage(count) {
 	var package_name_id = "pn_" + pkg_name.value;
 	var package_name = document.getElementById(package_name_id).innerHTML;
 	var update_pkg_pic = "update_" + pkg_name.value;
+	var package_name_number = document.getElementById('package_name_number').value;
+	var uninstall_package_count_max = document
+			.getElementById('uninstall_package_count_max').value;
+
 	if (confirm('Are you sure to update ' + package_name + "?")) {
 		document.getElementById(update_pkg_pic).src = "images/ajax_progress.gif";
 		document.getElementById(update_pkg_pic).style.cursor = "default";
@@ -813,6 +966,36 @@ function updatePackage(count) {
 		document.getElementById(update_pkg_pic).vspace = "5";
 		ajax_call_get('action=update_package&package_name=' + package_name
 				+ '&flag=' + pkg_name.value + '&package_count=' + count);
+		for ( var i = 0; i < package_name_number; i++) {
+			var update_pkg_count_tmp = "update_package_name_" + i;
+			var pkg_name_tmp = document.getElementById(update_pkg_count_tmp);
+			var update_pkg_pic_tmp = "update_" + pkg_name_tmp.value;
+
+			var del_pkg_count_tmp = "pn_package_name_" + i;
+			var del_pkg_name_tmp = document.getElementById(del_pkg_count_tmp);
+			var del_pkg_pic_tmp = "delete_" + del_pkg_name_tmp.value;
+
+			var view_pkg_count_tmp = "view_package_name_" + i;
+			var view_pkg_name_tmp = document.getElementById(view_pkg_count_tmp);
+			var view_pkg_pic_tmp = "view_" + view_pkg_name_tmp.value;
+
+			var temp = count - i;
+			if (temp) {
+				document.getElementById(update_pkg_pic_tmp).onclick = "";
+				document.getElementById(update_pkg_pic_tmp).style.cursor = "default";
+			}
+
+			document.getElementById(del_pkg_pic_tmp).onclick = "";
+			document.getElementById(del_pkg_pic_tmp).style.cursor = "default";
+			document.getElementById(view_pkg_pic_tmp).onclick = "";
+			document.getElementById(view_pkg_pic_tmp).style.cursor = "default";
+		}
+
+		for ( var i = 0; i < uninstall_package_count_max; i++) {
+			var install_pkg_id_tmp = "install_pkg_" + i;
+			document.getElementById(install_pkg_id_tmp).onclick = "";
+			document.getElementById(install_pkg_id_tmp).style.cursor = "default";
+		}
 	}
 }
 
@@ -882,7 +1065,7 @@ function onExecute() {
 
 function onSave() {
 	var edit_profile_name = document.getElementById("edit_profile_name");
-	var reg = /^[a-zA-Z]+\w{0,19}$/;
+	var reg = /^[a-zA-Z]{1}\w{0,19}$/;
 	var str = edit_profile_name.value;
 	var result = reg.exec(str);
 	if (!result) {
@@ -1017,6 +1200,21 @@ function blockAll() {
 			reg = new RegExp("_N:", "g");
 			radio_id = radio_id.replace(reg, "__N:");
 			document.getElementById("block__radio__" + radio_id).checked = true;
+		}
+	}
+}
+
+function notrunAll() {
+	var result = document.getElementById("result").innerHTML;
+	var result_list = new Array();
+	result_list = result.split("::");
+	for ( var i = 0; i < result_list.length; i++) {
+		if (document.getElementById("summary_case_" + result_list[i]).style.display != "none") {
+			var reg = new RegExp("_P:", "g");
+			var radio_id = result_list[i].replace(reg, "__P:");
+			reg = new RegExp("_N:", "g");
+			radio_id = radio_id.replace(reg, "__N:");
+			document.getElementById("not_run__radio__" + radio_id).checked = true;
 		}
 	}
 }

@@ -932,7 +932,6 @@ sub readProfile {
 
 	my $targetPackages = "";
 	my $wrtPackages    = "-e \"WRTLauncher";
-	my $hasWebapi      = "False";
 	if ( !@thisTargetPackages ) {
 		&initProfileInfo($profile_path);
 	}
@@ -952,7 +951,7 @@ sub readProfile {
 			}
 		}
 	}
-	if ( $targetPackages ne "none" ) {
+	if ( $targetPackages ne "" ) {
 		if ( $isWebApi eq "True" ) {
 			$targetPackages .= $wrtPackages . '"';
 		}
@@ -994,7 +993,6 @@ sub getBackupResultXMLCMD {
 		$time = $1;
 	}
 	writeResultInfo( $time, $isOnlyAuto, @targetFilter );
-	inform "[Backup Result]:@copyCommands";
 	return \@copyCommands;
 }
 

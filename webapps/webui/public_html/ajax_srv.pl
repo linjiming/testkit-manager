@@ -1007,7 +1007,7 @@ elsif ( $_GET{'action'} eq 'run_tests' ) {
 
 				# Everything is fine, send AJAX reply and start watching the log
 						else {
-							$data .= "<started>1</started>\n";
+							$data .= "<started>$_GET{'profile'}</started>\n";
 							$data .= construct_progress_data($status);
 							$TestKitLogger::logger->log( message =>
 								  "[ajax_srv.pl]: Started data = $data\n" );
@@ -2336,7 +2336,7 @@ sub updateAutoState {
 			if ( $inside eq "True" ) {
 				my @result_all  = split( ":", $autoResult{$package_name} );
 				my $pass_all    = int($1) + int( $result_all[0] );
-				my $line_number = $line - 3;
+				my $line_number = $line - 4;
 				system( "sed -i '"
 					  . $line_number
 					  . 'c Pass:'
@@ -2344,7 +2344,7 @@ sub updateAutoState {
 					  . "' ../../../results/"
 					  . $time
 					  . '/info' );
-				$line_number = $line + 3;
+				$line_number = $line + 4;
 				system( "sed -i '"
 					  . $line_number
 					  . 'c Pass(A):'
@@ -2358,7 +2358,7 @@ sub updateAutoState {
 			if ( $inside eq "True" ) {
 				my @result_all  = split( ":", $autoResult{$package_name} );
 				my $fail_all    = int($1) + int( $result_all[1] );
-				my $line_number = $line - 3;
+				my $line_number = $line - 4;
 				system( "sed -i '"
 					  . $line_number
 					  . 'c Fail:'
@@ -2366,11 +2366,33 @@ sub updateAutoState {
 					  . "' ../../../results/"
 					  . $time
 					  . '/info' );
-				$line_number = $line + 3;
+				$line_number = $line + 4;
 				system( "sed -i '"
 					  . $line_number
 					  . 'c Fail(A):'
 					  . int( $result_all[1] )
+					  . "' ../../../results/"
+					  . $time
+					  . '/info' );
+			}
+		}
+		if ( $_ =~ /Block\(M\):(\d*)/ ) {
+			if ( $inside eq "True" ) {
+				my @result_all  = split( ":", $autoResult{$package_name} );
+				my $fail_all    = int($1) + int( $result_all[2] );
+				my $line_number = $line - 4;
+				system( "sed -i '"
+					  . $line_number
+					  . 'c Block:'
+					  . $fail_all
+					  . "' ../../../results/"
+					  . $time
+					  . '/info' );
+				$line_number = $line + 4;
+				system( "sed -i '"
+					  . $line_number
+					  . 'c Block(A):'
+					  . int( $result_all[2] )
 					  . "' ../../../results/"
 					  . $time
 					  . '/info' );
@@ -2384,10 +2406,11 @@ sub updateAutoState_wanted {
 	if ( $dir =~ /.*\/(.*)_tests.xml$/ ) {
 		my $package_name = $1;
 		if ( $dir !~ /_manual_case_tests.xml$/ ) {
-			my $pass  = 0;
-			my $fail  = 0;
-			my $block = 0;
-			my $total = 0;
+			my $pass    = 0;
+			my $fail    = 0;
+			my $block   = 0;
+			my $not_run = 0;
+			my $total   = 0;
 			open FILE, $dir
 			  or die "Can't open " . $dir;
 			while (<FILE>) {
@@ -2395,6 +2418,9 @@ sub updateAutoState_wanted {
 				# just count auto case
 				if ( $_ =~ /.*<testcase.*execution_type="auto".*/ ) {
 					if ( $_ =~ /result="N\/A"/ ) {
+						$not_run += 1;
+					}
+					if ( $_ =~ /result="BLOCK"/ ) {
 						$block += 1;
 					}
 					if ( $_ =~ /result="PASS"/ ) {
@@ -2405,9 +2431,9 @@ sub updateAutoState_wanted {
 					}
 				}
 			}
-			$total = $pass + $fail + $block;
+			$total = $pass + $fail + $block + $not_run;
 			if ( $total > 0 ) {
-				$autoResult{$package_name} = $pass . ":" . $fail;
+				$autoResult{$package_name} = $pass . ":" . $fail . ":" . $block;
 			}
 		}
 	}
@@ -2439,7 +2465,7 @@ sub updateManualState {
 			if ( $inside eq "True" ) {
 				my @result_all  = split( ":", $manualResult{$package_name} );
 				my $pass_all    = int($1) + int( $result_all[0] );
-				my $line_number = $line - 6;
+				my $line_number = $line - 8;
 				system( "sed -i '"
 					  . $line_number
 					  . 'c Pass:'
@@ -2447,7 +2473,7 @@ sub updateManualState {
 					  . "' ../../../results/"
 					  . $time
 					  . '/info' );
-				$line_number = $line - 3;
+				$line_number = $line - 4;
 				system( "sed -i '"
 					  . $line_number
 					  . 'c Pass(M):'
@@ -2461,7 +2487,7 @@ sub updateManualState {
 			if ( $inside eq "True" ) {
 				my @result_all  = split( ":", $manualResult{$package_name} );
 				my $fail_all    = int($1) + int( $result_all[1] );
-				my $line_number = $line - 6;
+				my $line_number = $line - 8;
 				system( "sed -i '"
 					  . $line_number
 					  . 'c Fail:'
@@ -2469,11 +2495,33 @@ sub updateManualState {
 					  . "' ../../../results/"
 					  . $time
 					  . '/info' );
-				$line_number = $line - 3;
+				$line_number = $line - 4;
 				system( "sed -i '"
 					  . $line_number
 					  . 'c Fail(M):'
 					  . int( $result_all[1] )
+					  . "' ../../../results/"
+					  . $time
+					  . '/info' );
+			}
+		}
+		if ( $_ =~ /Block\(A\):(\d*)/ ) {
+			if ( $inside eq "True" ) {
+				my @result_all  = split( ":", $manualResult{$package_name} );
+				my $fail_all    = int($1) + int( $result_all[2] );
+				my $line_number = $line - 8;
+				system( "sed -i '"
+					  . $line_number
+					  . 'c Block:'
+					  . $fail_all
+					  . "' ../../../results/"
+					  . $time
+					  . '/info' );
+				$line_number = $line - 4;
+				system( "sed -i '"
+					  . $line_number
+					  . 'c Block(M):'
+					  . int( $result_all[2] )
 					  . "' ../../../results/"
 					  . $time
 					  . '/info' );
@@ -2489,12 +2537,17 @@ sub updateManualState_wanted {
 		my $pass         = 0;
 		my $fail         = 0;
 		my $block        = 0;
+		my $not_run      = 0;
 		my $total        = 0;
 		open FILE, $dir
 		  or die "Can't open " . $dir;
 		while (<FILE>) {
+
 			if ( $_ =~ /:N\/A/ ) {
 				$hasManual = "True";
+				$not_run += 1;
+			}
+			if ( $_ =~ /:BLOCK/ ) {
 				$block += 1;
 			}
 			if ( $_ =~ /:PASS/ ) {
@@ -2504,9 +2557,9 @@ sub updateManualState_wanted {
 				$fail += 1;
 			}
 		}
-		$total = $pass + $fail + $block;
+		$total = $pass + $fail + $block + $not_run;
 		if ( $total > 0 ) {
-			$manualResult{$package_name} = $pass . ":" . $fail;
+			$manualResult{$package_name} = $pass . ":" . $fail . ":" . $block;
 		}
 	}
 }

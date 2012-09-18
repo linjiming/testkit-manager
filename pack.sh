@@ -79,7 +79,7 @@ cd -
 # build
 echo "build from workspace... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 cd  $RPM_ROOT/SPECS
-rpmbuild -ba testkit-manager.spec --clean --define "_topdir $RPM_ROOT"
+rpmbuild -ba testkit-manager.spec --clean --define "_topdir $RPM_ROOT" --target=noarch
 cd -
 
 # copy rpm

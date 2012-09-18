@@ -15,7 +15,7 @@ Step 1: install dependence packages on host
     sudo apt-get install libdigest-sha-perl
     sudo apt-get install libjson-perl
     sudo apt-get install libio-pty-easy-perl
-    sudo apt-get install libxml-xslt-perl
+    sudo apt-get install libxml-libxslt-perl
     sudo apt-get install cpanminus
     cpanm JSON
     sudo apt-get install rpm
@@ -45,10 +45,10 @@ Step 4: connect device
 
 Configure Repository of Test Packages:
 ========
-Edit configuration file '/opt/testkit/manager/CONF' to configure the repo address
-  This step is optional if you can access the default local repo of test packages
-  If you want to use the test packages offline, you need download test packages in your host,
-  and put the package path to this configure file as local repo address
+Please put test packages to /home/package
+  If you have your own place to save the test packages, you also can configure the repository of test packages in configuration file '/opt/testkit/manager/CONF'
+    repo_url=<repo address>
+  <repo address> can be a remote server address or a local path on the host machine
 
 
 Startup:

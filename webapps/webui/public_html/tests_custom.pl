@@ -27,6 +27,8 @@ use Templates;
 use File::Find;
 use FindBin;
 use Data::Dumper;
+use Digest::SHA qw(sha1_hex);
+use Data::Dumper;
 
 if ( !( -e $profile_dir_manager ) ) {
 	system( 'mkdir ' . $profile_dir_manager );
@@ -146,10 +148,12 @@ my $UNINSTALL_PACKAGE_COUNT_MAX = "100";
 my $sort_flag                   = 0;
 my $refresh_flag                = 1;
 my $view_page_no_filter_flag    = 1;
+my $tree_view_current           = 0;
+my $list_view_current           = 0;
 
 # press delete package button
 if ( $_GET{"delete_package"} ) {
-	syncDefination();
+	syncDefinition();
 	my $flag_i = 0;
 	my @package_name_temp;
 	my $checkbox_value  = $_GET{"checkbox"};
@@ -185,7 +189,7 @@ if ( $_GET{"delete_package"} ) {
 			push( @package_name_temp, $_ );
 		}
 	}
-	syncDefination();
+	syncDefinition();
 
 	@package_name = @package_name_temp;
 
@@ -235,9 +239,11 @@ if ( $_GET{"delete_package"} ) {
 }
 
 elsif ( $_GET{'view_single_package'} ) {
+	$tree_view_current        = 1;
+	$list_view_current        = 0;
 	$refresh_flag             = 0;
 	$view_page_no_filter_flag = 0;
-	syncDefination();
+	syncDefinition();
 	my $get_value  = $_GET{"advanced"};
 	my @get_value  = split /\*/, $get_value;
 	my $view_count = 0;
@@ -293,9 +299,11 @@ elsif ( $_GET{'view_single_package'} ) {
 
 # press view button
 elsif ( $_POST{'view_package_info'} ) {
+	$tree_view_current        = 1;
+	$list_view_current        = 0;
 	$refresh_flag             = 0;
 	$view_page_no_filter_flag = 0;
-	syncDefination();
+	syncDefinition();
 	my %hash = %_POST;
 	my $key;
 	my $value;
@@ -347,10 +355,12 @@ elsif ( $_POST{'view_package_info'} ) {
 	ViewDetailedInfo();
 }
 
-elsif ( $_POST{'view_filter_package_list'} ) {
+elsif ( $_POST{'tree_view_filter_pkg_info'} ) {
+	$tree_view_current        = 1;
+	$list_view_current        = 0;
 	$refresh_flag             = 0;
 	$view_page_no_filter_flag = 0;
-	syncDefination();
+	syncDefinition();
 	$advanced_value_version      = $_POST{"select_ver"};
 	$advanced_value_architecture = $_POST{"select_arc"};
 
@@ -378,10 +388,56 @@ elsif ( $_POST{'view_filter_package_list'} ) {
 	ViewDetailedInfo();
 }
 
+elsif ( $_POST{'list_view_filter_pkg_info'} ) {
+	$list_view_current = 1;
+	$tree_view_current = 0;
+	my $list_file = $test_definition_dir . "list_view_case.xml";
+	$refresh_flag             = 0;
+	$view_page_no_filter_flag = 0;
+	syncDefinition();
+	$advanced_value_version      = $_POST{"select_ver"};
+	$advanced_value_architecture = $_POST{"select_arc"};
+
+	$advanced_value_category       = $_POST{"select_category"};
+	$advanced_value_priority       = $_POST{"select_pri"};
+	$advanced_value_status         = $_POST{"select_status"};
+	$advanced_value_execution_type = $_POST{"select_exe"};
+	$advanced_value_test_suite     = $_POST{"select_testsuite"};
+	$advanced_value_type           = $_POST{"select_type"};
+	$advanced_value_test_set       = $_POST{"select_testset"};
+	$advanced_value_component      = $_POST{"select_com"};
+
+	ScanPackages();
+	CountPackages();
+	AnalysisVersion();
+	CreateFilePath();
+	AnalysisTestsXML();
+	FilterCaseValue();
+	FilterCase();
+	UpdateViewPageSelectItem();
+
+	for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
+		$view_package_name_flag[$count] = $package_name_flag[$count];
+	}
+	ListViewDetailedInfo($list_file);
+
+	print <<DATA;
+<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list" style="table-layout:fixed">	
+  <tr>
+    <td>
+DATA
+	print xml2xsl_case($list_file);
+	print <<DATA;
+    </td>
+  </tr>
+  </table>
+DATA
+}
+
 #press load button
 elsif ( $_GET{'load_profile_button'} ) {
 	$refresh_flag = 0;
-	syncDefination();
+	syncDefinition();
 	my $file;
 	my $flag_i            = 0;
 	my $load_profile_name = $_GET{"load_profile_button"};
@@ -477,7 +533,7 @@ elsif ( $_GET{'load_profile_button'} ) {
 	closedir LOADPROFILE;
 }
 else {
-	syncDefination();
+	syncDefinition();
 	ScanPackages();
 	CountPackages();
 	@sort_package_name = sort @package_name;
@@ -544,8 +600,8 @@ DATA
               </table></td>
               <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
               <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name &nbsp</td>
-              <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" src="images/up_and_down_1.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
-              <td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
+              <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" title="Sort packages" src="images/up_and_down_1.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
+              <td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
               <td width="12%" height="30" align="left" nowrap="nowrap">
 				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
 			  </td>
@@ -679,7 +735,7 @@ DATA
             <tr>
               <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="10%" valign="top"><div align="center">
-                <input type="button" id="execute_profile" name="execute_profile" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();"/>
+                <input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();"/>
               </div></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" valign="top" class="backbackground_button"><div align="center">
@@ -702,7 +758,19 @@ DATA
 		        </tr>
                 <tr>
                   <td>
+DATA
+
+	if ( $package_name_number eq 0 ) {
+		print <<DATA;
+                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" disabled="true" value="" style="width: 14em;" onkeyup="showtips(event.target);if(event.keyCode==27)c();" onkeydown="enterTips(event.keyCode)" autocomplete=off /></label></td>
+DATA
+	}
+	else {
+		print <<DATA;
                   <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="" style="width: 14em;" onkeyup="showtips(event.target);if(event.keyCode==27)c();" onkeydown="enterTips(event.keyCode)" autocomplete=off /></label></td>
+DATA
+	}
+	print <<DATA;
                 </tr>
                 <tr>
                   <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
@@ -713,11 +781,11 @@ DATA
               </table></td>
               
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button"  type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:onSave();"/></td>
+              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button" title="Save test plan" type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:onSave();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" type="button" class="medium_button" value="Load" onclick="javascript:onLoad();"/></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:onLoad();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
             </tr>
           </table></td>
@@ -760,13 +828,14 @@ sub UpdateNullPage {
 	                <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
 	                  <td width="37%" height="30" align="right" class="custom_title">Version&nbsp</td>
 	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" value="Any Version" class="custom_select" onchange="javascript:filter_case_item();">
+                  <option>Any Version</option>
                   </select></td>
                 </tr>
               </table></td>
               <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
               <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name&nbsp</td>
-              <td width="4.5%" height="30" nowrap="nowrap"><a id="sort_packages" href="tests_custom.pl?order=$value"><img src="$image" width="23" height="23"/></a></td>
-              <td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
+              <td width="4.5%" height="30" nowrap="nowrap"><a id="sort_packages" title="Sort packages" href="tests_custom.pl?order=$value"><img src="$image" width="23" height="23"/></a></td>
+              <td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
               <td width="12%" align="left" height="30" nowrap="nowrap">
 				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
 			  </td>
@@ -782,6 +851,7 @@ sub UpdateNullPage {
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Category</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" value="Any Category" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>Any Category</option>
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -789,6 +859,7 @@ sub UpdateNullPage {
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Priority<td>
                     <select name="select_pri" id="select_pri" class="custom_select" value="And Priority" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>Any Priority</option>
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -798,6 +869,7 @@ sub UpdateNullPage {
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Status<td>
                     <select name="select_status" id="select_status" class="custom_select" value="Any Status" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>Any Status</option>
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -805,6 +877,7 @@ sub UpdateNullPage {
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Execution Type<td>
                     <select name="select_exe" id="select_exe" class="custom_select" value="Any Execution Type" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>Any Execution Type</option>
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -814,6 +887,7 @@ sub UpdateNullPage {
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Suite<td>
                     <select name="select_testsuite" id="select_testsuite" class="custom_select" value="Any Test Suite" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>Any Test Suite</option>
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -821,6 +895,7 @@ sub UpdateNullPage {
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Type<td>
                     <select name="select_type" id="select_type" class="custom_select" value="Any Type" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>Any Type</option>
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -830,6 +905,7 @@ sub UpdateNullPage {
                   <tr>
                     <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Set<td>
                       <select name="select_testset" id="select_testset" class="custom_select" value="Any Test Set" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>Any Test Set</option>
                     </select>                    </td>
                   </tr>
               </table></td>
@@ -837,6 +913,7 @@ sub UpdateNullPage {
                  <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Component<td>
                     <select name="select_com" id="select_com" class="custom_select" value="Any Component" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>Any Component</option>
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -876,7 +953,7 @@ DATA
             <tr>
               <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="10%"><div align="center">
-                <input type="button" id="execute_profile" name="execute_profile" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();"/>
+                <input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();"/>
               </div></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" class="backbackground_button"><div align="center">
@@ -901,12 +978,13 @@ DATA
                 </tr>
               </table></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button"  type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:onSave();"/></td>
+              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button" title="Save test plan" type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:onSave();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" type="button" class="medium_button" value="Load" disabled="true" onclick="javascript:onLoad();"/></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" disabled="true" onclick="javascript:onLoad();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="16" height="1" /></td>
+              <input type="hidden" id="package_name_number" name="package_name_number" value="$package_name_number">
             </tr>
           </table></td>
         </tr>
@@ -1375,6 +1453,405 @@ DATA
 DATA
 }
 
+sub ListViewDetailedInfo {
+	my $xml = "none";
+	my %caseInfo;
+	my @list_file_xml   = @_;
+	my $case_count_flag = 0;
+
+	my $package_number                    = 1;
+	my $count                             = 0;
+	my $advanced_value_category_tmp       = $advanced_value_category;
+	my $advanced_value_test_suite_tmp     = $advanced_value_test_suite;
+	my $advanced_value_test_set_tmp       = $advanced_value_test_set;
+	my $advanced_value_type_tmp           = $advanced_value_type;
+	my $advanced_value_status_tmp         = $advanced_value_status;
+	my $advanced_value_component_tmp      = $advanced_value_component;
+	my $advanced_value_execution_type_tmp = $advanced_value_execution_type;
+	my $advanced_value_priority_tmp       = $advanced_value_priority;
+	my $testcase_id;
+	my $testcase_purpose;
+	my $testcase_type;
+	my $testcase_component;
+	my $testcase_exe_type;
+	my $testcase_execution_type;
+	my @package_name_tmp = @package_name;
+	my $suite_terminator = 0;
+	my $set_terminator   = 0;
+
+	open OUT, '>' . $list_file_xml[0];
+	print OUT '<test_definition>' . "\n";
+	foreach (@package_name_tmp) {
+		if ( $view_package_name_flag[$count] eq "a" ) {
+			$case_count_flag++;
+		}
+		if ( $package_name_flag[$count] eq "a" ) {
+			my $suite_number    = 0;
+			my $set_number      = 0;
+			my $testcase_number = 1;
+			my $xml_temp;
+			my $suite_value;
+			my $set_value;
+			my $category_value;
+			my $flag_suite      = "n";
+			my $flag_set        = "n";
+			my $flag_case       = "n";
+			my $flag_category   = "n";
+			my $draw_suite_flag = 0;
+			my $draw_set_flag   = 0;
+			my $package         = $_;
+			my $tests_xml_dir = $test_definition_dir . $package . "/tests.xml";
+
+			open FILE, $tests_xml_dir or die $!;
+			while (<FILE>) {
+				if ( $_ =~ /suite.*name="(.*?)"/ ) {
+					if ($suite_terminator) {
+						print OUT '</suite>' . "\n";
+						$suite_terminator = 0;
+					}
+					$suite_value = $1;
+					$flag_suite  = "s";
+					if (
+						(
+							$advanced_value_test_suite_tmp =~
+							/\bAny Test Suite\b/
+						)
+						|| ( $advanced_value_test_suite_tmp =~
+							/\b$suite_value\b/ )
+					  )
+					{
+						$flag_suite = "m";
+						$suite_number++;
+						$draw_suite_flag = 0;
+					}
+				}
+				if ( $flag_suite eq "m" ) {
+					if ( $_ =~ /set.*name="(.*?)"/ ) {
+						if ($set_terminator) {
+							print OUT '</set>' . "\n";
+							$set_terminator = 0;
+						}
+						$set_value = $1;
+						$flag_set  = "s";
+						if (
+							(
+								$advanced_value_test_set_tmp =~
+								/\bAny Test Set\b/
+							)
+							|| ( $advanced_value_test_set_tmp =~
+								/\b$set_value\b/ )
+						  )
+						{
+							$flag_set = "m";
+							$set_number++;
+							$draw_set_flag = 0;
+						}
+					}
+					if ( $flag_set eq "m" ) {
+						if ( $_ =~ /testcase.*purpose="(.*?)"/ ) {
+							$testcase_purpose = $1;
+							if ( $_ =~ / type="(.*?)"/ ) {
+								$testcase_type = $1;
+							}
+							if ( $_ =~ /component="(.*?)"/ ) {
+								$testcase_component = $1;
+							}
+							if ( $_ =~ /execution_type="(.*?)"/ ) {
+								$testcase_exe_type = $1;
+							}
+							if ( $_ =~ /id="(.*?)"/ ) {
+								$case_value  = $1;
+								$testcase_id = $1;
+							}
+							$xml_temp = "none";
+
+							$flag_case     = "s";
+							$flag_category = "s";
+							my $tmp2;
+							my $tmp3;
+							my $tmp4;
+							my $tmp5;
+							my $tmp6;
+							my $tmp7;
+
+							if ( $_ =~ /type="(.*?)"/ ) {
+								$tmp2 = $1;
+							}
+							if ( $_ =~ /status="(.*?)"/ ) {
+								$tmp3 = $1;
+							}
+							if ( $_ =~ /component="(.*?)"/ ) {
+								$tmp4 = $1;
+							}
+							if ( $_ =~ /execution_type="(.*?)"/ ) {
+								$tmp5 = $1;
+							}
+							if ( $_ =~ /priority="(.*?)"/ ) {
+								$tmp6 = $1;
+							}
+							if ( $_ =~ /id="(.*?)"/ ) {
+								$tmp7 = $1;
+							}
+							if ( $_ =~ /testcase.*purpose="(.*?)"/ ) {
+								$testcase_execution_type = $tmp5;
+
+								if (
+									(
+										(
+											$advanced_value_type_tmp =~
+											/\bAny Type\b/
+										)
+										|| ( $advanced_value_type_tmp =~
+											/\b$tmp2\b/ )
+									)
+									&& (
+										(
+											$advanced_value_status_tmp =~
+											/\bAny Status\b/
+										)
+										|| ( $advanced_value_status_tmp =~
+											/\b$tmp3\b/ )
+									)
+									&& (
+										(
+											$advanced_value_component_tmp =~
+											/\bAny Component\b/
+										)
+										|| ( $advanced_value_component_tmp =~
+											/\b$tmp4\b/ )
+									)
+									&& (
+										(
+											$advanced_value_execution_type_tmp
+											=~ /\bAny Execution Type\b/
+										)
+										|| ( $advanced_value_execution_type_tmp
+											=~ /\b$tmp5\b/ )
+									)
+									&& (
+										(
+											$advanced_value_priority_tmp =~
+											/\bAny Priority\b/
+										)
+										|| ( $advanced_value_priority_tmp =~
+											/\b$tmp6\b/ )
+									)
+								  )
+								{
+									$flag_case = "m";
+								}
+							}
+						}
+						if ( $flag_case eq "m" ) {
+							chomp( $xml_temp .= $_ );
+							if ( $_ =~ /\<category\>(.*?)\<\/category\>/ ) {
+								$category_value = $1;
+								if ( $flag_category eq "s" ) {
+									if (
+										(
+											$advanced_value_category_tmp =~
+											/\bAny Category\b/
+										)
+										|| ( $advanced_value_category_tmp =~
+											/\b$category_value\b/ )
+									  )
+									{
+										$flag_category = "m";
+										%caseInfo = updateCaseInfo($xml_temp);
+										my $pre_conditions =
+										  $caseInfo{"pre_conditions"};
+										my $post_conditions =
+										  $caseInfo{"post_conditions"};
+										my $test_script_entry =
+										  $caseInfo{"test_script_entry"};
+										my $test_script_expected_result =
+										  $caseInfo{
+											"test_script_expected_result"};
+										my $actual_result =
+										  $caseInfo{"actual_result"};
+										my $spec     = $caseInfo{"spec"};
+										my $spec_url = $caseInfo{"spec_url"};
+										my $spec_statement =
+										  $caseInfo{"spec_statement"};
+										my $steps = $caseInfo{"steps"};
+
+										if ( $draw_suite_flag eq "0" ) {
+											$suite_terminator = 1;
+											print OUT '<suite name="'
+											  . $suite_value . '">' . "\n";
+											$draw_suite_flag = 1;
+										}
+
+										if ( $draw_set_flag eq "0" ) {
+											$set_terminator = 1;
+											print OUT '<set name="'
+											  . $set_value . '">' . "\n";
+											$draw_set_flag = 1;
+										}
+										print OUT '<testcase id="'
+										  . $case_value
+										  . '" purpose="'
+										  . $testcase_purpose
+										  . '" type="'
+										  . $testcase_type
+										  . '" component="'
+										  . $testcase_component
+										  . '" execution_type="'
+										  . $testcase_exe_type . '">' . "\n";
+										print OUT '<description>' . "\n";
+										print OUT '<pre_condition>'
+										  . $pre_conditions
+										  . '</pre_condition>' . "\n";
+										print OUT '<post_condition>'
+										  . $post_conditions
+										  . '</post_condition>' . "\n";
+										print OUT '<steps>' . "\n";
+										print OUT '<step order="1">' . "\n";
+										my @temp_steps = split( "__", $steps );
+
+										foreach (@temp_steps) {
+											my @temp = split( ":", $_ );
+											my $step_description = shift @temp;
+											my $expected_result  = shift @temp;
+											print OUT '<step_desc>'
+											  . $step_description
+											  . '</step_desc>' . "\n";
+											print OUT '<expected>'
+											  . $expected_result
+											  . '</expected>' . "\n";
+										}
+										print OUT '</step>' . "\n";
+										print OUT '</steps>' . "\n";
+										print OUT
+'<test_script_entry test_script_expected_result="'
+										  . $test_script_expected_result . '">'
+										  . $test_script_entry
+										  . '</test_script_entry>' . "\n";
+										print OUT '</description>' . "\n";
+										print OUT '<categories>' . "\n";
+										print OUT '</categories>' . "\n";
+										print OUT '</testcase>' . "\n";
+										$case_value_flag_count++;
+									}
+								}
+							}
+							else {
+								if ( $flag_category ne "m" ) {
+									if ( $_ =~ /\<\/testcase\>/ ) {
+										if ( $advanced_value_category_tmp =~
+											/\bAny Category\b/ )
+										{
+											chomp( $xml = $xml_temp );
+											%caseInfo = updateCaseInfo($xml);
+											my $pre_conditions =
+											  $caseInfo{"pre_conditions"};
+											my $post_conditions =
+											  $caseInfo{"post_conditions"};
+											my $test_script_entry =
+											  $caseInfo{"test_script_entry"};
+											my $test_script_expected_result =
+											  $caseInfo{
+												"test_script_expected_result"};
+											my $actual_result =
+											  $caseInfo{"actual_result"};
+											my $spec = $caseInfo{"spec"};
+											my $spec_url =
+											  $caseInfo{"spec_url"};
+											my $spec_statement =
+											  $caseInfo{"spec_statement"};
+											my $steps = $caseInfo{"steps"};
+
+											if ( $draw_suite_flag eq "0" ) {
+												$suite_terminator = 1;
+												print OUT '<suite name="'
+												  . $suite_value . '">' . "\n";
+												$draw_suite_flag = 1;
+											}
+											if ( $draw_set_flag eq "0" ) {
+												$set_terminator = 1;
+												print OUT '<set name="'
+												  . $set_value . '">' . "\n";
+												$draw_set_flag = 1;
+											}
+
+											print OUT '<testcase id="'
+											  . $case_value
+											  . '" purpose="'
+											  . $testcase_purpose
+											  . '" type="'
+											  . $testcase_type
+											  . '" component="'
+											  . $testcase_component
+											  . '" execution_type="'
+											  . $testcase_exe_type . '">'
+											  . "\n";
+											print OUT '<description>' . "\n";
+											print OUT '<pre_condition>'
+											  . $pre_conditions
+											  . '</pre_condition>' . "\n";
+											print OUT '<post_condition>'
+											  . $post_conditions
+											  . '</post_condition>' . "\n";
+											print OUT '<steps>' . "\n";
+											print OUT '<step order="1">' . "\n";
+											my @temp_steps =
+											  split( "__", $steps );
+
+											foreach (@temp_steps) {
+												my @temp = split( ":", $_ );
+												my $step_description =
+												  shift @temp;
+												my $expected_result =
+												  shift @temp;
+												print OUT '<step_desc>'
+												  . $step_description
+												  . '</step_desc>' . "\n";
+												print OUT '<expected>'
+												  . $expected_result
+												  . '</expected>' . "\n";
+											}
+											print OUT '</step>' . "\n";
+											print OUT '</steps>' . "\n";
+											print OUT
+'<test_script_entry test_script_expected_result="'
+											  . $test_script_expected_result
+											  . '">'
+											  . $test_script_entry
+											  . '</test_script_entry>' . "\n";
+											print OUT '</description>' . "\n";
+											print OUT '<spec>' . "\n";
+											print OUT '[Spec]' . $spec . "\n";
+											print OUT '[Spec URL]'
+											  . $spec_url . "\n";
+											print OUT '[Spec Statement]'
+											  . $spec_statement . "\n";
+											print OUT '</spec>' . "\n";
+											print OUT '</testcase>' . "\n";
+											$case_value_flag_count++;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			$package_number++;
+		}
+		$count++;
+		if ($set_terminator) {
+			print OUT '</set>' . "\n";
+			$set_terminator = 0;
+		}
+		if ($suite_terminator) {
+			print OUT '</suite>' . "\n";
+			$suite_terminator = 0;
+		}
+	}
+	print OUT '</test_definition>' . "\n";
+	close OUT;
+}
+
 #After press View button, refresh the page.
 sub UpdateViewPageSelectItem {
 	@sort_package_name    = sort @package_name;
@@ -1408,77 +1885,60 @@ sub UpdateViewPageSelectItem {
 
 	GetSelectItem();
 	print <<DATA;
-	<div id="ajax_loading" style="display:none"></div>
-	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-	  <tr>
-	    <td><form id="tests_custom" name="tests_custom" method="post" action="tests_custom.pl">
-	      <table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">
-	        <tr>
-	          <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
-	            <tr>
-	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
-	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-	                <tr>
-	                  <td width="47%" height="30" align="left" class="custom_title">Architecture&nbsp</td>
-	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
-	                    <option>X86</option>
-	                  </select>                  </td>
-	                </tr>
-	              </table></td>
-	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-	                <tr>
-	                  <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="30" align="right" class="custom_title">Version&nbsp</td>
-	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" class="custom_select">
+    <div id="ajax_loading" style="display:none"></div>
+    <table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+      <tr>
+        <td><form id="tests_custom" name="tests_custom" method="post" action="tests_custom.pl">
+          <table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
+                <tr>
+                  <td width="2%" height="30" nowrap="nowrap">&nbsp;</td> 
+DATA
+	if ($tree_view_current) {
+		print <<DATA;
+                  <td width="78%" height="30" nowrap="nowrap" class="custom_title">View test cases in tree view</td>
+DATA
+	}
+	elsif ($list_view_current) {
+		print <<DATA;
+                  <td width="78%" height="30" nowrap="nowrap" class="custom_title">View test cases in list view</td>
+DATA
+	}
+	print <<DATA;
+                  <td width="10%" height="30" align="center" nowrap="nowrap">
+                    <input id="tree_view_filter_pkg_info" name="tree_view_filter_pkg_info" title="View detailed information of filtered packages in tree view" class="medium_button" type="submit" value="Tree View"/>
+                  </td>
+                  <td width="10%" height="30" align="center" nowrap="nowrap">
+                    <input id="list_view_filter_pkg_info" name="list_view_filter_pkg_info" title="View detailed information of filtered packages in list view" class="medium_button" type="submit" value="List View"/>
+                  </td>
+                </tr>
+          </table></td>
+        </tr>
+        <tr>
+        <td id="list_advanced" style="display:"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
+            
+            <tr>
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Architecture</td><td>
+                    <select name="select_arc" align="20px" id="select_arc" class="custom_select" style="width:70%">
+                    <option>X86</option>
+                    </select></td>
+                </tr>
+              </table></td>
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Version<td>
+                    <select name="select_ver" id="select_ver" class="custom_select" style="width:70%">
 DATA
 	LoadDrawVersionSelect();
 	print <<DATA;
-                  </select></td>
+                    </select>                    </td>
                 </tr>
               </table></td>
-              <td width="3%" height="30" nowrap="nowrap">&nbsp;</td> 
-DATA
-	my $hidden_advanced_flag = 0;
-	if (   ( $advanced_value_category =~ /\bAny Category\b/ )
-		&& ( $advanced_value_priority       =~ /\bAny Priority\b/ )
-		&& ( $advanced_value_status         =~ /\bAny Status\b/ )
-		&& ( $advanced_value_execution_type =~ /\bAny Execution Type\b/ )
-		&& ( $advanced_value_test_suite     =~ /\bAny Test Suite\b/ )
-		&& ( $advanced_value_type           =~ /\bAny Type\b/ )
-		&& ( $advanced_value_test_set       =~ /\bAny Test Set\b/ )
-		&& ( $advanced_value_component      =~ /\bAny Component\b/ ) )
-	{
-		print <<DATA;
-		<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
-        <td width="42%" align="left" height="30" nowrap="nowrap">
-			<input id="view_filter_package_list" name="view_filter_package_list" class="medium_button" type="submit" value="View"/>
-		</td>
-         <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
-          </table></td>
-        </tr>
-        <tr>
-         <td id="list_advanced" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-DATA
-	}
-	else {
-		print <<DATA;
-		<td width="12%" height="30" nowrap="nowrap">
-			<input id="button_adv" name="button_adv" class="medium_button" type="button" value="Normal" onclick="javascript:hidden_Advanced_List();"/>
-		</td>
-		<td width="42%" height="30" align="left" nowrap="nowrap">
-			<input id="view_filter_package_list" name="view_filter_package_list" class="medium_button" type="submit" value="View"/>
-		</td>
-              <td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-		<td id="list_advanced" style="display:"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
-DATA
-	}
-
-	print <<DATA;
+            
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
@@ -1618,12 +2078,12 @@ DATA
 DATA
 	if ( !$sort_flag ) {
 		print <<DATA;
-     <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" src="images/up_and_down_1.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
+     <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" title="Sort packages" src="images/up_and_down_1.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
 DATA
 	}
 	else {
 		print <<DATA;
-     <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" src="images/up_and_down_2.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
+     <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" title="Sort packages" src="images/up_and_down_2.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
 DATA
 	}
 	my $hidden_advanced_flag = 0;
@@ -1639,12 +2099,12 @@ DATA
 
 		if ( @package_name == 0 ) {
 			print <<DATA;
-			<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
+			<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
 DATA
 		}
 		else {
 			print <<DATA;
-			<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
+			<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
 DATA
 		}
 		print <<DATA;
@@ -1662,7 +2122,7 @@ DATA
 	}
 	else {
 		print <<DATA;
-		<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" class="medium_button" type="button" value="Normal" onclick="javascript:hidden_Advanced_List();"/></td>
+		<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Hide advanced list" class="medium_button" type="button" value="Normal" onclick="javascript:hidden_Advanced_List();"/></td>
         <td width="42%" align="left" height="30" nowrap="nowrap">
 			<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
 		</td>
@@ -1818,7 +2278,7 @@ DATA
             <tr>
               <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="10%" valign="top"><div align="center">
-                <input type="button" id="execute_profile" name="execute_profile" class="large_button" value="Execute" onclick="javascript:onExecute();"/>
+                <input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" value="Execute" onclick="javascript:onExecute();"/>
               </div></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" valign="top" class="backbackground_button"><div align="center">
@@ -1851,11 +2311,11 @@ DATA
                 </tr>
               </table></td>              
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button"  type="button" class="medium_button" value="Save" onclick="javascript:onSave();"/></td>
+              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:onSave();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" type="button" class="medium_button" value="Load" onclick="javascript:onLoad();"/></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:onLoad();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="16" height="1" /></td>
             </tr>
           </table></td>
@@ -1876,7 +2336,7 @@ DATA
             <tr>
               <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="10%" valign="top"><div align="center">
-                <input type="button" id="execute_profile" name="execute_profile" disabled="true" class="large_button" value="Execute" onclick="javascript:onExecute();"/>
+                <input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" disabled="true" class="large_button" value="Execute" onclick="javascript:onExecute();"/>
               </div></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
               <td width="9%" valign="top" class="backbackground_button"><div align="center">
@@ -1909,11 +2369,11 @@ DATA
                 </tr>
               </table></td>              
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button" disabled="true" type="button" class="medium_button" value="Save" onclick="javascript:onSave();"/></td>
+              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button" title="Save test plan" disabled="true" type="button" class="medium_button" value="Save" onclick="javascript:onSave();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" type="button" class="medium_button" value="Load" onclick="javascript:onLoad();"/></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:onLoad();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
+              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
               <td width="1%"><img src="images/environment-spacer.gif" width="16" height="1" /></td>
             </tr>
           </table></td>
@@ -1942,6 +2402,11 @@ print <<DATA;
 var package_name_number = 
 DATA
 print $package_name_number. ";";
+
+print <<DATA;
+var uninstall_package_count_max = 
+DATA
+print $UNINSTALL_PACKAGE_COUNT_MAX. ";";
 
 print <<DATA;
 var case_number = new Array(
@@ -2620,9 +3085,11 @@ function hidden_Advanced_List()
 	if(advanced_list.style.display == ""){
 		advanced_list.style.display = "none";
 		button_advanced.value = "Advanced";
+		button_advanced.title = "Show advanced list";
 	}else{
 		advanced_list.style.display = "";
 		button_advanced.value = "Normal";
+		button_advanced.title = "Hide advanced list";
 	}
 }
 
@@ -2950,6 +3417,31 @@ function onViewPackage(count){
 	var testset=sel_testset.value;
 	var com=sel_com.value;
 	
+	for(var i=0; i<uninstall_package_count_max; i++){
+		var install_pkg_id_tmp = "install_pkg_" + i;
+		document.getElementById(install_pkg_id_tmp).onclick = "";
+		document.getElementById(install_pkg_id_tmp).style.cursor = "default";
+	}
+		
+	for(var i=0; i<package_name_number; i++){
+		var update_pkg_count_tmp = "update_package_name_" + i;
+		var pkg_name_tmp = document.getElementById(update_pkg_count_tmp);
+		var update_pkg_pic_tmp = "update_" + pkg_name_tmp.value;
+		var del_pkg_count_tmp = "pn_package_name_"+i;
+		var del_pkg_name_tmp = document.getElementById(del_pkg_count_tmp);
+		var del_pkg_pic_tmp = "delete_" + del_pkg_name_tmp.value;
+		var view_pkg_count_tmp = "view_package_name_"+i;
+		var view_pkg_name_tmp = document.getElementById(view_pkg_count_tmp);
+		var view_pkg_pic_tmp = "view_" + view_pkg_name_tmp.value;
+		
+		document.getElementById(update_pkg_pic_tmp).onclick = "";
+		document.getElementById(update_pkg_pic_tmp).style.cursor = "default";
+		document.getElementById(del_pkg_pic_tmp).onclick = "";
+		document.getElementById(del_pkg_pic_tmp).style.cursor = "default";
+		document.getElementById(view_pkg_pic_tmp).onclick = "";
+		document.getElementById(view_pkg_pic_tmp).style.cursor = "default";
+	}
+	
 	document.location="tests_custom.pl?view_single_package=1&view_"+pkg+"=1&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
 }
 DATA
@@ -2992,6 +3484,30 @@ function onDeletePackage(count) {
 	
 	
 	if(confirm("Are you sure to delete "+pkg+"?")){
+		for(var i=0; i<uninstall_package_count_max; i++){
+			var install_pkg_id_tmp = "install_pkg_" + i;
+			document.getElementById(install_pkg_id_tmp).onclick = "";
+			document.getElementById(install_pkg_id_tmp).style.cursor = "default";
+		}
+		
+		for(var i=0; i<package_name_number; i++){
+			var update_pkg_count_tmp = "update_package_name_" + i;
+			var pkg_name_tmp = document.getElementById(update_pkg_count_tmp);
+			var update_pkg_pic_tmp = "update_" + pkg_name_tmp.value;
+			var del_pkg_count_tmp = "pn_package_name_"+i;
+			var del_pkg_name_tmp = document.getElementById(del_pkg_count_tmp);
+			var del_pkg_pic_tmp = "delete_" + del_pkg_name_tmp.value;
+			var view_pkg_count_tmp = "view_package_name_"+i;
+			var view_pkg_name_tmp = document.getElementById(view_pkg_count_tmp);
+			var view_pkg_pic_tmp = "view_" + view_pkg_name_tmp.value;
+			
+			document.getElementById(update_pkg_pic_tmp).onclick = "";
+			document.getElementById(update_pkg_pic_tmp).style.cursor = "default";
+			document.getElementById(del_pkg_pic_tmp).onclick = "";
+			document.getElementById(del_pkg_pic_tmp).style.cursor = "default";
+			document.getElementById(view_pkg_pic_tmp).onclick = "";
+			document.getElementById(view_pkg_pic_tmp).style.cursor = "default";
+		}
 		document.location="tests_custom.pl?delete_package=1&delete_"+pkg+"=1&sort_flag="+sort_flag+"&checkbox="+checkbox_value+"&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
 	}
 }
@@ -3687,7 +4203,7 @@ sub DrawUninstallPackageList {
 		print <<DATA;
 		<tr id="uninstall_$i" style="display:none">
 	        <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" style="table-layout:fixed">
-	        <td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_$i" name="checkbox_$i" disabled="disabled"/></td>
+	        <td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_$i" name="checkbox_$i" disabled="true"/></td>
 	        <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
 	        <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_uninstall_packagename" id="pn_$i" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;cursor:default;" title="Uninstalled"></td>
 	        <td width="24%" height="30" align="left" class="custom_list_type_bottomright" id="cn_$i" name="cn_$i">&nbsp;- -</td>
@@ -3710,6 +4226,9 @@ sub DrawUninstallPackageList {
 	        </tr>
 DATA
 	}
+	print <<DATA;
+<input type="hidden" id="uninstall_package_count_max" value="$UNINSTALL_PACKAGE_COUNT_MAX">
+DATA
 }
 
 sub LoadDrawVersionSelect {

@@ -40,7 +40,7 @@ our @EXPORT = qw(
 
 # where is the result home folder
 my $result_dir_manager = $FindBin::Bin . "/../../results/";
-my $defination_dir     = $FindBin::Bin . "/../../defination/";
+my $definition_dir     = $FindBin::Bin . "/../../definition/";
 my $result_dir_lite    = $FindBin::Bin . "/../../lite";
 
 # save time -> package_name -> package_dir
@@ -57,7 +57,7 @@ sub writeResultInfo {
 	$isOnlyAuto   = $isOnlyAuto_temp;
 	@targetFilter = @targetFilter_temp;
 
-	syncDefination();
+	syncDefinition();
 
 	if ( $time_only ne "" ) {
 		find( \&changeDirStructure_wanted,
@@ -118,7 +118,7 @@ DATA
 			else {
 				$package_verdict .= "\nPackage:" . $temp . "\n";
 			}
-			for ( my $i = 1 ; $i <= 8 ; $i++ ) {
+			for ( my $i = 1 ; $i <= 11 ; $i++ ) {
 				$package_verdict .= $time_package_dir[ ++$count ] . "\n";
 			}
 			$package_verdict .= $time_package_dir[ ++$count ];
@@ -188,7 +188,7 @@ sub writeResultInfo_wanted {
 			my $set_name     = "";
 			my $case_content = "";
 			my $test_definition_xml =
-			  $defination_dir . $package_name . "/tests.xml";
+			  $definition_dir . $package_name . "/tests.xml";
 			open FILE, $test_definition_xml
 			  or die "can't open " . $test_definition_xml;
 			system( 'cp '
@@ -302,12 +302,12 @@ sub writeResultInfo_wanted {
 		my @totalVerdict =
 		  getTotalVerdict( $dir, $time, $package_name, $manual_case_number );
 		my @verdict = getVerdict( $dir, $time, $package_name );
-		if ( ( @totalVerdict == 3 ) && ( @verdict == 6 ) ) {
+		if ( ( @totalVerdict == 4 ) && ( @verdict == 8 ) ) {
 			push( @time_package_dir, $package_name );
-			for ( my $i = 1 ; $i <= 3 ; $i++ ) {
+			for ( my $i = 1 ; $i <= 4 ; $i++ ) {
 				push( @time_package_dir, shift(@totalVerdict) );
 			}
-			for ( my $i = 1 ; $i <= 6 ; $i++ ) {
+			for ( my $i = 1 ; $i <= 8 ; $i++ ) {
 				push( @time_package_dir, shift(@verdict) );
 			}
 		}
@@ -322,8 +322,9 @@ sub getTotalVerdict {
 	# parse tests_result.xml
 	my @totalVerdict = ();
 	$total = 0;
-	my $pass = 0;
-	my $fail = 0;
+	my $pass  = 0;
+	my $fail  = 0;
+	my $block = 0;
 	if ( -e $testkit_lite_result_xml ) {
 		open FILE, $testkit_lite_result_xml or die $!;
 		while (<FILE>) {
@@ -335,12 +336,16 @@ sub getTotalVerdict {
 				elsif ( $_ =~ /.*result="FAIL".*/ ) {
 					$fail += 1;
 				}
+				elsif ( $_ =~ /.*result="BLOCK".*/ ) {
+					$block += 1;
+				}
 			}
 		}
 	}
 	push( @totalVerdict, "Total:" . $total );
 	push( @totalVerdict, "Pass:" . $pass );
 	push( @totalVerdict, "Fail:" . $fail );
+	push( @totalVerdict, "Block:" . $block );
 	return @totalVerdict;
 }
 
@@ -357,9 +362,11 @@ sub getVerdict {
 		my $totalM = 0;
 		my $passM  = 0;
 		my $failM  = 0;
+		my $blockM = 0;
 		my $totalA = 0;
 		my $passA  = 0;
 		my $failA  = 0;
+		my $blockA = 0;
 
 		open FILE, $manual_result_list or die $!;
 		while (<FILE>) {
@@ -369,11 +376,15 @@ sub getVerdict {
 			if ( $_ =~ /FAIL/ ) {
 				$failM += 1;
 			}
+			if ( $_ =~ /BLOCK/ ) {
+				$blockM += 1;
+			}
 			$totalM += 1;
 		}
 		push( @verdict, "Total(M):" . $totalM );
 		push( @verdict, "Pass(M):" . $passM );
 		push( @verdict, "Fail(M):" . $failM );
+		push( @verdict, "Block(M):" . $blockM );
 
 		open FILE, $testkit_lite_result_xml or die $!;
 		while (<FILE>) {
@@ -387,6 +398,9 @@ sub getVerdict {
 				elsif ( $_ =~ /.*result="FAIL".*/ ) {
 					$failA += 1;
 				}
+				elsif ( $_ =~ /.*result="BLOCK".*/ ) {
+					$blockA += 1;
+				}
 			}
 		}
 		if ( $totalA == 0 ) {
@@ -395,6 +409,7 @@ sub getVerdict {
 		push( @verdict, "Total(A):" . $totalA );
 		push( @verdict, "Pass(A):" . $passA );
 		push( @verdict, "Fail(A):" . $failA );
+		push( @verdict, "Block(A):" . $blockA );
 	}
 	return @verdict;
 }
@@ -523,20 +538,20 @@ sub mkdirWriteXmlResult {
 	close $file;
 }
 
-sub syncDefination {
-	system( "rm -rf $defination_dir" . "*" );
-	my $cmd_defination = "sdb shell ls /usr/share/*/tests.xml";
-	my @definations    = `$cmd_defination`;
-	foreach (@definations) {
-		my $defination = "";
+sub syncDefinition {
+	system( "rm -rf $definition_dir" . "*" );
+	my $cmd_definition = "sdb shell ls /usr/share/*/tests.xml";
+	my @definitions    = `$cmd_definition`;
+	foreach (@definitions) {
+		my $definition = "";
 		if ( $_ =~ /(\/usr\/share\/.*\/tests.xml)/ ) {
-			$defination = $1;
+			$definition = $1;
 		}
-		$defination =~ s/\s*$//;
-		if ( $defination =~ /share\/(.*)\/tests.xml/ ) {
+		$definition =~ s/\s*$//;
+		if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
 			my $package_name = $1;
-			system("mkdir $defination_dir$package_name");
-			system("sdb pull $defination $defination_dir$package_name");
+			system("mkdir $definition_dir$package_name");
+			system("sdb pull $definition $definition_dir$package_name");
 		}
 	}
 }
