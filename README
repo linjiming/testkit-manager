@@ -4,7 +4,7 @@ It manages the auto tests execution remotely, and provides unified webUI to help
 
 dependency:
 ===========
-perl-libxml-perl perl-App-cpanminus perl-XML-Simple perl-XML-LibXSLT
+perl-libxml-perl perl-App-cpanminus perl-XML-Simple perl-XML-LibXSLT wget
 
 
 Installation:
@@ -17,10 +17,11 @@ Step 1: install dependence packages on host
     sudo apt-get install libio-pty-easy-perl
     sudo apt-get install libxml-libxslt-perl
     sudo apt-get install cpanminus
-    cpanm JSON
+    sudo cpanm JSON
     sudo apt-get install rpm
 
   Host (fedora17)
+    sudo yum install wget
     sudo yum install perl-libxml-perl
     sudo yum install perl-App-cpanminus
     sudo yum install perl-XML-Simple
@@ -28,10 +29,10 @@ Step 1: install dependence packages on host
 
 Step 2: install testkit-manger on host
   Host (ubuntu11.10)
-    rpm -ivh testkit-manager-x.x.x-x.i386.rpm --nodeps
+    sudo rpm -ivh testkit-manager-x.x.x-x.i386.rpm --nodeps
 
   Host (fedora17)
-    rpm -ivh testkit-manager-x.x.x-x.i386.rpm
+    sudo rpm -ivh testkit-manager-x.x.x-x.i386.rpm
 
 Step 3: install 'sdb' on host
   sudo cp <somewhere>/sdb /usr/bin
@@ -40,7 +41,7 @@ Step 3: install 'sdb' on host
 Step 4: connect device
   power on device
   connect USB
-  type command 'sdb devices' from the host to check if the device is really connected
+  type command 'sudo sdb devices' from the host to check if the device is really connected
 
 
 Configure Repository of Test Packages:
@@ -53,10 +54,14 @@ Please put test packages to /home/package
 
 Startup:
 ===========
-1. type command '/opt/testkit/manager/webapps/bin/testkit_start.pl' from the host
+1. type command 'sudo /opt/testkit/manager/webapps/bin/testkit_start.pl' from the host
 2. open web page on browser: http://<test-machine-name>:8899
 
 
 Limitation:
 ===========
 1. only support devices that have 'sdb' communication module
+
+Known Issues:
+===========
+N/A

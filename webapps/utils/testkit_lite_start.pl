@@ -1048,6 +1048,26 @@ sub syncLiteResult {
 #$subshell->Send("rm -rf ".$globals->{'testlog_dir'}."/runtest/latest/*;./runtest --testsetfile=./tests/testkit;exit\n");
 #$subshell->Send("rm -rf ".$globals->{'testlog_dir'}."/runtest/latest/*;/usr/local/bin/testrunner-lite -f $profile_content -o ".$globals->{'testlog_dir'}."/runtest/latest/results.xml;exit\n");
 	if ( $profile_content ne "" ) {
+
+		# kill all existing widgets before testing
+		my $cmd           = "sdb shell 'wrt-launcher -l'";
+		my @package_items = `$cmd`;
+		foreach (@package_items) {
+			my $package_id = "none";
+			if ( $_ =~ /^\s+(\d+)\s+(\d+)/ ) {
+				$package_id = $2;
+			}
+			if ( $package_id ne "none" ) {
+				my $cmd =
+				  "sdb shell 'ps aux | grep /bin/$package_id | sed -n '1,1p''";
+				my $pid = `$cmd`;
+				if ( $pid =~ /app\s*(\d*)\s*/ ) {
+					system("sdb shell kill $1");
+				}
+			}
+		}
+
+		# start testing
 		if ( $isWebApi eq "False" ) {
 			$subshell->Spawn( "rm -rf "
 				  . $globals->{'testlog_dir'}

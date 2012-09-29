@@ -1424,6 +1424,11 @@ tr.selectable:hover {
 }
 
 /* start test custom page */
+.test_plan_name {
+	width: 152px;
+	height: 20px;
+}
+
 .custom_title {
 	font-family: Arial;
 	font-size: 14px;

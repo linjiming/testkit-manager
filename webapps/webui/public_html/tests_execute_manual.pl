@@ -284,9 +284,9 @@ DATA
 		# print manual case
 		%manual_case_result = updateManualCaseResult( $time, $package );
 		$execution_type = "manual";
-		my $isManual          = "FALSE";
-		my $def_tests_xml_dir = $test_definition_dir . $package . "/tests.xml";
-		open FILE, $def_tests_xml_dir or die $!;
+		my $isManual         = "FALSE";
+		my $total_result_xml = "$result_dir_manager$time/tests.result.xml";
+		open FILE, $total_result_xml or die $!;
 		while (<FILE>) {
 			if ( $startCase eq "TRUE" ) {
 				chomp( $xml .= $_ );

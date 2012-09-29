@@ -136,7 +136,10 @@ function startTests(profile_name) {
 			+ encodeURIComponent(profile_name));
 }
 
-function startRefresh(profile_name) {
+function startRefresh(profile_name, have_alert) {
+	if (have_alert == "true") {
+		alert("A test is already running.\nYou cannot run another instance before it is finished.\nStart watching the current run...");
+	}
 	exec_info.innerHTML = 'Test cases are running &hellip;';
 	exec_status.innerHTML = '&nbsp;&nbsp;&nbsp;<img src="images/ajax_progress.gif" width="16" height="16" alt="" />';
 	cmdlog.innerHTML = '';
@@ -247,8 +250,9 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('sort_packages').style.cursor = "pointer";
 		document.getElementById('button_adv').disabled = false;
 		document.getElementById('update_package_list').disabled = false;
-		document.getElementById('load_profile_button').disabled = false;
-		document.getElementById('delete_profile_button').disabled = false;
+		document.getElementById('save_profile_panel_button').disabled = false;
+		document.getElementById('load_profile_panel_button').disabled = false;
+		document.getElementById('manage_profile_panel_button').disabled = false;
 	}
 
 	if (responseXML.getElementsByTagName('no_package_update_or_install').length > 0) {
@@ -262,8 +266,9 @@ function ajaxProcessResult(responseXML) {
 		}
 		document.getElementById('sort_packages').style.cursor = "pointer";
 		document.getElementById('button_adv').disabled = false;
-		document.getElementById('load_profile_button').disabled = false;
-		document.getElementById('delete_profile_button').disabled = false;
+		document.getElementById('save_profile_panel_button').disabled = false;
+		document.getElementById('load_profile_panel_button').disabled = false;
+		document.getElementById('manage_profile_panel_button').disabled = false;
 		document.getElementById('progress_waiting').style.display = "none";
 
 	}
@@ -304,8 +309,9 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('sort_packages').style.cursor = "pointer";
 		document.getElementById('button_adv').disabled = false;
 		document.getElementById('update_package_list').disabled = false;
-		document.getElementById('load_profile_button').disabled = false;
-		document.getElementById('delete_profile_button').disabled = false;
+		document.getElementById('save_profile_panel_button').disabled = false;
+		document.getElementById('load_profile_panel_button').disabled = false;
+		document.getElementById('manage_profile_panel_button').disabled = false;
 		// document.getElementById('update_package_list').value = "Reload";
 		// document.getElementById('update_package_list').title = "Refresh
 		// current page and load only installed packages, so you can start
@@ -351,6 +357,7 @@ function ajaxProcessResult(responseXML) {
 		if (count == "0") {
 			msg.push(tid);
 		}
+		updateTestPlanSelect();
 		alert("Test plan is saved successfully.");
 	}
 	if (responseXML.getElementsByTagName('load_profile').length > 0) {
@@ -375,10 +382,12 @@ function ajaxProcessResult(responseXML) {
 		if (load_flag == 0) {
 			alert("The following packages from the test plan are not installed:\n"
 					+ message_not_load);
-			document.getElementById('load_profile_button').disabled = false;
+			document.getElementById('load_profile_panel_button').disabled = false;
 		} else {
+			var load_test_plan_select = document
+					.getElementById('load_test_plan_select');
 			document.location = "tests_custom.pl?load_profile_button="
-					+ edit_profile_name.value;
+					+ load_test_plan_select.value;
 		}
 	}
 	if (responseXML.getElementsByTagName('delete_profile_success').length > 0) {
@@ -388,7 +397,7 @@ function ajaxProcessResult(responseXML) {
 				msg.splice(i, 1);
 			}
 		}
-		edit_profile_name.value = "";
+		updateTestPlanSelect();
 		alert("Test plan is deleted successfully.");
 	}
 	if (responseXML.getElementsByTagName('check_profile_name').length > 0) {
@@ -450,26 +459,32 @@ function ajaxProcessResult(responseXML) {
 		}
 		if (tid == "save") {
 			if (confirm("Are you sure to save this test plan?")) {
+				var save_test_plan_text = document
+						.getElementById("save_test_plan_text");
 				ajax_call_get('action=save_profile&save_profile_name='
-						+ edit_profile_name.value + '&checkbox='
+						+ save_test_plan_text.value + '&checkbox='
 						+ checkbox_value.join("*") + '&advanced=' + advanced
 						+ "&auto_count=" + filter_auto_count_string
 						+ "&manual_count=" + filter_manual_count_string
 						+ "&pkg_flag=" + package_name_flag.join("*"));
 			}
 		} else if ((tid != "save") && (tid.indexOf("save") == 0)) {
-			if (confirm("Test plan: " + tid.slice(4)
+			if (confirm("Test plan " + tid.slice(4)
 					+ " exists. Are you sure to overwirte it?")) {
+				var save_test_plan_select = document
+						.getElementById("save_test_plan_select");
 				ajax_call_get('action=save_profile&save_profile_name='
-						+ edit_profile_name.value + '&checkbox='
+						+ save_test_plan_select.value + '&checkbox='
 						+ checkbox_value.join("*") + '&advanced=' + advanced
 						+ "&auto_count=" + filter_auto_count_string
 						+ "&manual_count=" + filter_manual_count_string
 						+ "&pkg_flag=" + package_name_flag.join("*"));
 			}
 		} else if (tid == "delete") {
+			var manage_test_plan_select = document
+					.getElementById("manage_test_plan_select");
 			ajax_call_get('action=delete_profile&delete_profile_name='
-					+ edit_profile_name.value);
+					+ manage_test_plan_select.value);
 		} else {
 			alert("Test plan " + tid.slice(6) + " does not exist.");
 		}
@@ -681,7 +696,7 @@ function ajaxProcessResult(responseXML) {
 	}
 	if (responseXML.getElementsByTagName('started').length > 0) {
 		var profile_name = responseXML.getElementsByTagName('started')[0].childNodes[0].nodeValue;
-		setTimeout('startRefresh("' + profile_name + '")', 100);
+		setTimeout('startRefresh("' + profile_name + '", "false")', 100);
 	} else {
 		if (responseXML.getElementsByTagName('output').length > 0) {
 			var output = '';
@@ -824,8 +839,9 @@ function ajaxProcessResult(responseXML) {
 			if (responseXML.getElementsByTagName('redirect').length > 0) {
 				if (responseXML.getElementsByTagName('lose_connection').length > 0) {
 					stopRefresh();
-					exec_info.innerHTML = 'Lost connection to the device';
-					exec_status.innerHTML = '';
+					exec_info.style.color = 'red';
+					exec_info.innerHTML = 'Lost connection to the device,';
+					exec_status.innerHTML = 'refresh this page to restart testing.';
 					if (start_button)
 						start_button.disabled = true;
 				} else {
@@ -936,9 +952,10 @@ function onUpdatePackages() {
 	document.getElementById('update_package_list').disabled = true;
 	document.getElementById('execute_profile').disabled = true;
 	document.getElementById('view_package_info').disabled = true;
-	document.getElementById('save_profile_button').disabled = true;
-	document.getElementById('load_profile_button').disabled = true;
-	document.getElementById('delete_profile_button').disabled = true;
+	document.getElementById('save_profile_panel_button').disabled = true;
+	document.getElementById('load_profile_panel_button').disabled = true;
+	document.getElementById('manage_profile_panel_button').disabled = true;
+	close_all_test_plan_panel();
 	if (document.getElementById('update_null_page_div')) {
 		document.getElementById('update_null_page_div').style.display = "none";
 	}
@@ -1063,52 +1080,169 @@ function onExecute() {
 	}
 }
 
-function onSave() {
-	var edit_profile_name = document.getElementById("edit_profile_name");
-	var reg = /^[a-zA-Z]{1}\w{0,19}$/;
-	var str = edit_profile_name.value;
-	var result = reg.exec(str);
-	if (!result) {
-		edit_profile_name.style.borderColor = 'white';
-		alert('Test plan name should start with a letter and follow by letters, numbers or "_",\nand maximum length is 20 characters');
-		return false;
+function save_profile(type) {
+	var save_test_plan;
+	if (type == 'text') {
+		save_test_plan = document.getElementById("save_test_plan_text");
+		var reg = /^[a-zA-Z]{1}\w{0,19}$/;
+		var str = save_test_plan.value;
+		var result = reg.exec(str);
+		if (!result) {
+			alert('Test plan name should start with a letter and follow by letters, numbers or "_",\nand maximum length is 20 characters');
+			return false;
+		}
 	} else {
-		ajax_call_get('action=check_profile_isExist&profile_name='
-				+ edit_profile_name.value + '&option=save');
+		save_test_plan = document.getElementById("save_test_plan_select");
+	}
+	ajax_call_get('action=check_profile_isExist&profile_name='
+			+ save_test_plan.value + '&option=save');
+}
+
+function load_profile() {
+	if (confirm("Are you sure to load this test plan?")) {
+		var load_test_plan_select = document
+				.getElementById('load_test_plan_select');
+		document.getElementById('load_profile_button').disabled = true;
+		ajax_call_get('action=check_package_isExist&load_profile_name='
+				+ load_test_plan_select.value);
 	}
 }
 
-function onLoad() {
-	var flag = 1;
-	if (edit_profile_name.value == '') {
-		edit_profile_name.style.borderColor = 'white';
-		alert('Specify the test plan name.');
-		return false;
-	} else {
-		for ( var count = 0; count < msg.length; count++) {
-			if (msg[count] == edit_profile_name.value) {
-				flag = 0;
-			}
-		}
-		if (flag) {
-			alert("Test plan " + edit_profile_name.value + " does not exist.");
-		} else {
-			document.getElementById('load_profile_button').disabled = true;
-			ajax_call_get('action=check_package_isExist&load_profile_name='
-					+ edit_profile_name.value);
-		}
+function delete_profile() {
+	if (confirm("Are you sure to delete this test plan?")) {
+		var manage_test_plan_select = document
+				.getElementById("manage_test_plan_select");
+		ajax_call_get('action=check_profile_isExist&profile_name='
+				+ manage_test_plan_select.value + '&option=delete');
 	}
 }
 
-function onDelete() {
-	var edit_profile_name = document.getElementById("edit_profile_name");
-	if (edit_profile_name.value == '') {
-		edit_profile_name.style.borderColor = 'white';
-		alert('Specify the test plan name.');
-		return false;
+function show_save_panel() {
+	document.getElementById("load_profile_panel").style.display = "none";
+	document.getElementById("manage_profile_panel").style.display = "none";
+	document.getElementById("load_profile_panel_button").title = "Open load test plan panel";
+	document.getElementById("manage_profile_panel_button").title = "Open manage test plan panel";
+	if (document.getElementById("save_profile_panel").style.display == "none") {
+		document.getElementById("save_profile_panel").style.display = "";
+		document.getElementById("save_profile_panel_button").title = "Close save test plan panel";
+		document.getElementById("save_profile_panel_button").value = "Close";
+		document.getElementById("load_profile_panel_button").value = "Load";
+		document.getElementById("manage_profile_panel_button").value = "Manage";
 	} else {
-		ajax_call_get('action=check_profile_isExist&profile_name='
-				+ edit_profile_name.value + '&option=delete');
+		document.getElementById("save_profile_panel").style.display = "none";
+		document.getElementById("save_profile_panel_button").title = "Open save test plan panel";
+		document.getElementById("save_profile_panel_button").value = "Save";
+	}
+}
+
+function show_load_panel() {
+	document.getElementById("save_profile_panel").style.display = "none";
+	document.getElementById("manage_profile_panel").style.display = "none";
+	document.getElementById("save_profile_panel_button").title = "Open save test plan panel";
+	document.getElementById("manage_profile_panel_button").title = "Open manage test plan panel";
+	if (document.getElementById("load_profile_panel").style.display == "none") {
+		document.getElementById("load_profile_panel").style.display = "";
+		document.getElementById("load_profile_panel_button").title = "Close load test plan panel";
+		document.getElementById("save_profile_panel_button").value = "Save";
+		document.getElementById("load_profile_panel_button").value = "Close";
+		document.getElementById("manage_profile_panel_button").value = "Manage";
+	} else {
+		document.getElementById("load_profile_panel").style.display = "none";
+		document.getElementById("load_profile_panel_button").title = "Open load test plan panel";
+		document.getElementById("load_profile_panel_button").value = "Load";
+	}
+}
+
+function show_manage_panel() {
+	document.getElementById("save_profile_panel").style.display = "none";
+	document.getElementById("load_profile_panel").style.display = "none";
+	document.getElementById("save_profile_panel_button").title = "Open save test plan panel";
+	document.getElementById("load_profile_panel_button").title = "Open load test plan panel";
+	if (document.getElementById("manage_profile_panel").style.display == "none") {
+		document.getElementById("manage_profile_panel").style.display = "";
+		document.getElementById("manage_profile_panel_button").title = "Close manage test plan panel";
+		document.getElementById("save_profile_panel_button").value = "Save";
+		document.getElementById("load_profile_panel_button").value = "Load";
+		document.getElementById("manage_profile_panel_button").value = "Close";
+	} else {
+		document.getElementById("manage_profile_panel").style.display = "none";
+		document.getElementById("manage_profile_panel_button").title = "Open manage test plan panel";
+		document.getElementById("manage_profile_panel_button").value = "Manage";
+	}
+}
+
+function close_all_test_plan_panel() {
+	document.getElementById("save_profile_panel_button").value = "Save";
+	document.getElementById("load_profile_panel_button").value = "Load";
+	document.getElementById("manage_profile_panel_button").value = "Manage";
+	document.getElementById("save_profile_panel_button").title = "Open save test plan panel";
+	document.getElementById("load_profile_panel_button").title = "Open load test plan panel";
+	document.getElementById("manage_profile_panel_button").title = "Open manage test plan panel";
+	document.getElementById("save_profile_panel").style.display = "none";
+	document.getElementById("load_profile_panel").style.display = "none";
+	document.getElementById("manage_profile_panel").style.display = "none";
+}
+
+function view_profile(type) {
+	var test_plan_select;
+	if (type == 'save') {
+		test_plan_select = document.getElementById("save_test_plan_select");
+	}
+	if (type == 'load') {
+		test_plan_select = document.getElementById("load_test_plan_select");
+	}
+	if (type == 'manage') {
+		test_plan_select = document.getElementById("manage_test_plan_select");
+	}
+	var test_plan_name = test_plan_select.value;
+	alert("view test plan: " + test_plan_name);
+}
+
+function updateTestPlanSelect() {
+	var save_test_plan_select = document
+			.getElementById("save_test_plan_select");
+	var load_test_plan_select = document
+			.getElementById("load_test_plan_select");
+	var manage_test_plan_select = document
+			.getElementById("manage_test_plan_select");
+	var save_test_plan_text = document.getElementById("save_test_plan_text");
+
+	save_test_plan_select.options.length = 0;
+	load_test_plan_select.options.length = 0;
+	manage_test_plan_select.options.length = 0;
+	save_test_plan_text.value = "";
+
+	if (msg.length < 1) {
+		save_test_plan_select.add(new Option("<no plans present>",
+				"<no plans present>"));
+		save_test_plan_select.disabled = true;
+		load_test_plan_select.add(new Option("<no plans present>",
+				"<no plans present>"));
+		load_test_plan_select.disabled = true;
+		manage_test_plan_select.add(new Option("<no plans present>",
+				"<no plans present>"));
+		manage_test_plan_select.disabled = true;
+		document.getElementById("save_profile_button_select").disabled = true;
+		document.getElementById("view_profile_button_save").disabled = true;
+		document.getElementById("view_profile_button_load").disabled = true;
+		document.getElementById("view_profile_button_manage").disabled = true;
+		document.getElementById("load_profile_button").disabled = true;
+		document.getElementById("delete_profile_button").disabled = true;
+	} else {
+		for ( var i = 0; i < msg.length; i++) {
+			save_test_plan_select.add(new Option(msg[i], msg[i]));
+			save_test_plan_select.disabled = false;
+			load_test_plan_select.add(new Option(msg[i], msg[i]));
+			load_test_plan_select.disabled = false;
+			manage_test_plan_select.add(new Option(msg[i], msg[i]));
+			manage_test_plan_select.disabled = false;
+			document.getElementById("save_profile_button_select").disabled = false;
+			document.getElementById("view_profile_button_save").disabled = false;
+			document.getElementById("view_profile_button_load").disabled = false;
+			document.getElementById("view_profile_button_manage").disabled = false;
+			document.getElementById("load_profile_button").disabled = false;
+			document.getElementById("delete_profile_button").disabled = false;
+		}
 	}
 }
 
@@ -1116,7 +1250,7 @@ function saveManual() {
 	var arr = new Array();
 	var transfer = "";
 	var time = document.getElementById('time').innerHTML;
-	transfer += time + "::::";
+	transfer += time + "!:::!";
 	var page = document.getElementsByTagName("*");
 	for ( var i = 0; i < page.length; i++) {
 		var temp_id = page[i].id;
@@ -1136,17 +1270,18 @@ function saveManual() {
 							+ name_all[3] + "__" + name_all[4]);
 					var bugnumber = document.getElementById('bugnumber__'
 							+ name_all[3] + "__" + name_all[4]);
-					transfer_temp = package_name + "__" + name + ":" + result
-							+ "__" + testarea.value + "__" + bugnumber.value;
+					transfer_temp = package_name + "!__!" + name + "!:!"
+							+ result + "!__!" + testarea.value + "!__!"
+							+ bugnumber.value;
 				} else {
-					transfer_temp = package_name + "__" + name + ":" + result
-							+ "__auto__auto";
+					transfer_temp = package_name + "!__!" + name + "!:!"
+							+ result + "!__!auto!__!auto";
 				}
 				arr.push(transfer_temp);
 			}
 		}
 	}
-	transfer += arr.join(":::");
+	transfer += arr.join("!::!");
 	ajax_call_get('action=save_manual&content=' + transfer);
 }
 

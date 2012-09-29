@@ -1094,10 +1094,9 @@ DATA
 		# print manual case for package view
 		%manual_case_result = updateManualCaseResult( $time, $package );
 		$execution_type = "manual";
-		my $isManual = "FALSE";
-		my $def_tests_xml_dir =
-		  $result_dir_manager . $time . "/" . $package . "_definition.xml";
-		open FILE, $def_tests_xml_dir or die $!;
+		my $isManual         = "FALSE";
+		my $total_result_xml = "$result_dir_manager$time/tests.result.xml";
+		open FILE, $total_result_xml or die $!;
 		while (<FILE>) {
 			if ( $startCase eq "TRUE" ) {
 				chomp( $xml .= $_ );
@@ -1273,10 +1272,9 @@ DATA
 		# print manual case for component view
 		%manual_case_result = updateManualCaseResult( $time, $package );
 		$execution_type = "manual";
-		my $isManual = "FALSE";
-		my $def_tests_xml_dir =
-		  $result_dir_manager . $time . "/" . $package . "_definition.xml";
-		open FILE, $def_tests_xml_dir or die $!;
+		my $isManual         = "FALSE";
+		my $total_result_xml = "$result_dir_manager$time/tests.result.xml";
+		open FILE, $total_result_xml or die $!;
 		while (<FILE>) {
 			if ( $startCase eq "TRUE" ) {
 				chomp( $xml .= $_ );
@@ -1374,7 +1372,8 @@ DATA
 		my $name           = "none";
 		my $description    = "none";
 		my $result         = "none";
-		my $spec           = "none";
+		my $specs          = "none";
+		my $spec_number    = 0;
 		my $test_type      = "none";
 		my $execution_type = "auto";
 
@@ -1411,40 +1410,46 @@ DATA
 				%caseInfo    = updateCaseInfo($xml);
 				$result      = $caseInfo{"result"};
 				$description = $caseInfo{"description"};
-				$spec        = $caseInfo{"spec"};
+				$specs       = $caseInfo{"specs"};
 				$test_type   = $caseInfo{"test_type"};
 				$result =~ s/^\s//;
 				$result =~ s/\s$//;
 
 				my @spec_hex = ();
-				if ( $spec ne "none" ) {
-					my @temp_spec = split( ":", $spec );
-
-					# remove "::" error
-					for ( my $i = 0 ; $i < @temp_spec ; $i++ ) {
-						$temp_spec[$i] =~ s/^\s*//;
-						$temp_spec[$i] =~ s/\s*$//;
-						if ( $temp_spec[$i] eq "" ) {
-							$temp_spec[$i] = "none";
-							print
-'<p style="font-size:10px">&nbsp;<span style="color:red">'
-							  . $name
-							  . '</span> got "::" in [SPEC]</p>';
+				if (
+					(
+						$specs ne
+"none!::!none!::!none!::!none!::!none!::!none!::!none!::!none!::!none"
+					)
+					or ( $specs ne "none" )
+				  )
+				{
+					my @spec_list = split( "!__!", $specs );
+					foreach (@spec_list) {
+						$spec_number++;
+						my @spec_content = split( "!::!", $_ );
+						my @spec_content_top_5 = ();
+						for ( my $i = 0 ; $i < 5 ; $i++ ) {
+							if ( $spec_content[$i] eq "none" ) {
+								push( @spec_content_top_5, "[unknown]" );
+							}
+							else {
+								push( @spec_content_top_5, $spec_content[$i] );
+							}
 						}
-					}
-
-					my @temp_spec_back = @temp_spec;
-					for ( my $i = 0 ; $i < @temp_spec ; $i++ ) {
-						push( @spec_hex,
-							sha1_hex( join( ":", @temp_spec_back ) ) );
-						pop(@temp_spec_back);
+						my @spec_content_back = @spec_content_top_5;
+						for ( my $i = 0 ; $i < @spec_content ; $i++ ) {
+							push( @spec_hex,
+								sha1_hex( join( ":", @spec_content_back ) ) );
+							pop(@spec_content_back);
+						}
 					}
 				}
 				elsif ( $test_type eq "compliance" ) {
 					print
 					  '<p style="font-size:10px">&nbsp;<span style="color:red">'
 					  . $name
-					  . '</span> got no [SPEC] in xml</p>';
+					  . '</span> got no &lt;spec&gt; tag</p>';
 				}
 
 				$id =
@@ -1463,6 +1468,10 @@ DATA
 					$spec_hex_temp[$i] = 'SP_' . $spec_hex_temp[$i];
 				}
 				push( @spec_hex_temp, 'TT_' . $test_type );
+				for ( my $i = 1 ; $i < $spec_number ; $i++ ) {
+					push( @spec_hex_temp, 'TT_' . $test_type );
+				}
+				$spec_number = 0;
 				push( @spec_hex_temp, 'TT_' . $test_type . 'P_' . $package );
 				push( @spec_hex_temp, 'TT_' . $test_type . 'SU_' . $suite );
 				push( @spec_hex_temp, 'TT_' . $test_type . 'SE_' . $set );
@@ -1496,10 +1505,9 @@ DATA
 		# print manual case for test type view
 		%manual_case_result = updateManualCaseResult( $time, $package );
 		$execution_type = "manual";
-		my $isManual = "FALSE";
-		my $def_tests_xml_dir =
-		  $result_dir_manager . $time . "/" . $package . "_definition.xml";
-		open FILE, $def_tests_xml_dir or die $!;
+		my $isManual         = "FALSE";
+		my $total_result_xml = "$result_dir_manager$time/tests.result.xml";
+		open FILE, $total_result_xml or die $!;
 		while (<FILE>) {
 			if ( $startCase eq "TRUE" ) {
 				chomp( $xml .= $_ );
@@ -1528,40 +1536,48 @@ DATA
 				if ( defined $manual_case_result{$name} ) {
 					$result      = $manual_case_result{$name};
 					$description = $caseInfo{"description"};
-					$spec        = $caseInfo{"spec"};
+					$specs       = $caseInfo{"specs"};
 					$test_type   = $caseInfo{"test_type"};
 					$result =~ s/^\s//;
 					$result =~ s/\s$//;
 
 					my @spec_hex = ();
-					if ( $spec ne "none" ) {
-						my @temp_spec = split( ":", $spec );
-
-						# remove "::" error
-						for ( my $i = 0 ; $i < @temp_spec ; $i++ ) {
-							$temp_spec[$i] =~ s/^\s*//;
-							$temp_spec[$i] =~ s/\s*$//;
-							if ( $temp_spec[$i] eq "" ) {
-								$temp_spec[$i] = "none";
-								print
-'<p style="font-size:10px">&nbsp;<span style="color:red">'
-								  . $name
-								  . '</span> got "::" in [SPEC]</p>';
+					if (
+						(
+							$specs ne
+"none!::!none!::!none!::!none!::!none!::!none!::!none!::!none!::!none"
+						)
+						or ( $specs ne "none" )
+					  )
+					{
+						my @spec_list = split( "!__!", $specs );
+						foreach (@spec_list) {
+							$spec_number++;
+							my @spec_content = split( "!::!", $_ );
+							my @spec_content_top_5 = ();
+							for ( my $i = 0 ; $i < 5 ; $i++ ) {
+								if ( $spec_content[$i] eq "none" ) {
+									push( @spec_content_top_5, "[unknown]" );
+								}
+								else {
+									push( @spec_content_top_5,
+										$spec_content[$i] );
+								}
 							}
-						}
-
-						my @temp_spec_back = @temp_spec;
-						for ( my $i = 0 ; $i < @temp_spec ; $i++ ) {
-							push( @spec_hex,
-								sha1_hex( join( ":", @temp_spec_back ) ) );
-							pop(@temp_spec_back);
+							my @spec_content_back = @spec_content_top_5;
+							for ( my $i = 0 ; $i < @spec_content ; $i++ ) {
+								push( @spec_hex,
+									sha1_hex( join( ":", @spec_content_back ) )
+								);
+								pop(@spec_content_back);
+							}
 						}
 					}
 					elsif ( $test_type eq "compliance" ) {
 						print
 '<p style="font-size:10px">&nbsp;<span style="color:red">'
 						  . $name
-						  . '</span> got no [SPEC] in xml</p>';
+						  . '</span> got no &lt;spec&gt; tag</p>';
 					}
 
 					my $id_textarea =
@@ -1585,6 +1601,10 @@ DATA
 						$spec_hex_temp[$i] = 'SP_' . $spec_hex_temp[$i];
 					}
 					push( @spec_hex_temp, 'TT_' . $test_type );
+					for ( my $i = 1 ; $i < $spec_number ; $i++ ) {
+						push( @spec_hex_temp, 'TT_' . $test_type );
+					}
+					$spec_number = 0;
 					push( @spec_hex_temp,
 						'TT_' . $test_type . 'P_' . $package );
 					push( @spec_hex_temp, 'TT_' . $test_type . 'SU_' . $suite );
@@ -2541,30 +2561,59 @@ sub updateSpecList {
 
 sub updateSpecList_wanted {
 	my $dir = $File::Find::name;
-	if ( $dir =~ /.*\/(.*_tests.xml)$/ ) {
+	if ( $dir =~ /tests.result.xml$/ ) {
 		open FILE, $dir or die $!;
+		my $start_spec = "FALSE";
+		my $xml        = "none";
 		while (<FILE>) {
-			if ( $_ =~ /<spec>\[Spec\] *(.*) */ ) {
-				my $spec_name = $1;
-				$spec_name =~ s/\[Spec URL\].*//;
-				$spec_name =~ s/^[\s]+//;
-				$spec_name =~ s/[\s]+$//;
-				$spec_name =~ s/[\s]+/ /g;
-				$spec_name =~ s/&lt;/[/g;
-				$spec_name =~ s/&gt;/]/g;
-				$spec_name =~ s/</[/g;
-				$spec_name =~ s/>/]/g;
-				my @spec_item = split( ":", $spec_name );
+			if ( $start_spec eq "TRUE" ) {
+				chomp( $xml .= $_ );
+			}
+			if ( $_ =~ /<spec>/ ) {
+				$start_spec = "TRUE";
+				chomp( $xml = $_ );
+			}
+			if ( $_ =~ /<\/spec>/ ) {
+				$start_spec = "FALSE";
+				my $spec_category      = "[unknown]";
+				my $spec_section       = "[unknown]";
+				my $spec_specification = "[unknown]";
+				my $spec_interface     = "[unknown]";
+				my $spec_element_name  = "[unknown]";
+				if ( $xml =~ /category="(.*?)"/ ) {
+					$spec_category = $1;
+				}
+				if ( $xml =~ /section="(.*?)"/ ) {
+					$spec_section = $1;
+				}
+				if ( $xml =~ /specification="(.*?)"/ ) {
+					$spec_specification = $1;
+				}
+				if ( $xml =~ /interface="(.*?)"/ ) {
+					$spec_interface = $1;
+				}
+				if ( $xml =~ /element_name="(.*?)"/ ) {
+					$spec_element_name = $1;
+				}
+				my @spec_item = ();
+				push( @spec_item, $spec_category );
+				push( @spec_item, $spec_section );
+				push( @spec_item, $spec_specification );
+				push( @spec_item, $spec_interface );
+				push( @spec_item, $spec_element_name );
 
-				# remove additional space
 				for ( my $i = 0 ; $i < @spec_item ; $i++ ) {
-					$spec_item[$i] =~ s/^\s*//;
-					$spec_item[$i] =~ s/\s*$//;
+					$spec_item[$i] =~ s/^[\s]+//;
+					$spec_item[$i] =~ s/[\s]+$//;
+					$spec_item[$i] =~ s/[\s]+/ /g;
+					$spec_item[$i] =~ s/&lt;/[/g;
+					$spec_item[$i] =~ s/&gt;/]/g;
+					$spec_item[$i] =~ s/</[/g;
+					$spec_item[$i] =~ s/>/]/g;
 					if ( $spec_item[$i] eq "" ) {
-						$spec_item[$i] = "none";
+						$spec_item[$i] = "[unknown]";
 					}
 				}
-
 				for ( my $i = 0 ; $i < @spec_item ; $i++ ) {
 
 					# already got some specs at this level

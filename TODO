@@ -2,5 +2,4 @@ testkit-manager TODO list:
 ======================================
 - Bug Fixing and Stabilization
 - Optimize workflow on UI and improve user experience
-- Improve REPORT page to provide more readable and informative test report
 - Support IP-based communication with devices

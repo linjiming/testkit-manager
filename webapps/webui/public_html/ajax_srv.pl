@@ -46,8 +46,6 @@
 #
 
 use Templates;
-
-#use BuildList;
 use UserProfile;
 use TestStatus;
 use Common;
@@ -57,7 +55,6 @@ use File::Temp qw/tmpnam tempfile/;
 use JSON;
 use File::Find;
 use Data::Dumper;
-
 use TestKitLogger;
 
 autoflush_on();
@@ -879,9 +876,7 @@ elsif ( $_GET{'action'} eq 'run_tests' ) {
 
 		if ( $status->{'IS_RUNNING'} ) {
 			$error_text =
-"Tests are already running.<br />You cannot run another instance before they are finished.<br />Start watching the current run?<br /><br /><input type=\"button\" value=\"Yes\" style=\"width: 5em;\" onclick=\"javascript:cert='"
-			  . ( $status->{'CERTIFICATION'} ? 'certification' : 'custom' )
-			  . "';startTestsPrepareGUI();startRefresh();\" />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=\"button\" value=\"No\" style=\"width: 5em;\" onclick=\"javascript:err_area.style.display='none';\" />";
+"A test is already running.<br />You cannot run another instance before it is finished.<br />Start watching the current run?";
 		}
 		else {
 			my $profile_path =
@@ -1215,15 +1210,22 @@ elsif ( $_GET{'action'} eq 'install_package' ) {
 	if ( $check_install =~ /OK/ ) {
 		my $file_name = $test_definition_dir . $package_name . "/tests.xml";
 		my $case_number_temp = 0;
-		open FILE, $file_name or die $!;
-		while (<FILE>) {
-			if ( $_ =~ /<testcase(.*)/ ) {
-				$case_number_temp++;
+		eval {
+			open FILE, $file_name or die $!;
+			while (<FILE>) {
+				if ( $_ =~ /<testcase(.*)/ ) {
+					$case_number_temp++;
+				}
 			}
-		}
-		$data .=
+			$data .=
 "<install_package_name>SUCCESS_$package_name</install_package_name>\n";
-		$data .= "<case_number_temp>$case_number_temp</case_number_temp>\n";
+			$data .= "<case_number_temp>$case_number_temp</case_number_temp>\n";
+		};
+		if ($@) {
+			$data .=
+"<install_package_name>SUCCESS_$package_name</install_package_name>\n";
+			$data .= "<case_number_temp>0</case_number_temp>\n";
+		}
 	}
 	else {
 		$data .=
@@ -1327,61 +1329,67 @@ elsif ( $_GET{'action'} eq 'check_profile_isExist' ) {
 
 # execute profile
 elsif ( $_GET{'action'} eq 'execute_profile' ) {
-	my $file;
-	my $flag_i = 0;
-	my @select_packages;
-	my @advanced_value    = split /\*/, $_GET{"advanced"};
-	my @checkbox_value    = split /\*/, $_GET{"checkbox"};
-	my @auto_count        = split /\:/, $_GET{'auto_count'};
-	my @manual_count      = split /\:/, $_GET{'manual_count'};
-	my @package_name_flag = split /\*/, $_GET{"pkg_flag"};
+	my $status = read_status();
 
-	my $dir_profile_name = $profile_dir_manager;
+	# only write test plan when there is no running test
+	if ( !$status->{'IS_RUNNING'} ) {
+		my $file;
+		my $flag_i = 0;
+		my @select_packages;
+		my @advanced_value    = split /\*/, $_GET{"advanced"};
+		my @checkbox_value    = split /\*/, $_GET{"checkbox"};
+		my @auto_count        = split /\:/, $_GET{'auto_count'};
+		my @manual_count      = split /\:/, $_GET{'manual_count'};
+		my @package_name_flag = split /\*/, $_GET{"pkg_flag"};
 
-	$advanced_value_architecture   = $advanced_value[0];
-	$advanced_value_version        = $advanced_value[1];
-	$advanced_value_category       = $advanced_value[2];
-	$advanced_value_priority       = $advanced_value[3];
-	$advanced_value_status         = $advanced_value[4];
-	$advanced_value_execution_type = $advanced_value[5];
-	$advanced_value_test_suite     = $advanced_value[6];
-	$advanced_value_type           = $advanced_value[7];
-	$advanced_value_test_set       = $advanced_value[8];
-	$advanced_value_component      = $advanced_value[9];
+		my $dir_profile_name = $profile_dir_manager;
 
-	open OUT, '>' . $dir_profile_name . "temp_plan";
-	print OUT "[Auto]\n";
-	while ( $flag_i < @package_name_flag ) {
-		if ( $package_name_flag[$flag_i] eq "a" ) {
-			if ( $checkbox_value[$flag_i] =~ /select/ ) {
-				$_ = $checkbox_value[$flag_i];
-				s/selectcheckbox_//g;
-				print OUT $_ . "("
-				  . $auto_count[$flag_i] . " "
-				  . $manual_count[$flag_i] . ")\n";
-				push( @select_packages, $checkbox_value[$flag_i] );
+		$advanced_value_architecture   = $advanced_value[0];
+		$advanced_value_version        = $advanced_value[1];
+		$advanced_value_category       = $advanced_value[2];
+		$advanced_value_priority       = $advanced_value[3];
+		$advanced_value_status         = $advanced_value[4];
+		$advanced_value_execution_type = $advanced_value[5];
+		$advanced_value_test_suite     = $advanced_value[6];
+		$advanced_value_type           = $advanced_value[7];
+		$advanced_value_test_set       = $advanced_value[8];
+		$advanced_value_component      = $advanced_value[9];
+
+		open OUT, '>' . $dir_profile_name . "temp_plan";
+		print OUT "[Auto]\n";
+		while ( $flag_i < @package_name_flag ) {
+			if ( $package_name_flag[$flag_i] eq "a" ) {
+				if ( $checkbox_value[$flag_i] =~ /select/ ) {
+					$_ = $checkbox_value[$flag_i];
+					s/selectcheckbox_//g;
+					print OUT $_ . "("
+					  . $auto_count[$flag_i] . " "
+					  . $manual_count[$flag_i] . ")\n";
+					push( @select_packages, $checkbox_value[$flag_i] );
+				}
 			}
+			$flag_i++;
 		}
-		$flag_i++;
-	}
-	print OUT "[/Auto]\n";
+		print OUT "[/Auto]\n";
 
-	print OUT "\n[Advanced-feature]\n";
-	print OUT "select_arc=" . $advanced_value_architecture . "\n";
-	print OUT "select_ver=" . $advanced_value_version . "\n";
-	print OUT "select_category=" . $advanced_value_category . "\n";
-	print OUT "select_pri=" . $advanced_value_priority . "\n";
-	print OUT "select_status=" . $advanced_value_status . "\n";
-	print OUT "select_exe=" . $advanced_value_execution_type . "\n";
-	print OUT "select_testsuite=" . $advanced_value_test_suite . "\n";
-	print OUT "select_type=" . $advanced_value_type . "\n";
-	print OUT "select_testset=" . $advanced_value_test_set . "\n";
-	print OUT "select_com=" . $advanced_value_component . "\n";
+		print OUT "\n[Advanced-feature]\n";
+		print OUT "select_arc=" . $advanced_value_architecture . "\n";
+		print OUT "select_ver=" . $advanced_value_version . "\n";
+		print OUT "select_category=" . $advanced_value_category . "\n";
+		print OUT "select_pri=" . $advanced_value_priority . "\n";
+		print OUT "select_status=" . $advanced_value_status . "\n";
+		print OUT "select_exe=" . $advanced_value_execution_type . "\n";
+		print OUT "select_testsuite=" . $advanced_value_test_suite . "\n";
+		print OUT "select_type=" . $advanced_value_type . "\n";
+		print OUT "select_testset=" . $advanced_value_test_set . "\n";
+		print OUT "select_com=" . $advanced_value_component . "\n";
 
-	print OUT "\n";
-	foreach (@select_packages) {
-		s/selectcheckbox_//g;
-		print OUT "[select-packages]: " . $_ . "\n";
+		print OUT "\n";
+		foreach (@select_packages) {
+			s/selectcheckbox_//g;
+			print OUT "[select-packages]: " . $_ . "\n";
+		}
+		close OUT;
 	}
 	$data .= "<execute_profile_name>temp_plan</execute_profile_name>\n";
 }
@@ -1516,11 +1524,11 @@ elsif ( $_GET{'action'} eq "delete_profile" ) {
 # write manual result back to the file
 elsif ( $_GET{'action'} eq 'save_manual' ) {
 	my $content     = $_GET{'content'};
-	my @temp_1      = split( "::::", $content );
+	my @temp_1      = split( "!:::!", $content );
 	my $time        = shift(@temp_1);
-	my @content_all = split( ":::", shift(@temp_1) );
+	my @content_all = split( "!::!", shift(@temp_1) );
 	foreach (@content_all) {
-		my @content     = split( "__", $_ );
+		my @content     = split( "!__!", $_ );
 		my $package     = shift(@content);
 		my $name_result = shift(@content);
 		my $testarea    = shift(@content);
@@ -1532,8 +1540,8 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 			$bugnumber = "none";
 		}
 
-		# handle all cases including manual cases to the xml file
-		my @temp_2 = split( ":", $name_result );
+		# handle all cases to its package result xml file
+		my @temp_2 = split( "!:!", $name_result );
 		my $name   = shift(@temp_2);
 		my $result = shift(@temp_2);
 		my $auto_case_result_xml =
@@ -1547,18 +1555,16 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 			my $line_number  = $1;
 			my $line_content = $2;
 			$line_content =~ s/\s/\\ /g;
-			if ( $line_content =~ /result=".*"/ ) {
-				$line_content =~ s/result=".*"/result="$result"/;
+			if ( $line_content =~ /result="(.*?)"/ ) {
+				my $result_temp = $1;
+				if ( $result_temp ne $result ) {
+					$line_content =~ s/result=".*?"/result="$result"/;
+					system( "sed -i '"
+						  . $line_number . "c "
+						  . $line_content . "' "
+						  . $auto_case_result_xml );
+				}
 			}
-			else {
-				$line_content =~
-s/execution_type="manual"/execution_type="manual" result="$result"/;
-			}
-
-			system( "sed -i '"
-				  . $line_number . "c "
-				  . $line_content . "' "
-				  . $auto_case_result_xml );
 		}
 
 		# write result also back to test.result.xml
@@ -1572,18 +1578,16 @@ s/execution_type="manual"/execution_type="manual" result="$result"/;
 			my $line_number  = $1;
 			my $line_content = $2;
 			$line_content =~ s/\s/\\ /g;
-			if ( $line_content =~ /result=".*"/ ) {
-				$line_content =~ s/result=".*"/result="$result"/;
+			if ( $line_content =~ /result="(.*?)"/ ) {
+				my $result_temp = $1;
+				if ( $result_temp ne $result ) {
+					$line_content =~ s/result=".*?"/result="$result"/;
+					system( "sed -i '"
+						  . $line_number . "c "
+						  . $line_content . "' "
+						  . $tests_result_xml );
+				}
 			}
-			else {
-				$line_content =~
-s/execution_type="manual"/execution_type="manual" result="$result"/;
-			}
-
-			system( "sed -i '"
-				  . $line_number . "c "
-				  . $line_content . "' "
-				  . $tests_result_xml );
 		}
 
 		# record a copy of manual cases, so we can store comment and bug number
@@ -1633,7 +1637,7 @@ s/execution_type="manual"/execution_type="manual" result="$result"/;
 				close $manual_result;
 			}
 			my $manual_result_comment_bug_number;
-			my @temp_name = split( ":", $name_result );
+			my @temp_name = split( "!:!", $name_result );
 			my $name = shift @temp_name;
 			open $manual_result_comment_bug_number,
 			    ">>"
@@ -1641,9 +1645,9 @@ s/execution_type="manual"/execution_type="manual" result="$result"/;
 			  . $package
 			  . "_manual_case_tests_comment_bug_number.txt"
 			  or die $!;
-			print {$manual_result_comment_bug_number} $package . "__" 
-			  . $name . "__"
-			  . $testarea . "__"
+			print {$manual_result_comment_bug_number} $package . "!__!" 
+			  . $name . "!__!"
+			  . $testarea . "!__!"
 			  . $bugnumber . "\n";
 			close $manual_result_comment_bug_number;
 		}
@@ -1665,13 +1669,12 @@ s/execution_type="manual"/execution_type="manual" result="$result"/;
 
 	# create tar file
 	my $tar_cmd_delete = "rm -f " . $result_dir_manager . $time . "/*.tgz";
-	my $tar_cmd_create =
-	    "tar -czPf "
+	my $tar_cmd_create = "cd "
 	  . $result_dir_manager
-	  . $time . "/"
-	  . $time . ".tgz "
-	  . $result_dir_manager
-	  . $time . "/*";
+	  . $time
+	  . "/; tar -czPf ./"
+	  . $time
+	  . ".tgz application.js back_top.png jquery.min.js testresult.xsl tests.css tests.result.xml";
 	system("$tar_cmd_delete");
 	system("$tar_cmd_create &>/dev/null");
 	$data .= "<save_manual_redirect>1</save_manual_redirect>\n";
@@ -1717,7 +1720,7 @@ elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests
 							}
 							if ( $package_id ne "none" ) {
 								my $cmd =
-"sdb shell 'ps aux | grep $package_id/bin/$package_id | sed -n '1,1p''";
+"sdb shell 'ps aux | grep /bin/$package_id | sed -n '1,1p''";
 								my $pid = `$cmd`;
 								if ( $pid =~ /app\s*(\d*)\s*/ ) {
 									system("sdb shell kill $1");
@@ -2405,36 +2408,34 @@ sub updateAutoState_wanted {
 	my $dir = $File::Find::name;
 	if ( $dir =~ /.*\/(.*)_tests.xml$/ ) {
 		my $package_name = $1;
-		if ( $dir !~ /_manual_case_tests.xml$/ ) {
-			my $pass    = 0;
-			my $fail    = 0;
-			my $block   = 0;
-			my $not_run = 0;
-			my $total   = 0;
-			open FILE, $dir
-			  or die "Can't open " . $dir;
-			while (<FILE>) {
+		my $pass         = 0;
+		my $fail         = 0;
+		my $block        = 0;
+		my $not_run      = 0;
+		my $total        = 0;
+		open FILE, $dir
+		  or die "Can't open " . $dir;
+		while (<FILE>) {
 
-				# just count auto case
-				if ( $_ =~ /.*<testcase.*execution_type="auto".*/ ) {
-					if ( $_ =~ /result="N\/A"/ ) {
-						$not_run += 1;
-					}
-					if ( $_ =~ /result="BLOCK"/ ) {
-						$block += 1;
-					}
-					if ( $_ =~ /result="PASS"/ ) {
-						$pass += 1;
-					}
-					if ( $_ =~ /result="FAIL"/ ) {
-						$fail += 1;
-					}
+			# just count auto case
+			if ( $_ =~ /.*<testcase.*execution_type="auto".*/ ) {
+				if ( $_ =~ /result="N\/A"/ ) {
+					$not_run += 1;
+				}
+				if ( $_ =~ /result="BLOCK"/ ) {
+					$block += 1;
+				}
+				if ( $_ =~ /result="PASS"/ ) {
+					$pass += 1;
+				}
+				if ( $_ =~ /result="FAIL"/ ) {
+					$fail += 1;
 				}
 			}
-			$total = $pass + $fail + $block + $not_run;
-			if ( $total > 0 ) {
-				$autoResult{$package_name} = $pass . ":" . $fail . ":" . $block;
-			}
+		}
+		$total = $pass + $fail + $block + $not_run;
+		if ( $total > 0 ) {
+			$autoResult{$package_name} = $pass . ":" . $fail . ":" . $block;
 		}
 	}
 }
@@ -2543,7 +2544,7 @@ sub updateManualState_wanted {
 		  or die "Can't open " . $dir;
 		while (<FILE>) {
 
-			if ( $_ =~ /:N\/A/ ) {
+			if ( $_ =~ /!:!N\/A/ ) {
 				$hasManual = "True";
 				$not_run += 1;
 			}

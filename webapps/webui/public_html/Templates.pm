@@ -369,9 +369,7 @@ sub updateCaseInfo {
 	my $note                        = "none";
 	my $test_script_entry           = "none";
 	my $test_script_expected_result = "none";
-	my $spec                        = "none";
-	my $spec_url                    = "none";
-	my $spec_statement              = "none";
+	my $specs                       = "none";
 	my $actual_result               = "none";
 	my $start                       = "none";
 	my $end                         = "none";
@@ -382,6 +380,7 @@ sub updateCaseInfo {
 	my $measurement_unit            = "none";
 	my $measurement_target          = "none";
 	my $measurement_failure         = "none";
+	my $steps                       = "none";
 	my $categories                  = "";
 
 	if ( $xml =~ /purpose="(.*?)"/ ) {
@@ -456,29 +455,127 @@ sub updateCaseInfo {
 			$categories .= "[" . $_ . "] ";
 		}
 	}
-	if ( $xml =~ /<spec>\[Spec\] *(.*) *\[Spec URL\]/ ) {
-		$spec = $1;
-		$spec =~ s/^[\s]+//;
-		$spec =~ s/[\s]+$//;
-		$spec =~ s/[\s]+/ /g;
-		$spec =~ s/&lt;/[/g;
-		$spec =~ s/&gt;/]/g;
-		$spec =~ s/</[/g;
-		$spec =~ s/>/]/g;
-	}
-	if (   ( $xml =~ /\[Spec URL\] *(.*) *\[Spec Statement\]/ )
-		or ( $xml =~ /\[Spec URL\] *(.*) *<\/spec>/ ) )
-	{
-		$spec_url = $1;
-	}
-	if ( $xml =~ /\[Spec Statement\] *(.*) *<\/spec>/ ) {
-		$spec_statement = $1;
-	}
 
 	# change $categories to none if not found
 	if ( $categories eq "" ) {
 		$categories = "none";
 	}
+
+	# parse steps, each steps might have more than one step
+	my @step_desc = ();
+	my @expected  = ();
+	if ( $xml =~ /<step_desc>(.*?)<\/step_desc>/ ) {
+		@step_desc = $xml =~ /<step_desc>(.*?)<\/step_desc>/g;
+	}
+	if ( $xml =~ /<expected>(.*?)<\/expected>/ ) {
+		@expected = $xml =~ /<expected>(.*?)<\/expected>/g;
+	}
+	my @temp_steps = ();
+	for ( my $i = 0 ; $i < @step_desc ; $i++ ) {
+		my $step_temp;
+		my $expected_temp;
+		if ( $step_desc[$i] eq "" ) {
+			$step_temp = "none";
+		}
+		else {
+			$step_temp = $step_desc[$i];
+		}
+		if ( $expected[$i] && ( $expected[$i] ne "" ) ) {
+			$expected_temp = $expected[$i];
+		}
+		else {
+			$expected_temp = "none";
+		}
+		push( @temp_steps, $step_temp . "!::!" . $expected_temp );
+	}
+	if ( @temp_steps >= 1 ) {
+		$steps = join( "!__!", @temp_steps );
+	}
+	else {
+		$steps = "none!::!none";
+	}
+
+	# parse specs, each specs might have more than one spec
+	my @specs         = ();
+	my @specs_content = ();
+	if ( $xml =~ /<specs>\s*(.*)\s*<\/specs>/ ) {
+		@specs = $1 =~ /<spec>(.*?)<\/spec>/g;
+	}
+	foreach (@specs) {
+		my $spec_category      = "none";
+		my $spec_section       = "none";
+		my $spec_specification = "none";
+		my $spec_interface     = "none";
+		my $spec_element_name  = "none";
+		my $spec_usage         = "none";
+		my $spec_element_type  = "none";
+		my $spec_url           = "none";
+		my $spec_statement     = "none";
+		if ( $_ =~ /category="\s*(.*?)\s*"/ ) {
+
+			if ( $1 ne "" ) {
+				$spec_category = $1;
+			}
+		}
+		if ( $_ =~ /section="\s*(.*?)\s*"/ ) {
+			if ( $1 ne "" ) {
+				$spec_section = $1;
+			}
+		}
+		if ( $_ =~ /specification="\s*(.*?)\s*"/ ) {
+			if ( $1 ne "" ) {
+				$spec_specification = $1;
+			}
+		}
+		if ( $_ =~ /interface="\s*(.*?)\s*"/ ) {
+			if ( $1 ne "" ) {
+				$spec_interface = $1;
+			}
+		}
+		if ( $_ =~ /element_name="\s*(.*?)\s*"/ ) {
+			if ( $1 ne "" ) {
+				$spec_element_name = $1;
+			}
+		}
+		if ( $_ =~ /usage="\s*(.*?)\s*"/ ) {
+			if ( $1 ne "" ) {
+				$spec_usage = $1;
+			}
+		}
+		if ( $_ =~ /element_type="\s*(.*?)\s*"/ ) {
+			if ( $1 ne "" ) {
+				$spec_element_type = $1;
+			}
+		}
+		if ( $_ =~ /<spec_url>\s*(.*?)\s*<\/spec_url>/ ) {
+			if ( $1 ne "" ) {
+				$spec_url = $1;
+			}
+		}
+		if ( $_ =~ /<spec_statement>\s*(.*?)\s*<\/spec_statement>/ ) {
+			if ( $1 ne "" ) {
+				$spec_statement = $1;
+			}
+		}
+		push( @specs_content,
+			    $spec_category . "!::!"
+			  . $spec_section . "!::!"
+			  . $spec_specification . "!::!"
+			  . $spec_interface . "!::!"
+			  . $spec_element_name . "!::!"
+			  . $spec_usage . "!::!"
+			  . $spec_element_type . "!::!"
+			  . $spec_url . "!::!"
+			  . $spec_statement );
+	}
+	if ( @specs_content >= 1 ) {
+		$specs = join( "!__!", @specs_content );
+	}
+	else {
+		$specs =
+"none!::!none!::!none!::!none!::!none!::!none!::!none!::!none!::!none";
+	}
+
 	$caseInfo{"description"}                 = $description;
 	$caseInfo{"result"}                      = $result;
 	$caseInfo{"priority"}                    = $priority;
@@ -491,9 +588,7 @@ sub updateCaseInfo {
 	$caseInfo{"note"}                        = $note;
 	$caseInfo{"test_script_entry"}           = $test_script_entry;
 	$caseInfo{"test_script_expected_result"} = $test_script_expected_result;
-	$caseInfo{"spec"}                        = $spec;
-	$caseInfo{"spec_url"}                    = $spec_url;
-	$caseInfo{"spec_statement"}              = $spec_statement;
+	$caseInfo{"specs"}                       = $specs;
 	$caseInfo{"actual_result"}               = $actual_result;
 	$caseInfo{"start"}                       = $start;
 	$caseInfo{"end"}                         = $end;
@@ -505,31 +600,8 @@ sub updateCaseInfo {
 	$caseInfo{"measurement_target"}          = $measurement_target;
 	$caseInfo{"measurement_failure"}         = $measurement_failure;
 	$caseInfo{"categories"}                  = $categories;
+	$caseInfo{"steps"}                       = $steps;
 
-	my $steps = "none";
-
-	my @step_desc = ();
-	my @expected  = ();
-
-	# handle steps
-	if ( $xml =~ /<step_desc>(.*?)<\/step_desc>/ ) {
-		@step_desc = $xml =~ /<step_desc>(.*?)<\/step_desc>/g;
-	}
-	if ( $xml =~ /<expected>(.*?)<\/expected>/ ) {
-		@expected = $xml =~ /<expected>(.*?)<\/expected>/g;
-	}
-	my @temp_steps = ();
-	for ( my $i = 0 ; $i < @step_desc ; $i++ ) {
-		push( @temp_steps, $step_desc[$i] . ":" . $expected[$i] );
-	}
-	if ( @temp_steps >= 1 ) {
-		$steps = join( "__", @temp_steps );
-	}
-	else {
-		$steps = "none:none";
-	}
-
-	$caseInfo{"steps"} = $steps;
 	return %caseInfo;
 }
 
@@ -556,8 +628,8 @@ sub printManualCaseInfo {
 		  . "_manual_case_tests_comment_bug_number.txt"
 		  or die $!;
 		while (<FILE>) {
-			if ( index( $_, "__" . $case_name . "__" ) > 0 ) {
-				my @comment_bug_temp = split( "__", $_ );
+			if ( index( $_, $case_name ) > 0 ) {
+				my @comment_bug_temp = split( "!__!", $_ );
 				$bugnumber = pop(@comment_bug_temp);
 				$comment   = pop(@comment_bug_temp);
 			}
@@ -567,9 +639,9 @@ sub printManualCaseInfo {
 	print <<DATA;
 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:10px;table-layout:fixed" frame="below" rules="all">
 DATA
-	my @temp_steps = split( "__", $steps );
+	my @temp_steps = split( "!__!", $steps );
 	foreach (@temp_steps) {
-		my @temp             = split( ":", $_ );
+		my @temp             = split( "!::!", $_ );
 		my $step_description = shift @temp;
 		my $expected_result  = shift @temp;
 		print <<DATA;
@@ -624,9 +696,7 @@ sub printDetailedCaseInfo {
 	my $measurement_target          = $caseInfo{"measurement_target"};
 	my $measurement_failure         = $caseInfo{"measurement_failure"};
 	my $categories                  = $caseInfo{"categories"};
-	my $spec                        = $caseInfo{"spec"};
-	my $spec_url                    = $caseInfo{"spec_url"};
-	my $spec_statement              = $caseInfo{"spec_statement"};
+	my $specs                       = $caseInfo{"specs"};
 	my $steps                       = $caseInfo{"steps"};
 	print <<DATA;
                             <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:10px;table-layout:fixed" frame="below" rules="all">
@@ -676,9 +746,9 @@ sub printDetailedCaseInfo {
                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
 DATA
 
-	my @temp_steps = split( "__", $steps );
+	my @temp_steps = split( "!__!", $steps );
 	foreach (@temp_steps) {
-		my @temp             = split( ":", $_ );
+		my @temp             = split( "!::!", $_ );
 		my $step_description = shift @temp;
 		my $expected_result  = shift @temp;
 		print <<DATA;
@@ -749,10 +819,87 @@ DATA
                                 <td align="left" width="35%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Failure:">&nbsp;Failure:</td>
                                 <td align="left" colspan="2" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$measurement_failure">&nbsp;$measurement_failure</td>
                               </tr>
+DATA
+
+	my @temp_specs = split( "!__!", $specs );
+	for ( my $i = 0 ; $i < @temp_specs ; $i++ ) {
+		my @temp               = split( "!::!", $temp_specs[$i] );
+		my $spec_category      = shift @temp;
+		my $spec_section       = shift @temp;
+		my $spec_specification = shift @temp;
+		my $spec_interface     = shift @temp;
+		my $spec_element_name  = shift @temp;
+		my $spec_usage         = shift @temp;
+		my $spec_element_type  = shift @temp;
+		my $spec_url           = shift @temp;
+		my $spec_statement     = shift @temp;
+
+		my $count     = @temp_specs;
+		my $count_row = $count * 9;
+		print <<DATA;
                               <tr>
-                                <td align="left" width="15%" rowspan="3" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Spec">&nbsp;Spec</td>
-                                <td align="left" width="35%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Name:">&nbsp;Name:</td>
-                                <td align="left" colspan="2" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec">&nbsp;$spec</td>
+DATA
+		if ( $i == 0 ) {
+			print <<DATA;
+                                <td align="left" width="15%" rowspan="$count_row" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Spec">&nbsp;Spec</td>
+DATA
+		}
+		print <<DATA;
+                                <td align="left" width="35%" rowspan="7" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Assertion:">&nbsp;Assertion:</td>
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                    <tr>
+                                        <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="category">&nbsp;category:</td>
+                                        <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_category">&nbsp;$spec_category</td>
+                                    </tr>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                      <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="section">&nbsp;section:</td>
+                                      <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_section">&nbsp;$spec_section</td>
+                                     </tr>
+                                  </table></td>
+                              </tr>
+                              <tr>
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="specification">&nbsp;specification:</td>
+                                         <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_specification">&nbsp;$spec_specification</td>
+                                     </tr>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="interface">&nbsp;interface:</td>
+                                         <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_interface">&nbsp;$spec_interface</td>
+                                     </tr>
+                                  </table></td>
+                              </tr>
+                              <tr>
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;element_name:</td>
+                                         <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_element_name">&nbsp;$spec_element_name</td>
+                                     </tr>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;usage:</td>
+                                          <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_usage">&nbsp;$spec_usage</td>
+                                     </tr>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;element_type:</td>
+                                          <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_element_type">&nbsp;$spec_element_type</td>
+                                     </tr>
+                                </table></td>
                               </tr>
                               <tr>
                                 <td align="left" width="35%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="URL:">&nbsp;URL:</td>
@@ -762,6 +909,9 @@ DATA
                                 <td align="left" width="35%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Statement:">&nbsp;Statement:</td>
                                 <td align="left" colspan="2" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_statement">&nbsp;$spec_statement</td>
                               </tr>
+DATA
+	}
+	print <<DATA;
                             </table>
 DATA
 }
@@ -792,8 +942,7 @@ sub printDetailedCaseInfoWithComment {
 	my $measurement_failure         = $caseInfo{"measurement_failure"};
 	my $categories                  = $caseInfo{"categories"};
 	my $spec                        = $caseInfo{"spec"};
-	my $spec_url                    = $caseInfo{"spec_url"};
-	my $spec_statement              = $caseInfo{"spec_statement"};
+	my $specs                       = $caseInfo{"specs"};
 	my $steps                       = $caseInfo{"steps"};
 
 	# handle comment and bug number
@@ -818,7 +967,7 @@ sub printDetailedCaseInfoWithComment {
 		  or die $!;
 		while (<FILE>) {
 			if ( index( $_, $case_name ) > 0 ) {
-				my @comment_bug_temp = split( "__", $_ );
+				my @comment_bug_temp = split( "!__!", $_ );
 				$bugnumber = pop(@comment_bug_temp);
 				$comment   = pop(@comment_bug_temp);
 			}
@@ -880,9 +1029,9 @@ sub printDetailedCaseInfoWithComment {
                                 <td align="left" colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
 DATA
 
-	my @temp_steps = split( "__", $steps );
+	my @temp_steps = split( "!__!", $steps );
 	foreach (@temp_steps) {
-		my @temp             = split( ":", $_ );
+		my @temp             = split( "!::!", $_ );
 		my $step_description = shift @temp;
 		my $expected_result  = shift @temp;
 		print <<DATA;
@@ -953,10 +1102,86 @@ DATA
                                 <td align="left" width="35%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Failure:">&nbsp;Failure:</td>
                                 <td align="left" colspan="2" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$measurement_failure">&nbsp;$measurement_failure</td>
                               </tr>
+DATA
+	my @temp_specs = split( "!__!", $specs );
+	for ( my $i = 0 ; $i < @temp_specs ; $i++ ) {
+		my @temp               = split( "!::!", $temp_specs[$i] );
+		my $spec_category      = shift @temp;
+		my $spec_section       = shift @temp;
+		my $spec_specification = shift @temp;
+		my $spec_interface     = shift @temp;
+		my $spec_element_name  = shift @temp;
+		my $spec_usage         = shift @temp;
+		my $spec_element_type  = shift @temp;
+		my $spec_url           = shift @temp;
+		my $spec_statement     = shift @temp;
+
+		my $count     = @temp_specs;
+		my $count_row = $count * 9;
+		print <<DATA;
                               <tr>
-                                <td align="left" width="15%" rowspan="3" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Spec">&nbsp;Spec</td>
-                                <td align="left" width="35%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Name:">&nbsp;Name:</td>
-                                <td align="left" colspan="2" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec">&nbsp;$spec</td>
+DATA
+		if ( $i == 0 ) {
+			print <<DATA;
+                                <td align="left" width="15%" rowspan="$count_row" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Spec">&nbsp;Spec</td>
+DATA
+		}
+		print <<DATA;
+                                <td align="left" width="35%" rowspan="7" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Assertion:">&nbsp;Assertion:</td>
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                    <tr>
+                                        <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="category">&nbsp;category:</td>
+                                        <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_category">&nbsp;$spec_category</td>
+                                    </tr>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                      <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="section">&nbsp;section:</td>
+                                      <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_section">&nbsp;$spec_section</td>
+                                     </tr>
+                                  </table></td>
+                              </tr>
+                              <tr>
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="specification">&nbsp;specification:</td>
+                                         <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_specification">&nbsp;$spec_specification</td>
+                                     </tr>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="interface">&nbsp;interface:</td>
+                                         <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_interface">&nbsp;$spec_interface</td>
+                                     </tr>
+                                  </table></td>
+                              </tr>
+                              <tr>
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;element_name:</td>
+                                         <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_element_name">&nbsp;$spec_element_name</td>
+                                     </tr>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;usage:</td>
+                                          <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_usage">&nbsp;$spec_usage</td>
+                                     </tr>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                     <tr>
+                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;element_type:</td>
+                                          <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_element_type">&nbsp;$spec_element_type</td>
+                                     </tr>
+                                </table></td>
                               </tr>
                               <tr>
                                 <td align="left" width="35%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="URL:">&nbsp;URL:</td>
@@ -966,6 +1191,9 @@ DATA
                                 <td align="left" width="35%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Statement:">&nbsp;Statement:</td>
                                 <td align="left" colspan="2" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_statement">&nbsp;$spec_statement</td>
                               </tr>
+DATA
+	}
+	print <<DATA;
                             </table>
 DATA
 }
@@ -982,7 +1210,7 @@ sub updateManualCaseResult {
 			or ( $_ =~ /BLOCK/ )
 			or ( $_ =~ /N\/A/ ) )
 		{
-			my @temp = split( ":", $_ );
+			my @temp = split( "!:!", $_ );
 			$manual_case_result{ pop(@temp) } = pop(@temp);
 		}
 	}
@@ -1041,15 +1269,16 @@ sub install_package {
 			# update package
 			if ( $have_package =~ /$package_name/ ) {
 				system(
-"sdb shell 'cd /tmp; rpm -Uvh $package_rpm_name --nodeps &>/dev/null'"
+"sdb shell 'cd /tmp; rpm -Uvh $package_rpm_name --nodeps &>/dev/null' &>/dev/null"
 				);
 			}
 			else {
 				system(
-"sdb shell 'cd /tmp; rpm -ivh $package_rpm_name --nodeps &>/dev/null'"
+"sdb shell 'cd /tmp; rpm -ivh $package_rpm_name --nodeps &>/dev/null' &>/dev/null"
 				);
 			}
 		}
+		sleep 3;
 		syncDefinition();
 		my $check_cmd     = "sdb shell 'rpm -qa | grep " . $package_name . "'";
 		my $check_install = `$check_cmd`;
@@ -1085,12 +1314,14 @@ sub install_package {
 
 sub syncDefinition {
 
-	# sync xml definition file
+	# sync xml definition files
 	system( "rm -rf $test_definition_dir" . "*" );
 	system( "rm -rf $opt_dir" . "*" );
-	my $cmd_definition = "sdb shell ls /usr/share/*/tests.xml";
+	my $cmd_definition = "sdb shell ls '/usr/share/*/tests.xml'";
 	my @definitions    = `$cmd_definition`;
-	if ( $definitions[0] !~ /No such file or directory/ ) {
+	if (   ( @definitions >= 1 )
+		&& ( $definitions[0] !~ /No such file or directory/ ) )
+	{
 		foreach (@definitions) {
 			my $definition = "";
 			if ( $_ =~ /(\/usr\/share\/.*\/tests.xml)/ ) {
@@ -1101,7 +1332,8 @@ sub syncDefinition {
 				my $package_name = $1;
 				system("mkdir $test_definition_dir$package_name");
 				system(
-					"sdb pull $definition $test_definition_dir$package_name");
+"sdb pull $definition $test_definition_dir$package_name &>/dev/null"
+				);
 				system("mkdir $opt_dir$package_name");
 				system("echo 'No readme info' > $opt_dir$package_name/README");
 				system(
@@ -1110,10 +1342,10 @@ sub syncDefinition {
 		}
 	}
 
-	# sync readme file and license file
-	my $cmd_readme = "sdb shell ls /opt/*/README";
+	# sync readme files and license files
+	my $cmd_readme = "sdb shell 'ls /opt/*/README'";
 	my @readmes    = `$cmd_readme`;
-	if ( $readmes[0] !~ /No such file or directory/ ) {
+	if ( ( @readmes >= 1 ) && ( $readmes[0] !~ /No such file or directory/ ) ) {
 		foreach (@readmes) {
 			my $readme = "";
 			if ( $_ =~ /(\/opt\/.*\/README)/ ) {
@@ -1124,12 +1356,15 @@ sub syncDefinition {
 				my $package_name = $1;
 				if ( -e "$opt_dir$package_name/README" ) {
 					system("rm -f $opt_dir$package_name/README");
-					system("sdb pull $readme $opt_dir$package_name");
+					system(
+						"sdb pull $readme $opt_dir$package_name &>/dev/null");
 					my $license_cmd = `sdb shell ls /opt/$package_name/LICENSE`;
 					if ( $license_cmd !~ /No such file or directory/ ) {
 						my $license = $readme;
 						$license =~ s/README/LICENSE/;
-						system("sdb pull $license $opt_dir$package_name");
+						system(
+"sdb pull $license $opt_dir$package_name &>/dev/null"
+						);
 					}
 					else {
 						system(
@@ -1297,7 +1532,8 @@ sub xml2xsl {
 	# transform XML file and print output
 	my $results = $stylesheet->transform($source);
 	my $result  = $stylesheet->output_as_bytes($results);
-	$result =~ s/.*(<div id="testcasepage".*<\/div>).*/$1/s;
+	$result =~ s/.*(<div id="testcasepage".*<\/script>).*/$1/s;
+	$result =~ s/src=".\/back_top.png"/src="..\/images\/back_top.png"/s;
 
 	return $result;
 }
@@ -1319,7 +1555,8 @@ sub xml2xsl_case {
 	# transform XML file and print output
 	my $results = $stylesheet->transform($source);
 	my $result  = $stylesheet->output_as_bytes($results);
-	$result =~ s/.*(<div id="testcasepage".*<\/div>).*/$1/s;
+	$result =~ s/.*(<div id="testcasepage".*<\/script>).*/$1/s;
+	$result =~ s/src=".\/back_top.png"/src="..\/images\/back_top.png"/s;
 
 	return $result;
 }

@@ -16,6 +16,7 @@
     <!--[if IE]><script type="text/javascript" src="css/IEFixes.js"></script>
     <meta http-equiv="imagetoolbar" content="no" /><![endif]-->
     <script type="text/javascript" src="css/dtk.js"></script>
+    <script type="text/javascript" src="css/jquery.min.js"></script>
     
     <!--begin Script and CSS includes for YUI dependencies on this page-->
     <!--begin YUI CSS infrastructure-->
@@ -43,7 +44,7 @@
     <!--end source file -->
     <!-- begin optional dependency source file -->
     <script src="yui/build/animation/animation-min.js" type="text/javascript"></script>
-    <!-- begin optional dependency source file -->
+    <!-- end optional dependency source file -->
     <!--end Script and CSS includes for YUI dependencies on this page-->
   </head>
 

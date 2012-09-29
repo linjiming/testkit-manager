@@ -45,13 +45,8 @@ my $testkit_lite_error_message = "none";
 check_testkit_lite();
 
 if ( $_GET{'profile'} ) {
-	if ( ( $have_testkit_lite eq "TRUE" ) and ( $have_testkit_lite eq "TRUE" ) )
-	{
-		$js_init = "startTests('$_GET{'profile'}');\n";
-	}
-}
-else {
-	if ( ( $have_testkit_lite eq "TRUE" ) and ( $have_testkit_lite eq "TRUE" ) )
+	if (    ( $have_testkit_lite eq "TRUE" )
+		and ( $have_correct_testkit_lite eq "TRUE" ) )
 	{
 		my $status = read_status();
 		if ( $status->{'IS_RUNNING'} ) {
@@ -65,7 +60,30 @@ else {
 			$global_case_number_init =
 			  'var global_case_number = ' . $CURRENT_RUN_NUMBER . ';';
 			$need_update_progress_bar = "var need_update_progress_bar = false;";
-			$js_init                  = "startRefresh('$TEST_PLAN');\n";
+			$js_init                  = "startRefresh('$TEST_PLAN', 'true');\n";
+		}
+		else {
+			$js_init = "startTests('$_GET{'profile'}');\n";
+		}
+	}
+}
+else {
+	if (    ( $have_testkit_lite eq "TRUE" )
+		and ( $have_correct_testkit_lite eq "TRUE" ) )
+	{
+		my $status = read_status();
+		if ( $status->{'IS_RUNNING'} ) {
+			my $TEST_PLAN       = ( $status->{'TEST_PLAN'}       or "" );
+			my $CURRENT_PACKAGE = ( $status->{'CURRENT_PACKAGE'} or "none" );
+			my $CURRENT_RUN_NUMBER = ( $status->{'CURRENT_RUN_NUMBER'} or 0 );
+			$global_profile_init =
+			  'var global_profile_name = "' . $TEST_PLAN . '";';
+			$global_package_name_init =
+			  'var global_package_name = "' . $CURRENT_PACKAGE . '";';
+			$global_case_number_init =
+			  'var global_case_number = ' . $CURRENT_RUN_NUMBER . ';';
+			$need_update_progress_bar = "var need_update_progress_bar = false;";
+			$js_init = "startRefresh('$TEST_PLAN', 'false');\n";
 		}
 	}
 }
@@ -186,7 +204,7 @@ DATA
 }
 else {
 	print <<DATA;
-            <select name="test_profile_no" id="test_profile_no" style="width: 12em;" size="1" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+            <select name="test_profile_no" id="test_profile_no" style="width: 11em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
 DATA
 }
 
@@ -463,44 +481,60 @@ sub install_testkit_lite {
 			my $main_version = $1;
 			my $sub_version  = $2;
 			if ( $main_version eq $MTK_VERSION ) {
-				if ( $have_testkit_lite eq "TRUE" ) {
-					system("sdb shell rpm -e testkit-lite &>/dev/null");
-				}
-				if ( $repo_type =~ /remote/ ) {
-					system( "wget -c $repo_url"
-						  . "testkit-lite-$main_version-$sub_version.noarch.rpm -P /tmp -q -N"
-					);
+				if (   ( $have_testkit_lite eq "TRUE" )
+					&& ( $have_correct_testkit_lite eq "FALSE" ) )
+				{
 					system(
+"sdb shell 'rpm -e testkit-lite &>/dev/null' &>/dev/null"
+					);
+				}
+				if (   ( $have_testkit_lite eq "FALSE" )
+					or ( $have_correct_testkit_lite eq "FALSE" ) )
+				{
+					if ( $repo_type =~ /remote/ ) {
+						system( "wget -c $repo_url"
+							  . "testkit-lite-$main_version-$sub_version.noarch.rpm -P /tmp -q -N"
+						);
+						system(
 "sdb push /tmp/testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
-					);
-				}
-				if ( $repo_type =~ /local/ ) {
-					system( "sdb push $repo_url"
-						  . "testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
-					);
-				}
-				system( "sdb shell 'rpm -ivh /tmp/"
-					  . "testkit-lite-$main_version-$sub_version.noarch.rpm --nodeps"
-					  . "' 2>&1 >/dev/null" );
-				my $cmd          = "sdb shell 'rpm -qa | grep testkit-lite'";
-				my $testkit_lite = `$cmd`;
-				if ( $testkit_lite =~ /testkit-lite-(.*)-\d\.noarch/ ) {
-					$have_testkit_lite = "TRUE";
-					my $version = $1;
-					if ( $version eq $MTK_VERSION ) {
-						$have_correct_testkit_lite = "TRUE";
+						);
+					}
+					if ( $repo_type =~ /local/ ) {
+						system( "sdb push $repo_url"
+							  . "testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
+						);
+					}
+					sleep 3;
+					system( "sdb shell 'rpm -ivh /tmp/"
+						  . "testkit-lite-$main_version-$sub_version.noarch.rpm --nodeps"
+						  . " &>/dev/null' &>/dev/null" );
+					sleep 3;
+					my $cmd = "sdb shell 'rpm -qa | grep testkit-lite'";
+					my $testkit_lite = `$cmd`;
+					if ( $testkit_lite =~ /testkit-lite-(.*)-\d\.noarch/ ) {
+						$have_testkit_lite = "TRUE";
+						my $version = $1;
+						if ( $version eq $MTK_VERSION ) {
+							$have_correct_testkit_lite = "TRUE";
+						}
+						else {
+							$have_correct_testkit_lite = "FALSE";
+						}
+					}
+					else {
+						$have_testkit_lite = "FALSE";
 					}
 				}
 				if (   ( $have_testkit_lite eq "FALSE" )
 					or ( $have_correct_testkit_lite eq "FALSE" ) )
 				{
 					$testkit_lite_error_message =
-"testkit-lite-$1-$2.noarch.rpm is find in the repo, however we failed to install it, please try manually";
+"testkit-lite-$main_version-$sub_version.noarch.rpm is find in the repo, however we failed to install it, please try manually";
 				}
 			}
 			else {
 				$testkit_lite_error_message =
-"Only find testkit-lite-$1-$2.noarch.rpm in the repo, please install testkit-lite-$MTK_VERSION-x.noarch.rpm manually";
+"Only find testkit-lite-$main_version-$sub_version.noarch.rpm in the repo, please install testkit-lite-$MTK_VERSION-x.noarch.rpm manually";
 			}
 		}
 		else {

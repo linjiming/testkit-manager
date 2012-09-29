@@ -95,13 +95,12 @@ DATA
 			# create tar file
 			my $tar_cmd_delete =
 			  "rm -f " . $result_dir_manager . $time . "/*.tgz";
-			my $tar_cmd_create =
-			    "tar -czPf "
+			my $tar_cmd_create = "cd "
 			  . $result_dir_manager
-			  . $time . "/"
-			  . $time . ".tgz "
-			  . $result_dir_manager
-			  . $time . "/*";
+			  . $time
+			  . "/; tar -czPf ./"
+			  . $time
+			  . ".tgz application.js back_top.png jquery.min.js testresult.xsl tests.css tests.result.xml";
 			system("$tar_cmd_delete");
 			system("$tar_cmd_create &>/dev/null");
 
@@ -155,7 +154,25 @@ sub writeResultInfo_wanted {
 		system(
 "cp /opt/testkit/manager/webapps/webui/public_html/css/tests.css $result_dir_manager$time"
 		);
+		system(
+"cp /opt/testkit/manager/webapps/webui/public_html/css/jquery.min.js $result_dir_manager$time"
+		);
+		system(
+"cp /opt/testkit/manager/webapps/webui/public_html/images/back_top.png $result_dir_manager$time"
+		);
+		system(
+"cp /opt/testkit/manager/webapps/webui/public_html/application.js $result_dir_manager$time"
+		);
 		my $package_name = $1;
+
+		my $test_definition_xml =
+		  $definition_dir . $package_name . "/tests.xml";
+		system( 'cp '
+			  . $test_definition_xml . ' '
+			  . $result_dir_manager
+			  . $time . '/'
+			  . $package_name
+			  . '_definition.xml' );
 
 		if ( -e $dir . "/tests.result.xml" ) {
 			system( 'mv ' . $dir . "/tests.result.xml " . $dir . "/tests.xml" );
@@ -165,10 +182,6 @@ sub writeResultInfo_wanted {
 				  . "_tests.xml" );
 		}
 		my $xml_result = $dir . "/tests.xml";
-
-		my $startCase          = "FALSE";
-		my @xml                = ();
-		my $manual_case_number = 0;
 
 		# if dir is not empty, create manual case list
 		if (
@@ -182,90 +195,26 @@ sub writeResultInfo_wanted {
 		  )
 		{
 
-			# get all manual cases
-			my $content      = "";
-			my $suite_name   = "";
-			my $set_name     = "";
-			my $case_content = "";
-			my $test_definition_xml =
-			  $definition_dir . $package_name . "/tests.xml";
-			open FILE, $test_definition_xml
-			  or die "can't open " . $test_definition_xml;
-			system( 'cp '
-				  . $test_definition_xml . ' '
-				  . $result_dir_manager
-				  . $time . '/'
-				  . $package_name
-				  . '_definition.xml' );
-
+			# get all manual cases' result
+			my $content = "";
+			my $total_result_xml =
+			  $result_dir_manager . $time . "/" . $package_name . "_tests.xml";
+			open FILE, $total_result_xml
+			  or die "can't open " . $total_result_xml;
 			while (<FILE>) {
-				if ( $_ =~ /suite.*name="(.*?)".*/ ) {
-					push( @xml, $_ );
-					chomp( $suite_name = $_ );
-				}
-				if ( $_ =~ /<\/suite>/ ) {
-					push( @xml, $_ );
-				}
-				if ( $_ =~ /set.*name="(.*?)".*/ ) {
-					push( @xml, $_ );
-					chomp( $set_name = $_ );
-				}
-				if ( $_ =~ /<\/set>/ ) {
-					push( @xml, $_ );
-				}
-				if ( $startCase eq "TRUE" ) {
-					push( @xml, $_ );
-				}
-				if (   ( $_ =~ /.*<testcase.*execution_type="manual".*/ )
+				if (   ( $_ =~ /.*<testcase.*execution_type="\s*manual\s*".*/ )
 					&& ( $isOnlyAuto eq "FALSE" ) )
 				{
-					chomp( $case_content = $_ );
-					my $allMatch = "TRUE";
-					my $xml_single_case =
-					  $suite_name . $set_name . $case_content;
-					foreach (@targetFilter) {
-						chomp( my $filter = $_ );
-						if ( $xml_single_case !~ /$filter/ ) {
-							$allMatch = "FALSE";
+					if ( $_ =~ /.*<testcase.*id="\s*(.*?)\s*".*/ ) {
+						my $temp_id = $1;
+						if ( $_ =~ /result="\s*(.*?)\s*"/ ) {
+							my $result = $1;
+							$content .= $temp_id . "!:!$result\n";
+						}
+						else {
+							$content .= $temp_id . "!:!N/A\n";
 						}
 					}
-					if ( $allMatch eq "TRUE" ) {
-						$manual_case_number++;
-						$startCase = "TRUE";
-						push( @xml, $_ );
-						if ( $_ =~ /.*<testcase.*id="(.*?)".*/ ) {
-							my $temp_id = $1;
-							my $auto_case_result_xml =
-							    $result_dir_manager 
-							  . $time . '/'
-							  . $package_name
-							  . '_tests.xml';
-							my $name = $temp_id;
-							$name =~ s/\s/\\ /g;
-							my $cmd_getLine =
-							    'grep id=\\"' 
-							  . $name . '\\" '
-							  . $auto_case_result_xml . ' -n';
-							my $grepResult = `$cmd_getLine`;
-							if ( $grepResult =~ /\s*(\d*)\s*:(.*>)/ ) {
-								my $line_number  = $1;
-								my $line_content = $2;
-								if ( $line_content =~ /result="(.*?)"/ ) {
-									my $result = $1;
-									$content .= $temp_id . ":$result\n";
-								}
-								else {
-									$content .= $temp_id . ":N/A\n";
-								}
-							}
-							else {
-								$content .= $temp_id . ":N/A\n";
-							}
-						}
-					}
-				}
-				if ( $_ =~ /.*<\/testcase>.*/ ) {
-					$startCase = "FALSE";
 				}
 			}
 			my $file_list;
@@ -280,27 +229,8 @@ sub writeResultInfo_wanted {
 			close $file_list;
 		}
 
-		#don't write if no manual case
-		if ( @xml > 1 ) {
-
-			# write manual cases' xml to a xml
-			my $file_xml;
-			open $file_xml,
-			    ">"
-			  . $result_dir_manager
-			  . $time . "/"
-			  . $package_name
-			  . "_manual_case_tests.xml"
-			  or die $!;
-			foreach (@xml) {
-				print {$file_xml} $_;
-			}
-			close $file_xml;
-		}
-
 		# get result info
-		my @totalVerdict =
-		  getTotalVerdict( $dir, $time, $package_name, $manual_case_number );
+		my @totalVerdict = getTotalVerdict( $dir, $time, $package_name );
 		my @verdict = getVerdict( $dir, $time, $package_name );
 		if ( ( @totalVerdict == 4 ) && ( @verdict == 8 ) ) {
 			push( @time_package_dir, $package_name );
@@ -316,7 +246,7 @@ sub writeResultInfo_wanted {
 
 # parse tests_result.txt and get total, pass, fail number
 sub getTotalVerdict {
-	my ( $testkit_lite_result, $time, $package, $manual_case_number ) = @_;
+	my ( $testkit_lite_result, $time, $package ) = @_;
 	my $testkit_lite_result_xml = $testkit_lite_result . "/tests.xml";
 
 	# parse tests_result.xml

@@ -86,6 +86,8 @@ my @one_webapi_package_item_count = ();
 my $definition_dir                = $FindBin::Bin . "/../../../definition/";
 my $test_definition_dir           = $definition_dir;
 
+my %caseInfo;
+
 syncDefinition();
 
 ScanPackages();
@@ -1156,8 +1158,14 @@ function filter_case_item(){
 					}	
 					for(k; k < parseInt(count_webapi_end); k++){
 						var item = package_webapi_item[k];
-						if((spec_value[j].indexOf(item+":") >= 0)||(spec_value[j] == item)){
+						if (spec_value[j].indexOf(item+":")== 0){
+							pkg_webapi_item_count[k]++; 
+						}
+						if((spec_value[j].indexOf(item+":") > 0) && (spec_value[j].indexOf(":"+item) > 0)){
 							pkg_webapi_item_count[k]++; 							
+						}
+						if (spec_value[j] == item) {
+							pkg_webapi_item_count[k]++; 
 						}
 					}
 				}
@@ -1809,52 +1817,68 @@ sub FilterCaseValue {
 		my $component_value;
 		my $priority_value;
 		my $category_value;
-		my $spec = "none";
+		my $spec        = "none";
+		my $spec_number = 0;
+		my $startCase   = "FALSE";
+		my $xml         = "none";
 
 		open FILE, $tests_xml_dir or die $!;
 
 		while (<FILE>) {
-			if ( $_ =~ /suite.*name="(.*?)"/ ) {
+			if ( $startCase eq "TRUE" ) {
+				chomp( $xml .= $_ );
+			}
+			if ( $_ =~ /suite.*name="(.*?)".*/ ) {
 				$suite_value = $1;
 			}
-			if ( $_ =~
-/testcase.*purpose="(.*?)".*type="(.*?)".*status="(.*?)".*component="(.*?)".*priority="(.*?)"/
-			  )
-			{
-				$type_value      = $2;
-				$status_value    = $3;
-				$component_value = $4;
-				$priority_value  = $5;
-				$category_value  = "null";
+			if ( $_ =~ /.*<testcase.*/ ) {
+				$startCase = "TRUE";
+				chomp( $xml = $_ );
 			}
+			if ( $_ =~ /.*<\/testcase>.*/ ) {
+				$startCase       = "FALSE";
+				%caseInfo        = updateCaseInfo($xml);
+				$type_value      = $caseInfo{"test_type"};
+				$status_value    = $caseInfo{"status"};
+				$component_value = $caseInfo{"component"};
+				$priority_value  = $caseInfo{"priority"};
+				$category_value  = $caseInfo{"categories"};
+				$spec            = $caseInfo{"specs"};
 
-			if ( $_ =~ /\<category\>(.*?)\<\/category\>/ ) {
-				my $category_value_tmp;
-				$category_value_tmp = $1;
-				$category_value = $category_value . "&" . $category_value_tmp;
-			}
-			if ( $_ =~ /<spec>\[Spec\](.*)/ ) {
-				$spec = $1;
-				$spec =~ s/&amp;/&/g;
-				$spec =~ s/^[\s]+//;
-				$spec =~ s/[\s]+$//;
-				$spec =~ s/[\s]+/ /g;
-				$spec =~ s/&lt;/[/g;
-				$spec =~ s/&gt;/]/g;
-				$spec =~ s/</[/g;
-				$spec =~ s/>/]/g;
-				$spec =~ s/\:\s/\:/;
-				$spec =~ s/\s\:/\:/;
-			}
-
-			if ( $_ =~ /\<\/testcase\>/ ) {
 				push( @filter_suite_value,     $suite_value );
 				push( @filter_type_value,      $type_value );
 				push( @filter_status_value,    $status_value );
 				push( @filter_component_value, $component_value );
 				push( @filter_priority_value,  $priority_value );
 				push( @filter_category_value,  $category_value );
-				push( @filter_spec_value,      $spec );
+
+				if (
+					(
+						$spec ne
+"none!::!none!::!none!::!none!::!none!::!none!::!none!::!none!::!none"
+					)
+					or ( $spec ne "none" )
+				  )
+				{
+					my @spec_list = split( "!__!", $spec );
+					foreach (@spec_list) {
+						$spec_number++;
+						my @spec_content = split( "!::!", $_ );
+						my @spec_content_top_5 = ();
+						for ( my $i = 0 ; $i < 5 ; $i++ ) {
+							if ( $spec_content[$i] eq "none" ) {
+								push( @spec_content_top_5, "[unknown]" );
+							}
+							else {
+								push( @spec_content_top_5, $spec_content[$i] );
+							}
+						}
+						push( @filter_spec_value,
+							join( ":", @spec_content_top_5 ) );
+
+					}
+				}
+
 				$one_package_case_count_total++;
 			}
 		}
@@ -1954,28 +1978,57 @@ sub updateSpecList_wanted {
 	my $dir = $File::Find::name;
 	if ( $dir =~ /.*\/tests.xml$/ ) {
 		open FILE, $dir or die $!;
+		my $start_spec = "FALSE";
+		my $xml        = "none";
 		while (<FILE>) {
-			if ( $_ =~ /<spec>\[Spec\](.*)/ ) {
-				my $spec_name = $1;
-				$spec_name =~ s/&amp;/&/g;
-				$spec_name =~ s/^[\s]+//;
-				$spec_name =~ s/[\s]+$//;
-				$spec_name =~ s/[\s]+/ /g;
-				$spec_name =~ s/&lt;/[/g;
-				$spec_name =~ s/&gt;/]/g;
-				$spec_name =~ s/</[/g;
-				$spec_name =~ s/>/]/g;
-				$spec_name =~ s/\:\s/\:/;
-				$spec_name =~ s/\s\:/\:/;
-
-				my @spec_item = split( ":", $spec_name );
-
-				# remove additional space
-				foreach (@spec_item) {
-					$_ =~ s/^\s*//;
-					$_ =~ s/\s*$//;
+			if ( $start_spec eq "TRUE" ) {
+				chomp( $xml .= $_ );
+			}
+			if ( $_ =~ /<spec>/ ) {
+				$start_spec = "TRUE";
+				chomp( $xml = $_ );
+			}
+			if ( $_ =~ /<\/spec>/ ) {
+				$start_spec = "FALSE";
+				my $spec_category      = "[unknown]";
+				my $spec_section       = "[unknown]";
+				my $spec_specification = "[unknown]";
+				my $spec_interface     = "[unknown]";
+				my $spec_element_name  = "[unknown]";
+				if ( $xml =~ /category="(.*?)"/ ) {
+					$spec_category = $1;
 				}
+				if ( $xml =~ /section="(.*?)"/ ) {
+					$spec_section = $1;
+				}
+				if ( $xml =~ /specification="(.*?)"/ ) {
+					$spec_specification = $1;
+				}
+				if ( $xml =~ /interface="(.*?)"/ ) {
+					$spec_interface = $1;
+				}
+				if ( $xml =~ /element_name="(.*?)"/ ) {
+					$spec_element_name = $1;
+				}
+				my @spec_item = ();
+				push( @spec_item, $spec_category );
+				push( @spec_item, $spec_section );
+				push( @spec_item, $spec_specification );
+				push( @spec_item, $spec_interface );
+				push( @spec_item, $spec_element_name );
 
+				for ( my $i = 0 ; $i < @spec_item ; $i++ ) {
+					$spec_item[$i] =~ s/^[\s]+//;
+					$spec_item[$i] =~ s/[\s]+$//;
+					$spec_item[$i] =~ s/[\s]+/ /g;
+					$spec_item[$i] =~ s/&lt;/[/g;
+					$spec_item[$i] =~ s/&gt;/]/g;
+					$spec_item[$i] =~ s/</[/g;
+					$spec_item[$i] =~ s/>/]/g;
+					if ( $spec_item[$i] eq "" ) {
+						$spec_item[$i] = "[unknown]";
+					}
+				}
 				for ( my $i = 0 ; $i < @spec_item ; $i++ ) {
 
 					# already got some specs at this level

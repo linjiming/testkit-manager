@@ -8,7 +8,9 @@
 			<STYLE type="text/css">
 				@import "tests.css";
 			</STYLE>
-
+			<head>
+				<script type="text/javascript" src="jquery.min.js" />
+			</head>
 			<body>
 				<div id="testcasepage">
 					<div id="title">
@@ -21,6 +23,7 @@
 						</table>
 					</div>
 					<div id="suites">
+						<a name="contents"></a>
 						<table>
 							<tr>
 								<th>Test Suite</th>
@@ -47,7 +50,13 @@
 							<xsl:for-each select="test_definition/suite">
 								<tr>
 									<td>
-										<xsl:value-of select="@name" />
+										<a>
+											<xsl:attribute name="href">
+                                                                                      #<xsl:value-of
+												select="@name" />
+                                                                                   </xsl:attribute>
+											<xsl:value-of select="@name" />
+										</a>
 									</td>
 									<td>
 										<xsl:value-of select="count(set//testcase)" />
@@ -74,10 +83,19 @@
 					<div id="cases">
 						<xsl:for-each select="test_definition/suite">
 							<xsl:sort select="@name" />
-							<p>
+							<div id="btc">
+								<a href="#contents">Back to Contents</a>
+							</div>
+							<div id="suite_title">
 								Test Suite:
 								<xsl:value-of select="@name" />
-							</p>
+								<a>
+									<xsl:attribute name="name">
+                                                                     <xsl:value-of
+										select="@name" />
+                                                                  </xsl:attribute>
+								</a>
+							</div>
 							<table>
 								<tr>
 									<th>Case_ID</th>
@@ -97,7 +115,7 @@
 										</td>
 									</tr>
 									<xsl:for-each select=".//testcase">
-										<xsl:sort select="@id" />
+										<!-- xsl:sort select="@id" /> -->
 										<tr>
 											<td>
 												<xsl:value-of select="@id" />
@@ -145,9 +163,36 @@
 												</p>
 											</td>
 											<td>
-												<xsl:call-template name="br-replace">
-													<xsl:with-param name="word" select=".//spec" />
-												</xsl:call-template>
+												<xsl:for-each select=".//specs/spec">
+													<b>[Spec_Assertion]:</b>
+													<br />
+													[Category]:
+													<xsl:value-of select="./spec_assertion/@category" />
+													<br />
+													[Section]:
+													<xsl:value-of select="./spec_assertion/@section" />
+													<br />
+													[Specification]:
+													<xsl:value-of select="./spec_assertion/@specification" />
+													<br />
+													[Interface]:
+													<xsl:value-of select="./spec_assertion/@interface" />
+													<br />
+													<xsl:choose>
+														<xsl:when test="./spec_assertion/@element_name">
+															[<xsl:value-of select="./spec_assertion/@element_type" />]:
+															<xsl:value-of select="./spec_assertion/@element_name" />
+															<br />
+														</xsl:when>
+													</xsl:choose>
+
+													[URL]:
+													<xsl:value-of select="./spec_url" />
+													<br />
+													[Statement]:
+													<xsl:value-of select="./spec_statement" />
+													<br />
+												</xsl:for-each>
 											</td>
 										</tr>
 									</xsl:for-each>
@@ -156,26 +201,16 @@
 						</xsl:for-each>
 					</div>
 				</div>
+				<div id="goTopBtn">
+					<img border="0" src="./back_top.png" />
+				</div>
+				<script type="text/javascript" src="application.js" />
+				<script language="javascript" type="text/javascript">
+					$(document).ready(function(){
+					goTopEx();
+					});
+				</script>
 			</body>
 		</html>
-	</xsl:template>
-	<xsl:template name="br-replace">
-		<xsl:param name="word" />
-		<xsl:variable name="cr">
-			<xsl:text>
-</xsl:text>
-		</xsl:variable>
-		<xsl:choose>
-			<xsl:when test="contains($word,$cr)">
-				<xsl:value-of select="substring-before($word,$cr)" />
-				<br />
-				<xsl:call-template name="br-replace">
-					<xsl:with-param name="word" select="substring-after($word,$cr)" />
-				</xsl:call-template>
-			</xsl:when>
-			<xsl:otherwise>
-				<xsl:value-of select="$word" />
-			</xsl:otherwise>
-		</xsl:choose>
 	</xsl:template>
 </xsl:stylesheet>

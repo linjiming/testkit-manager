@@ -2,13 +2,13 @@
 
 Summary: Testkit Manager
 Name: testkit-manager
-Version: 2.2.3
-Release: 2
+Version: 2.2.4
+Release: 3
 License: GPLv2
 Group: System/Libraries
 Source: %name-%version.tar.gz
 BuildRoot: %_tmppath/%name-%version-buildroot
-Requires: perl-libxml-perl perl-App-cpanminus perl-XML-Simple perl-XML-LibXSLT
+Requires: perl-libxml-perl perl-App-cpanminus perl-XML-Simple perl-XML-LibXSLT wget
 
 %description
 This is testkit manager with WebUI
@@ -32,7 +32,22 @@ make install DESTDIR=$RPM_BUILD_ROOT
 /opt/testkit/manager
 
 %changelog
-* Thu Sep 7 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.3-2
+* Thu Sep 28 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.4-3
+- add known issues section in README
+
+Thu Sep 25 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.4-2
+- update manual cases' number on manual execution page
+
+Thu Sep 17 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.4-1
+- add 'sudo' for all commands in README
+- change xsl files to the latest version
+- support new schema of <specs> in tests.xml
+- go to List View first, when enter case view page
+- leave only useful files in the tar log
+- kill all existing widgets before executing tests
+- update warning text when losing connection to the device
+
+Thu Sep 7 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.3-2
 - update report page's UI and alien it with case view
 - change use XSLT.pm to LibXSLT.pm
 
