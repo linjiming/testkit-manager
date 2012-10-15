@@ -276,11 +276,15 @@ function ajaxProcessResult(responseXML) {
 	if (responseXML.getElementsByTagName('uninstall_package_name').length > 0) {
 		uninstall_pkg_name = responseXML
 				.getElementsByTagName('uninstall_package_name')[0].childNodes[0].nodeValue;
+		uninstall_pkg_name_with_ver = responseXML
+				.getElementsByTagName('uninstall_package_name_with_version')[0].childNodes[0].nodeValue;
 		uninstall_pkg_version = responseXML
 				.getElementsByTagName('uninstall_package_version')[0].childNodes[0].nodeValue;
 		install_pkg_update_flag = responseXML
 				.getElementsByTagName('update_package_flag')[0].childNodes[0].nodeValue;
 		uninstall_pkg_name_arr = uninstall_pkg_name.split(" ");
+		uninstall_pkg_name_arr_with_ver = uninstall_pkg_name_with_ver
+				.split(" ");
 		var pkg_len = uninstall_pkg_name_arr.length;
 		uninstall_pkg_version_arr = uninstall_pkg_version.split(" ")
 		install_pkg_update_flag_arr = install_pkg_update_flag.split(" ");
@@ -328,6 +332,7 @@ function ajaxProcessResult(responseXML) {
 			if (uninstall_pkg_name_arr[i].indexOf("-") >= 0) {
 				document.getElementById(id).style.display = "";
 				document.getElementById(pkg_name_id).innerHTML = uninstall_pkg_name_arr[i];
+				document.getElementById(pkg_name_id).name = uninstall_pkg_name_arr_with_ver[i];
 				document.getElementById(pkg_name_id).title = uninstall_pkg_name_arr[i];
 				document.getElementById(pkg_ver_id).innerHTML = uninstall_pkg_version_arr[i];
 			}
@@ -383,6 +388,7 @@ function ajaxProcessResult(responseXML) {
 			alert("The following packages from the test plan are not installed:\n"
 					+ message_not_load);
 			document.getElementById('load_profile_panel_button').disabled = false;
+			document.getElementById('load_profile_button').disabled = false;
 		} else {
 			var load_test_plan_select = document
 					.getElementById('load_test_plan_select');
@@ -400,6 +406,75 @@ function ajaxProcessResult(responseXML) {
 		updateTestPlanSelect();
 		alert("Test plan is deleted successfully.");
 	}
+	// view test plan
+	if (responseXML.getElementsByTagName('view_profile_success').length > 0) {
+		var test_plan_name = responseXML
+				.getElementsByTagName('view_profile_success')[0].childNodes[0].nodeValue;
+		var view_profile_package_name = responseXML
+				.getElementsByTagName('view_profile_package_name')[0].childNodes[0].nodeValue;
+		var view_profile_auto_case_number = responseXML
+				.getElementsByTagName('view_profile_auto_case_number')[0].childNodes[0].nodeValue;
+		var view_profile_manual_case_number = responseXML
+				.getElementsByTagName('view_profile_manual_case_number')[0].childNodes[0].nodeValue;
+		var view_profile_advanced_value = responseXML
+				.getElementsByTagName('view_profile_advanced_value')[0].childNodes[0].nodeValue;
+		var package_name = view_profile_package_name.split("!__! ");
+		var auto_case_number = view_profile_auto_case_number.split("!__! ");
+		var manual_case_number = view_profile_manual_case_number.split("!__! ");
+		var popdiv_string = "";
+
+		var advanced_key = new Array("Architecture", "Version", "Category",
+				"Priority", "Status", "Execution Type", "Test Suite", "Type",
+				"Test Set", "Component");
+
+		popdiv_string += '<tr><td height="30" width="100%" align="left" class="view_test_plan_edge">&nbsp;</td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="93%" align="left" class="view_test_plan_edge">Test Plan: '
+				+ test_plan_name
+				+ '</td></tr></table></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" align="left" class="view_test_plan_title" width="90%">&nbsp;Package</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">';
+		popdiv_string += '<tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="60%" align="left" class="view_test_plan_popup">&nbsp;Name</td><td height="30" width="15%" align="left" class="view_test_plan_popup">&nbsp;Auto</td><td height="30" width="15%" align="left" class="view_test_plan_popup">&nbsp;Manual</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr>';
+		for ( var i = 0; i < package_name.length; i++) {
+			if (package_name[i].indexOf('!__!') >= 0) {
+				package_name[i] = package_name[i].split('!__!')[0];
+				auto_case_number[i] = auto_case_number[i].split('!__!')[0];
+				manual_case_number[i] = manual_case_number[i].split('!__!')[0];
+			}
+			if (package_name[i]) {
+				popdiv_string += '<tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="60%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ package_name[i]
+						+ '</td><td height="30" width="15%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ auto_case_number[i]
+						+ '</td><td height="30" width="15%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ manual_case_number[i]
+						+ '</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr>';
+			}
+		}
+		popdiv_string += '</table></tr></table></tr><tr><td height="30" width="100%" align="left" class="view_test_plan_edge">&nbsp;</td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" align="left" class="view_test_plan_title" width="90%">&nbsp;Filter</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">';
+		var advanced_value = view_profile_advanced_value.split("!::!");
+		for ( var i = 0; i < advanced_value.length; i++) {
+			if (advanced_value[i].indexOf('Any') >= 0) {
+				advanced_value[i] = "- -";
+			}
+		}
+		for ( var i = 0; i < advanced_value.length; i++) {
+			if (i % 2 == 0) {
+				var j = i;
+				var k = j + 1;
+				popdiv_string += '<tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="18%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ advanced_key[j]
+						+ '</td><td height="30" width="27%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ advanced_value[j]
+						+ '</td><td height="30" width="18%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ advanced_key[k]
+						+ '</td><td height="30" width="27%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ advanced_value[k]
+						+ '</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr>';
+			}
+		}
+		popdiv_string += '</table></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="95%" align="right" class="view_test_plan_edge">&nbsp;</td><td height="30" width="5%" align="right" class="view_test_plan_edge">&nbsp;</td></tr><tr><td height="30" width="95%" align="right" class="view_test_plan_edge"><input type="button" id="close_view_popup" name="close_view_popup" value="Close" onclick="javascript:onClosePopup();"></td><td height="30" width="5%" align="right" class="view_test_plan_edge">&nbsp;</td></tr><tr><td height="30" width="95%" align="right" class="view_test_plan_edge">&nbsp;</td><td height="30" width="5%" align="right" class="view_test_plan_edge">&nbsp;</td></tr></table></tr></table></tr>';
+		document.getElementById('popDiv').innerHTML = popdiv_string;
+		document.getElementById('popDiv').style.display = 'block';
+		document.getElementById('popIframe').style.display = 'block';
+	}
+
 	if (responseXML.getElementsByTagName('check_profile_name').length > 0) {
 		tid = responseXML.getElementsByTagName('check_profile_name')[0].childNodes[0].nodeValue;
 		var sel_arc = document.getElementById("select_arc");
@@ -898,7 +973,7 @@ function installPackage(count) {
 	var uninstall_package_count_max = document
 			.getElementById('uninstall_package_count_max').value;
 
-	if (confirm('Are you sure to install ' + pkg_name.innerHTML + "?")) {
+	if (confirm('Are you sure to install ' + pkg_name.name + "?")) {
 		document.getElementById(install_pkg_pic).src = "images/ajax_progress.gif";
 		document.getElementById(install_pkg_pic).onclick = "";
 		document.getElementById(install_pkg_pic).style.cursor = "default";
@@ -935,8 +1010,8 @@ function installPackage(count) {
 			document.getElementById(view_pkg_pic_tmp).onclick = "";
 			document.getElementById(view_pkg_pic_tmp).style.cursor = "default";
 		}
-		ajax_call_get('action=install_package&package_name='
-				+ pkg_name.innerHTML + '&package_count=' + count);
+		ajax_call_get('action=install_package&package_name=' + pkg_name.name
+				+ '&package_count=' + count);
 	}
 }
 
@@ -1195,7 +1270,13 @@ function view_profile(type) {
 		test_plan_select = document.getElementById("manage_test_plan_select");
 	}
 	var test_plan_name = test_plan_select.value;
-	alert("view test plan: " + test_plan_name);
+	document.getElementById('popDiv').innerHTML = "";
+	ajax_call_get('action=view_test_plan&test_plan_name=' + test_plan_name);
+}
+
+function onClosePopup() {
+	document.getElementById('popDiv').style.display = 'none';
+	document.getElementById('popIframe').style.display = 'none';
 }
 
 function updateTestPlanSelect() {

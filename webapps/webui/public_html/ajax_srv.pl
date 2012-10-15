@@ -67,10 +67,11 @@ my $wholeXML;
 my $hasManual = "False";    # check if still got some manual result
 my %manualResult;           # to record manual result
 my %autoResult;             # to record auto result
-my @uninstall_package_name    = ();
-my @uninstall_package_version = ();
-my @package_version_latest;
-my @package_version_installed;
+my @uninstall_package_name              = ();
+my @uninstall_package_name_with_version = ();
+my @uninstall_package_version           = ();
+my @package_version_latest              = ();
+my @package_version_installed           = ();
 
 my $output_xml =
     "HTTP/1.0 200 OK" 
@@ -650,23 +651,29 @@ sub getUpdateInfoFromNetwork {
 			my $package_name_tmp = $_;
 			my $cmd = "sdb shell 'rpm -qa | grep " . $package_name_tmp . "'";
 			my $package_version_installed = `$cmd`;
-			my $version                   = "none";
+			my $version_installed         = "none";
 			if ( $package_version_installed =~ /-(\d\.\d\.\d-\d)/ ) {
-				$version = $1;
+				$version_installed = $1;
 			}
-			push( @package_version_installed, $version );
-			push( @package_version_latest,    $version );
+			push( @package_version_installed, $version_installed );
+			push( @package_version_latest,    $version_installed );
 
 			foreach (@rpm) {
 				my $remote_pacakge_name = $_;
 				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
 				if ( $remote_pacakge_name =~ /$package_name_tmp/ ) {
 					$install_flag[$temp_rpm_count] = "a";
-					my $version = "none";
+					my $version_latest = "none";
 					if ( $remote_pacakge_name =~ /-(\d\.\d\.\d-\d)/ ) {
-						$version = $1;
+						$version_latest = $1;
 					}
-					$package_version_latest[$temp_package_count] = $version;
+					my $result_latest_version = compare_version(
+						$package_version_latest[$temp_package_count],
+						$version_latest );
+					if ( $result_latest_version eq "update" ) {
+						$package_version_latest[$temp_package_count] =
+						  $version_latest;
+					}
 				}
 				$temp_rpm_count++;
 			}
@@ -681,6 +688,8 @@ sub getUpdateInfoFromNetwork {
 				if ( $remote_pacakge_name =~ /\s*(.*)-(\d\.\d\.\d-\d)/ ) {
 					$package_name = $1;
 					$version      = $2;
+					push( @uninstall_package_name_with_version,
+						$remote_pacakge_name );
 				}
 				push( @uninstall_package_name,    $package_name );
 				push( @uninstall_package_version, $version );
@@ -702,14 +711,18 @@ sub getUpdateInfoFromNetwork {
 	else {
 		for ( my $i = 0 ; $i < @rpm ; $i++ ) {
 			if ( $rpm[$i] =~ /tests/ ) {
-				my $rpm_temp = $rpm[$i];
-				$_ = $rpm_temp;
-				s/(.*)$GREP_PATH(.*)\-(.*)\-(.*)/$2/g;
-				push( @uninstall_package_name, $_ );
 				my $remote_pacakge_name = $rpm[$i];
-				my $version             = "none";
-				if ( $remote_pacakge_name =~ /-(\d\.\d\.\d-\d)/ ) {
-					$version = $1;
+				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
+				push( @uninstall_package_name_with_version,
+					$remote_pacakge_name );
+				my $package_name = "";
+				if ( $remote_pacakge_name =~ /\s*(.*)-(\d\.\d\.\d-\d)/ ) {
+					$package_name = $1;
+				}
+				push( @uninstall_package_name, $package_name );
+				my $version = "none";
+				if ( $remote_pacakge_name =~ /\s*(.*)-(\d\.\d\.\d-\d)/ ) {
+					$version = $2;
 				}
 				push( @uninstall_package_version, $version );
 			}
@@ -1167,7 +1180,7 @@ elsif ( $_GET{'action'} eq 'get_test_log' ) {
 }
 
 elsif ( $_GET{'action'} eq 'update_page_with_uninstall_pkg' ) {
-	my @installed_package_list = split /\:/, $_GET{'installed_packages'};
+	my @installed_package_list = split( ":", $_GET{'installed_packages'} );
 	my $flag_uninstall         = 0;
 	my $flag_update            = 0;
 	my $check_network          = check_network();
@@ -1187,6 +1200,8 @@ elsif ( $_GET{'action'} eq 'update_page_with_uninstall_pkg' ) {
 			$data .=
 "<uninstall_package_name>@uninstall_package_name</uninstall_package_name>\n";
 			$data .=
+"<uninstall_package_name_with_version>@uninstall_package_name_with_version</uninstall_package_name_with_version>\n";
+			$data .=
 "<uninstall_package_version>@uninstall_package_version</uninstall_package_version>\n";
 			$data .=
 "<update_package_flag>@update_package_flag</update_package_flag>\n";
@@ -1204,10 +1219,14 @@ elsif ( $_GET{'action'} eq 'update_page_with_uninstall_pkg' ) {
 
 #install package
 elsif ( $_GET{'action'} eq 'install_package' ) {
-	my $package_name  = $_GET{'package_name'};
-	my $package_count = $_GET{'package_count'};
-	my $check_install = install_package($package_name);
+	my $package_rpm_name = $_GET{'package_name'};
+	my $package_count    = $_GET{'package_count'};
+	my $check_install    = install_package($package_rpm_name);
 	if ( $check_install =~ /OK/ ) {
+		my $package_name = "";
+		if ( $package_rpm_name =~ /(.*)-\d\.\d\.\d-\d/ ) {
+			$package_name = $1;
+		}
 		my $file_name = $test_definition_dir . $package_name . "/tests.xml";
 		my $case_number_temp = 0;
 		eval {
@@ -1519,6 +1538,71 @@ elsif ( $_GET{'action'} eq "delete_profile" ) {
 	closedir DELPROFILE;
 	$data .=
 	  "<delete_profile_success>$delete_profile_name</delete_profile_success>\n";
+}
+
+#view profile
+elsif ( $_GET{'action'} eq "view_test_plan" ) {
+	my $view_profile_name     = $_GET{'test_plan_name'};
+	my $dir_profile_name      = $profile_dir_manager;
+	my $view_profile_path     = "none";
+	my $advanced_value        = "none";
+	my $advanced_value_string = "none";
+	my $theEnd                = "False";
+	my $package_name          = "none";
+	my $auto_number           = "none";
+	my $manual_number         = "none";
+	my @package_name          = ();
+	my @auto_number           = ();
+	my @manual_number         = ();
+	my @advanced_value        = ();
+
+	opendir VIEWPROFILE, $dir_profile_name
+	  or die "can not open $dir_profile_name";
+
+	foreach $file ( readdir VIEWPROFILE ) {
+		if ( $file =~ /\b$view_profile_name\b/ ) {
+			$view_profile      = $file;
+			$view_profile_path = $dir_profile_name . $view_profile;
+			open FILE, $view_profile_path or die $! . " " . $view_profile_path;
+			while (<FILE>) {
+				my $line = $_;
+				$line =~ s/\n//g;
+				if ( $line =~ /\[\/Auto\]/ ) {
+					$theEnd = "True";
+				}
+				if ( $theEnd eq "False" ) {
+					if ( $line !~ /Auto/ ) {
+						if ( $line =~ /(.*)\((\d*) (\d*)\)/ ) {
+							$package_name  = $1;
+							$auto_number   = $2;
+							$manual_number = $3;
+							push( @package_name,  $package_name . "!__!" );
+							push( @auto_number,   $auto_number . "!__!" );
+							push( @manual_number, $manual_number . "!__!" );
+						}
+					}
+				}
+				if ( $line =~ /\=/ ) {
+					my @advanced_value_temp = split( "=", $line );
+					$advanced_value = pop(@advanced_value_temp);
+					push( @advanced_value, $advanced_value );
+				}
+			}
+			last;
+		}
+	}
+	$advanced_value_string = join( "!::!", @advanced_value );
+	closedir VIEWPROFILE;
+	$data .=
+	  "<view_profile_success>$view_profile_name</view_profile_success>\n";
+	$data .=
+	  "<view_profile_package_name>@package_name</view_profile_package_name>\n";
+	$data .=
+"<view_profile_auto_case_number>@auto_number</view_profile_auto_case_number>\n";
+	$data .=
+"<view_profile_manual_case_number>@manual_number</view_profile_manual_case_number>\n";
+	$data .=
+"<view_profile_advanced_value>$advanced_value_string</view_profile_advanced_value>\n";
 }
 
 # write manual result back to the file

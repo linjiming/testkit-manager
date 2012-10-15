@@ -1223,9 +1223,11 @@ sub callSystem {
 }
 
 sub install_package {
-	my ($package_name)   = @_;
+	my ($parameter)      = @_;
 	my $package_rpm_name = "";
-	my $check_network    = check_network();
+	my $package_name     = "";
+
+	my $check_network = check_network();
 	if ( $check_network =~ /OK/ ) {
 		my $repo      = get_repo();
 		my @repo_all  = split( "::", $repo );
@@ -1237,24 +1239,65 @@ sub install_package {
 		$GREP_PATH =~ s/\./\\\./g;
 		$GREP_PATH =~ s/\-/\\\-/g;
 
+		# install package
+		if ( $parameter =~ /(.*)-\d\.\d\.\d-\d/ ) {
+			$package_rpm_name = $parameter;
+			$package_name     = $1;
+		}
+
+		# update package
+		else {
+			$package_name = $parameter;
+			my @rpm            = ();
+			my $temp_rpm_count = 0;
+			if ( $repo_type =~ /remote/ ) {
+				@rpm =
+				  `$DOWNLOAD_CMD $repo_url 2>&1 | grep $GREP_PATH.*tests.*rpm`;
+			}
+			if ( $repo_type =~ /local/ ) {
+				@rpm = `find $repo_url | grep $GREP_PATH.*tests.*rpm`;
+			}
+			my $cmd = "sdb shell 'rpm -qa | grep " . $package_name . "'";
+			my $package_version_installed = `$cmd`;
+			my $version_installed         = "none";
+			if ( $package_version_installed =~ /-(\d\.\d\.\d-\d)/ ) {
+				$version_installed = $1;
+			}
+			foreach (@rpm) {
+				my $remote_pacakge_name = $_;
+				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
+				if ( $remote_pacakge_name =~ /$package_name/ ) {
+					my $version_latest = "none";
+					if ( $remote_pacakge_name =~ /-(\d\.\d\.\d-\d)/ ) {
+						$version_latest = $1;
+					}
+					my $result_latest_version =
+					  compare_version( $version_installed, $version_latest );
+					if ( $result_latest_version eq "update" ) {
+						$version_installed = $version_latest;
+						$package_rpm_name  = $remote_pacakge_name;
+					}
+				}
+				$temp_rpm_count++;
+			}
+		}
+
+		$package_rpm_name =~ s/^\s//;
+		$package_rpm_name =~ s/\s$//;
+		$package_name     =~ s/^\s//;
+		$package_name     =~ s/\s$//;
 		my $cmd = "";
 		if ( $repo_type =~ /remote/ ) {
 			$cmd =
 			    "$DOWNLOAD_CMD "
 			  . $repo_url
-			  . " 2>&1 | grep $GREP_PATH"
-			  . "$package_name.*.rpm";
+			  . " 2>&1 | grep $GREP_PATH$package_rpm_name";
 		}
 		if ( $repo_type =~ /local/ ) {
-			$cmd = "find "
-			  . $repo_url
-			  . " | grep $GREP_PATH"
-			  . "$package_name.*.rpm";
+			$cmd = "find " . $repo_url . " | grep $GREP_PATH$package_rpm_name";
 		}
 		my $network_result = `$cmd`;
-		if ( $network_result =~ /$GREP_PATH.*($package_name.*.rpm)/ ) {
-			$package_rpm_name = $1;
-
+		if ( $network_result =~ /$GREP_PATH.*$package_rpm_name/ ) {
 			if ( $repo_type =~ /remote/ ) {
 				system("wget -c $repo_url$package_rpm_name -P /tmp -q -N");
 				system("sdb push /tmp/$package_rpm_name /tmp &>/dev/null");
@@ -1272,6 +1315,8 @@ sub install_package {
 "sdb shell 'cd /tmp; rpm -Uvh $package_rpm_name --nodeps &>/dev/null' &>/dev/null"
 				);
 			}
+
+			# install package
 			else {
 				system(
 "sdb shell 'cd /tmp; rpm -ivh $package_rpm_name --nodeps &>/dev/null' &>/dev/null"
@@ -1310,6 +1355,9 @@ sub install_package {
 			}
 		}
 	}
+	else {
+		return $check_network;
+	}
 }
 
 sub syncDefinition {
@@ -1344,33 +1392,25 @@ sub syncDefinition {
 
 	# sync readme files and license files
 	my $cmd_readme = "sdb shell 'ls /opt/*/README'";
-	my @readmes    = `$cmd_readme`;
+	my $readme     = `$cmd_readme`;
+	my @readmes    = $readme =~ /(\/opt\/.*?\/README)/g;
 	if ( ( @readmes >= 1 ) && ( $readmes[0] !~ /No such file or directory/ ) ) {
 		foreach (@readmes) {
 			my $readme = "";
 			if ( $_ =~ /(\/opt\/.*\/README)/ ) {
 				$readme = $1;
 			}
-			$readme =~ s/\s*$//;
+			$readme =~ s/^\s//;
+			$readme =~ s/\s$//;
 			if ( $readme =~ /opt\/(.*)\/README/ ) {
 				my $package_name = $1;
-				if ( -e "$opt_dir$package_name/README" ) {
-					system("rm -f $opt_dir$package_name/README");
+				system("sdb pull $readme $opt_dir$package_name &>/dev/null");
+				my $license_cmd = `sdb shell 'ls /opt/$package_name/LICENSE'`;
+				if ( $license_cmd !~ /No such file or directory/ ) {
+					my $license = $readme;
+					$license =~ s/README/LICENSE/;
 					system(
-						"sdb pull $readme $opt_dir$package_name &>/dev/null");
-					my $license_cmd = `sdb shell ls /opt/$package_name/LICENSE`;
-					if ( $license_cmd !~ /No such file or directory/ ) {
-						my $license = $readme;
-						$license =~ s/README/LICENSE/;
-						system(
-"sdb pull $license $opt_dir$package_name &>/dev/null"
-						);
-					}
-					else {
-						system(
-"echo 'No license info' > $opt_dir$package_name/LICENSE"
-						);
-					}
+						"sdb pull $license $opt_dir$package_name &>/dev/null");
 				}
 			}
 		}

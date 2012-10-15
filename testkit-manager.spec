@@ -2,8 +2,8 @@
 
 Summary: Testkit Manager
 Name: testkit-manager
-Version: 2.2.4
-Release: 3
+Version: 2.2.5
+Release: 2
 License: GPLv2
 Group: System/Libraries
 Source: %name-%version.tar.gz
@@ -32,7 +32,18 @@ make install DESTDIR=$RPM_BUILD_ROOT
 /opt/testkit/manager
 
 %changelog
-* Thu Sep 28 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.4-3
+* Thu Oct 12 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.5-2
+- automatic select testkit-lite with the same version number from the repo
+- update operation icons when sort packages
+
+* Thu Oct 10 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.5-1
+- add save, load and manage panel to operate test plan
+- add a new popup to view test plan
+- support install and update from repo which contains packages with same name but different versions
+- update pdf file
+- add support to update testkit-lite's version, when an older version is existed
+
+Thu Sep 28 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.4-3
 - add known issues section in README
 
 Thu Sep 25 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.4-2

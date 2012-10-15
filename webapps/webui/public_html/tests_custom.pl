@@ -600,8 +600,9 @@ sub UpdatePage {
 	print show_error_dlg("");
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
-	
-	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
+	<iframe id='popIframe' class='popIframe' frameborder='0' ></iframe>
+	<div id="popDiv" class="mydiv" style="overflow-y:auto;overflow-x:auto;height:460px;display:none";></div>
+	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="">
 	      <table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">
@@ -899,6 +900,8 @@ sub UpdateNullPage {
 	print show_error_dlg("");
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
+	<iframe id='popIframe' class='popIframe' frameborder='0' ></iframe>
+	<div id="popDiv" class="mydiv" style="overflow-y:auto;overflow-x:auto;height:460px;display:none";></div>
 	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="">
@@ -1031,6 +1034,7 @@ sub UpdateNullPage {
             </tr>
           </table></td>
         </tr>
+        <input type="hidden" id="package_name_number" name="package_name_number" value="$package_name_number">
         <tr><table width="100%" height="300" border="0" id="update_null_page_div" align="center" class="backbackground_button" cellpadding="0" cellspacing="0" style="display:">
         	<tr>
         		<td width="100%" align="center" class="custom_list_type_bottomright_packagename" id="update_null_page" name="update_null_page">No packages, please click Update button , install packages, then click reload button to refresh page!</td>
@@ -1039,44 +1043,132 @@ sub UpdateNullPage {
         </tr>
 DATA
 	DrawUninstallPackageList();
+
+	my $profiles_list = "";
+	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/profiles/test' ) ) {
+		my @files = sort grep !/^[\.~]/, readdir(DIR);
+		foreach (@files) {
+			my $profile_name = $_;
+			$profiles_list .=
+			  "    <option value=\"$profile_name\">$profile_name</option>\n";
+		}
+	}
 	print <<DATA;
+            </tr>
+          </table></td>
+        </tr>
         <tr>
-          <td><table width="100%" height="30" border="0" align="center" class="backbackground_button" cellpadding="0" cellspacing="0">
+        <td height="4" width="100%" class="backbackground_button"></td>
+        </tr>
+        <tr>
+          <td><table width="768" height="30" border="0" class="backbackground_button custom_font" cellpadding="0" cellspacing="0">
             <tr>
-              <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="10%"><div align="center">
-                <input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();"/>
-              </div></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" class="backbackground_button"><div align="center">
-                <input id="view_package_info" name="view_package_info" type="submit" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" />
-              </div></td>
-              <td width="7%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="6%" class="backbackground_button">&nbsp;</td>
-              <td width="8%" nowrap="nowrap" class="custom_font">Test Plan</td>
-              <td width="21%" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
+              <td width="10%" align="center"><input type="submit" id="view_package_info" name="view_package_info" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" /></td>
+              <td width="40%">&nbsp;</td>
+              <td width="10%" align="center">Test Plan</td>
+              <td width="10%" align="center"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:show_save_panel();" /></td>
+              <td width="10%" align="center"><input name="load_profile_panel_button" id="load_profile_panel_button" title="Open load test plan panel" type="button" class="medium_button" value="Load" onclick="javascript:show_load_panel();" /></td>
+              <td width="10%" align="center"><input name="manage_profile_panel_button" id="manage_profile_panel_button" title="Open manage test plan panel" type="button" class="medium_button" value="Manage" onclick="javascript:show_manage_panel();" /></td>
+            </tr>
+            <tr id="save_profile_panel" style="display:none">
+              <td height="60" colspan="7"><table width="100%" height="60">
                 <tr>
-		        	<td height="7" class="backbackground_button"></td>
-		        </tr>
-                <tr>
-                  <td>
-                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" disabled="true" value="" style="width: 14em;" onkeyup="showtips(event.target);if(event.keyCode==27)c();" onkeydown="enterTips(event.keyCode)" autocomplete=off /></label></td>
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Save as a new test plan</td>
+                  <td width="20%" align="left"><input name="save_test_plan_text" type="text" class="test_plan_name" id="save_test_plan_text" /></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="save_profile_button_text" id="save_profile_button_text" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('text');" /></td>
+                  <td width="10%">&nbsp;</td>
+                  <td width="5%">&nbsp;</td>
                 </tr>
                 <tr>
-                  <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
-                   </select>
-                  </label>
-                  </td>
+DATA
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Overwrite an existing test plan</td>
+                  <td width="20%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 11em;">$profiles_list</select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('select');" /></td>
+                  <td width="10%" align="center"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('save');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Overwrite an existing test plan</td>
+                  <td width="20%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 11em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button" value="Save" disabled="disabled" onclick="javascript:save_profile('select');" /></td>
+                  <td width="10%" align="center"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button" value="View" disabled="disabled" onclick="javascript:view_profile('save');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
                 </tr>
               </table></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button" title="Save test plan" type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:onSave();"/></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" disabled="true" onclick="javascript:onLoad();"/></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="16" height="1" /></td>
-              <input type="hidden" id="package_name_number" name="package_name_number" value="$package_name_number">
+            </tr>
+            <tr id="load_profile_panel" style="display:none">
+              <td height="30" colspan="7"><table width="100%" height="30">
+                <tr>
+DATA
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Choose from existing test plans</td>
+                  <td width="20%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 11em;">$profiles_list</select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:load_profile();" /></td>
+                  <td width="10%" align="center"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('load');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Choose from existing test plans</td>
+                  <td width="20%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 11em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" disabled="disabled" onclick="javascript:load_profile();" /></td>
+                  <td width="10%" align="center"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button" value="View" disabled="disabled" onclick="javascript:view_profile('load');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
+                </tr>
+              </table></td>
+            </tr>
+            <tr id="manage_profile_panel" style="display:none">
+              <td height="30" colspan="7"><table width="100%" height="30">
+                <tr>
+DATA
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Existing test plans</td>
+                  <td width="20%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 11em;">$profiles_list</select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('manage');" /></td>
+                  <td width="10%" align="center"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:delete_profile();" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Existing test plans</td>
+                  <td width="20%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 11em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button" value="View" disabled="disabled" onclick="javascript:view_profile('manage');" /></td>
+                  <td width="10%" align="center"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" disabled="disabled" onclick="javascript:delete_profile();" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
+                </tr>
+              </table></td>
             </tr>
           </table></td>
         </tr>
@@ -2228,6 +2320,8 @@ sub UpdateLoadPageSelectItem {
 	print show_error_dlg("");
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
+	<iframe id='popIframe' class='popIframe' frameborder='0' ></iframe>
+	<div id="popDiv" class="mydiv" style="overflow-y:auto;overflow-x:auto;height:460px;display:none";></div>
 	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="tests_custom.pl">
@@ -2447,8 +2541,16 @@ DATA
 	}
 	LoadDrawPackageList();
 	DrawUninstallPackageList();
-	if ( @checkbox_packages > 0 ) {
-		print <<DATA;
+	my $profiles_list = "";
+	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/profiles/test' ) ) {
+		my @files = sort grep !/^[\.~]/, readdir(DIR);
+		foreach (@files) {
+			my $profile_name = $_;
+			$profiles_list .=
+			  "    <option value=\"$profile_name\">$profile_name</option>\n";
+		}
+	}
+	print <<DATA;
             </tr>
           </table></td>
         </tr>
@@ -2456,113 +2558,131 @@ DATA
         <td height="4" width="100%" class="backbackground_button"></td>
         </tr>
         <tr>
-          <td><table width="100%" height="48" border="0" class="backbackground_button" cellpadding="0" cellspacing="0">
+          <td><table width="100%" height="30" border="0" class="backbackground_button custom_font" cellpadding="0" cellspacing="0">
             <tr>
-              <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="10%" valign="top"><div align="center">
-                <input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" value="Execute" onclick="javascript:onExecute();"/>
-              </div></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" valign="top" class="backbackground_button"><div align="center">
-                <input id="view_package_info" name="view_package_info" type="submit" class="large_button" value="View" title="View detailed information of selected packages" />
-              </div></td>
-              <td width="7%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="6%" class="backbackground_button">&nbsp;</td>
-              <td width="8%" valign="top"><table>
-		        <tr>
-		        	<td height="1" class="backbackground_button"></td>
-		        </tr>
-              	<tr>
-              		<td nowrap="nowrap" class="custom_font">Test Plan</td>
-              	</tr>
-              </table>
-              </td>
-			<td width="21%" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-                <tr>
-		        	<td height="7" class="backbackground_button"></td>
-		        </tr>
-                <tr>
-                  <td>
-                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="$load_profile_name" style="width: 14em;" onkeyup="showtips(event.target);if(event.keyCode==27)c();" onkeydown="enterTips(event.keyCode)" autocomplete=off /></label></td>
-                </tr>
-                <tr>
-                  <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
-                   </select>
-                  </label>
-                  </td>
-                </tr>
-              </table></td>              
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:onSave();"/></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:onLoad();"/></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="16" height="1" /></td>
-            </tr>
-          </table></td>
-        </tr>
-      </table>  
+DATA
+	if ( @checkbox_packages > 0 ) {
+		print <<DATA;
+              <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" value="Execute" onclick="javascript:onExecute();" /></td>
+              <td width="10%" align="center"><input type="submit" id="view_package_info" name="view_package_info" class="large_button" value="View" title="View detailed information of selected packages" /></td>
 DATA
 	}
 	else {
 		print <<DATA;
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-        <td height="4" width="100%" class="backbackground_button"></td>
-        </tr>
-        <tr>
-          <td><table width="100%" height="48" border="0" class="backbackground_button" cellpadding="0" cellspacing="0">
-            <tr>
-              <td width="3.5%" align="center" valign="middle"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="10%" valign="top"><div align="center">
-                <input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" disabled="true" class="large_button" value="Execute" onclick="javascript:onExecute();"/>
-              </div></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" valign="top" class="backbackground_button"><div align="center">
-                <input id="view_package_info" name="view_package_info" disabled="true" type="submit" class="large_button" value="View" title="View detailed information of selected packages" />
-              </div></td>
-              <td width="7%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="6%" class="backbackground_button">&nbsp;</td>
-              <td width="8%" valign="top"><table>
-		        <tr>
-		        	<td height="1" class="backbackground_button"></td>
-		        </tr>
-              	<tr>
-              		<td nowrap="nowrap" class="custom_font">Test Plan</td>
-              	</tr>
-              </table>
-              </td>
-			<td width="21%" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-                <tr>
-		        	<td height="7" class="backbackground_button"></td>
-		        </tr>
-                <tr>
-                  <td>
-                  <label><input name="edit_profile_name" type="text" class="custom_font" id="edit_profile_name" value="$load_profile_name" style="width: 14em;" onkeyup="showtips(event.target);if(event.keyCode==27)c();" onkeydown="enterTips(event.keyCode)" autocomplete=off /></label></td>
-                </tr>
-                <tr>
-                  <td><label><select id="sel" size="4" style="display:none;height:auto;width:11.6em;" onclick=returnValue() onkeydown="if(event.keyCode==13){returnValue()}">
-                   </select>
-                  </label>
-                  </td>
-                </tr>
-              </table></td>              
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="top" valign="top" class="backbackground_button"><input name="save_profile_button" id="save_profile_button" title="Save test plan" disabled="true" type="button" class="medium_button" value="Save" onclick="javascript:onSave();"/></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:onLoad();"/></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="1" height="1" /></td>
-              <td width="9%" align="center" valign="top" class="backbackground_button"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:onDelete();"/></td>
-              <td width="1%"><img src="images/environment-spacer.gif" width="16" height="1" /></td>
-            </tr>
-          </table></td>
-        </tr>
-      </table>  
+              <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
+              <td width="10%" align="center"><input type="submit" id="view_package_info" name="view_package_info" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" /></td>
 DATA
 	}
+	print <<DATA;
+              <td width="40%">&nbsp;</td>
+              <td width="10%" align="center">Test Plan</td>
+              <td width="10%" align="center"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" onclick="javascript:show_save_panel();" /></td>
+              <td width="10%" align="center"><input name="load_profile_panel_button" id="load_profile_panel_button" title="Open load test plan panel" type="button" class="medium_button" value="Load" onclick="javascript:show_load_panel();" /></td>
+              <td width="10%" align="center"><input name="manage_profile_panel_button" id="manage_profile_panel_button" title="Open manage test plan panel" type="button" class="medium_button" value="Manage" onclick="javascript:show_manage_panel();" /></td>
+            </tr>
+            <tr id="save_profile_panel" style="display:none">
+              <td height="60" colspan="7"><table width="100%" height="60">
+                <tr>
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Save as a new test plan</td>
+                  <td width="20%" align="left"><input name="save_test_plan_text" type="text" class="test_plan_name" id="save_test_plan_text" /></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="save_profile_button_text" id="save_profile_button_text" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('text');" /></td>
+                  <td width="10%">&nbsp;</td>
+                  <td width="5%">&nbsp;</td>
+                </tr>
+                <tr>
+DATA
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Overwrite an existing test plan</td>
+                  <td width="20%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 11em;">$profiles_list</select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('select');" /></td>
+                  <td width="10%" align="center"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('save');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Overwrite an existing test plan</td>
+                  <td width="20%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 11em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button" value="Save" disabled="disabled" onclick="javascript:save_profile('select');" /></td>
+                  <td width="10%" align="center"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button" value="View" disabled="disabled" onclick="javascript:view_profile('save');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
+                </tr>
+              </table></td>
+            </tr>
+            <tr id="load_profile_panel" style="display:none">
+              <td height="30" colspan="7"><table width="100%" height="30">
+                <tr>
+DATA
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Choose from existing test plans</td>
+                  <td width="20%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 11em;">$profiles_list</select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:load_profile();" /></td>
+                  <td width="10%" align="center"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('load');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Choose from existing test plans</td>
+                  <td width="20%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 11em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" disabled="disabled" onclick="javascript:load_profile();" /></td>
+                  <td width="10%" align="center"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button" value="View" disabled="disabled" onclick="javascript:view_profile('load');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
+                </tr>
+              </table></td>
+            </tr>
+            <tr id="manage_profile_panel" style="display:none">
+              <td height="30" colspan="7"><table width="100%" height="30">
+                <tr>
+DATA
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Existing test plans</td>
+                  <td width="20%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 11em;">$profiles_list</select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('manage');" /></td>
+                  <td width="10%" align="center"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:delete_profile();" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Existing test plans</td>
+                  <td width="20%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 11em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="20%">&nbsp;</td>
+                  <td width="10%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button" value="View" disabled="disabled" onclick="javascript:view_profile('manage');" /></td>
+                  <td width="10%" align="center"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" disabled="disabled" onclick="javascript:delete_profile();" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
+                </tr>
+              </table></td>
+            </tr>
+          </table></td>
+        </tr>
+      </table>
+DATA
 }
 print <<DATA;
         </form>
@@ -3349,12 +3469,17 @@ function sortPackages(){
 	if (sort_flag){
 		img_id.src = "images/up_and_down_1.png";
 		for(var count = 0; count < package_name_number; count++){
+			var transfer;
+			var sort_count = package_name_number-1-count;
 			var checkbox_id = "checkbox_package_name"+count;
 			var package_name_id = "pn_"+package_name[count];
 			var id = document.getElementById(main_list_id[count]);
 			var package_case_cn_id = "cn_"+package_name[count];
 			var package_ver_id = "ver_"+package_name[count];
 			var update_id = "update_package_name_"+count;
+			var update_reverse_id = "update_package_name_"+sort_count; 
+			var update_pkg_pic = "update_" + document.getElementById(update_id).value;
+			var update_pkg_pic_reverse = "update_" + document.getElementById(update_reverse_id).value;
 			var delete_id = "pn_package_name_"+count;
 			var view_id = "view_package_name_"+count;
 			var sec_list_intro_id = "second_list_intro"+count;
@@ -3369,7 +3494,7 @@ function sortPackages(){
 			var sec_list_install_path_reverse_id = "sec_list_install_path_reverse"+count;
 			
 			document.getElementById(checkbox_id).name = "checkbox_"+package_name[count];
-			document.getElementById(package_name_id).innerHTML = "&nbsp"+package_name[count];
+			document.getElementById(package_name_id).innerHTML = package_name[count];
 			
 			id.style.display = "none";
 			if(package_name_flag[count] == "a"){
@@ -3378,6 +3503,19 @@ function sortPackages(){
 			document.getElementById(package_case_cn_id).innerHTML = "&nbsp"+case_number[count];
 			document.getElementById(package_ver_id).innerHTML = version[count];
 			document.getElementById(update_id).value = package_name[count];	
+			
+			transfer = document.getElementById(update_pkg_pic).src;
+			document.getElementById(update_pkg_pic).src = document.getElementById(update_pkg_pic_reverse).src;
+			document.getElementById(update_pkg_pic_reverse).src = transfer;
+			
+			transfer = document.getElementById(update_pkg_pic).style.cursor;
+			document.getElementById(update_pkg_pic).style.cursor = document.getElementById(update_pkg_pic_reverse).style.cursor;
+			document.getElementById(update_pkg_pic_reverse).style.cursor = transfer;
+			
+			transfer = document.getElementById(update_pkg_pic).onclick;
+			document.getElementById(update_pkg_pic).onclick = document.getElementById(update_pkg_pic_reverse).onclick;
+			document.getElementById(update_pkg_pic_reverse).onclick = transfer;
+			
 			document.getElementById(delete_id).value = package_name[count];
 			document.getElementById(view_id).value = package_name[count];
 			document.getElementById(sec_list_intro_id).style.display="";
@@ -3399,6 +3537,7 @@ function sortPackages(){
 	else{
 		img_id.src = "images/up_and_down_2.png";
 		for(var count = 0; count < package_name_number; count++){
+			var transfer;
 			var sort_count = package_name_number-1-count;
 			var checkbox_id = "checkbox_package_name"+count;
 			var package_name_id = "pn_"+package_name[count];
@@ -3406,6 +3545,9 @@ function sortPackages(){
 			var package_case_cn_id = "cn_"+package_name[count];
 			var package_ver_id = "ver_"+package_name[count];
 			var update_id = "update_package_name_"+count;
+			var update_reverse_id = "update_package_name_"+sort_count; 
+			var update_pkg_pic = "update_" + document.getElementById(update_id).value;
+			var update_pkg_pic_reverse = "update_" + document.getElementById(update_reverse_id).value;
 			var delete_id = "pn_package_name_"+count;
 			var view_id = "view_package_name_"+count;
 			var sec_list_intro_id = "second_list_intro"+count;
@@ -3421,14 +3563,27 @@ function sortPackages(){
 	
 			id.style.display = "none";
 			document.getElementById(checkbox_id).name = "checkbox_"+package_name[sort_count];
-			document.getElementById(package_name_id).innerHTML = "&nbsp"+package_name[sort_count];
+			document.getElementById(package_name_id).innerHTML = package_name[sort_count];
 			
 			if(package_name_flag[count] == "a"){	
 			 	id.style.display = "";	
 			}			
 			document.getElementById(package_case_cn_id).innerHTML = "&nbsp"+case_number[sort_count];			
 			document.getElementById(package_ver_id).innerHTML = version[sort_count];	
-			document.getElementById(update_id).value = package_name[sort_count];		
+			document.getElementById(update_id).value = package_name[sort_count];
+			
+			transfer = document.getElementById(update_pkg_pic).src;
+			document.getElementById(update_pkg_pic).src = document.getElementById(update_pkg_pic_reverse).src;
+			document.getElementById(update_pkg_pic_reverse).src = transfer;
+			
+			transfer = document.getElementById(update_pkg_pic).style.cursor;
+			document.getElementById(update_pkg_pic).style.cursor = document.getElementById(update_pkg_pic_reverse).style.cursor;
+			document.getElementById(update_pkg_pic_reverse).style.cursor = transfer;
+			
+			transfer = document.getElementById(update_pkg_pic).onclick;
+			document.getElementById(update_pkg_pic).onclick = document.getElementById(update_pkg_pic_reverse).onclick;
+			document.getElementById(update_pkg_pic_reverse).onclick = transfer;
+					
 			document.getElementById(delete_id).value = package_name[sort_count];
 			document.getElementById(view_id).value = package_name[sort_count];
 			

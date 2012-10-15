@@ -474,72 +474,86 @@ sub install_testkit_lite {
 			  . " | grep $GREP_PATH"
 			  . "testkit-lite.*.noarch.rpm";
 		}
-		my $network_result = `$cmd`;
+		my @testkit_lites = ();
+		@testkit_lites = `$cmd`;
+		my $network_result = "";
+		my $version_old    = "0.0.0-0";
+		foreach (@testkit_lites) {
+			my $testkit_lite = $_;
+			if ( $testkit_lite =~
+				/$GREP_PATH.*testkit-lite-(\d\.\d\.\d)-(\d).noarch.rpm/ )
+			{
+				my $version_main   = $1;
+				my $version_sub    = $2;
+				my $version_latest = $version_main . "-" . $version_sub;
+				my $result_version =
+				  compare_version( $version_old, $version_latest );
+				if (   ( $result_version eq "update" )
+					&& ( $version_main eq $MTK_VERSION ) )
+				{
+					$version_old    = $version_latest;
+					$network_result = $testkit_lite;
+				}
+			}
+		}
 		if (
 			$network_result =~ /$GREP_PATH.*testkit-lite-(.*)-(\d).noarch.rpm/ )
 		{
 			my $main_version = $1;
 			my $sub_version  = $2;
-			if ( $main_version eq $MTK_VERSION ) {
-				if (   ( $have_testkit_lite eq "TRUE" )
-					&& ( $have_correct_testkit_lite eq "FALSE" ) )
-				{
+			if (   ( $have_testkit_lite eq "TRUE" )
+				&& ( $have_correct_testkit_lite eq "FALSE" ) )
+			{
+				system(
+					"sdb shell 'rpm -e testkit-lite &>/dev/null' &>/dev/null");
+			}
+			if (   ( $have_testkit_lite eq "FALSE" )
+				or ( $have_correct_testkit_lite eq "FALSE" ) )
+			{
+				if ( $repo_type =~ /remote/ ) {
+					system( "wget -c $repo_url"
+						  . "testkit-lite-$main_version-$sub_version.noarch.rpm -P /tmp -q -N"
+					);
 					system(
-"sdb shell 'rpm -e testkit-lite &>/dev/null' &>/dev/null"
+"sdb push /tmp/testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
 					);
 				}
-				if (   ( $have_testkit_lite eq "FALSE" )
-					or ( $have_correct_testkit_lite eq "FALSE" ) )
-				{
-					if ( $repo_type =~ /remote/ ) {
-						system( "wget -c $repo_url"
-							  . "testkit-lite-$main_version-$sub_version.noarch.rpm -P /tmp -q -N"
-						);
-						system(
-"sdb push /tmp/testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
-						);
-					}
-					if ( $repo_type =~ /local/ ) {
-						system( "sdb push $repo_url"
-							  . "testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
-						);
-					}
-					sleep 3;
-					system( "sdb shell 'rpm -ivh /tmp/"
-						  . "testkit-lite-$main_version-$sub_version.noarch.rpm --nodeps"
-						  . " &>/dev/null' &>/dev/null" );
-					sleep 3;
-					my $cmd = "sdb shell 'rpm -qa | grep testkit-lite'";
-					my $testkit_lite = `$cmd`;
-					if ( $testkit_lite =~ /testkit-lite-(.*)-\d\.noarch/ ) {
-						$have_testkit_lite = "TRUE";
-						my $version = $1;
-						if ( $version eq $MTK_VERSION ) {
-							$have_correct_testkit_lite = "TRUE";
-						}
-						else {
-							$have_correct_testkit_lite = "FALSE";
-						}
+				if ( $repo_type =~ /local/ ) {
+					system( "sdb push $repo_url"
+						  . "testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
+					);
+				}
+				sleep 3;
+				system( "sdb shell 'rpm -ivh /tmp/"
+					  . "testkit-lite-$main_version-$sub_version.noarch.rpm --nodeps"
+					  . " &>/dev/null' &>/dev/null" );
+				sleep 3;
+				my $cmd          = "sdb shell 'rpm -qa | grep testkit-lite'";
+				my $testkit_lite = `$cmd`;
+				if ( $testkit_lite =~ /testkit-lite-(.*)-\d\.noarch/ ) {
+					$have_testkit_lite = "TRUE";
+					my $version = $1;
+					if ( $version eq $MTK_VERSION ) {
+						$have_correct_testkit_lite = "TRUE";
 					}
 					else {
-						$have_testkit_lite = "FALSE";
+						$have_correct_testkit_lite = "FALSE";
 					}
 				}
-				if (   ( $have_testkit_lite eq "FALSE" )
-					or ( $have_correct_testkit_lite eq "FALSE" ) )
-				{
-					$testkit_lite_error_message =
-"testkit-lite-$main_version-$sub_version.noarch.rpm is find in the repo, however we failed to install it, please try manually";
+				else {
+					$have_testkit_lite = "FALSE";
 				}
 			}
-			else {
+			if (   ( $have_testkit_lite eq "FALSE" )
+				or ( $have_correct_testkit_lite eq "FALSE" ) )
+			{
 				$testkit_lite_error_message =
-"Only find testkit-lite-$main_version-$sub_version.noarch.rpm in the repo, please install testkit-lite-$MTK_VERSION-x.noarch.rpm manually";
+"testkit-lite-$main_version-$sub_version.noarch.rpm is find in the repo, however we failed to install it, please try manually";
 			}
 		}
 		else {
 			$testkit_lite_error_message =
-"Can't find testkit-lite in the repo, please install testkit-lite-$MTK_VERSION-x.noarch.rpm manually";
+"Can't find testkit-lite-$MTK_VERSION-x.noarch.rpm in the repo, please install it manually";
 		}
 	}
 	else {
