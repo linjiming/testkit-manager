@@ -122,3 +122,12 @@ testkit-manager 2.2.5:
 * Thu Oct 12 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.5-2
   - automatic select testkit-lite with the same version number from the repo
   - update operation icons when sort packages
+
+testkit-manager 2.2.6:
+===================
+* Thu Oct 23 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.6-1
+  - add support to restore completed packages' progress bar when switch between different pages during exectuion
+  - update auto and manual exectuion pages' UI
+  - add support to install package with a lower version
+  - update plan page's UI to display the package version in the repo
+  - add clear button in the plan page to erase all the filters

@@ -169,20 +169,7 @@ if ( $_GET{"delete_package"} ) {
 			my $cmd          = "sdb shell 'rpm -qa | grep " . $temp . "'";
 			my $have_package = `$cmd`;
 			if ( $have_package =~ /$temp/ ) {
-				system("sdb shell 'rpm -e $temp &>/dev/null' &>/dev/null");
-				my $cmd = "sdb shell 'wrt-launcher -l | grep " . $temp . "'";
-				my @package_items = `$cmd`;
-				foreach (@package_items) {
-					my $package_id = "none";
-					if ( $_ =~ /^\s+(\d+)\s+(\d+)/ ) {
-						$package_id = $2;
-					}
-					if ( $package_id ne "none" ) {
-						system(
-"sdb shell 'wrt-installer -u $package_id &>/dev/null' &>/dev/null"
-						);
-					}
-				}
+				remove_package($temp);
 			}
 		}
 		else {
@@ -609,40 +596,44 @@ sub UpdatePage {
 	        <tr>
 	          <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
 	            <tr>
-	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
-	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-	                <tr>
-	                  <td width="47%" height="30" align="right" class="custom_title">Architecture &nbsp</td>
-	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
-	                    <option>X86</option>
-	                  </select>                  </td>
-	                </tr>
-	              </table></td>
-	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-	                <tr>
-	                <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="30" align="right" class="custom_title">Version &nbsp</td>
-	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_case_item();">
-DATA
-	DrawVersionSelect();
-	print <<DATA;
-                  </select></td>
-                </tr>
-              </table></td>
-              <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
-              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name &nbsp</td>
-              <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" title="Sort packages" src="images/up_and_down_1.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
-              <td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
-              <td width="12%" height="30" align="left" nowrap="nowrap">
-				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
-			  </td>
-			  <td width="4.5%" height="30" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" width="14" height="14"/></a></td>
-              <td width="33%" height="30" nowrap="nowrap">&nbsp;</td>
-            </tr>
+	              <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
+	              <td width="61%" height="30" id="name" align="left" nowrap="nowrap" class="custom_title">Create Test Plan</td>
+	              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Packages &nbsp</td>
+	              <td width="10%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List();"/></td>
+	              <td width="10%" height="30" align="left" nowrap="nowrap">
+	                <input type="submit" id="view_package_info" name="view_package_info" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" />
+	              </td>
+	              <td width="10%" height="30" align="left" nowrap="nowrap">
+					<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
+				  </td>
+				  <td width="2%" height="30" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" width="14" height="14"/></a></td>
+	              <td width="1%" height="30" nowrap="nowrap">&nbsp;</td>
+           		</tr>
           </table></td>
         </tr>
         <tr>
           <td id="list_advanced" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="below" rules="none">
+            <tr>
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Architecture</td><td>
+                    <select name="select_arc" align="20px" id="select_arc" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>X86</option>
+                    </select>
+                  </td>
+                </tr>
+              </table></td>
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Version<td>
+                    <select name="select_ver" id="select_ver" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+DATA
+	DrawVersionSelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+            </tr>
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
@@ -743,10 +734,16 @@ DATA
                 <tr>
               <td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
               <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
-              <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_title">Package Name</td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottom_title">&nbsp;Operation</td>
+              <td width="23.5%" height="30" class="custom_list_type_bottomright_title"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="70%" align="center" height="30" valign="middle"><div align="left">Package Name</div></td>	
+                  <td width="30%" align="center" height="30" valign="middle"><div align="left"><img id="sort_packages" title="Sort packages" src="images/up_and_down_1.png" width="23" height="23" onclick="javascript:sortPackages()"/></div></td>	
+                </tr>
+              </table></td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Installed Version</td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Upgraded Version</td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottom_title">&nbsp;Operation</td>
               <input type="hidden" id="package_name_number" name="package_name_number" value="$package_name_number">
                 </tr>
               </table></td>
@@ -775,7 +772,7 @@ DATA
           <td><table width="100%" height="30" border="0" class="backbackground_button custom_font" cellpadding="0" cellspacing="0">
             <tr>
               <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
-              <td width="10%" align="center"><input type="submit" id="view_package_info" name="view_package_info" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" /></td>
+              <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button" disabled="true" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
               <td width="40%">&nbsp;</td>
               <td width="10%" align="center">Test Plan</td>
               <td width="10%" align="center"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:show_save_panel();" /></td>
@@ -905,42 +902,47 @@ sub UpdateNullPage {
 	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="">
-	      <table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">
-	        <tr>
+	     <table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">
+	     <tr>
 	          <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
 	            <tr>
-	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
-	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-	                <tr>
-	                  <td width="47%" height="30" align="right" class="custom_title">Architecture&nbsp</td>
-	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
-	                    <option>X86</option>
-	                  </select>                  </td>
-	                </tr>
-	              </table></td>
-	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-	                <tr>
-	                <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="30" align="right" class="custom_title">Version&nbsp</td>
-	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" value="Any Version" class="custom_select" onchange="javascript:filter_case_item();">
-                  <option>Any Version</option>
-                  </select></td>
-                </tr>
-              </table></td>
-              <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
-              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name&nbsp</td>
-              <td width="4.5%" height="30" nowrap="nowrap"><a id="sort_packages" title="Sort packages" href="tests_custom.pl?order=$value"><img src="$image" width="23" height="23"/></a></td>
-              <td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
-              <td width="12%" align="left" height="30" nowrap="nowrap">
-				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
-			  </td>
-			  <td width="4.5%" height="30" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" width="14" height="14"/></a></td>
-              <td width="33%" height="30" nowrap="nowrap">&nbsp;</td>
-            </tr>
+	              <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
+	              <td width="61%" height="30" id="name" align="left" nowrap="nowrap" class="custom_title">Create Test Plan</td>
+	              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Packages &nbsp</td>
+	              <td width="10%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List();"/></td>
+	              <td width="10%" height="30" align="left" nowrap="nowrap">
+	                <input type="submit" id="view_package_info" name="view_package_info" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" />
+	              </td>
+	              <td width="10%" height="30" align="left" nowrap="nowrap">
+					<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
+				  </td>
+				  <td width="2%" height="30" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" width="14" height="14"/></a></td>
+	              <td width="1%" height="30" nowrap="nowrap">&nbsp;</td>
+           		</tr>
           </table></td>
         </tr>
         <tr>
           <td id="list_advanced" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="below" rules="none">
+            <tr>
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Architecture</td><td>
+                    <select name="select_arc" align="20px" id="select_arc" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>X86</option>
+                    </select>
+                  </td>
+                </tr>
+              </table></td>
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Version<td>
+                    <select name="select_ver" id="select_ver" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>Any Version</option>
+                    </select>                    </td>
+                </tr>
+              </table></td>
+            </tr>
+            
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
@@ -1024,10 +1026,17 @@ sub UpdateNullPage {
               <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
                 <tr>
               <td width="4%" height="22" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Package Name</td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottom_title">&nbsp;Opreation</td>
+              <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
+              <td width="23.5%" height="30" class="custom_list_type_bottomright_title"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="70%" align="center" height="30" valign="middle"><div align="left">Package Name</div></td>	
+                  <td width="30%" align="center" height="30" valign="middle"><div align="left"><img id="sort_packages" title="Sort packages" src="images/up_and_down_1.png" width="23" height="23"/></div></td>	
+                </tr>
+              </table></td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Installed Version</td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Upgraded Version</td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottom_title">&nbsp;Operation</td>
                 </tr>
               </table></td>
             </tr>
@@ -1064,7 +1073,7 @@ DATA
           <td><table width="768" height="30" border="0" class="backbackground_button custom_font" cellpadding="0" cellspacing="0">
             <tr>
               <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
-              <td width="10%" align="center"><input type="submit" id="view_package_info" name="view_package_info" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" /></td>
+              <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button" disabled="true" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
               <td width="40%">&nbsp;</td>
               <td width="10%" align="center">Test Plan</td>
               <td width="10%" align="center"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:show_save_panel();" /></td>
@@ -2329,39 +2338,10 @@ sub UpdateLoadPageSelectItem {
 	        <tr>
 	          <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
 	            <tr>
-	              <td width="2.5%" height="30" nowrap="nowrap">&nbsp;</td>
-	              <td width="17%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-	                <tr>
-	                  <td width="47%" height="30" align="left" class="custom_title">Architecture&nbsp</td>
-	                  <td width="53%" height="30"><select id="select_arc" name="select_arc" class="custom_select">
-	                    <option>X86</option>
-	                  </select>                  </td>
-	                </tr>
-	              </table></td>
-	              <td width="13%" height="30" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-	                <tr>
-	                <td width="13%" height="30" nowrap="nowrap">&nbsp;</td>
-	                  <td width="37%" height="30" align="right" class="custom_title">Version&nbsp</td>
-	                  <td width="50%" height="30" ><select id="select_ver" name="select_ver" class="custom_select" onchange="javascript:filter_case_item();">
+	              <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
+	              <td width="61%" height="30" id="name" align="left" nowrap="nowrap" class="custom_title">Create Test Plan</td>
+	              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Packages &nbsp</td>
 DATA
-	LoadDrawVersionSelect();
-	print <<DATA;
-                  </select></td>
-                </tr>
-              </table></td>
-              <td width="2%" height="30" nowrap="nowrap">&nbsp;</td>
-              <td width="4%" height="30" id="name" nowrap="nowrap" class="custom_title">Name&nbsp</td>
-DATA
-	if ( !$sort_flag ) {
-		print <<DATA;
-     <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" title="Sort packages" src="images/up_and_down_1.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
-DATA
-	}
-	else {
-		print <<DATA;
-     <td width="4.5%" height="30" nowrap="nowrap"><img id="sort_packages" title="Sort packages" src="images/up_and_down_2.png" width="23" height="23" onclick="javascript:sortPackages()"/></a></td>
-DATA
-	}
 	my $hidden_advanced_flag = 0;
 	if (   ( $advanced_value_category =~ /\bAny Category\b/ )
 		&& ( $advanced_value_priority       =~ /\bAny Priority\b/ )
@@ -2375,20 +2355,34 @@ DATA
 
 		if ( @package_name == 0 ) {
 			print <<DATA;
-			<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Advanced" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
+			<td width="10%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Filter" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
 DATA
 		}
 		else {
 			print <<DATA;
-			<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List();"/></td>
+			<td width="10%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List();"/></td>
+DATA
+		}
+		if ( @checkbox_packages > 0 ) {
+			print <<DATA;
+			<td width="10%" height="30" align="left" nowrap="nowrap">
+				<input type="submit" id="view_package_info" name="view_package_info" class="large_button" value="View" title="View detailed information of selected packages" />
+			</td>
+DATA
+		}
+		else {
+			print <<DATA;
+			<td width="10%" height="30" align="left" nowrap="nowrap">
+				<input type="submit" id="view_package_info" name="view_package_info" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" />
+			</td>
 DATA
 		}
 		print <<DATA;
-	        <td width="42%" align="left" height="30" nowrap="nowrap">
+	        <td width="10%" align="left" height="30" nowrap="nowrap">
 				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
 			</td>
-			<td width="4.5%" height="30" nowrap="nowrap"><img id="progress_waiting" src="" width="14" height="14"/></a></td>
-			<td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
+			<td width="2%" height="30" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" style="display:none" width="14" height="14"/></a></td>
+			<td width="1%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
@@ -2398,12 +2392,28 @@ DATA
 	}
 	else {
 		print <<DATA;
-		<td width="12%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Hide advanced list" class="medium_button" type="button" value="Normal" onclick="javascript:hidden_Advanced_List();"/></td>
-        <td width="42%" align="left" height="30" nowrap="nowrap">
+		<td width="10%" height="30" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Hide advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List();"/></td>
+DATA
+		if ( @checkbox_packages > 0 ) {
+			print <<DATA;
+			<td width="10%" height="30" align="left" nowrap="nowrap">
+				<input type="submit" id="view_package_info" name="view_package_info" class="large_button" value="View" title="View detailed information of selected packages" />
+			</td>
+DATA
+		}
+		else {
+			print <<DATA;
+			<td width="10%" height="30" align="left" nowrap="nowrap">
+				<input type="submit" id="view_package_info" name="view_package_info" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" />
+			</td>
+DATA
+		}
+		print <<DATA;
+        <td width="10%" align="left" height="30" nowrap="nowrap">
 			<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
 		</td>
-		<td width="4.5%" height="30" nowrap="nowrap"><img id="progress_waiting" src="" width="14" height="14"/></a></td>
-		<td width="3%" height="30" nowrap="nowrap">&nbsp;</td>
+		<td width="2%" height="30" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" style="display:none" width="14" height="14"/></a></td>
+		<td width="1%" height="30" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
@@ -2413,6 +2423,28 @@ DATA
 	}
 
 	print <<DATA;
+          <tr>
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Architecture</td><td>
+                    <select name="select_arc" align="20px" id="select_arc" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>X86</option>
+                    </select>
+                  </td>
+                </tr>
+              </table></td>
+              <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="30" align="left" class="custom_title">&nbsp;Version<td>
+                    <select name="select_ver" id="select_ver" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+DATA
+	DrawVersionSelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+            </tr>
+            
             <tr>
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
@@ -2520,10 +2552,27 @@ sub UpdateLoadPage {
                 <tr>
               <td width="4%" height="22" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
               <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
-              <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_title">Package Name</td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Version</td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottom_title">&nbsp;Operation</td>
+              <td width="23.5%" height="30" class="custom_list_type_bottomright_title"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="70%" align="center" height="30" valign="middle"><div align="left">Package Name</div></td>
+DATA
+	if ( !$sort_flag ) {
+		print <<DATA;
+                  <td width="30%" align="center" height="30" valign="middle"><div align="left"><img id="sort_packages" title="Sort packages" src="images/up_and_down_1.png" width="23" height="23" onclick="javascript:sortPackages()"/></div></td>	
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="30%" align="center" height="30" valign="middle"><div align="left"><img id="sort_packages" title="Sort packages" src="images/up_and_down_2.png" width="23" height="23" onclick="javascript:sortPackages()"/></div></td>	
+DATA
+	}
+	print <<DATA;
+                </tr>
+              </table></td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Case Number</td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Installed Version</td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottomright_title">&nbsp;Upgraded Version</td>
+              <td width="18%" height="30" align="left" class="custom_list_type_bottom_title">&nbsp;Operation</td>
               <input type="hidden" id="package_name_number" name="package_name_number" value="$package_name_number">
                 </tr>
               </table></td>
@@ -2564,13 +2613,13 @@ DATA
 	if ( @checkbox_packages > 0 ) {
 		print <<DATA;
               <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" value="Execute" onclick="javascript:onExecute();" /></td>
-              <td width="10%" align="center"><input type="submit" id="view_package_info" name="view_package_info" class="large_button" value="View" title="View detailed information of selected packages" /></td>
+              <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
 DATA
 	}
 	else {
 		print <<DATA;
               <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
-              <td width="10%" align="center"><input type="submit" id="view_package_info" name="view_package_info" class="large_button" disabled="true" value="View" title="View detailed information of selected packages" /></td>
+              <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button" disabled="true" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
 DATA
 	}
 	print <<DATA;
@@ -3369,11 +3418,11 @@ function hidden_Advanced_List()
 	button_advanced = document.getElementById('button_adv');
 	if(advanced_list.style.display == ""){
 		advanced_list.style.display = "none";
-		button_advanced.value = "Advanced";
+		button_advanced.value = "Filter";
 		button_advanced.title = "Show advanced list";
 	}else{
 		advanced_list.style.display = "";
-		button_advanced.value = "Normal";
+		button_advanced.value = "Filter";
 		button_advanced.title = "Hide advanced list";
 	}
 }
@@ -3403,7 +3452,9 @@ function count_checkbox() {
 	var form = document.tests_custom;
 	for (var i=0; i<form.length; ++i) {
 		if ((form[i].type.toLowerCase() == 'checkbox') && (form[i].name != 'checkbox_all')) {
-			++num;
+			if(form[i].disabled == false){
+				++num;
+			}
 		}
 	}
 	return num;
@@ -3413,13 +3464,35 @@ function update_state() {
 	var button;
 	var num_checked = count_checked();
 	var num_checkbox = count_checkbox();
+	var advanced_value_version = document.getElementById('select_ver');
+	var advanced_value_category	= document.getElementById('select_category');
+	var advanced_value_priority = document.getElementById('select_pri');
+	var advanced_value_status = document.getElementById('select_status');
+	var advanced_value_execution_type = document.getElementById('select_exe');
+	var advanced_value_test_suite = document.getElementById('select_testsuite');
+	var advanced_value_type = document.getElementById('select_type');
+	var advanced_value_test_set = document.getElementById('select_testset');
+	var advanced_value_component = document.getElementById('select_com');
+	var clear_flag = 0;
+	
+	if ((advanced_value_version.selectedIndex == 0)&&(advanced_value_category.selectedIndex == 0)&&(advanced_value_priority.selectedIndex == 0)&&(advanced_value_status.selectedIndex == 0)&&(advanced_value_execution_type.selectedIndex == 0)&&(advanced_value_test_suite.selectedIndex == 0)&&(advanced_value_type.selectedIndex == 0)&&(advanced_value_test_set.selectedIndex == 0)&&(advanced_value_component.selectedIndex == 0)){
+		clear_flag = 0;
+	}
+	else{
+		clear_flag = 1;
+	}
+	
 	button = document.getElementById('execute_profile');
 	if (button) {
 		button.disabled = (num_checked == 0);
 	}
 	button = document.getElementById('view_package_info');
 	if (button) {
-		button.disabled = (num_checked ==0);
+		button.disabled = (num_checked == 0);
+	}
+	button = document.getElementById('clear_information');
+	if (button) {
+		button.disabled = (num_checked == 0 && clear_flag == 0);
 	}
 	button = document.getElementById('save_profile_button_text');
 	if (button) {
@@ -3436,7 +3509,12 @@ function update_state() {
 	}
 	var elem = document.getElementById('checkbox_all');
 	if (num_checked == num_checkbox){
-		elem.checked = 1
+		if(num_checkbox == 0){
+			elem.checked = 0
+		}
+		else{
+			elem.checked = 1
+		}
 	} else {
 		elem.checked = 0
 	}
@@ -3455,11 +3533,44 @@ function check_uncheck_all() {
 		var checked = elem.checked;
 		var form = document.tests_custom;
 		for (var i=0; i<form.length; ++i) {
-			if ((form[i].type.toLowerCase() == 'checkbox') && (form[i].name != 'checkbox_all'))
-				check_uncheck(form[i], checked);
+			if ((form[i].type.toLowerCase() == 'checkbox') && (form[i].name != 'checkbox_all')){
+				if(form[i].disabled == false){
+					check_uncheck(form[i], checked);
+				}
+			}
 		}
 		update_state();
 	}
+}
+
+function onClearinfo(){
+	var advanced_value_version = document.getElementById('select_ver');
+	var advanced_value_category	= document.getElementById('select_category');
+	var advanced_value_priority = document.getElementById('select_pri');
+	var advanced_value_status = document.getElementById('select_status');
+	var advanced_value_execution_type = document.getElementById('select_exe');
+	var advanced_value_test_suite = document.getElementById('select_testsuite');
+	var advanced_value_type = document.getElementById('select_type');
+	var advanced_value_test_set = document.getElementById('select_testset');
+	var advanced_value_component = document.getElementById('select_com');
+	
+	advanced_value_version.selectedIndex = 0;
+	advanced_value_category.selectedIndex = 0;
+	advanced_value_priority.selectedIndex = 0;
+	advanced_value_status.selectedIndex = 0;
+	advanced_value_execution_type.selectedIndex = 0;
+	advanced_value_test_suite.selectedIndex = 0;
+	advanced_value_type.selectedIndex = 0;
+	advanced_value_test_set.selectedIndex = 0;
+	advanced_value_component.selectedIndex = 0;
+	
+	var form = document.tests_custom;
+	for (var i=0; i<form.length; ++i) {
+		if (form[i].type.toLowerCase() == 'checkbox')
+			check_uncheck(form[i], false);
+	}
+	update_state();
+	filter_case_item();
 }
 DATA
 
@@ -3476,6 +3587,8 @@ function sortPackages(){
 			var id = document.getElementById(main_list_id[count]);
 			var package_case_cn_id = "cn_"+package_name[count];
 			var package_ver_id = "ver_"+package_name[count];
+			var package_ver_upgraded = "ver_in_repo_"+package_name[count];
+			var package_ver_upgraded_reverse = "ver_in_repo_"+package_name[sort_count];
 			var update_id = "update_package_name_"+count;
 			var update_reverse_id = "update_package_name_"+sort_count; 
 			var update_pkg_pic = "update_" + document.getElementById(update_id).value;
@@ -3502,20 +3615,25 @@ function sortPackages(){
 			}
 			document.getElementById(package_case_cn_id).innerHTML = "&nbsp"+case_number[count];
 			document.getElementById(package_ver_id).innerHTML = version[count];
+			if(count < package_name_number/2 ){
+				transfer = document.getElementById(package_ver_upgraded).innerHTML;
+				document.getElementById(package_ver_upgraded).innerHTML = document.getElementById(package_ver_upgraded_reverse).innerHTML;
+				document.getElementById(package_ver_upgraded_reverse).innerHTML = transfer;
+			
+				transfer = document.getElementById(update_pkg_pic).src;
+				document.getElementById(update_pkg_pic).src = document.getElementById(update_pkg_pic_reverse).src;
+				document.getElementById(update_pkg_pic_reverse).src = transfer;
+				
+				transfer = document.getElementById(update_pkg_pic).style.cursor;
+				document.getElementById(update_pkg_pic).style.cursor = document.getElementById(update_pkg_pic_reverse).style.cursor;
+				document.getElementById(update_pkg_pic_reverse).style.cursor = transfer;
+				
+				transfer = document.getElementById(update_pkg_pic).onclick;
+				document.getElementById(update_pkg_pic).onclick = document.getElementById(update_pkg_pic_reverse).onclick;
+				document.getElementById(update_pkg_pic_reverse).onclick = transfer;
+			}
+			
 			document.getElementById(update_id).value = package_name[count];	
-			
-			transfer = document.getElementById(update_pkg_pic).src;
-			document.getElementById(update_pkg_pic).src = document.getElementById(update_pkg_pic_reverse).src;
-			document.getElementById(update_pkg_pic_reverse).src = transfer;
-			
-			transfer = document.getElementById(update_pkg_pic).style.cursor;
-			document.getElementById(update_pkg_pic).style.cursor = document.getElementById(update_pkg_pic_reverse).style.cursor;
-			document.getElementById(update_pkg_pic_reverse).style.cursor = transfer;
-			
-			transfer = document.getElementById(update_pkg_pic).onclick;
-			document.getElementById(update_pkg_pic).onclick = document.getElementById(update_pkg_pic_reverse).onclick;
-			document.getElementById(update_pkg_pic_reverse).onclick = transfer;
-			
 			document.getElementById(delete_id).value = package_name[count];
 			document.getElementById(view_id).value = package_name[count];
 			document.getElementById(sec_list_intro_id).style.display="";
@@ -3544,6 +3662,8 @@ function sortPackages(){
 			var id = document.getElementById(main_list_id[sort_count]);
 			var package_case_cn_id = "cn_"+package_name[count];
 			var package_ver_id = "ver_"+package_name[count];
+			var package_ver_upgraded = "ver_in_repo_"+package_name[count];
+			var package_ver_upgraded_reverse = "ver_in_repo_"+package_name[sort_count];
 			var update_id = "update_package_name_"+count;
 			var update_reverse_id = "update_package_name_"+sort_count; 
 			var update_pkg_pic = "update_" + document.getElementById(update_id).value;
@@ -3569,21 +3689,27 @@ function sortPackages(){
 			 	id.style.display = "";	
 			}			
 			document.getElementById(package_case_cn_id).innerHTML = "&nbsp"+case_number[sort_count];			
-			document.getElementById(package_ver_id).innerHTML = version[sort_count];	
+			document.getElementById(package_ver_id).innerHTML = version[sort_count];
+			
+			if(count < package_name_number/2 ){
+				transfer = document.getElementById(package_ver_upgraded).innerHTML;
+				document.getElementById(package_ver_upgraded).innerHTML = document.getElementById(package_ver_upgraded_reverse).innerHTML;
+				document.getElementById(package_ver_upgraded_reverse).innerHTML = transfer;
+			
+				transfer = document.getElementById(update_pkg_pic).src;
+				document.getElementById(update_pkg_pic).src = document.getElementById(update_pkg_pic_reverse).src;
+				document.getElementById(update_pkg_pic_reverse).src = transfer;
+				
+				transfer = document.getElementById(update_pkg_pic).style.cursor;
+				document.getElementById(update_pkg_pic).style.cursor = document.getElementById(update_pkg_pic_reverse).style.cursor;
+				document.getElementById(update_pkg_pic_reverse).style.cursor = transfer;
+				
+				transfer = document.getElementById(update_pkg_pic).onclick;
+				document.getElementById(update_pkg_pic).onclick = document.getElementById(update_pkg_pic_reverse).onclick;
+				document.getElementById(update_pkg_pic_reverse).onclick = transfer;
+			}
+				
 			document.getElementById(update_id).value = package_name[sort_count];
-			
-			transfer = document.getElementById(update_pkg_pic).src;
-			document.getElementById(update_pkg_pic).src = document.getElementById(update_pkg_pic_reverse).src;
-			document.getElementById(update_pkg_pic_reverse).src = transfer;
-			
-			transfer = document.getElementById(update_pkg_pic).style.cursor;
-			document.getElementById(update_pkg_pic).style.cursor = document.getElementById(update_pkg_pic_reverse).style.cursor;
-			document.getElementById(update_pkg_pic_reverse).style.cursor = transfer;
-			
-			transfer = document.getElementById(update_pkg_pic).onclick;
-			document.getElementById(update_pkg_pic).onclick = document.getElementById(update_pkg_pic_reverse).onclick;
-			document.getElementById(update_pkg_pic_reverse).onclick = transfer;
-					
 			document.getElementById(delete_id).value = package_name[sort_count];
 			document.getElementById(view_id).value = package_name[sort_count];
 			
@@ -3608,8 +3734,6 @@ DATA
 
 print <<DATA;
 function filter_case_item(){
-	document.getElementById('checkbox_all').checked=false;	
-	//check_uncheck_all(); remove for remember initial state
 	var advanced_value_version = document.getElementById('select_ver');
 	var advanced_value_category	= document.getElementById('select_category');
 	var advanced_value_priority = document.getElementById('select_pri');
@@ -3619,7 +3743,11 @@ function filter_case_item(){
 	var advanced_value_type = document.getElementById('select_type');
 	var advanced_value_test_set = document.getElementById('select_testset');
 	var advanced_value_component = document.getElementById('select_com');
-	var flag_case = new Array("a","a","a","a","a","a");
+	var flag_case = new Array( );
+	var check_uncheck_all_button_disable = 1;
+	for (var i=0; i<package_name_number; i++) {	
+		flag_case[i] = "a";
+	}
 	
 	for (var i=0; i<package_name_number; i++) {	
 		var j;
@@ -3671,6 +3799,7 @@ function filter_case_item(){
 		var sort_count = package_name_number-1-i;
 		if(flag_case[i] == "a"){
 			package_name_flag[i] = "a";
+			check_uncheck_all_button_disable = 0;
 			if(sort_flag){
 				id = document.getElementById(main_list_id[sort_count]);
 				id.style.display = "";
@@ -3692,11 +3821,21 @@ function filter_case_item(){
 			}
 		}
 	}
-	for( var i=0; i<100; i++){
-		var id = "uninstall_"+i;
-		document.getElementById(id).style.display="none";
+	for (var i=0; i<package_name_number; i++){
+		var id = "checkbox_package_name"+i;
+		if(package_name_flag[i] == "b"){
+			document.getElementById(id).checked=false;
+		}
 	}
-
+	if(check_uncheck_all_button_disable){
+		document.getElementById('checkbox_all').checked=false;	
+		check_uncheck_all();
+		document.getElementById('checkbox_all').disabled = true;
+	}
+	else{
+		document.getElementById('checkbox_all').disabled = false;
+	}
+	update_state();
 }
 DATA
 
@@ -4287,17 +4426,23 @@ DATA
 		print <<DATA;
               <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
               <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_packagename" id="pn_$package_name[$count]" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;cursor:pointer;" title="$package_name[$count]" onclick="javascript:show_CaseDetail('second_list_$package_name[$count]');">$package_name[$count]</td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp;$case_number[3*$count]</td>
-              <td width="24%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
+              <td width="18%" height="30" align="left" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp;$case_number[3*$count]</td>
+              <td width="18%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td width="22%" height="30" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="23" height="23" /></div></td>
-                  <td width="78%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$package_name[$count]">$version[$count]</div></td>
+                  <td width="5%" height="30" align="center" valign="middle">&nbsp;</td>
+                  <td width="95%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$package_name[$count]">$version[$count]</div></td>
                 </tr>
               </table></td>
-              <td width="24%" height="30" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <td width="18%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="5%" height="30" align="center" valign="middle">&nbsp;</td>
+                  <td width="95%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="ver_in_repo_$package_name[$count]">&nbsp;- -</div></td>
+                </tr>
+              </table></td>
+              <td width="18%" height="30" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center" height="30" valign="middle"><div align="left"><img src="images/operation_install_disable.png" title="Install package" width="23" height="23" /></div></td>
-                  <td align="center" height="30" valign="middle"><div align="left"><img src="images/operation_update_disable.png" title="Update package" id="update_$package_name[$count]" name="update_$package_name[$count]" width="23" height="23" /></div></td>
+                  <td align="center" height="30" valign="middle"><div align="left"><img src="images/operation_update_disable.png" title="Upgrade package" id="update_$package_name[$count]" name="update_$package_name[$count]" width="23" height="23" /></div></td>
 					<input type="hidden" id="update_package_name_$count" name="update_package_name_$count" value="$package_name[$count]">
                   <td align="center" height="30" valign="middle"><div align="left"><img title="Delete package" src="images/operation_delete.png" id="delete_$package_name[$count]" name="delete_$package_name[$count]" style="cursor:pointer" width="23" height="23" onclick="javascript:onDeletePackage($count);"/></a></td>
                   <input type="hidden" id="pn_package_name_$count" name="pn_package_name_$count" value="$package_name[$count]">
@@ -4402,17 +4547,23 @@ sub DrawPackageList {
               <td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" onclick="javascript:update_state()"/></td>
               <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
               <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_packagename" id="pn_$package_name[$count]" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;cursor:pointer;" title="$package_name[$count]" onclick="javascript:show_CaseDetail('second_list_$package_name[$count]');">$package_name[$count]</td>
-              <td width="24%" height="30" align="left" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp;$case_number[3*$count]</td>
-              <td width="24%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
+              <td width="18%" height="30" align="left" class="custom_list_type_bottomright" id="cn_$package_name[$count]" name="cn_$package_name[$count]">&nbsp;$case_number[3*$count]</td>
+              <td width="18%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td width="22%" height="30" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="23" height="23" /></div></td>
-                  <td width="78%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$package_name[$count]">$version[$count]</div></td>
+                  <td width="2%" height="30" align="center" valign="middle"><div align="right">&nbsp;</td>
+                  <td width="98%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$package_name[$count]">$version[$count]</div></td>
                 </tr>
               </table></td>
-              <td width="24%" height="30" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <td width="18%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="5%" height="30" align="center" valign="middle"><div align="right">&nbsp;</td>
+                  <td width="95%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="ver_in_repo_$package_name[$count]">&nbsp;- -</div></td>
+                </tr>
+              </table></td>
+              <td width="18%" height="30" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td align="center" height="30" valign="middle"><div align="left"><img src="images/operation_install_disable.png" title="Install package" width="23" height="23" /></div></td>	
-                  <td align="center" height="30" valign="middle"><div align="left"><img src="images/operation_update_disable.png" title="Update package" id="update_$package_name[$count]" name="update_$package_name[$count]" width="23" height="23"/></div></td>
+                  <td align="center" height="30" valign="middle"><div align="left"><img src="images/operation_update_disable.png" title="Upgrade package" id="update_$package_name[$count]" name="update_$package_name[$count]" width="23" height="23"/></div></td>
                   	<input type="hidden" id="update_package_name_$count" name="update_package_name_$count" value="$package_name[$count]">
                   <td align="center" height="30" valign="middle"><div align="left"><img title="Delete package" src="images/operation_delete.png" id="delete_$package_name[$count]" name="delete_$package_name[$count]" style="cursor:pointer" width="23" height="23" onclick="javascript:onDeletePackage($count);" /></a></td>
                   <input type="hidden" id="pn_package_name_$count" name="pn_package_name_$count" value="$package_name[$count]">
@@ -4514,17 +4665,23 @@ sub DrawUninstallPackageList {
 	        <td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_$i" name="checkbox_$i" disabled="true"/></td>
 	        <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
 	        <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_uninstall_packagename" id="pn_$i" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;cursor:default;" title="Uninstalled"></td>
-	        <td width="24%" height="30" align="left" class="custom_list_type_bottomright" id="cn_$i" name="cn_$i">&nbsp;- -</td>
-	        <td width="24%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
+	        <td width="18%" height="30" align="left" class="custom_list_type_bottomright" id="cn_$i" name="cn_$i">&nbsp;&nbsp;- -</td>
+	        <td width="18%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
 	        <tr>
-	         <td width="22%" height="30" align="center" valign="middle"><div align="right"><img src="images/package_version.png" width="23" height="23" /></div></td>
-	          <td width="78%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$i"> </div></td>
+	         <td width="10%" height="30" align="center" valign="middle"><div align="right">&nbsp;</td>
+	          <td width="90%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="unistall_ver_$i">- -</div></td>
 	          </tr>
 	        </table></td>
-	         <td width="24%" height="30" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+	        <td width="18%" height="30" valign="middle" nowrap="nowrap" bordercolor="#ECE9D8" class="custom_list_type_bottomright"><table width="58%" border="0" cellspacing="0" cellpadding="0">
+	        <tr>
+	         <td width="2%" height="30" align="center" valign="middle"><div align="right">&nbsp;</td>
+	          <td width="98%" height="30" align="center" valign="middle"><div align="left" class="custom_title" id="ver_$i"> </div></td>
+	          </tr>
+	        </table></td>
+	         <td width="18%" height="30" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0">
 	         <tr>
 	          <td align="center" height="30" valign="middle"><div align="left"><img title="Install package" src="images/operation_install.png" id="install_pkg_$i" name="install_pkg_$i" style="cursor:pointer" width="23" height="23" onclick="javascript:installPackage($i);"/></div></td>				
-	            <td align="center" height="30" valign="middle"><div align="left"><img title="Update package" src="images/operation_update_disable.png" id="update_uninstall_pkg_name_$i" name="update_uninstall_pkg_name_$i" width="23" height="23" /></div></td>
+	            <td align="center" height="30" valign="middle"><div align="left"><img title="Upgrade package" src="images/operation_update_disable.png" id="update_uninstall_pkg_name_$i" name="update_uninstall_pkg_name_$i" width="23" height="23" /></div></td>
 	            <td align="center" height="30" valign="middle"><div align="left"><img title="Delete package" src="images/operation_delete.png" id="delete_uninstall_pkg_name_$i" name="delete_uninstall_pkg_name_$i" width="23" height="23"/></a></td>
 	            <td align="center" height="30" valign="middle"><div align="left"><img title="View package" src="images/operation_view_tests.png" id="view_uninstall_pkg_name_$i" name="view_uninstall_pkg_name_$i" width="23" height="23"/></div></td>
 	            </tr>

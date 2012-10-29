@@ -24,15 +24,16 @@ Step 1: install dependence packages on host
     sudo yum install wget
     sudo yum install perl-libxml-perl
     sudo yum install perl-App-cpanminus
+    sudo yum install perl-Digest-SHA
     sudo yum install perl-XML-Simple
     sudo yum install perl-XML-LibXSLT
 
 Step 2: install testkit-manger on host
   Host (ubuntu11.10)
-    sudo rpm -ivh testkit-manager-x.x.x-x.i386.rpm --nodeps
+    sudo rpm -ivh testkit-manager-x.x.x-x.noarch.rpm --nodeps
 
   Host (fedora17)
-    sudo rpm -ivh testkit-manager-x.x.x-x.i386.rpm
+    sudo rpm -ivh testkit-manager-x.x.x-x.noarch.rpm
 
 Step 3: install 'sdb' on host
   sudo cp <somewhere>/sdb /usr/bin

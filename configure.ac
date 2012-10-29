@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-AC_INIT([testkit-manager], [2.2.0], [weidongx.sun@intel.com])
+AC_INIT([testkit-manager], [2.2.6], [weidongx.sun@intel.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 # Checks for programs.

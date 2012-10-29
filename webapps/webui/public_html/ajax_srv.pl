@@ -662,7 +662,6 @@ sub getUpdateInfoFromNetwork {
 				my $remote_pacakge_name = $_;
 				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
 				if ( $remote_pacakge_name =~ /$package_name_tmp/ ) {
-					$install_flag[$temp_rpm_count] = "a";
 					my $version_latest = "none";
 					if ( $remote_pacakge_name =~ /-(\d\.\d\.\d-\d)/ ) {
 						$version_latest = $1;
@@ -674,6 +673,30 @@ sub getUpdateInfoFromNetwork {
 						$package_version_latest[$temp_package_count] =
 						  $version_latest;
 					}
+				}
+				$temp_rpm_count++;
+			}
+			$temp_package_count++;
+		}
+
+		$temp_package_count = 0;
+		foreach (@package_name) {
+			my $package_name_tmp = $_;
+			my $temp_rpm_count   = 0;
+			foreach (@rpm) {
+				my $remote_pacakge_name = $_;
+				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
+				if (
+					(
+						$remote_pacakge_name =~
+/$package_name_tmp(.*)$package_version_latest[$temp_package_count]/
+					)
+					|| ( $remote_pacakge_name =~
+/$package_name_tmp(.*)$package_version_installed[$temp_package_count]/
+					)
+				  )
+				{
+					$install_flag[$temp_rpm_count] = "a";
 				}
 				$temp_rpm_count++;
 			}
@@ -1205,6 +1228,8 @@ elsif ( $_GET{'action'} eq 'update_page_with_uninstall_pkg' ) {
 "<uninstall_package_version>@uninstall_package_version</uninstall_package_version>\n";
 			$data .=
 "<update_package_flag>@update_package_flag</update_package_flag>\n";
+			$data .=
+"<update_package_version_latest>@package_version_latest</update_package_version_latest>\n";
 		}
 		else {
 			$data .=
@@ -1638,6 +1663,7 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 		if ( $grepResult =~ /\s*(\d*)\s*:(.*>)/ ) {
 			my $line_number  = $1;
 			my $line_content = $2;
+			$line_content =~ s/'/ /g;
 			$line_content =~ s/\s/\\ /g;
 			if ( $line_content =~ /result="(.*?)"/ ) {
 				my $result_temp = $1;
@@ -1661,6 +1687,7 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 		if ( $grepResult =~ /\s*(\d*)\s*:(.*>)/ ) {
 			my $line_number  = $1;
 			my $line_content = $2;
+			$line_content =~ s/'/ /g;
 			$line_content =~ s/\s/\\ /g;
 			if ( $line_content =~ /result="(.*?)"/ ) {
 				my $result_temp = $1;

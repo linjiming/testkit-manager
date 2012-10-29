@@ -170,6 +170,9 @@ sub read_status() {
 		elsif ($line =~ m/^CURRENT_RUN_NUMBER\s*=\s*(\d+)$/) {
 			$res->{'CURRENT_RUN_NUMBER'} = $1;
 		}
+		elsif ($line =~ m/^COMPLETE_PACKAGE\s*=\s*(.+)$/) {
+			$res->{'COMPLETE_PACKAGE'} = $1;
+		}
 		elsif ($line =~ m/^STATUS\s*=\s*(.+)$/) {
 			if (defined($ts_idx)) {
 				$res->{'TEST_SUITES'}->[$ts_idx]->{'STATUS'} = $1;

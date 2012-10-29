@@ -842,21 +842,13 @@ function update_state() {
 	if (button) {
 		button.disabled = (num_checked < 2);
 	}
-	button = document.getElementById('mail_button');
-	if (button) {
-		button.disabled = (num_checked == 0);
-	}
-	button = document.getElementById('submit_button');
-	if (button) {
-		button.disabled = (num_checked == 0);
-	}
-	button = document.getElementById('export_button');
-	if (button) {
-		button.disabled = (num_checked == 0);
-	}
 	var elem = document.getElementById('check_all');
 	if (num_checked == num_checkbox){
-		elem.checked = 1
+		if (num_checked == 0){
+			elem.checked = 0
+		} else {
+			elem.checked = 1
+		}
 	} else {
 		elem.checked = 0
 	}

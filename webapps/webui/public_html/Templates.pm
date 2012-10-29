@@ -44,7 +44,7 @@ $Common::debug_inform_sub = sub { };
 	  $cert_sys_host $cert_sys_base
 	  &print_header &print_footer
 	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg
-	  &updatePackageList &updateCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &syncDefinition &compare_version &check_network &get_repo &xml2xsl &xml2xsl_case
+	  &updatePackageList &updateCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &remove_package &syncDefinition &compare_version &check_network &get_repo &xml2xsl &xml2xsl_case
 	  ),
 	@Common::EXPORT,
 	@Manifest::EXPORT
@@ -1309,19 +1309,15 @@ sub install_package {
 			my $cmd = "sdb shell 'rpm -qa | grep " . $package_name . "'";
 			my $have_package = `$cmd`;
 
-			# update package
+			# remove installed package
 			if ( $have_package =~ /$package_name/ ) {
-				system(
-"sdb shell 'cd /tmp; rpm -Uvh $package_rpm_name --nodeps &>/dev/null' &>/dev/null"
-				);
+				remove_package($package_name);
 			}
 
 			# install package
-			else {
-				system(
+			system(
 "sdb shell 'cd /tmp; rpm -ivh $package_rpm_name --nodeps &>/dev/null' &>/dev/null"
-				);
-			}
+			);
 		}
 		sleep 3;
 		syncDefinition();
@@ -1413,6 +1409,24 @@ sub syncDefinition {
 						"sdb pull $license $opt_dir$package_name &>/dev/null");
 				}
 			}
+		}
+	}
+}
+
+sub remove_package {
+	my ($package_name) = @_;
+	system("sdb shell 'rpm -e $package_name &>/dev/null' &>/dev/null");
+	my $cmd = "sdb shell 'wrt-launcher -l | grep " . $package_name . "'";
+	my @package_items = `$cmd`;
+	foreach (@package_items) {
+		my $package_id = "none";
+		if ( $_ =~ /^\s+(\d+)\s+(\d+)/ ) {
+			$package_id = $2;
+		}
+		if ( $package_id ne "none" ) {
+			system(
+"sdb shell 'wrt-installer -u $package_id &>/dev/null' &>/dev/null"
+			);
 		}
 	}
 }

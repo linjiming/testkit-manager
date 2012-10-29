@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Copyright (C) 2010 Intel Corporation
-# 
+#
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -18,7 +18,8 @@
 #
 # Authors:
 #              Zhang, Wei <wei.z.zhang@intel.com>
-#	       Chen, Hao <hao.h.chen@intel.com>
+#              Chen, Hao <hao.h.chen@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 #
 # script create rpm package
 
@@ -30,7 +31,6 @@ if [ -z "$NAME" ];then
 	exit 1
 fi
 
-
 # parse spec required version
 VERSION=`grep "Version:" testkit-manager.spec | awk '{print $2}'`
 if [ -z "$VERSION" ];then
@@ -40,22 +40,21 @@ fi
 
 SRC_ROOT=${PWD}
 RPM_ROOT=/tmp/${NAME}_pack
-ARCHIVE_TYPE=tar.gz 	#tar.gz2
-ARCHIVE_OPTION=czvf  	#cjvf
+ARCHIVE_TYPE=tar.gz	#tar.gz2
+ARCHIVE_OPTION=czvf	#czvf
 
 # check precondition
 check_precondition()
 {
-    which $1 > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo "Error: no tool: $1"
-        exit 1
-    fi
+	which $1 > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		echo "Error: no tool: $1"
+		exit 1
+	fi
 }
 check_precondition rpmbuild
 check_precondition gcc
 check_precondition make
-
 
 # clean
 echo "cleaning rpm workspace... >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"

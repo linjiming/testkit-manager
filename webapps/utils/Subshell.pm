@@ -143,7 +143,7 @@ sub Close {
 sub stale_notification {
 	my ($time) = @_;
 
-	inform "No output from subshell for " . format_duration($time) . "\n";
+	inform "No output from testkit-lite for " . format_duration($time) . "\n";
 }
 
 # Setup logging subshell output to the file.

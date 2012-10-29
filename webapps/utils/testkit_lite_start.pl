@@ -624,8 +624,11 @@ sub write_status {
 		  if defined $globals->{'test_plan'};
 		$content .= "CURRENT_PACKAGE = " . $globals->{'current_package'} . "\n"
 		  if defined $globals->{'current_package'};
-		$content .= "CURRENT_RUN_NUMBER = " . $globals->{'current_run_number'}
+		$content .=
+		  "CURRENT_RUN_NUMBER = " . $globals->{'current_run_number'} . "\n"
 		  if defined $globals->{'current_run_number'};
+		$content .= "COMPLETE_PACKAGE = " . $globals->{'complete_package'}
+		  if defined $globals->{'complete_package'};
 	}
 
 	return write_string_as_file( '!' . $globals->{'status_file'}, $content );
@@ -1087,7 +1090,8 @@ sub syncLiteResult {
 	}
 
 	# write status
-	$globals->{'testkitdone'} = "Running";
+	$globals->{'testkitdone'}      = "Running";
+	$globals->{'complete_package'} = "none";
 	write_status();
 
 	# write INFO
@@ -1103,8 +1107,21 @@ sub syncLiteResult {
 			return 1;
 		}
 
-		if ( $line =~ /execute suite:(.*)/ ) {
-			my $current_package_temp = $1;
+		# record auto package
+		if ( $line =~ /testing xml:.*[0-9:\.\-]+\/(.*?)\.auto\.xml/ ) {
+			my $current_package_temp  = $1 . '_auto';
+			my $complete_package_temp = $globals->{'complete_package'};
+			if ( ( $complete_package_temp eq "none" )
+				&& defined $globals->{'current_package'} )
+			{
+				$globals->{'complete_package'} = $globals->{'current_package'};
+			}
+			if ( ( $complete_package_temp ne "none" )
+				&& defined $globals->{'current_package'} )
+			{
+				$globals->{'complete_package'} .=
+				  '!:!' . $globals->{'current_package'};
+			}
 			$current_package_temp =~ s/^\s//;
 			$current_package_temp =~ s/\s$//;
 			$current_package                 = $current_package_temp;
@@ -1113,6 +1130,32 @@ sub syncLiteResult {
 			$globals->{'current_run_number'} = $current_run_number;
 			write_status();
 		}
+
+		# record manual package
+		if ( $line =~ /testing xml:.*[0-9:\.\-]+\/(.*?)\.manual\.xml/ ) {
+			my $current_package_temp  = $1 . '_manual';
+			my $complete_package_temp = $globals->{'complete_package'};
+			if ( ( $complete_package_temp eq "none" )
+				&& defined $globals->{'current_package'} )
+			{
+				$globals->{'complete_package'} = $globals->{'current_package'};
+			}
+			if ( ( $complete_package_temp ne "none" )
+				&& defined $globals->{'current_package'} )
+			{
+				$globals->{'complete_package'} .=
+				  '!:!' . $globals->{'current_package'};
+			}
+			$current_package_temp =~ s/^\s//;
+			$current_package_temp =~ s/\s$//;
+			$current_package                 = $current_package_temp;
+			$globals->{'current_package'}    = $current_package;
+			$current_run_number              = 0;
+			$globals->{'current_run_number'} = $current_run_number;
+			write_status();
+		}
+
+		# record case number
 		if ( $line =~ /execute case:/ ) {
 			my @matches = $line =~ /execute case:/g;
 			$current_run_number += @matches;

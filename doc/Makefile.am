@@ -19,4 +19,4 @@
 #
 
 testkitdocdir = /opt/testkit/manager/doc
-dist_testkitdoc_SCRIPTS = *.pdf
+dist_testkitdoc_DATA = *.pdf

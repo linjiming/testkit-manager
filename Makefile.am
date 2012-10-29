@@ -16,8 +16,10 @@
 #
 # Authors:
 #              Wei, Zhang <wei.z.zhang@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 #
 
 SUBDIRS = webapps doc
-defdir = /opt/testkit/manager
-dist_def_DATA = README LICENSE CONF
+
+rootdir = /opt/testkit/manager
+dist_root_DATA = ChangeLog CONF LICENSE README TODO

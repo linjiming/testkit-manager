@@ -23,8 +23,6 @@
 
 #<variables settings>
 FILES = dc-server.conf.default  dc-server.pl  mime.types  public_html
-
-
 SUBDIRS=$(shell ls -Q)
 
 # mandatory targets
@@ -47,14 +45,14 @@ install:
 	if [ -d $$n -a -f $$n/Makefile ]; then \
 		$(MAKE) -C $$n install || exit 1; \
 	fi; \
-	done 
+	done
 
 uninstall:
 	for n in $(SUBDIRS); do \
-                if [ -d $$n -a -f $$n/Makefile ]; then \
-                        $(MAKE) -C $$n uninstall || exit 1; \
-                fi; \
-        done
+		if [ -d $$n -a -f $$n/Makefile ]; then \
+			$(MAKE) -C $$n uninstall || exit 1; \
+		fi; \
+	done
 
 clean:
 	for n in $(SUBDIRS); do \

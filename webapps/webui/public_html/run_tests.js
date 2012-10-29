@@ -274,6 +274,8 @@ function ajaxProcessResult(responseXML) {
 	}
 
 	if (responseXML.getElementsByTagName('uninstall_package_name').length > 0) {
+		var package_name_number = document
+				.getElementById("package_name_number").value;
 		uninstall_pkg_name = responseXML
 				.getElementsByTagName('uninstall_package_name')[0].childNodes[0].nodeValue;
 		uninstall_pkg_name_with_ver = responseXML
@@ -282,19 +284,31 @@ function ajaxProcessResult(responseXML) {
 				.getElementsByTagName('uninstall_package_version')[0].childNodes[0].nodeValue;
 		install_pkg_update_flag = responseXML
 				.getElementsByTagName('update_package_flag')[0].childNodes[0].nodeValue;
+
 		uninstall_pkg_name_arr = uninstall_pkg_name.split(" ");
 		uninstall_pkg_name_arr_with_ver = uninstall_pkg_name_with_ver
 				.split(" ");
 		var pkg_len = uninstall_pkg_name_arr.length;
 		uninstall_pkg_version_arr = uninstall_pkg_version.split(" ")
 		install_pkg_update_flag_arr = install_pkg_update_flag.split(" ");
+
+		if (package_name_number > 0) {
+			update_pkg_version_latest = responseXML
+					.getElementsByTagName('update_package_version_latest')[0].childNodes[0].nodeValue;
+			update_pkg_version_latest_arr = update_pkg_version_latest
+					.split(" ");
+		}
+
 		for ( var i = 0; i < install_pkg_update_flag_arr.length; i++) {
 			if (install_pkg_update_flag_arr[i] == "a") {
 				var update_pkg_id_temp = "update_package_name_" + i;
 				var update_pkg = "update_"
 						+ document.getElementById(update_pkg_id_temp).value;
+				var update_pkg_latest_ver = "ver_in_repo_"
+						+ document.getElementById(update_pkg_id_temp).value;
 				var update_pkg_id = document.getElementById(update_pkg);
-				update_pkg_id.title = "Update package";
+				document.getElementById(update_pkg_latest_ver).innerHTML = update_pkg_version_latest_arr[i];
+				update_pkg_id.title = "Upgrade package";
 				update_pkg_id.style.cursor = "pointer";
 				update_pkg_id.src = "images/operation_update.png";
 				update_pkg_id.onclick = function(num) {
@@ -307,10 +321,14 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('update_package_list').disabled = false;
 		document.getElementById('select_arc').disabled = false;
 		document.getElementById('select_ver').disabled = false;
-		document.getElementById('sort_packages').onclick = function() {
-			return sortPackages();
+
+		if (package_name_number > 0) {
+			document.getElementById('sort_packages').onclick = function() {
+				return sortPackages();
+			}
+			document.getElementById('sort_packages').style.cursor = "pointer";
 		}
-		document.getElementById('sort_packages').style.cursor = "pointer";
+
 		document.getElementById('button_adv').disabled = false;
 		document.getElementById('update_package_list').disabled = false;
 		document.getElementById('save_profile_panel_button').disabled = false;
@@ -344,7 +362,8 @@ function ajaxProcessResult(responseXML) {
 			document.getElementById(id).style.display = "none";
 		}
 		document.getElementById('progress_waiting').style.display = "none";
-		// Update packages successfully!;
+		update_state();
+		// Upgrade packages successfully!;
 	}
 	if (responseXML.getElementsByTagName('execute_profile_name').length > 0) {
 		tid = responseXML.getElementsByTagName('execute_profile_name')[0].childNodes[0].nodeValue;
@@ -684,7 +703,7 @@ function ajaxProcessResult(responseXML) {
 			document.getElementById(update_pic_id).onclick = "";
 			document.getElementById(version_id).innerHTML = version_latest;
 			document.location = "tests_custom.pl";
-			// Update package successfully!
+			// Upgrade package successfully!
 		} else {
 			var version_id = "ver_" + flag;
 			var package_name_number = document
@@ -692,7 +711,7 @@ function ajaxProcessResult(responseXML) {
 			var uninstall_package_count_max = document
 					.getElementById('uninstall_package_count_max').value;
 
-			alert("Update package fail\n" + tid);
+			alert("Upgrade package fail\n" + tid);
 			update_pic_id = "update_" + flag;
 			document.getElementById(update_pic_id).src = "images/operation_update.png";
 			document.getElementById(update_pic_id).style.cursor = "pointer";
@@ -783,11 +802,13 @@ function ajaxProcessResult(responseXML) {
 			if (need_update_progress_bar) {
 				// change color for progress bar
 				for ( var i = 0; i < package_list.length; i++) {
-					var r, re;
-					re = new RegExp("execute suite: " + package_list[i], "g");
-					r = output.match(re);
-					if (r) {
-						global_package_name = package_list[i];
+					var r_auto, re_auto, r_manual, re_manual;
+					// get auto package name
+					re_auto = new RegExp("testing xml:.*" + package_list[i]
+							+ "\.auto\.xml", "g");
+					r_auto = output.match(re_auto);
+					if (r_auto) {
+						global_package_name = package_list[i] + "_auto";
 						global_case_number = 0;
 						var page = document.getElementsByTagName("*");
 						for ( var i = 0; i < page.length; i++) {
@@ -802,6 +823,97 @@ function ajaxProcessResult(responseXML) {
 								+ global_profile_name + '_'
 								+ global_package_name).style.color = "#137717";
 					}
+					// get maunal package name
+					re_manual = new RegExp("testing xml:.*" + package_list[i]
+							+ "\.manual\.xml", "g");
+					r_manual = output.match(re_manual);
+					if (r_manual) {
+						global_package_name = package_list[i] + "_manual";
+						global_case_number = 0;
+						var page = document.getElementsByTagName("*");
+						for ( var i = 0; i < page.length; i++) {
+							var temp_id = page[i].id;
+							if (temp_id.indexOf("text_") >= 0) {
+								page[i].style.color = "";
+							}
+						}
+						document.getElementById('text_' + global_profile_name
+								+ '_' + global_package_name).style.color = "#137717";
+						document.getElementById('text_progress_'
+								+ global_profile_name + '_'
+								+ global_package_name).style.color = "#137717";
+						// add progress bar for manual package, will remove
+						// later
+						var max_value = 0;
+						for ( var i = 0; i < progress_bar_max_value_list.length; i++) {
+							if (progress_bar_max_value_list[i].indexOf('bar_'
+									+ global_profile_name + '_'
+									+ global_package_name) >= 0) {
+								var reg_both = progress_bar_max_value_list[i]
+										.split("::");
+								max_value = parseInt(reg_both[1]);
+							}
+						}
+						if (max_value > 0) {
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_'
+									+ global_package_name).innerHTML = max_value
+									+ "/" + max_value;
+							document.getElementById('bar_'
+									+ global_profile_name + '_'
+									+ global_package_name).innerHTML = "";
+							var pb = new YAHOO.widget.ProgressBar()
+									.render('bar_' + global_profile_name + '_'
+											+ global_package_name);
+							pb.set('minValue', 0);
+							pb.set('maxValue', max_value);
+							pb.set('width', 90);
+							pb.set('height', 6);
+							pb.set('value', max_value);
+						}
+						// add manual case number to the total number, will
+						// remove later
+						var manual_case_number = 0;
+						var case_number_before_all = global_case_number_all;
+						var max_value_all = 0;
+						for ( var i = 0; i < progress_bar_max_value_list.length; i++) {
+							if (progress_bar_max_value_list[i].indexOf('bar_'
+									+ global_profile_name + '_'
+									+ global_package_name) >= 0) {
+								var reg_both = progress_bar_max_value_list[i]
+										.split("::");
+								manual_case_number = parseInt(reg_both[1]);
+							}
+							if (progress_bar_max_value_list[i].indexOf('bar_'
+									+ global_profile_name + '_all') >= 0) {
+								var reg_both = progress_bar_max_value_list[i]
+										.split("::");
+								max_value_all = parseInt(reg_both[1]);
+							}
+						}
+						global_case_number_all = global_case_number_all
+								+ manual_case_number;
+						if (max_value_all > 0) {
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_all').innerHTML = global_case_number_all
+									+ "/" + max_value_all;
+							document.getElementById('bar_'
+									+ global_profile_name + '_all').innerHTML = "";
+							var pb = new YAHOO.widget.ProgressBar()
+									.render('bar_' + global_profile_name
+											+ '_all');
+							pb.set('minValue', 0);
+							pb.set('maxValue', max_value_all);
+							pb.set('width', 90);
+							pb.set('height', 6);
+							pb.set('value', case_number_before_all);
+							pb.set('anim', true);
+							var anim = pb.get('anim');
+							anim.duration = 1;
+							anim.method = YAHOO.util.Easing.easeBothStrong;
+							pb.set('value', global_case_number_all);
+						}
+					}
 				}
 				// update progress bar
 				var r, re;
@@ -809,15 +921,19 @@ function ajaxProcessResult(responseXML) {
 				r = output.match(re);
 				if (r) {
 					var case_number_before = global_case_number;
-					if (r) {
-						global_case_number = global_case_number + r.length;
-					} else {
-						global_case_number = global_case_number
-								+ r_webapi.length;
-					}
+					var case_number_before_all = global_case_number_all;
+					global_case_number_all = global_case_number_all + r.length;
+					global_case_number = global_case_number + r.length;
 					if (global_package_name != "none") {
 						var max_value = 0;
+						var max_value_all = 0;
 						for ( var i = 0; i < progress_bar_max_value_list.length; i++) {
+							if (progress_bar_max_value_list[i].indexOf('bar_'
+									+ global_profile_name + '_all') >= 0) {
+								var reg_both = progress_bar_max_value_list[i]
+										.split("::");
+								max_value_all = parseInt(reg_both[1]);
+							}
 							if (progress_bar_max_value_list[i].indexOf('bar_'
 									+ global_profile_name + '_'
 									+ global_package_name) >= 0) {
@@ -829,11 +945,34 @@ function ajaxProcessResult(responseXML) {
 						if (global_case_number >= max_value) {
 							global_case_number = max_value;
 						}
+						if (global_case_number_all >= max_value_all) {
+							global_case_number_all = max_value_all;
+						}
+						if (max_value_all > 0) {
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_all').innerHTML = global_case_number_all
+									+ "/" + max_value_all;
+							document.getElementById('bar_'
+									+ global_profile_name + '_all').innerHTML = "";
+							var pb = new YAHOO.widget.ProgressBar()
+									.render('bar_' + global_profile_name
+											+ '_all');
+							pb.set('minValue', 0);
+							pb.set('maxValue', max_value_all);
+							pb.set('width', 90);
+							pb.set('height', 6);
+							pb.set('value', case_number_before_all);
+							pb.set('anim', true);
+							var anim = pb.get('anim');
+							anim.duration = 1;
+							anim.method = YAHOO.util.Easing.easeBothStrong;
+							pb.set('value', global_case_number_all);
+						}
 						if (max_value > 0) {
 							document.getElementById('text_progress_'
 									+ global_profile_name + '_'
-									+ global_package_name).innerHTML = "&nbsp;&nbsp;"
-									+ global_case_number + "/" + max_value;
+									+ global_package_name).innerHTML = global_case_number
+									+ "/" + max_value;
 							document.getElementById('bar_'
 									+ global_profile_name + '_'
 									+ global_package_name).innerHTML = "";
@@ -845,25 +984,95 @@ function ajaxProcessResult(responseXML) {
 							pb.set('width', 90);
 							pb.set('height', 6);
 							pb.set('value', case_number_before);
-
 							pb.set('anim', true);
 							var anim = pb.get('anim');
 							anim.duration = 1;
 							anim.method = YAHOO.util.Easing.easeBothStrong;
-
 							pb.set('value', global_case_number);
 						}
 					}
 				}
 			} else {
 				need_update_progress_bar = true;
+				// update progress bar for all completed packages
+				for ( var i = 0; i < complete_package_list.length; i++) {
+					var complete_package = complete_package_list[i];
+					var max_value = 0;
+					for ( var j = 0; j < progress_bar_max_value_list.length; j++) {
+						if (progress_bar_max_value_list[j].indexOf('bar_'
+								+ global_profile_name + '_' + complete_package) >= 0) {
+							var reg_both = progress_bar_max_value_list[j]
+									.split("::");
+							max_value = parseInt(reg_both[1]);
+						}
+					}
+					if (max_value > 0) {
+						global_case_number_all = global_case_number_all
+								+ max_value;
+						document.getElementById('text_progress_'
+								+ global_profile_name + '_' + complete_package).innerHTML = max_value
+								+ "/" + max_value;
+						document.getElementById('bar_' + global_profile_name
+								+ '_' + complete_package).innerHTML = "";
+						var pb = new YAHOO.widget.ProgressBar().render('bar_'
+								+ global_profile_name + '_' + complete_package);
+						pb.set('minValue', 0);
+						pb.set('maxValue', max_value);
+						pb.set('width', 90);
+						pb.set('height', 6);
+						pb.set('value', max_value);
+					}
+				}
+				// update progress bar for total
+				var max_value_all = 0;
+				for ( var i = 0; i < progress_bar_max_value_list.length; i++) {
+					if (progress_bar_max_value_list[i].indexOf('bar_'
+							+ global_profile_name + '_all') >= 0) {
+						var reg_both = progress_bar_max_value_list[i]
+								.split("::");
+						max_value_all = parseInt(reg_both[1]);
+					}
+				}
+				if (max_value_all > 0) {
+					// add manual case number to the total number, will remove
+					// later
+					if (global_package_name.indexOf('_manual') >= 0) {
+						var max_value = 0;
+						for ( var i = 0; i < progress_bar_max_value_list.length; i++) {
+							if (progress_bar_max_value_list[i].indexOf('bar_'
+									+ global_profile_name + '_'
+									+ global_package_name) >= 0) {
+								var reg_both = progress_bar_max_value_list[i]
+										.split("::");
+								max_value = parseInt(reg_both[1]);
+							}
+						}
+						if (max_value > 0) {
+							global_case_number_all = global_case_number_all
+									+ max_value;
+						}
+					}
+					document.getElementById('text_progress_'
+							+ global_profile_name + '_all').innerHTML = global_case_number_all
+							+ "/" + max_value_all;
+					document.getElementById('bar_' + global_profile_name
+							+ '_all').innerHTML = "";
+					var pb = new YAHOO.widget.ProgressBar().render('bar_'
+							+ global_profile_name + '_all');
+					pb.set('minValue', 0);
+					pb.set('maxValue', max_value_all);
+					pb.set('width', 90);
+					pb.set('height', 6);
+					pb.set('value', global_case_number_all);
+				}
+				// update text and progress bar for current run package
 				if (global_package_name != 'none') {
-					// change color for progress bar
+					// change color for current run package's progress bar
 					document.getElementById('text_' + global_profile_name + '_'
 							+ global_package_name).style.color = "#137717";
 					document.getElementById('text_progress_'
 							+ global_profile_name + '_' + global_package_name).style.color = "#137717";
-					// update progress bar
+					// update progress bar for current run package
 					var max_value = 0;
 					for ( var i = 0; i < progress_bar_max_value_list.length; i++) {
 						if (progress_bar_max_value_list[i].indexOf('bar_'
@@ -878,10 +1087,19 @@ function ajaxProcessResult(responseXML) {
 						global_case_number = max_value;
 					}
 					if (max_value > 0) {
-						document.getElementById('text_progress_'
-								+ global_profile_name + '_'
-								+ global_package_name).innerHTML = "&nbsp;&nbsp;"
-								+ global_case_number + "/" + max_value;
+						// set progress bar to the end for manual package, will
+						// remove later
+						if (global_package_name.indexOf('_auto') >= 0) {
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_'
+									+ global_package_name).innerHTML = global_case_number
+									+ "/" + max_value;
+						} else {
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_'
+									+ global_package_name).innerHTML = max_value
+									+ "/" + max_value;
+						}
 						document.getElementById('bar_' + global_profile_name
 								+ '_' + global_package_name).innerHTML = "";
 						var pb = new YAHOO.widget.ProgressBar().render('bar_'
@@ -891,7 +1109,13 @@ function ajaxProcessResult(responseXML) {
 						pb.set('maxValue', max_value);
 						pb.set('width', 90);
 						pb.set('height', 6);
-						pb.set('value', global_case_number);
+						// set progress bar to the end for manual package, will
+						// remove later
+						if (global_package_name.indexOf('_auto') >= 0) {
+							pb.set('value', global_case_number);
+						} else {
+							pb.set('value', max_value);
+						}
 					}
 				}
 			}
@@ -1022,10 +1246,11 @@ function onUpdatePackages() {
 	document.getElementById('select_ver').disabled = true;
 	document.getElementById('sort_packages').onclick = "";
 	document.getElementById('sort_packages').style.cursor = "default";
-	document.getElementById('button_adv').value = "Advanced";
+	document.getElementById('button_adv').value = "Filter";
 	document.getElementById('button_adv').disabled = true;
 	document.getElementById('update_package_list').disabled = true;
 	document.getElementById('execute_profile').disabled = true;
+	document.getElementById('clear_information').disabled = true;
 	document.getElementById('view_package_info').disabled = true;
 	document.getElementById('save_profile_panel_button').disabled = true;
 	document.getElementById('load_profile_panel_button').disabled = true;
@@ -1048,7 +1273,7 @@ function updatePackage(count) {
 	var uninstall_package_count_max = document
 			.getElementById('uninstall_package_count_max').value;
 
-	if (confirm('Are you sure to update ' + package_name + "?")) {
+	if (confirm('Are you sure to upgrade ' + package_name + "?")) {
 		document.getElementById(update_pkg_pic).src = "images/ajax_progress.gif";
 		document.getElementById(update_pkg_pic).style.cursor = "default";
 		document.getElementById(update_pkg_pic).onclick = "";

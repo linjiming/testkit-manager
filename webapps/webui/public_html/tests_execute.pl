@@ -27,16 +27,18 @@ use Templates;
 use TestStatus;
 use Data::Dumper;
 
-my $js_init                  = "";
-my $global_profile_init      = "var global_profile_name = 'temp_plan';";
-my $global_package_name_init = "var global_package_name = 'none';";
-my $global_case_number_init  = "var global_case_number = 0;";
-my $need_update_progress_bar = "var need_update_progress_bar = true;";
-my $selected_profile         = "none";
-my $have_progress_bar        = "TRUE";
+my $js_init                     = "";
+my $global_profile_init         = "var global_profile_name = 'temp_plan';";
+my $global_package_name_init    = "var global_package_name = 'none';";
+my $global_case_number_init     = "var global_case_number = 0;";
+my $global_case_number_all_init = "var global_case_number_all = 0;";
+my $need_update_progress_bar    = "var need_update_progress_bar = true;";
+my $selected_profile            = "none";
+my $have_progress_bar           = "TRUE";
 my %profile_list;    #parse and save all information from profile files
 my @progress_bar_max_value     = ();     #save all auto progress bar's max value
 my @package_list               = ();     #save all the packages
+my @complete_package_list      = ();     #save all complete packages
 my $have_testkit_lite          = "FALSE";
 my $have_correct_testkit_lite  = "FALSE";
 my $testkit_lite_status        = "FALSE";
@@ -53,12 +55,18 @@ if ( $_GET{'profile'} ) {
 			my $TEST_PLAN       = ( $status->{'TEST_PLAN'}       or "" );
 			my $CURRENT_PACKAGE = ( $status->{'CURRENT_PACKAGE'} or "none" );
 			my $CURRENT_RUN_NUMBER = ( $status->{'CURRENT_RUN_NUMBER'} or 0 );
+			my $COMPLETE_PACKAGE = ( $status->{'COMPLETE_PACKAGE'} or "none" );
+			if ( $COMPLETE_PACKAGE ne "none" ) {
+				@complete_package_list = split( '!:!', $COMPLETE_PACKAGE );
+			}
 			$global_profile_init =
 			  'var global_profile_name = "' . $TEST_PLAN . '";';
 			$global_package_name_init =
 			  'var global_package_name = "' . $CURRENT_PACKAGE . '";';
 			$global_case_number_init =
 			  'var global_case_number = ' . $CURRENT_RUN_NUMBER . ';';
+			$global_case_number_all_init =
+			  'var global_case_number_all = ' . $CURRENT_RUN_NUMBER . ';';
 			$need_update_progress_bar = "var need_update_progress_bar = false;";
 			$js_init                  = "startRefresh('$TEST_PLAN', 'true');\n";
 		}
@@ -76,12 +84,18 @@ else {
 			my $TEST_PLAN       = ( $status->{'TEST_PLAN'}       or "" );
 			my $CURRENT_PACKAGE = ( $status->{'CURRENT_PACKAGE'} or "none" );
 			my $CURRENT_RUN_NUMBER = ( $status->{'CURRENT_RUN_NUMBER'} or 0 );
+			my $COMPLETE_PACKAGE = ( $status->{'COMPLETE_PACKAGE'} or "none" );
+			if ( $COMPLETE_PACKAGE ne "none" ) {
+				@complete_package_list = split( '!:!', $COMPLETE_PACKAGE );
+			}
 			$global_profile_init =
 			  'var global_profile_name = "' . $TEST_PLAN . '";';
 			$global_package_name_init =
 			  'var global_package_name = "' . $CURRENT_PACKAGE . '";';
 			$global_case_number_init =
 			  'var global_case_number = ' . $CURRENT_RUN_NUMBER . ';';
+			$global_case_number_all_init =
+			  'var global_case_number_all = ' . $CURRENT_RUN_NUMBER . ';';
 			$need_update_progress_bar = "var need_update_progress_bar = false;";
 			$js_init = "startRefresh('$TEST_PLAN', 'false');\n";
 		}
@@ -194,41 +208,37 @@ print <<DATA;
     <td height="30" class="top_button_bg"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
         <tbody>
           <tr>
-            <td width="15">&nbsp;</td>
-            <td width="252" style="font-size:14px">Test Plan
+            <td width="2%">&nbsp;</td>
+            <td width="48%">Execute Tests</td>
+            <td width="30%" style="font-size:14px">Test Plan
 DATA
 if ($found) {
 	print <<DATA;
-            <select name="test_profile" id="test_profile" style="width: 11em;" onchange="javascript:filter_progress_bar();">$profiles_list</select></td>
+            <select name="test_profile" id="test_profile" style="width: 11em"; onchange="javascript:filter_progress_bar();">$profiles_list</select></td>
 DATA
+	if (    ( $have_testkit_lite eq "TRUE" )
+		and ( $have_correct_testkit_lite eq "TRUE" ) )
+	{
+		print <<DATA;
+            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" class="top_button" onclick="javascript:startTests('');"></td>
+            <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
+DATA
+	}
+	else {
+		print <<DATA;
+            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start to test" value="Start Test" disabled="disabled" class="top_button" onclick="javascript:startTests('');"></td>
+            <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
+DATA
+	}
 }
 else {
 	print <<DATA;
-            <select name="test_profile_no" id="test_profile_no" style="width: 11em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+            <select name="test_profile_no" id="test_profile_no" style="width: 11em"; disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start to test" value="Start Test" disabled="disabled" class="top_button" onclick="javascript:startTests('');"></td>
+            <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
 DATA
 }
-
-if (    ( $have_testkit_lite eq "TRUE" )
-	and ( $have_correct_testkit_lite eq "TRUE" ) )
-{
-	print <<DATA;
-            <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="START" id="start_button" title="Start testing" value="Start" class="bottom_button" onclick="javascript:startTests('');"></td>
-            <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop" disabled="disabled" class="bottom_button" onclick="javascript:stopTests();"></td>
-DATA
-}
-else {
-	print <<DATA;
-            <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="START" id="start_button" title="Start to test" value="Start" disabled="disabled" class="bottom_button" onclick="javascript:startTests('');"></td>
-            <td width="6"><img src="images/environment-spacer.gif" alt="" width="6" height="1"></td>
-            <td width="71"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop" disabled="disabled" class="bottom_button" onclick="javascript:stopTests();"></td>
-DATA
-}
-
 print <<DATA;
-            <td>&nbsp;</td>
           </tr>
         </tbody>
       </table></td>
@@ -236,7 +246,7 @@ print <<DATA;
   <tr>
     <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
-          <td width="288" valign="top" class="report_list_outside_left_bold">
+          <td width="50%" valign="top" class="report_list_outside_left_bold">
 DATA
 foreach ( keys %profile_list ) {
 	my $profile_name = $_;
@@ -260,9 +270,11 @@ DATA
 	my @package_number = split( "__", $profile_list{$profile_name} );
 	my $auto_all       = 0;
 	my $manual_all     = 0;
-	my $auto_text_id   = 'text_' . $profile_name . '_all';
+	my $case_all       = 0;
+	my $text_id        = 'text_' . $profile_name . '_all';
 	my $bar_id         = 'bar_' . $profile_name . '_all';
 	my $progress_id    = 'text_progress_' . $profile_name . '_all';
+
 	foreach (@package_number) {
 		my @temp         = split( ":", $_ );
 		my $package_name = $temp[0];
@@ -271,53 +283,75 @@ DATA
 		$auto_all   = int($auto_all) + int($auto);
 		$manual_all = int($manual_all) + int($manual);
 	}
+	$case_all = int($auto_all) + int($manual_all);
 	push( @progress_bar_max_value,
-		'bar_' . $profile_name . '_all' . '::' . $auto_all );
+		'bar_' . $profile_name . '_all' . '::' . $case_all );
+
+	# print total case number
 	print <<DATA;
             <table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
               <tr>
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row">Total</td>
-                <td class="report_list_one_row"></td>
+                <td width="65%" align="left" class="report_list_one_row"><span id="$text_id">Total&nbsp;</span><span id="$progress_id">($case_all)</span></td>
+                <td width="31%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
               <tr>
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$auto_text_id">Auto Test&nbsp;</span><span id="$progress_id">($auto_all)</span></td>
-                <td class="report_list_one_row"><div id="$bar_id"></div></td>
-              </tr>
-              <tr>
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row">&nbsp;&nbsp;Manual Test&nbsp;($manual_all)</td>
-                <td class="report_list_one_row"></td>
+                <td width="65%" align="left" class="report_list_one_row">Auto Test</td>
+                <td width="31%" align="left" class="report_list_one_row"></td>
               </tr>
 DATA
+
+	# print auto packages
 	my @package_number_order = reverse(@package_number);
 	foreach (@package_number_order) {
 		my @temp         = split( ":", $_ );
 		my $package_name = $temp[0];
 		my $auto         = $temp[1];
-		my $manual       = $temp[2];
 		push( @progress_bar_max_value,
-			'bar_' . $profile_name . '_' . $package_name . '::' . $auto );
-		my $auto_text_id = 'text_' . $profile_name . '_' . $package_name;
-		my $bar_id       = 'bar_' . $profile_name . '_' . $package_name;
+			'bar_' . $profile_name . '_' . $package_name . '_auto::' . $auto );
+		my $auto_text_id =
+		  'text_' . $profile_name . '_' . $package_name . '_auto';
+		my $bar_id = 'bar_' . $profile_name . '_' . $package_name . '_auto';
 		my $progress_id =
-		  'text_progress_' . $profile_name . '_' . $package_name;
+		  'text_progress_' . $profile_name . '_' . $package_name . '_auto';
 		print <<DATA;
               <tr>
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row">$package_name</td>
-                <td class="report_list_one_row"></td>
+                <td width="65%" align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$auto_text_id">$package_name&nbsp;</span><span id="$progress_id">($auto)</span></td>
+                <td width="31%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
+DATA
+	}
+	print <<DATA;
               <tr>
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$auto_text_id">Auto Test&nbsp;</span><span id="$progress_id">($auto)</span></td>
-                <td align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
+                <td width="65%" align="left" class="report_list_one_row">Manual Test</td>
+                <td width="31%" align="left" class="report_list_one_row"></td>
               </tr>
+DATA
+
+	# print manual packages
+	foreach (@package_number_order) {
+		my @temp         = split( ":", $_ );
+		my $package_name = $temp[0];
+		my $manual       = $temp[2];
+		push( @progress_bar_max_value,
+			    'bar_'
+			  . $profile_name . '_'
+			  . $package_name
+			  . '_manual::'
+			  . $manual );
+		my $manual_text_id =
+		  'text_' . $profile_name . '_' . $package_name . '_manual';
+		my $bar_id = 'bar_' . $profile_name . '_' . $package_name . '_manual';
+		my $progress_id =
+		  'text_progress_' . $profile_name . '_' . $package_name . '_manual';
+		print <<DATA;
               <tr>
                 <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row">&nbsp;&nbsp;Manual Test&nbsp;($manual)</td>
-                <td class="report_list_one_row"></td>
+                <td width="65%" align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$manual_text_id">$package_name&nbsp;</span><span id="$progress_id">($manual)</span></td>
+                <td width="31%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
 DATA
 	}
@@ -327,12 +361,12 @@ DATA
 }
 print <<DATA;
           </td>
-          <td width="480" valign="top" class="report_list_outside_right_bold"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+          <td width="50%" valign="top" class="report_list_outside_right_bold"><table width="100%" border="0" cellspacing="0" cellpadding="0">
               <tr>
                 <td align="left" height="30">&nbsp;<span id="exec_info">Nothing started</span>&nbsp;<span id="exec_status"></span></td>
               </tr>
               <tr>
-                <td align="left"><pre id="cmdlog" style="margin-top:0px;margin-bottom:4px; margin-left:4px; height:310px;width:450px;overflow:auto;text-wrap:none;border:1px solid #BCBCBC;background-color:white;color:black;font-family:Arial;font-size:10px;">Execute output will go here...</pre></td>
+                <td align="left"><pre id="cmdlog" style="margin-top:0px;margin-bottom:3px; margin-left:3px; height:310px;width:384px;overflow:auto;text-wrap:none;border:1px solid #BCBCBC;background-color:white;color:black;font-family:Arial;font-size:10px;">Execute output will go here...</pre></td>
               </tr>
             </table></td>
         </tr>
@@ -396,6 +430,13 @@ function filter_progress_bar() {
 </script>
 DATA
 
+my $complete_package_list_array = join( '","', @complete_package_list );
+if ( @complete_package_list < 1 ) {
+	$complete_package_list_array = '(' . $complete_package_list_array . ')';
+}
+else {
+	$complete_package_list_array = '("' . $complete_package_list_array . '")';
+}
 my $package_list_array = join( '","', @package_list );
 $package_list_array = '("' . $package_list_array . '")';
 my $progress_bar_max_value_list_array = join( '","', @progress_bar_max_value );
@@ -407,7 +448,9 @@ print <<DATA;
 $global_profile_init
 $global_package_name_init
 $global_case_number_init
+$global_case_number_all_init
 $need_update_progress_bar
+var complete_package_list = new Array$complete_package_list_array;
 var package_list = new Array$package_list_array;
 var progress_bar_max_value_list = new Array$progress_bar_max_value_list_array;
 // ]]>

@@ -55,9 +55,8 @@ if ( $_GET{'time'} ) {
     <td height="30" class="top_button_bg"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
         <tbody>
           <tr>
-            <td width="15">&nbsp;</td>
-            <td align="left" style="font-size:14px">Manual execution for&nbsp;&nbsp;$time</td>
-            <td>&nbsp;</td>
+            <td width="2%">&nbsp;</td>
+            <td width="98%" align="left">Edit test results</td>
           </tr>
         </tbody>
       </table></td>
@@ -114,9 +113,30 @@ DATA
                       <tr>
                         <td><table width="100%" border="1" cellpadding="0" cellspacing="0" style="table-layout:fixed" frame="below" rules="all">
                             <tr>
-                              <td height="30" align="left" width="30%" class="report_list_outside_left">&nbsp;Name</td>
-                              <td align="left" width="30%" class="report_list_one_row">&nbsp;Description</td>
-                              <td align="center" width="40%" class="report_list_outside_right">&nbsp;Result</td>
+                              <td align="left" height="30" class="report_list_one_row">&nbsp;Manual execution for&nbsp;&nbsp;$time</td>
+                            </tr>
+                          </table></td>
+                      </tr>
+                      <tr>
+                        <td><table width="100%" border="1" cellpadding="0" cellspacing="0" style="table-layout:fixed" frame="below" rules="all">
+                            <tr>
+                              <td rowspan="2" height="61" align="left" width="30%" class="report_list_outside_left">&nbsp;Name</td>
+                              <td rowspan="2" align="left" width="30%" class="report_list_one_row">&nbsp;Description</td>
+                              <td colspan="4" height="30" align="center" width="40%" class="report_list_outside_right">Result</td>
+                            </tr>
+                            <tr>
+                              <td height="30" class="report_list_outside_right">&nbsp;
+                                <input type="radio" name="radiobutton" onclick="javascript:passAll();" title="Set all cases' result to PASS">
+                                P</td>
+                              <td class="report_list_one_row">&nbsp;
+                                <input type="radio" name="radiobutton" onclick="javascript:failAll();" title="Set all cases' result to FAIL">
+                                F</td>
+                              <td class="report_list_one_row">&nbsp;
+                                <input type="radio" name="radiobutton" onclick="javascript:blockAll();" title="Set all cases' result to BLOCK">
+                                B</td>
+                              <td class="report_list_one_row">&nbsp;
+                                <input type="radio" name="radiobutton" onclick="javascript:notrunAll();" title="Set all cases' result to N/A">
+                                N</td>
                             </tr>
                           </table></td>
                       </tr>
@@ -448,19 +468,11 @@ DATA
               <tr>
                 <td height="30"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                     <tr>
-                      <td width="30%"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+                      <td width="75%">&nbsp;</td>
+                      <td width="25%"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
                           <tr>
                             <td align="center"><input type="submit" name="button_save" title="Save modification of case results" value="Save" class="bottom_button" onclick="javascript:saveManual();"></td>
                             <td align="center"><input type="submit" name="button_finish" value="Finish" title="Finish editing result, and go to report page" class="bottom_button" onclick="javascript:finishManual();"></td>
-                          </tr>
-                        </table></td>
-                      <td width="20%">&nbsp;</td>
-                      <td width="50%"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
-                          <tr>
-                            <td align="center"><input type="submit" name="button_pass" value="Pass" title="Set all cases' result to PASS" class="bottom_button" onclick="javascript:passAll();"></td>
-                            <td align="center"><input type="submit" name="button_fail" value="Fail" title="Set all cases' result to FAIL" class="bottom_button" onclick="javascript:failAll();"></td>
-                            <td align="center"><input type="submit" name="button_block" value="Block" title="Set all cases' result to BLOCK" class="bottom_button" onclick="javascript:blockAll();"></td>
-                            <td align="center"><input type="submit" name="button_not_run" value="N/A" title="Set all cases' result to N/A" class="bottom_button" onclick="javascript:notrunAll();"></td>
                           </tr>
                         </table></td>
                     </tr>
