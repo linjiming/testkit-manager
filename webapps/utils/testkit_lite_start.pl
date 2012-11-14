@@ -36,9 +36,10 @@ use IO::Handle;    # for autoflush();
 use FindBin;
 use File::Basename qw(dirname basename);
 
-my $profile_name;       # profile name of this execution
-my $current_package;    # package name of current run
-my $current_run_number = 0;    # how many cases has run for the running pacakge
+my $profile_name       = "";    # profile name of this execution
+my $profile_content    = "";    # the actual name and filter of the profile
+my $current_package    = "";    # package name of current run
+my $current_run_number = 0;     # how many cases has run for the running pacakge
 
 sub BEGIN {
 
@@ -46,7 +47,7 @@ sub BEGIN {
 	# from the same directory where this script is located.
 	unshift @INC, $FindBin::Bin;
 
-	$| = 1;                    # Immediate flush of all output
+	$| = 1;                     # Immediate flush of all output
 
 	# Certain utilities used for system administration (and other privileged
 	# commands) may be stored in /sbin, /usr/sbin, and /usr/local/sbin.
@@ -848,9 +849,6 @@ my @thisTargetFilter;
 my @targetFilter;
 
 sub initProfileInfo {
-	my $profile_path;
-	($profile_path) = @_;
-
 	my $theEnd = "False";
 
 	# change to use our own profile, not the system supplied
@@ -923,34 +921,33 @@ sub initProfileInfo {
 		close(FILE);
 	}
 	else {
-		inform "[Target Package]:Fail to read the profile:$profile_path";
+		inform "[Target Package]:Fail to read the profile:$profile_name";
 	}
 	inform "[Target Package]:@thisTargetPackages";
 	inform "[Target Filter]:@thisTargetFilter";
 }
 
 sub readProfile {
-	my $profile_path;
-	($profile_path) = @_;
-
 	my $targetPackages = "";
 	my $wrtPackages    = "-e \"WRTLauncher";
 	if ( !@thisTargetPackages ) {
-		&initProfileInfo($profile_path);
+		&initProfileInfo();
 	}
 	foreach (@thisTargetPackages) {
+		my $thisTargetPackage = $_;
 
 		# check if the package is still there
-		my $cmd         = "sdb shell ls /usr/share/$_/tests.xml";
+		my $cmd = sdb_cmd("shell ls /usr/share/$thisTargetPackage/tests.xml");
 		my $isInstalled = `$cmd`;
 		if ( $isInstalled !~ /No such file or directory/ ) {
-			if ( $_ =~ /webapi/ ) {
+
+			if ( $thisTargetPackage =~ /webapi/ ) {
 				$isWebApi = "True";
-				$targetPackages .= "/usr/share/$_/tests.xml ";
-				$wrtPackages .= " " . $_;
+				$targetPackages .= "/usr/share/$thisTargetPackage/tests.xml ";
+				$wrtPackages .= " " . $thisTargetPackage;
 			}
 			else {
-				$targetPackages .= "/usr/share/$_/tests.xml ";
+				$targetPackages .= "/usr/share/$thisTargetPackage/tests.xml ";
 			}
 		}
 	}
@@ -961,7 +958,8 @@ sub readProfile {
 		if ( @thisTargetFilter >= 1 ) {
 			$targetPackages .= " ";
 			foreach (@thisTargetFilter) {
-				$targetPackages .= $_ . " ";
+				my $filter = $_;
+				$targetPackages .= $filter . " ";
 			}
 		}
 	}
@@ -978,12 +976,13 @@ sub getBackupResultXMLCMD {
 			&initProfileInfo($profile_path);
 		}
 		foreach (@thisTargetPackages) {
-			push( @copyCommands, "mkdir $result_path/$_" );
+			my $thisTargetPackage = $_;
+			push( @copyCommands, "mkdir $result_path/$thisTargetPackage" );
 			push( @copyCommands,
-"cp -rf /opt/testkit/lite/latest/usr/share/$_/tests.xml.xmlresult $result_path/$_/result.tests.xml"
+"cp -rf /opt/testkit/lite/latest/usr/share/$thisTargetPackage/tests.xml.xmlresult $result_path/$thisTargetPackage/result.tests.xml"
 			);
 			push( @copyCommands,
-"more /opt/testkit/lite/latest/usr/share/$_/tests.xml.textresult >> $result_path/auto_summary"
+"more /opt/testkit/lite/latest/usr/share/$thisTargetPackage/tests.xml.textresult >> $result_path/auto_summary"
 			);
 		}
 	}
@@ -1002,9 +1001,10 @@ sub getBackupResultXMLCMD {
 sub syncLiteResult {
 	my $result_dir_lite = $FindBin::Bin . "/../../lite";
 	system("rm -rf $result_dir_lite/*");
-	system("sdb shell 'cd /opt/testkit/lite; tar -czvf /tmp/lite.tar.gz .'");
-	system("sdb pull /tmp/lite.tar.gz $result_dir_lite");
-	system("sdb shell rm -rf /tmp/lite.tar.gz");
+	system(
+		sdb_cmd("shell 'cd /opt/testkit/lite; tar -czvf /tmp/lite.tar.gz .'") );
+	system( sdb_cmd("pull /tmp/lite.tar.gz $result_dir_lite") );
+	system( sdb_cmd("shell rm -rf /tmp/lite.tar.gz") );
 	system("cd $result_dir_lite;tar -xzvf $result_dir_lite/lite.tar.gz");
 	system("rm -rf $result_dir_lite/lite.tar.gz");
 }
@@ -1026,7 +1026,7 @@ sub syncLiteResult {
 	write_info("Sub shell started");
 
 	# Run the test in ptyshell
-	my $profile_content =
+	$profile_content =
 	  &readProfile( $globals->{'testkit_dir'} . "/tests/testkit" );
 	if ( $profile_content eq "" ) {
 		inform "[WARNNING]:\nfound no package\n";
@@ -1036,14 +1036,14 @@ sub syncLiteResult {
 			inform "[CMD]:\nrm -rf "
 			  . $globals->{'testlog_dir'}
 			  . "/runtest/latest/*;\n"
-			  . 'sdb shell testkit-lite -f '
+			  . sdb_cmd("shell testkit-lite -f ")
 			  . $profile_content . "\n";
 		}
 		else {
 			inform "[CMD]:\nrm -rf "
 			  . $globals->{'testlog_dir'}
 			  . "/runtest/latest/*;\n"
-			  . 'sdb shell testkit-lite -f '
+			  . sdb_cmd("shell testkit-lite -f ")
 			  . $profile_content . "\n";
 		}
 	}
@@ -1053,19 +1053,20 @@ sub syncLiteResult {
 	if ( $profile_content ne "" ) {
 
 		# kill all existing widgets before testing
-		my $cmd           = "sdb shell 'wrt-launcher -l'";
+		my $cmd           = sdb_cmd("shell 'wrt-launcher -l'");
 		my @package_items = `$cmd`;
 		foreach (@package_items) {
-			my $package_id = "none";
-			if ( $_ =~ /^\s+(\d+)\s+(\d+)/ ) {
+			my $package_item = $_;
+			my $package_id   = "none";
+			if ( $package_item =~ /^\s+(\d+)\s+(\d+)/ ) {
 				$package_id = $2;
 			}
 			if ( $package_id ne "none" ) {
-				my $cmd =
-				  "sdb shell 'ps aux | grep /bin/$package_id | sed -n '1,1p''";
+				my $cmd = sdb_cmd(
+					"shell 'ps aux | grep /bin/$package_id | sed -n '1,1p''");
 				my $pid = `$cmd`;
 				if ( $pid =~ /app\s*(\d*)\s*/ ) {
-					system("sdb shell kill $1");
+					system( sdb_cmd("shell kill $1") );
 				}
 			}
 		}
@@ -1074,14 +1075,14 @@ sub syncLiteResult {
 		if ( $isWebApi eq "False" ) {
 			$subshell->Spawn( "rm -rf "
 				  . $globals->{'testlog_dir'}
-				  . "/runtest/latest/*; sdb shell testkit-lite -f $profile_content"
-			);
+				  . "/runtest/latest/*; "
+				  . sdb_cmd("shell testkit-lite -f $profile_content") );
 		}
 		else {
 			$subshell->Spawn( "rm -rf "
 				  . $globals->{'testlog_dir'}
-				  . "/runtest/latest/*; sdb shell testkit-lite -f $profile_content"
-			);
+				  . "/runtest/latest/*; "
+				  . sdb_cmd("shell testkit-lite -f $profile_content") );
 		}
 	}
 	else {
@@ -1180,8 +1181,6 @@ sub syncLiteResult {
 
 # backup report and send email
 {
-	my $profile_content =
-	  &readProfile( $globals->{'testkit_dir'} . "/tests/testkit" );
 	if ( $profile_content ne "" ) {
 
 		# write status

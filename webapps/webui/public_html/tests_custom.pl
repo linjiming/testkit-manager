@@ -70,19 +70,22 @@ my @priority_item        = ();
 my @component_item       = ();
 my @execution_type_item  = ();
 
-my $package_name_number   = 0;
-my $count_num             = 0;
-my $number                = 0;
-my $category_number       = 0;
-my $test_suite_number     = 0;
-my $test_set_number       = 0;
-my $status_number         = 0;
-my $priority_number       = 0;
-my $type_number           = 0;
-my $component_number      = 0;
-my $execution_type_number = 0;
-my $value                 = "";
-my $image                 = "";
+my $package_name_number        = 0;
+my $count_num                  = 0;
+my $number                     = 0;
+my $category_number            = 0;
+my $test_suite_number          = 0;
+my $test_set_number            = 0;
+my $status_number              = 0;
+my $priority_number            = 0;
+my $type_number                = 0;
+my $component_number           = 0;
+my $execution_type_number      = 0;
+my $test_set_item_number       = 0;
+my $test_component_item_number = 0;
+my $test_suite_item_number     = 0;
+my $value                      = "";
+my $image                      = "";
 
 my $cnt_load_file = 0;
 my $load_type_item;
@@ -150,6 +153,7 @@ my $refresh_flag                = 1;
 my $view_page_no_filter_flag    = 1;
 my $tree_view_current           = 0;
 my $list_view_current           = 0;
+my $testkit_lite_error_message  = check_testkit_sdb();
 
 # press delete package icon
 if ( $_GET{"delete_package"} ) {
@@ -166,7 +170,7 @@ if ( $_GET{"delete_package"} ) {
 	foreach (@package_name) {
 		my $temp = $_;
 		if ( $_GET{ "delete_" . "$temp" } ) {
-			my $cmd          = "sdb shell 'rpm -qa | grep " . $temp . "'";
+			my $cmd = sdb_cmd( "shell 'rpm -qa | grep " . $temp . "'" );
 			my $have_package = `$cmd`;
 			if ( $have_package =~ /$temp/ ) {
 				remove_package($temp);
@@ -557,6 +561,7 @@ else {
 	@package_name      = @sort_package_name;
 	AnalysisVersion();
 	my $i = @package_name;
+
 	if ( $i eq "0" ) {
 		FilterCaseValue();
 		UpdateNullPage();
@@ -576,6 +581,7 @@ sub UpdatePage {
 	print "Content-type: text/html" . CRLF . CRLF;
 
 	print_header( "$MTK_BRANCH Manager Main Page", "custom" );
+	print show_error_dlg($testkit_lite_error_message);
 
 	CreateFilePath();
 
@@ -584,7 +590,7 @@ sub UpdatePage {
 	AnalysisReadMe();
 
 	GetSelectItem();
-	print show_error_dlg("");
+
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
 	<iframe id='popIframe' class='popIframe' frameborder='0' ></iframe>
@@ -617,7 +623,7 @@ sub UpdatePage {
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Architecture</td><td>
-                    <select name="select_arc" align="20px" id="select_arc" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_arc" align="20px" id="select_arc" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('arc');">
                     <option>X86</option>
                     </select>
                   </td>
@@ -626,7 +632,7 @@ sub UpdatePage {
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Version<td>
-                    <select name="select_ver" id="select_ver" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_ver" id="select_ver" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('version');">
 DATA
 	DrawVersionSelect();
 	print <<DATA;
@@ -638,7 +644,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Category</td><td>
-                    <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('category');">
 DATA
 	DrawCategorySelect();
 	print <<DATA;
@@ -648,7 +654,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Priority<td>
-                    <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('priority');">
 DATA
 	DrawPrioritySelect();
 	print <<DATA;
@@ -660,7 +666,7 @@ DATA
               <td width="30%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Status<td>
-                    <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('status');">
 DATA
 	DrawStatusSelect();
 	print <<DATA;
@@ -670,7 +676,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Execution Type<td>
-                    <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('exe_type');">
 DATA
 	DrawExecutiontypeSelect();
 	print <<DATA;
@@ -682,7 +688,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Suite<td>
-                    <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('suite');">
 DATA
 	DrawTestsuiteSelect();
 	print <<DATA;
@@ -692,7 +698,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Type<td>
-                    <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('type');">
 DATA
 	DrawTypeSelect();
 	print <<DATA;
@@ -704,7 +710,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
                     <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Set<td>
-                      <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                      <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('set');">
 DATA
 	DrawTestsetSelect();
 	print <<DATA;
@@ -714,7 +720,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Component<td>
-                    <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('component');">
 DATA
 	DrawComponentSelect();
 	print <<DATA;
@@ -894,7 +900,8 @@ sub UpdateNullPage {
 	print "Content-type: text/html" . CRLF . CRLF;
 
 	print_header( "$MTK_BRANCH Manager Main Page", "custom" );
-	print show_error_dlg("");
+	print show_error_dlg($testkit_lite_error_message);
+
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
 	<iframe id='popIframe' class='popIframe' frameborder='0' ></iframe>
@@ -1195,11 +1202,10 @@ sub ViewDetailedInfo {
 		<td><table width="100%" height="600px" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none" style="table-layout:fixed">
         	<tr>
 	            <td width="1%" class="report_list_one_row" style="background-color:#E9F6FC">&nbsp;</td>
-	            <td width="29%" height="600px" valign="top" class="view_package_list_info" style="text-wrap:none;background-color:#E9F6FC">
-					<div id="tree_area_package" style="overflow-y:auto;overflow-x:auto;height:600px;width:100%" >
-						<div class='view_no_match_testcase_message' id="no_match_testcase_message" style="display:none">No match testcase!</div>
-						<div class='view_no_match_testcase_message' id="no_select_testcase_message" style="display:none">Please select testcase!</div>
-					</div>
+	            <td width="39%" valign="top" class="view_package_list_info" style="text-wrap:none;background-color:#E9F6FC">
+					<div id="tree_area_package" style="background:transparent;overflow-x:auto;overflow-y:hidden;width:100%";></div>
+					<div class='view_no_match_testcase_message' id="no_match_testcase_message" style="display:none">No match testcase!</div>
+					<div class='view_no_match_testcase_message' id="no_select_testcase_message" style="display:none">Please select testcase!</div>
 				</td>			
 DATA
 
@@ -1208,23 +1214,24 @@ DATA
 <script language="javascript" type="text/javascript">
 // <![CDATA[
 // package tree
-//global variable to allow console inspection of tree:
-
-drawCaseTree();
-// anonymous function wraps the remainder of the logic:
-function drawCaseTree() {
-	var tree;
-
-	// function to initialize the tree:
-	function treeInit() {
-		buildTree();
-	}
-
-	// Function creates the tree
-	function buildTree() {
-
-		// instantiate the tree:
-		tree = new YAHOO.widget.TreeView("tree_area_package");
+\$(function() {
+	\$("#tree_area_package").bind("click.jstree", function(event) {
+		// filter leaves
+		var count = \$(event.target).parents('li').attr('id');
+		if(count.indexOf('_')<0){
+			onCaseClick(count);
+		}
+	}).jstree(
+			{
+				"themes" : {
+					"icons" : false
+				},
+				"ui" : {
+					"select_limit" : 1,
+					"initially_select" : [ "0" ]
+				},
+				"xml_data" : {
+					"data" : "" + "<root>"
 DATA
 
 	my $package_number                    = 1;
@@ -1415,70 +1422,57 @@ DATA
 										push( @case_id, $testcase_id );
 
 										if ( $draw_package_flag eq "0" ) {
-											print 'var package_'
+											print "+ \"<item id='package_"
 											  . $package_number
-											  . ' = new YAHOO.widget.TextNode("'
+											  . "'>\"\n";
+											print "+ \"<content><name>"
 											  . $package
-											  . '", tree.getRoot(), false);';
-											print "\n";
-											print 'package_'
-											  . $package_number
-											  . '.title="Package: '
-											  . $package . '";';
-											print "\n";
+											  . "</name></content>\"\n";
+											print "+ \"</item>\"\n";
 											$draw_package_flag = 1;
 										}
 
 										if ( $draw_suite_flag eq "0" ) {
-											print 'var suite_'
-											  . $suite_number
-											  . ' = new YAHOO.widget.TextNode("'
-											  . $suite_value
-											  . '", package_'
+											print "+ \"<item id='package_"
 											  . $package_number
-											  . ', false);';
-											print "\n";
-											print 'suite_'
+											  . "_suite_"
 											  . $suite_number
-											  . '.title="Suite: '
-											  . $value . '"';
-											print "\n";
+											  . "' parent_id='package_"
+											  . $package_number
+											  . "'>\"\n";
+											print "+ \"<content><name>"
+											  . $suite_value
+											  . "</name></content>\"\n";
+											print "+ \"</item>\"\n";
 											$draw_suite_flag = 1;
 										}
 
 										if ( $draw_set_flag eq "0" ) {
-											print 'var set_'
+											print "+ \"<item id='package_"
+											  . $package_number . "_set_"
 											  . $set_number
-											  . ' = new YAHOO.widget.TextNode("'
-											  . $set_value
-											  . '", suite_'
+											  . "' parent_id='package_"
+											  . $package_number
+											  . "_suite_"
 											  . $suite_number
-											  . ', false);';
-											print "\n";
-											print 'set_'
-											  . $set_number
-											  . '.title="Set: '
-											  . $set_value . '";';
-											print "\n";
+											  . "'>\"\n";
+											print "+ \"<content><name>"
+											  . $set_value
+											  . "</name></content>\"\n";
+											print "+ \"</item>\"\n";
 											$draw_set_flag = 1;
 										}
 
-										print 'var testcase_'
-										  . $testcase_number
-										  . ' = new YAHOO.widget.TextNode("'
-										  . ' <span class=\'view_case_name_list\'>'
-										  . '<a onclick=\'javascript:onCaseClick('
-										  . $case_value_flag_count . ');\'>'
-										  . $case_value . '</a>'
-										  . '", set_'
+										print "+ \"<item id='"
+										  . $case_value_flag_count
+										  . "' parent_id='package_"
+										  . $package_number . "_set_"
 										  . $set_number
-										  . ', false);';
-										print "\n";
-										print 'testcase_'
-										  . $testcase_number
-										  . '.title="Case: '
-										  . $case_value . '";';
-										print "\n";
+										  . "'>\"\n";
+										print "+ \"<content><name>"
+										  . $case_value
+										  . "</name></content>\"\n";
+										print "+ \"</item>\"\n";
 										$case_value_flag_count++;
 									}
 								}
@@ -1497,67 +1491,57 @@ DATA
 											push( @case_xml, $xml );
 
 											if ( $draw_package_flag eq "0" ) {
-												print 'var package_'
+												print "+ \"<item id='package_"
 												  . $package_number
-												  . ' = new YAHOO.widget.TextNode("'
+												  . "'>\"\n";
+												print "+ \"<content><name>"
 												  . $package
-												  . '", tree.getRoot(), false);';
-												print "\n";
-												print 'package_'
-												  . $package_number
-												  . '.title="Package: '
-												  . $package . '";';
-												print "\n";
+												  . "</name></content>\"\n";
+												print "+ \"</item>\"\n";
 												$draw_package_flag = 1;
 											}
+
 											if ( $draw_suite_flag eq "0" ) {
-												print 'var suite_'
-												  . $suite_number
-												  . ' = new YAHOO.widget.TextNode("'
-												  . $suite_value
-												  . '", package_'
+												print "+ \"<item id='package_"
 												  . $package_number
-												  . ', false);';
-												print "\n";
-												print 'suite_'
+												  . "_suite_"
 												  . $suite_number
-												  . '.title="Suite: '
-												  . $value . '"';
-												print "\n";
+												  . "' parent_id='package_"
+												  . $package_number
+												  . "'>\"\n";
+												print "+ \"<content><name>"
+												  . $suite_value
+												  . "</name></content>\"\n";
+												print "+ \"</item>\"\n";
 												$draw_suite_flag = 1;
 											}
+
 											if ( $draw_set_flag eq "0" ) {
-												print 'var set_'
+												print "+ \"<item id='package_"
+												  . $package_number . "_set_"
 												  . $set_number
-												  . ' = new YAHOO.widget.TextNode("'
-												  . $set_value
-												  . '", suite_'
+												  . "' parent_id='package_"
+												  . $package_number
+												  . "_suite_"
 												  . $suite_number
-												  . ', false);';
-												print "\n";
-												print 'set_'
-												  . $set_number
-												  . '.title="Set: '
-												  . $set_value . '";';
-												print "\n";
+												  . "'>\"\n";
+												print "+ \"<content><name>"
+												  . $set_value
+												  . "</name></content>\"\n";
+												print "+ \"</item>\"\n";
 												$draw_set_flag = 1;
 											}
-											print 'var testcase_'
-											  . $testcase_number
-											  . ' = new YAHOO.widget.TextNode("'
-											  . ' <span class=\'view_case_name_list\'>'
-											  . '<a onclick=\'javascript:onCaseClick('
-											  . $case_value_flag_count . ');\'>'
-											  . $case_value . '</a>'
-											  . '", set_'
+
+											print "+ \"<item id='"
+											  . $case_value_flag_count
+											  . "' parent_id='package_"
+											  . $package_number . "_set_"
 											  . $set_number
-											  . ', false);';
-											print "\n";
-											print 'testcase_'
-											  . $testcase_number
-											  . '.title="Case: '
-											  . $case_value . '";';
-											print "\n";
+											  . "'>\"\n";
+											print "+ \"<content><name>"
+											  . $case_value
+											  . "</name></content>\"\n";
+											print "+ \"</item>\"\n";
 											$case_value_flag_count++;
 										}
 									}
@@ -1577,33 +1561,42 @@ DATA
 		}
 		$count++;
 	}
-	if ( @case_value > 0 ) {
+	if ( @case_value == 0 ) {
 		print <<DATA;
-	// The tree is not created in the DOM until this method is called:
-		tree.draw();
+   		+ "<item>"
+		+ "<content><name></name></content>"
+		+ "</item>" 
 DATA
 	}
-	else {
+	print <<DATA;
+	+ "</root>"
+				},
+				"core" : {
+					"initially_open" : [ "package_1_set_1" ]
+				},
+				"plugins" : [ "themes", "xml_data", "ui" ]
+			});
+DATA
+	if ( @case_value == 0 ) {
 		if ( $case_count_flag eq "0" ) {
 			print <<DATA;
-   			 document.getElementById("no_match_testcase_message").style.display="";
+			document.getElementById("tree_area_package").style.display="none";
+   			document.getElementById("no_match_testcase_message").style.display="";
 DATA
 		}
 		else {
 			print <<DATA;
-   			 document.getElementById("no_select_testcase_message").style.display="";
+			document.getElementById("tree_area_package").style.display="none";
+   			document.getElementById("no_select_testcase_message").style.display="";
 DATA
 		}
 	}
 	print <<DATA;
-	}
-	// Add a window onload handler to build the tree when the load
-	// event fires.
-	YAHOO.util.Event.addListener(window, "load", treeInit);
-}
+});
+
 // ]]>
 </script>
-		<td width="70%" valign="top" class="view_case_detail_info" >
+		<td width="60%" valign="top" class="view_case_detail_info" >
 DATA
 	my $count_temp = 0;
 	if ( @case_value eq "0" ) {
@@ -2161,6 +2154,7 @@ sub UpdateViewPageSelectItem {
 	print "Content-type: text/html" . CRLF . CRLF;
 
 	print_header( "$MTK_BRANCH Manager Main Page", "custom" );
+	print show_error_dlg($testkit_lite_error_message);
 
 	AnalysisReadMe();
 
@@ -2322,11 +2316,12 @@ sub UpdateLoadPageSelectItem {
 	print "Content-type: text/html" . CRLF . CRLF;
 
 	print_header( "$MTK_BRANCH Manager Main Page", "custom" );
+	print show_error_dlg($testkit_lite_error_message);
 
 	AnalysisReadMe();
 
 	GetSelectItem();
-	print show_error_dlg("");
+
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
 	<iframe id='popIframe' class='popIframe' frameborder='0' ></iframe>
@@ -2436,7 +2431,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Version<td>
-                    <select name="select_ver" id="select_ver" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_ver" id="select_ver" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('version');">
 DATA
 	DrawVersionSelect();
 	print <<DATA;
@@ -2449,7 +2444,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Category</td><td>
-                    <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('category');">
 DATA
 	LoadDrawCategorySelect();
 	print <<DATA;
@@ -2459,7 +2454,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Priority<td>
-                    <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_pri" id="select_pri" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('priority');">
 DATA
 	LoadDrawPrioritySelect();
 	print <<DATA;
@@ -2471,7 +2466,7 @@ DATA
               <td width="30%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Status<td>
-                    <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_status" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('status');">
 DATA
 	LoadDrawStatusSelect();
 	print <<DATA;
@@ -2481,7 +2476,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Execution Type<td>
-                    <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_exe" id="select_exe" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('exe_type');">
 DATA
 	LoadDrawExecutiontypeSelect();
 	print <<DATA;
@@ -2493,7 +2488,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Suite<td>
-                    <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('suite');">
 DATA
 	LoadDrawTestsuiteSelect();
 	print <<DATA;
@@ -2503,7 +2498,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Type<td>
-                    <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_type" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('type');">
 DATA
 	LoadDrawTypeSelect();
 	print <<DATA;
@@ -2515,7 +2510,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
                     <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Set<td>
-                      <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                      <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('set');">
 DATA
 	LoadDrawTestsetSelect();
 	print <<DATA;
@@ -2525,7 +2520,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Component<td>
-                    <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
+                    <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('component');">
 DATA
 	LoadDrawComponentSelect();
 	print <<DATA;
@@ -2753,6 +2748,21 @@ print <<DATA;
 var package_name_number = 
 DATA
 print $package_name_number. ";";
+
+print <<DATA;
+var test_set_item_number = 
+DATA
+print $test_set_item_number. ";";
+
+print <<DATA;
+var test_component_item_number = 
+DATA
+print $test_component_item_number. ";";
+
+print <<DATA;
+var test_suite_item_number = 
+DATA
+print $test_suite_item_number. ";";
 
 print <<DATA;
 var uninstall_package_count_max = 
@@ -3145,6 +3155,51 @@ for ( $count_num = 0 ; $count_num < @component ; $count_num++ ) {
 	}
 	else {
 		print '"' . $component[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var test_set_item = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @test_set_item ; $count_num++ ) {
+	if ( $count_num == @test_set_item - 1 ) {
+		print '"' . $test_set_item[$count_num] . '"';
+	}
+	else {
+		print '"' . $test_set_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var component_item = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @component_item ; $count_num++ ) {
+	if ( $count_num == @component_item - 1 ) {
+		print '"' . $component_item[$count_num] . '"';
+	}
+	else {
+		print '"' . $component_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var test_suite_item = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @test_suite_item ; $count_num++ ) {
+	if ( $count_num == @test_suite_item - 1 ) {
+		print '"' . $test_suite_item[$count_num] . '"';
+	}
+	else {
+		print '"' . $test_suite_item[$count_num] . '"' . ",";
 	}
 }
 print <<DATA;
@@ -3733,7 +3788,8 @@ function sortPackages(){
 DATA
 
 print <<DATA;
-function filter_case_item(){
+function filter_case_item(type){
+	var filter_option = type;
 	var advanced_value_version = document.getElementById('select_ver');
 	var advanced_value_category	= document.getElementById('select_category');
 	var advanced_value_priority = document.getElementById('select_pri');
@@ -3743,10 +3799,235 @@ function filter_case_item(){
 	var advanced_value_type = document.getElementById('select_type');
 	var advanced_value_test_set = document.getElementById('select_testset');
 	var advanced_value_component = document.getElementById('select_com');
+	var suite_value_get_flag = 1;
+	
 	var flag_case = new Array( );
 	var check_uncheck_all_button_disable = 1;
 	for (var i=0; i<package_name_number; i++) {	
 		flag_case[i] = "a";
+	}
+	
+	if(filter_option == "suite"){
+		for(var k=1; k < advanced_value_test_set.options.length; ) {
+			advanced_value_test_set.options.remove(k);
+		}
+		for(var k=1; k < advanced_value_component.options.length; ) {
+			advanced_value_component.options.remove(k);
+		}
+		
+		if(advanced_value_test_suite.value == "Any Test Suite"){
+			for(var k=0; k<test_set_item_number; k++){
+				var varItem = new Option(test_set_item[k],test_set_item[k]);
+				advanced_value_test_set.options.add(varItem);
+			}
+			for(var k=0; k<test_component_item_number; k++){
+				var varItem = new Option(component_item[k],component_item[k]);
+				advanced_value_component.options.add(varItem);
+			}
+		}
+		
+		for (var i=0; i<package_name_number; i++) {	
+			var j;
+			if(i == "0"){
+				j=0;
+			}
+			else{
+				j = parseInt(one_package_case_count_total[i-1])
+			}		
+			for(j; j < parseInt(one_package_case_count_total[i]); j++) {
+				if(advanced_value_test_suite.value == suite_value[j]){
+					var set_varItem = new Option(set_value[j],set_value[j]);
+					if(advanced_value_test_set.options.length == 0){
+						advanced_value_test_set.options.add(set_varItem);
+					}
+					else{
+						for(var k=0; k < advanced_value_test_set.options.length; k++){
+							if(advanced_value_test_set.options[k].text == set_value[j]){
+								break;
+							}
+							if(k == advanced_value_test_set.options.length-1){
+								advanced_value_test_set.options.add(set_varItem);
+							}	
+						}
+					}
+					
+					var component_varItem = new Option(component_value[j],component_value[j]);
+					if(advanced_value_component.options.length == 0){
+						advanced_value_component.options.add(component_varItem);
+					}
+					else{
+						for(var k=0; k < advanced_value_component.options.length; k++){
+							if(advanced_value_component.options[k].text == component_value[j]){
+								break;
+							}
+							if(k == advanced_value_component.options.length-1){
+								advanced_value_component.options.add(component_varItem);
+							}	
+						}
+					}	
+				}
+			}
+		}
+	}
+	
+	if(filter_option == "set"){
+		advanced_value_component_cp = advanced_value_component.value;
+		for(var k=1; k < advanced_value_component.options.length; ) {
+			advanced_value_component.options.remove(k);
+		}
+		if( advanced_value_test_set.value == "Any Test Set" ){
+			if(advanced_value_test_set.options.length == test_set_item_number + 1){
+				advanced_value_test_suite.selectedIndex = 0;
+				for(var m = 0; m < test_component_item_number; m++){
+					var component_varItem = new Option(component_item[m],component_item[m]);
+					advanced_value_component.options.add(component_varItem);
+				}
+			}
+		}
+		for (var i=0; i<package_name_number; i++) {	
+			var j;
+			if(i == "0"){
+				j=0;
+			}
+			else{
+				j = parseInt(one_package_case_count_total[i-1])
+			}		
+			for(j; j < parseInt(one_package_case_count_total[i]); j++) {
+				if(suite_value_get_flag){
+					if(advanced_value_test_set.value == set_value[j]){
+						var suite_item_temp = suite_value[j];
+						for(var m = 0; m < test_suite_item_number; m++){
+							if(suite_item_temp == test_suite_item[m]){
+								advanced_value_test_suite.selectedIndex = m+1;
+							}
+						}
+						suite_value_get_flag = 0;
+					}	
+				}
+				if(advanced_value_test_set.value == "Any Test Set"){
+					if(advanced_value_test_set.options.length != test_set_item_number + 1){
+						if(advanced_value_test_suite.value == suite_value[j]){
+							var component_varItem = new Option(component_value[j],component_value[j]);
+							if(advanced_value_component.options.length == 0){
+								advanced_value_component.options.add(component_varItem);
+							}
+							else{
+								for(var k=0; k < advanced_value_component.options.length; k++){
+									if(advanced_value_component.options[k].text == component_value[j]){
+										break;
+									}
+									if(k == advanced_value_component.options.length-1){
+										advanced_value_component.options.add(component_varItem);
+									}	
+								}
+							}	
+						}
+					}
+				}
+				if(advanced_value_test_set.value == set_value[j]){
+					var component_varItem = new Option(component_value[j],component_value[j]);
+					if(advanced_value_component.options.length == 0){
+						advanced_value_component.options.add(component_varItem);
+					}
+					else{
+						for(var k=0; k < advanced_value_component.options.length; k++){
+							if(advanced_value_component.options[k].text == component_value[j]){
+								break;
+							}
+							if(k == advanced_value_component.options.length-1){
+								advanced_value_component.options.add(component_varItem);
+							}	
+						}
+					}
+				}
+			}
+		}
+		for(var k=0; k < advanced_value_component.options.length; k++ ){
+			if(advanced_value_component_cp == advanced_value_component.options[k].value){
+				advanced_value_component.options.selectedIndex = k;
+			}
+		}		
+	}
+	
+	if(filter_option == "component"){
+		advanced_value_test_set_cp = advanced_value_test_set.value;
+		for(var k=1; k < advanced_value_test_set.options.length; ) {
+			advanced_value_test_set.options.remove(k);
+		}
+		if( advanced_value_component.value == "Any Component" ){
+			if(advanced_value_component.options.length == test_component_item_number + 1){
+				advanced_value_test_suite.selectedIndex = 0;
+				for(var m = 0; m < test_set_item_number; m++){
+					var set_varItem = new Option(test_set_item[m],test_set_item[m]);
+					advanced_value_test_set.options.add(set_varItem);
+				}
+			}
+		}
+		for (var i=0; i<package_name_number; i++) {	
+			var j;
+			if(i == "0"){
+				j=0;
+			}
+			else{
+				j = parseInt(one_package_case_count_total[i-1])
+			}		
+			for(j; j < parseInt(one_package_case_count_total[i]); j++) {
+				if(suite_value_get_flag){
+					if(advanced_value_component.value == component_value[j]){
+						var suite_item_temp = suite_value[j];
+						for(var m = 0; m < test_suite_item_number; m++){
+							if(suite_item_temp == test_suite_item[m]){
+								advanced_value_test_suite.selectedIndex = m+1;
+							}
+						}
+						suite_value_get_flag = 0;
+					}	
+				}
+				if(advanced_value_component.value == "Any Component"){
+					if(advanced_value_component.options.length != test_component_item_number + 1){
+						if(advanced_value_test_suite.value == suite_value[j]){
+							var set_varItem = new Option(set_value[j],set_value[j]);
+							if(advanced_value_test_set.options.length == 0){
+								advanced_value_test_set.options.add(set_varItem);
+							}
+							else{
+								for(var k=0; k < advanced_value_test_set.options.length; k++){
+									if(advanced_value_test_set.options[k].text == set_value[j]){
+										break;
+									}
+									if(k == advanced_value_test_set.options.length-1){
+										advanced_value_test_set.options.add(set_varItem);
+									}	
+								}
+							}	
+						}
+					}
+				}
+				if(advanced_value_component.value == component_value[j]){
+					if(advanced_value_test_suite.value == suite_value[j]){
+						var set_varItem = new Option(set_value[j],set_value[j]);
+						if(advanced_value_test_set.options.length == 0){
+							advanced_value_test_set.options.add(set_varItem);
+						}
+						else{
+							for(var k=0; k < advanced_value_test_set.options.length; k++){
+								if(advanced_value_test_set.options[k].text == set_value[j]){
+									break;
+								}
+								if(k == advanced_value_test_set.options.length-1){
+									advanced_value_test_set.options.add(set_varItem);
+								}	
+							}
+						}
+					}
+				}
+			}
+		}
+		for(var k=0; k < advanced_value_test_set.options.length; k++ ){
+			if(advanced_value_test_set_cp == advanced_value_test_set.options[k].value){
+				advanced_value_test_set.options.selectedIndex = k;
+			}
+		}	
 	}
 	
 	for (var i=0; i<package_name_number; i++) {	
@@ -3760,7 +4041,7 @@ function filter_case_item(){
 		else{
 			j = parseInt(one_package_case_count_total[i-1])
 		}		
-		for(j; j < parseInt(one_package_case_count_total[i]); j++) {		
+		for(j; j < parseInt(one_package_case_count_total[i]); j++) {
 			if (((advanced_value_version.value == "Any Version")||(advanced_value_version.value == version_value[j]))
 			&& ((advanced_value_test_suite.value == "Any Test Suite")||(advanced_value_test_suite.value == suite_value[j]))
 			&& ((advanced_value_test_set.value == "Any Test Set")||(advanced_value_test_set.value == set_value[j]))
@@ -3951,7 +4232,7 @@ function onDeletePackage(count) {
 	}
 	
 	
-	if(confirm("Are you sure to delete "+pkg+"?")){
+	if(confirm("Are you sure to delete package:\\n"+pkg+"?")){
 		for(var i=0; i<uninstall_package_count_max; i++){
 			var install_pkg_id_tmp = "install_pkg_" + i;
 			document.getElementById(install_pkg_id_tmp).onclick = "";
@@ -4010,7 +4291,10 @@ sub CountPackages {
 sub AnalysisVersion {
 	my $temp_version;
 	my $temp_count = 0;
-	my @temp       = `sdb shell 'rpm -qa | grep tests'`;
+
+	my $cmd_ver = sdb_cmd("shell 'rpm -qa | grep tests'");
+	my @temp    = `$cmd_ver`;
+
 	if ( @temp > 0 ) {
 		while ( $temp_count < $package_name_number ) {
 			for ( my $i = 0 ; $i < @temp ; $i++ ) {
@@ -4096,7 +4380,7 @@ sub AnalysisTestsXML {
 					}
 				}
 			}
-			if ( $_ =~ /<suite name="(.*?)"/ ) {
+			if ( $_ =~ /<suite.*name="(.*?)"/ ) {
 				$temp = $1;
 				if ( $test_suite_number_temp == 0 ) {
 					push( @test_suite, $temp );
@@ -5138,8 +5422,9 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@test_suite_item = sort @temp;
-	@temp            = ();
+	@test_suite_item        = sort @temp;
+	$test_suite_item_number = @test_suite_item;
+	@temp                   = ();
 
 	push( @temp, $test_set[0] );
 	for ( $j = 1 ; $j < @test_set ; $j++ ) {
@@ -5152,8 +5437,9 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@test_set_item = sort @temp;
-	@temp          = ();
+	@test_set_item        = sort @temp;
+	$test_set_item_number = @test_set_item;
+	@temp                 = ();
 
 	push( @temp, $status[0] );
 	for ( $j = 1 ; $j < @status ; $j++ ) {
@@ -5208,8 +5494,9 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@component_item = sort @temp;
-	@temp           = ();
+	@component_item             = sort @temp;
+	$test_component_item_number = @component_item;
+	@temp                       = ();
 
 	push( @temp, $execution_type[0] );
 	for ( $j = 1 ; $j < @execution_type ; $j++ ) {

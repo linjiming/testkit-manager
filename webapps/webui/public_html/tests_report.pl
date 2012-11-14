@@ -881,7 +881,7 @@ function confirm_remove() {
 		return false;
 	}
 	else
-		return confirm('Are you sure to delete ' + num + ' selected report(s)?');
+		return confirm('Are you sure to delete the ' + num + ' selected report(s)?');
 }
 // ]]>
 </script>
@@ -984,9 +984,9 @@ sub showDetailedReport {
               <tr>
                 <td width="1%" class="report_list_one_row" style="background-color:#E9F6FC">&nbsp;</td>
                 <td width="39%" valign="top" class="report_list_outside_left_bold" style="background-color:#E9F6FC">
-                  <div id="tree_area_package"></div>
-                  <div id="tree_area_component" style="display:none"></div>
-                  <div id="tree_area_test_type" style="display:none"></div></td>
+                  <div id="tree_area_package" style="background:transparent; overflow-x:auto; overflow-y:hidden;"></div>
+                  <div id="tree_area_component" style="background:transparent; display:none; overflow-x:auto; overflow-y:hidden;"></div>
+                  <div id="tree_area_test_type" style="background:transparent; display:none; overflow-x:auto; overflow-y:hidden;"></div></td>
                 <td width="60%" valign="top" class="report_list_outside_right_bold"><div id="view_area_package">
                   <div id="view_area_package_reg" style="display:none"></div>
                   <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -1644,140 +1644,161 @@ DATA
     </tr>
   </table>
 <script language="javascript" type="text/javascript">
-// <![CDATA[
 // package tree
-//global variable to allow console inspection of tree:
-var tree;
-
-// anonymous function wraps the remainder of the logic:
-(function() {
-
-	// function to initialize the tree:
-	function treeInit() {
-		buildTree();
-	}
-
-	// Function creates the tree
-	function buildTree() {
-
-		// instantiate the tree:
-		tree = new YAHOO.widget.TreeView("tree_area_package");
+\$(function() {
+	\$("#tree_area_package").bind("click.jstree", function(event) {
+		var eventNodeName = event.target.nodeName;
+		if (eventNodeName == 'A') {
+			// set result to 'Fail', type to 'All'
+			var select_result = document.getElementById('select_result');
+			var select_type = document.getElementById('select_type');
+			select_result.selectedIndex = 0;
+			select_type.selectedIndex = 0;
+			// filter leaves
+			var title = \$(event.target).parents('li').attr('id');
+			var reg = title;
+			document.getElementById("view_area_package_reg").innerHTML = reg;
+			var page = document.getElementsByTagName("*");
+			for ( var i = 0; i < page.length; i++) {
+				var temp_id = page[i].id;
+				if (temp_id.indexOf("case_package_") >= 0) {
+					page[i].style.display = "none";
+					if ((temp_id.indexOf(reg) >= 0) && (temp_id.indexOf("R:FAIL") >= 0)) {
+						page[i].style.display = "";
+					}
+				}
+			}
+			// close detailed case div
+			for ( var i = 0; i < page.length; i++) {
+				var temp_id = page[i].id;
+				if (temp_id.indexOf("detailed_case_package_") >= 0) {
+					page[i].style.display = "none";
+				}
+			}
+		}
+	}).jstree(
+			{
+				"themes" : {
+					"icons" : false
+				},
+				"ui" : {
+					"select_limit" : 1
+				},
+				"xml_data" : {
+					"data" : "" + "<root>"
 DATA
-
 	@package_list = updatePackageList($time);
 	my $package_number = 1;
+
+	# add package to the tree
 	foreach (@package_list) {
 		my $package = $_;
 		my $tests_xml_dir =
 		  $result_dir_manager . $time . "/" . $package . "_definition.xml";
-		print 'var package_'
-		  . $package_number
-		  . ' = new YAHOO.widget.TextNode("'
+		print "+ \"<item id='P:" . $package . "'>\"\n";
+		print "+ \"<content><name>" 
 		  . $package
 		  . getHTMLResult( 'P_' . $package )
-		  . '", tree.getRoot(), false);';
-		print "\n";
-		print 'package_' . $package_number . '.title="P:' . $package . '";';
-		print "\n";
-		open FILE, $tests_xml_dir or die $!;
-		my $suite_number = 0;
-		my $set_number   = 1;
+		  . "</name></content>\"\n";
+		print "+ \"</item>\"\n";
+		eval {
 
-		while (<FILE>) {
-			if ( $_ =~ /suite.*name="(.*?)"/ ) {
-				$suite_number++;
-				print 'var suite_'
-				  . $suite_number
-				  . ' = new YAHOO.widget.TextNode("'
-				  . $1
-				  . getHTMLResult( 'SU_' . $1 )
-				  . '", package_'
-				  . $package_number
-				  . ', false);';
-				print "\n";
-				print 'suite_' . $suite_number . '.title="SU:' . $1 . '";';
-				print "\n";
+			# read definition xml, add suite and set to the tree
+			open FILE, $tests_xml_dir or die $!;
+			my $suite_number = 0;
+			my $set_number   = 1;
+			my $suite_name   = "[unknown]";
+			my $set_name     = "[unknown]";
+			while (<FILE>) {
+				if ( $_ =~ /suite.*name="(.*?)"/ ) {
+					$suite_name = $1;
+					$suite_number++;
+					print "+ \"<item id='SU:"
+					  . $suite_name
+					  . "' parent_id='P:"
+					  . $package
+					  . "'>\"\n";
+					print "+ \"<content><name>"
+					  . $suite_name
+					  . getHTMLResult( 'SU_' . $suite_name )
+					  . "</name></content>\"\n";
+					print "+ \"</item>\"\n";
+				}
+				if ( $_ =~ /set.*name="(.*?)"/ ) {
+					$set_name = $1;
+					print "+ \"<item id='SE:"
+					  . $set_name
+					  . "' parent_id='SU:"
+					  . $suite_name
+					  . "'>\"\n";
+					print "+ \"<content><name>"
+					  . $set_name
+					  . getHTMLResult( 'SE_' . $set_name )
+					  . "</name></content>\"\n";
+					print "+ \"</item>\"\n";
+				}
 			}
-			if ( $_ =~ /set.*name="(.*?)"/ ) {
-				print 'var set_'
-				  . $set_number
-				  . ' = new YAHOO.widget.TextNode("'
-				  . $1
-				  . getHTMLResult( 'SE_' . $1 )
-				  . '", suite_'
-				  . $suite_number
-				  . ', false);';
-				print "\n";
-				print 'set_' . $set_number . '.title="SE:' . $1 . '";';
-				print "\n";
-			}
+		};
+		if ($@) {
+			print "+ \"<item parent_id='P:" . $package . "'>\"\n";
+			print "+ \"<content><name>missing file: "
+			  . $tests_xml_dir
+			  . "</name></content>\"\n";
+			print "+ \"</item>\"\n";
 		}
 		$package_number++;
 	}
-
 	print <<DATA;
-		tree.subscribe("labelClick",
-			function(node) {
-				// set result to 'Fail', type to 'All'
-				var select_result = document.getElementById('select_result');
-				var select_type = document.getElementById('select_type');
-				select_result.selectedIndex = 0;
-				select_type.selectedIndex = 0;
-				// filter leaves
-				var title = node.title;
-				var reg = title;
-				document.getElementById("view_area_package_reg").innerHTML = reg;
-				var page = document.getElementsByTagName("*");
-				for ( var i = 0; i < page.length; i++) {
-					var temp_id = page[i].id;
-					if (temp_id.indexOf("case_package_") >= 0) {
-						page[i].style.display = "none";
-						if ((temp_id.indexOf(reg) >= 0)
-								&& (temp_id.indexOf("R:FAIL") >= 0)) {
-							page[i].style.display = "";
-						}
-					}
-				}
-				for ( var i = 0; i < page.length; i++) {
-					var temp_id = page[i].id;
-					if (temp_id.indexOf("detailed_case_package_") >= 0) {
-						page[i].style.display = "none";
-					}
-				}
+							+ "</root>"
+				},
+				"plugins" : [ "themes", "xml_data", "ui" ]
 			});
-		// The tree is not created in the DOM until this method is called:
-		tree.draw();
-	}
-
-	// Add a window onload handler to build the tree when the load
-	// event fires.
-	YAHOO.util.Event.addListener(window, "load", treeInit);
-
-})();
-// ]]>
+});
 </script>
-
 <script language="javascript" type="text/javascript">
-// <![CDATA[
 // component tree
-//global variable to allow console inspection of tree:
-var tree;
-
-// anonymous function wraps the remainder of the logic:
-(function() {
-
-	// function to initialize the tree:
-	function treeInit() {
-		buildTree();
-	}
-
-	// Function creates the tree
-	function buildTree() {
-
-		// instantiate the tree:
-		tree = new YAHOO.widget.TreeView("tree_area_component");
+\$(function() {
+	\$("#tree_area_component").bind("click.jstree", function(event) {
+		var eventNodeName = event.target.nodeName;
+		if (eventNodeName == 'A') {
+			// set result to 'Fail', type to 'All'
+			var select_result = document.getElementById('select_result');
+			var select_type = document.getElementById('select_type');
+			select_result.selectedIndex = 0;
+			select_type.selectedIndex = 0;
+			// filter leaves
+			var title = \$(event.target).parents('li').attr('id');
+			var reg = title;
+			document.getElementById("view_area_component_reg").innerHTML = reg;
+			var page = document.getElementsByTagName("*");
+			for ( var i = 0; i < page.length; i++) {
+				var temp_id = page[i].id;
+				if (temp_id.indexOf("case_component_") >= 0) {
+					page[i].style.display = "none";
+					if ((temp_id.indexOf(reg) >= 0) && (temp_id.indexOf("R:FAIL") >= 0)) {
+						page[i].style.display = "";
+					}
+				}
+			}
+			// close detailed case div
+			for ( var i = 0; i < page.length; i++) {
+				var temp_id = page[i].id;
+				if (temp_id.indexOf("detailed_case_component_") >= 0) {
+					page[i].style.display = "none";
+				}
+			}
+		}
+	}).jstree(
+			{
+				"themes" : {
+					"icons" : false
+				},
+				"ui" : {
+					"select_limit" : 1
+				},
+				"xml_data" : {
+					"data" : "" + "<root>"
 DATA
-
 	updateComponentList($time);
 	my $component_depth = keys %component_list;
 	for ( my $i = 1 ; $i <= $component_depth ; $i++ ) {
@@ -1791,99 +1812,97 @@ DATA
 			my $parent    = pop(@temp);
 			my $component = pop(@temp);
 			if ( $parent eq "root" ) {
-				print 'var level_' 
-				  . $i . '_'
-				  . $component
-				  . ' = new YAHOO.widget.TextNode("'
+				print "+ \"<item id='level-" . $i . ":" . $component . "'>\"\n";
+				print "+ \"<content><name>"
 				  . $component
 				  . getHTMLResult( 'level-' . $i . ':' . $component )
-				  . '", tree.getRoot(), false);';
+				  . "</name></content>\"\n";
+				print "+ \"</item>\"\n";
 			}
 			else {
-				print 'var level_' 
-				  . $i . '_'
+				print "+ \"<item id='level-" 
+				  . $i . ":"
 				  . $component
-				  . ' = new YAHOO.widget.TextNode("'
+				  . "' parent_id='level-"
+				  . ( $i - 1 ) . ":"
+				  . $parent
+				  . "'>\"\n";
+				print "+ \"<content><name>"
 				  . $component
 				  . getHTMLResult( 'level-' . $i . ':' . $component )
-				  . '", level_'
-				  . ( $i - 1 ) . '_'
-				  . $parent
-				  . ', false);';
+				  . "</name></content>\"\n";
+				print "+ \"</item>\"\n";
 			}
-			print "\n";
-			print 'level_' 
-			  . $i . '_'
-			  . $component
-			  . '.title="level-'
-			  . $i . ':'
-			  . $component . '";';
-			print "\n";
 		}
 	}
-
 	print <<DATA;
-		tree.subscribe("labelClick",
-			function(node) {
-				// set result to 'Fail', type to 'All'
-				var select_result = document.getElementById('select_result');
-				var select_type = document.getElementById('select_type');
-				select_result.selectedIndex = 0;
-				select_type.selectedIndex = 0;
-				// filter leaves
-				var title = node.title;
-				var reg = title;
-				
-				document.getElementById("view_area_component_reg").innerHTML = reg;
-				var page = document.getElementsByTagName("*");
-				for ( var i = 0; i < page.length; i++) {
-					var temp_id = page[i].id;
-					if (temp_id.indexOf("case_component_") >= 0) {
-						page[i].style.display = "none";
-						if ((temp_id.indexOf(reg) >= 0)
-								&& (temp_id.indexOf("R:FAIL") >= 0)) {
+							+ "</root>"
+				},
+				"plugins" : [ "themes", "xml_data", "ui" ]
+			});
+});
+</script>
+
+<script language="javascript" type="text/javascript">
+// test type tree
+\$(function() {
+	\$("#tree_area_test_type").bind("click.jstree", function(event) {
+		var eventNodeName = event.target.nodeName;
+		if (eventNodeName == 'A') {
+			// set result to 'Fail', type to 'All'
+			var select_result = document.getElementById('select_result');
+			var select_type = document.getElementById('select_type');
+			select_result.selectedIndex = 0;
+			select_type.selectedIndex = 0;
+			// filter leaves
+			var title = \$(event.target).parents('li').attr('id');
+			var reg = "";
+			var reg_test_type = "";
+			var have_test_type = "";
+			if ((title.indexOf("P:") >= 0) || (title.indexOf("SU:") >= 0) || (title.indexOf("SE:") >= 0)) {
+				have_test_type = "TRUE";
+				var reg_both = title.split("__");
+				reg_test_type = reg_both[0];
+				reg = reg_both[1];
+			} else {
+				have_test_type = "FALSE";
+				reg = title;
+			}
+			document.getElementById("view_area_test_type_reg").innerHTML = title;
+			var page = document.getElementsByTagName("*");
+			for ( var i = 0; i < page.length; i++) {
+				var temp_id = page[i].id;
+				if (temp_id.indexOf("case_test_type_") >= 0) {
+					page[i].style.display = "none";
+					if (have_test_type == "TRUE") {
+						if ((temp_id.indexOf(reg) >= 0) && (temp_id.indexOf(reg_test_type) >= 0) && (temp_id.indexOf("R:FAIL") >= 0)) {
+							page[i].style.display = "";
+						}
+					} else {
+						if ((temp_id.indexOf(reg) >= 0) && (temp_id.indexOf("R:FAIL") >= 0)) {
 							page[i].style.display = "";
 						}
 					}
 				}
-				for ( var i = 0; i < page.length; i++) {
-					var temp_id = page[i].id;
-					if (temp_id.indexOf("detailed_case_component_") >= 0) {
-						page[i].style.display = "none";
-					}
+			}
+			// close detailed case div
+			for ( var i = 0; i < page.length; i++) {
+				var temp_id = page[i].id;
+				if (temp_id.indexOf("detailed_case_test_type_") >= 0) {
+					page[i].style.display = "none";
 				}
-			});
-		// The tree is not created in the DOM until this method is called:
-		tree.draw();
-	}
-
-	// Add a window onload handler to build the tree when the load
-	// event fires.
-	YAHOO.util.Event.addListener(window, "load", treeInit);
-
-})();
-// ]]>
-</script>
-
-<script language="javascript" type="text/javascript">
-// <![CDATA[
-// test type tree
-//global variable to allow console inspection of tree:
-var tree;
-
-// anonymous function wraps the remainder of the logic:
-(function() {
-
-	// function to initialize the tree:
-	function treeInit() {
-		buildTree();
-	}
-
-	// Function creates the tree
-	function buildTree() {
-
-		// instantiate the tree:
-		tree = new YAHOO.widget.TreeView("tree_area_test_type");
+			}
+		}
+	}).jstree(
+			{
+				"themes" : {
+					"icons" : false
+				},
+				"ui" : {
+					"select_limit" : 1
+				},
+				"xml_data" : {
+					"data" : "" + "<root>"
 DATA
 
 	my $haveCompliance = "FALSE";
@@ -1891,17 +1910,16 @@ DATA
 	foreach (@test_type) {
 		my $test_type = $_;
 		if ( $test_type ne "compliance" ) {
-			print 'var test_type_'
-			  . $test_type
-			  . ' = new YAHOO.widget.TextNode("'
+			print "+ \"<item id='TT:" . $test_type . "'>\"\n";
+			print "+ \"<content><name>"
 			  . $test_type
 			  . getHTMLResult( 'TT_' . $test_type )
-			  . '", tree.getRoot(), false);';
-			print "\n";
-			print 'test_type_' . $test_type . '.title="TT:' . $test_type . '"';
-			print "\n";
+			  . "</name></content>\"\n";
+			print "+ \"</item>\"\n";
 			@package_list = updatePackageList($time);
 			my $package_number = 1;
+
+			# add package to the tree
 			foreach (@package_list) {
 				my $package = $_;
 				my $tests_xml_dir =
@@ -1909,61 +1927,70 @@ DATA
 				  . $time . "/" 
 				  . $package
 				  . "_definition.xml";
-				print 'var package_'
-				  . $package_number
-				  . ' = new YAHOO.widget.TextNode("'
+				print "+ \"<item id='TT:"
+				  . $test_type . "__P:"
+				  . $package
+				  . "' parent_id='TT:"
+				  . $test_type
+				  . "'>\"\n";
+				print "+ \"<content><name>" 
 				  . $package
 				  . getHTMLResult( 'TT_' . $test_type . "P_" . $package )
-				  . '", test_type_'
-				  . $test_type
-				  . ', false);';
-				print "\n";
-				print 'package_'
-				  . $package_number
-				  . '.title="TT:'
-				  . $test_type . '__P:'
-				  . $package . '";';
-				print "\n";
-				open FILE, $tests_xml_dir or die $!;
-				my $suite_number = 0;
-				my $set_number   = 1;
+				  . "</name></content>\"\n";
+				print "+ \"</item>\"\n";
+				eval {
 
-				while (<FILE>) {
-					if ( $_ =~ /suite.*name="(.*?)"/ ) {
-						$suite_number++;
-						print 'var suite_'
-						  . $suite_number
-						  . ' = new YAHOO.widget.TextNode("'
-						  . $1
-						  . getHTMLResult( 'TT_' . $test_type . "SU_" . $1 )
-						  . '", package_'
-						  . $package_number
-						  . ', false);';
-						print "\n";
-						print 'suite_'
-						  . $suite_number
-						  . '.title="TT:'
-						  . $test_type . '__SU:'
-						  . $1 . '";';
-						print "\n";
+					# read definition xml, add suite and set to the tree
+					open FILE, $tests_xml_dir or die $!;
+					my $suite_number = 0;
+					my $set_number   = 1;
+					my $suite_name   = "[unknown]";
+					my $set_name     = "[unknown]";
+					while (<FILE>) {
+						if ( $_ =~ /suite.*name="(.*?)"/ ) {
+							$suite_name = $1;
+							$suite_number++;
+							print "+ \"<item id='TT:"
+							  . $test_type . "__SU:"
+							  . $suite_name
+							  . "' parent_id='TT:"
+							  . $test_type . "__P:"
+							  . $package
+							  . "'>\"\n";
+							print "+ \"<content><name>"
+							  . $suite_name
+							  . getHTMLResult(
+								'TT_' . $test_type . "SU_" . $suite_name )
+							  . "</name></content>\"\n";
+							print "+ \"</item>\"\n";
+						}
+						if ( $_ =~ /set.*name="(.*?)"/ ) {
+							$set_name = $1;
+							print "+ \"<item id='TT:"
+							  . $test_type . "__SE:"
+							  . $set_name
+							  . "' parent_id='TT:"
+							  . $test_type . "__SU:"
+							  . $suite_name
+							  . "'>\"\n";
+							print "+ \"<content><name>"
+							  . $set_name
+							  . getHTMLResult(
+								'TT_' . $test_type . "SE_" . $set_name )
+							  . "</name></content>\"\n";
+							print "+ \"</item>\"\n";
+						}
 					}
-					if ( $_ =~ /set.*name="(.*?)"/ ) {
-						print 'var set_'
-						  . $set_number
-						  . ' = new YAHOO.widget.TextNode("'
-						  . $1
-						  . getHTMLResult( 'TT_' . $test_type . "SE_" . $1 )
-						  . '", suite_'
-						  . $suite_number
-						  . ', false);';
-						print "\n";
-						print 'set_'
-						  . $set_number
-						  . '.title="TT:'
-						  . $test_type . '__SE:'
-						  . $1 . '";';
-						print "\n";
-					}
+				};
+				if ($@) {
+					print "+ \"<item parent_id='TT:"
+					  . $test_type . "__P:"
+					  . $package
+					  . "'>\"\n";
+					print "+ \"<content><name>missing file: "
+					  . $tests_xml_dir
+					  . "</name></content>\"\n";
+					print "+ \"</item>\"\n";
 				}
 				$package_number++;
 			}
@@ -1975,12 +2002,11 @@ DATA
 	if ( ( $haveCompliance eq "TRUE" ) && ( $hasTestTypeError eq "FALSE" ) ) {
 
 		# create compliance node
-		print 'var test_type_compliance = new YAHOO.widget.TextNode("compliance'
+		print "+ \"<item id='TT:compliance'>\"\n";
+		print "+ \"<content><name>compliance"
 		  . getHTMLResult('TT_compliance')
-		  . '", tree.getRoot(), false);';
-		print "\n";
-		print 'test_type_compliance.title="TT:compliance";';
-		print "\n";
+		  . "</name></content>\"\n";
+		print "+ \"</item>\"\n";
 		updateSpecList($time);
 		my $spec_depth = keys %spec_list;
 		for ( my $i = 1 ; $i <= $spec_depth ; $i++ ) {
@@ -1993,102 +2019,38 @@ DATA
 				my @temp_inside = split( "::", $_ );
 				my $item        = shift(@temp_inside);
 				my $parent      = shift(@temp_inside);
-
 				if ( $i == 1 ) {
-					print 'var SP_'
+					print "+ \"<item id='SP_"
 					  . sha1_hex($parent)
-					  . ' = new YAHOO.widget.TextNode("'
+					  . "' parent_id='TT:compliance'>\"\n";
+					print "+ \"<content><name>" 
 					  . $item
 					  . getHTMLResult( 'SP_' . sha1_hex($parent) )
-					  . '", test_type_compliance, false);';
-					print "\n";
-					print 'SP_'
-					  . sha1_hex($parent)
-					  . '.title="SP_'
-					  . sha1_hex($parent) . '";';
-					print "\n";
+					  . "</name></content>\"\n";
+					print "+ \"</item>\"\n";
 				}
 				else {
-					print 'var SP_'
+					print "+ \"<item id='SP_"
 					  . sha1_hex( $parent . ':' . $item )
-					  . ' = new YAHOO.widget.TextNode("'
+					  . "' parent_id='SP_"
+					  . sha1_hex($parent)
+					  . "'>\"\n";
+					print "+ \"<content><name>" 
 					  . $item
 					  . getHTMLResult(
 						'SP_' . sha1_hex( $parent . ':' . $item ) )
-					  . '", SP_'
-					  . sha1_hex($parent)
-					  . ', false);';
-					print "\n";
-					print 'SP_'
-					  . sha1_hex( $parent . ':' . $item )
-					  . '.title="SP_'
-					  . sha1_hex( $parent . ':' . $item ) . '";';
-					print "\n";
+					  . "</name></content>\"\n";
+					print "+ \"</item>\"\n";
 				}
 			}
 		}
 	}
-
 	print <<DATA;
-		tree.subscribe("labelClick",
-			function(node) {
-				// set result to 'Fail', type to 'All'
-				var select_result = document.getElementById('select_result');
-				var select_type = document.getElementById('select_type');
-				select_result.selectedIndex = 0;
-				select_type.selectedIndex = 0;
-				// filter leaves
-				var title = node.title;
-				var reg = "";
-				var reg_test_type = "";
-				var have_test_type = "";
-				if ((title.indexOf("P:") >= 0) || (title.indexOf("SU:") >= 0)
-						|| (title.indexOf("SE:") >= 0)) {
-					have_test_type = "TRUE";
-					var reg_both = node.title.split("__");
-					reg_test_type = reg_both[0];
-					reg = reg_both[1];
-				} else {
-					have_test_type = "FALSE";
-					reg = title;
-				}
-				document.getElementById("view_area_test_type_reg").innerHTML = title;
-				var page = document.getElementsByTagName("*");
-				for ( var i = 0; i < page.length; i++) {
-					var temp_id = page[i].id;
-					if (temp_id.indexOf("case_test_type_") >= 0) {
-						page[i].style.display = "none";
-						if (have_test_type == "TRUE") {
-							if ((temp_id.indexOf(reg) >= 0)
-									&& (temp_id.indexOf(reg_test_type) >= 0)
-									&& (temp_id.indexOf("R:FAIL") >= 0)) {
-								page[i].style.display = "";
-							}
-						} else {
-							if ((temp_id.indexOf(reg) >= 0)
-									&& (temp_id.indexOf("R:FAIL") >= 0)) {
-								page[i].style.display = "";
-							}
-						}
-					}
-				}
-				for ( var i = 0; i < page.length; i++) {
-					var temp_id = page[i].id;
-					if (temp_id.indexOf("detailed_case_test_type_") >= 0) {
-						page[i].style.display = "none";
-					}
-				}
+							+ "</root>"
+				},
+				"plugins" : [ "themes", "xml_data", "ui" ]
 			});
-		// The tree is not created in the DOM until this method is called:
-		tree.draw();
-	}
-
-	// Add a window onload handler to build the tree when the load
-	// event fires.
-	YAHOO.util.Event.addListener(window, "load", treeInit);
-
-})();
-// ]]>
+});
 </script>
 <script language="javascript" type="text/javascript">
 // <![CDATA[

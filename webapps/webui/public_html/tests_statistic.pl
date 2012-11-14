@@ -88,6 +88,8 @@ my $test_definition_dir           = $definition_dir;
 
 my %caseInfo;
 
+my $testkit_lite_error_message = check_testkit_sdb();
+
 syncDefinition();
 
 ScanPackages();
@@ -111,6 +113,8 @@ print "HTTP/1.0 200 OK" . CRLF;
 print "Content-type: text/html" . CRLF . CRLF;
 
 print_header( "$MTK_BRANCH Manager Main Page", "statistic" );
+
+print show_error_dlg($testkit_lite_error_message);
 
 print <<DATA;
 <div id="ajax_loading" style="display:none"></div>
@@ -328,7 +332,7 @@ for ( my $count = 0 ; $count < $package_webapi_number ; $count++ ) {
               	<tr>
               		<td width="21%" class="static_list_packagename" ><img src="images/statistic_background_left.png"></td>
                 	<td width="40%" align="left" valign="top" class="static_list_packagename" >
-                  	<div id="tree_area_test_type_$package_name_webapi[$count]" style="display:"></div></td>
+                  	<div id="tree_area_test_type_$package_name_webapi[$count]" style="background-color:transparent;display:"></div></td>
                   	<td width="12%" align="right" valign="bottom" class="static_list_packagename" ><img src="images/statistic_background_right.png"></td>
                  </tr>
                  </table></td>
@@ -336,22 +340,19 @@ for ( my $count = 0 ; $count < $package_webapi_number ; $count++ ) {
 <script language="javascript" type="text/javascript">
 // <![CDATA[
 // test type tree
-//global variable to allow console inspection of tree:
-var tree;
-
-// anonymous function wraps the remainder of the logic:
-(function() {
-
-	// function to initialize the tree:
-	function treeInit() {
-		buildTree();
-	}
-
-	// Function creates the tree
-	function buildTree() {
-
-		// instantiate the tree:
-		tree = new YAHOO.widget.TreeView("tree_area_test_type_$package_name_webapi[$count]");
+\$(function() {
+	\$("#tree_area_test_type_$package_name_webapi[$count]").bind("click.jstree", function(event) {
+		// filter leaves
+	}).jstree(
+			{
+				"themes" : {
+					"icons" : false
+				},
+				"ui" : {
+					"select_limit" : 1
+				},
+				"xml_data" : {
+					"data" : "" + "<root>"
 DATA
 	updateStaticSpecList( $package_name_webapi[$count] );
 	my $spec_depth = keys %spec_list;
@@ -367,22 +368,15 @@ DATA
 			my $parent      = shift(@temp_inside);
 
 			if ( $i == 1 ) {
-				print 'var SP_'
-				  . sha1_hex($parent)
-				  . ' = new YAHOO.widget.TextNode("'
+				print "+ \"<item id='SP_" . sha1_hex($parent) . "'>\"\n";
+				print "+ \"<content><name>" 
 				  . $item
 				  . '<span id=\'SP_'
 				  . $count
 				  . sha1_hex($parent)
-				  . '\' class=\'static_tree_count\'>'
-				  . '</span>'
-				  . '", tree.getRoot(), false);';
-				print "\n";
-				print 'SP_'
-				  . sha1_hex($parent)
-				  . '.title="SP_'
-				  . sha1_hex($parent) . '";';
-				print "\n";
+				  . '\' class=\'static_tree_count\'></span>'
+				  . "</name></content>\"\n";
+				print "+ \"</item>\"\n";
 				push( @package_webapi_item, $item );
 				push( @package_webapi_item_id,
 					'SP_' . $count . sha1_hex($parent) );
@@ -390,24 +384,19 @@ DATA
 				$package_webapi_item_num_total++;
 			}
 			else {
-				print 'var SP_'
+				print "+ \"<item id='SP_"
 				  . sha1_hex( $parent . ':' . $item )
-				  . ' = new YAHOO.widget.TextNode("'
+				  . "' parent_id='SP_"
+				  . sha1_hex($parent)
+				  . "'>\"\n";
+				print "+ \"<content><name>" 
 				  . $item
 				  . '<span id=\'SP_'
 				  . $count
 				  . sha1_hex( $parent . ':' . $item )
-				  . '\' class=\'static_tree_count\'>'
-				  . '</span>'
-				  . '", SP_'
-				  . sha1_hex($parent)
-				  . ', false);';
-				print "\n";
-				print 'SP_'
-				  . sha1_hex( $parent . ':' . $item )
-				  . '.title="SP_'
-				  . sha1_hex( $parent . ':' . $item ) . '";';
-				print "\n";
+				  . '\' class=\'static_tree_count\'></span>'
+				  . "</name></content>\"\n";
+				print "+ \"</item>\"\n";
 				push( @package_webapi_item, $parent . ":" . $item );
 				push( @package_webapi_item_id,
 					'SP_' . $count . sha1_hex( $parent . ':' . $item ) );
@@ -421,16 +410,11 @@ DATA
 		}
 	}
 	print <<DATA;
-		tree.draw();
-		tree.expandAll();
-		tree.collapseAll();
-	}
-
-	// Add a window onload handler to build the tree when the load
-	// event fires.
-	YAHOO.util.Event.addListener(window, "load", treeInit);
-
-})();
+	+ "</root>"
+				},
+				"plugins" : [ "themes", "xml_data", "ui" ]
+			});
+	});
 // ]]>
 </script>
 DATA
@@ -1556,7 +1540,7 @@ sub AnalysisTestsXML {
 					}
 				}
 			}
-			if ( $_ =~ /<suite name="(.*?)"/ ) {
+			if ( $_ =~ /<suite.*name="(.*?)"/ ) {
 				$temp = $1;
 				if ( $test_suite_number_temp == 0 ) {
 					push( @test_suite, $temp );

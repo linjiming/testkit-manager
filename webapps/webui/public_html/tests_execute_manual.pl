@@ -126,16 +126,16 @@ DATA
                             </tr>
                             <tr>
                               <td height="30" class="report_list_outside_right">&nbsp;
-                                <input type="radio" name="radiobutton" onclick="javascript:passAll();" title="Set all cases' result to PASS">
+                                <input id="pass_all_button" type="radio" name="radiobutton" onclick="javascript:passAll();" title="Set all cases' result to PASS">
                                 P</td>
                               <td class="report_list_one_row">&nbsp;
-                                <input type="radio" name="radiobutton" onclick="javascript:failAll();" title="Set all cases' result to FAIL">
+                                <input id="fail_all_button" type="radio" name="radiobutton" onclick="javascript:failAll();" title="Set all cases' result to FAIL">
                                 F</td>
                               <td class="report_list_one_row">&nbsp;
-                                <input type="radio" name="radiobutton" onclick="javascript:blockAll();" title="Set all cases' result to BLOCK">
+                                <input id="block_all_button" type="radio" name="radiobutton" onclick="javascript:blockAll();" title="Set all cases' result to BLOCK">
                                 B</td>
                               <td class="report_list_one_row">&nbsp;
-                                <input type="radio" name="radiobutton" onclick="javascript:notrunAll();" title="Set all cases' result to N/A">
+                                <input id="not_run_all_button" type="radio" name="radiobutton" onclick="javascript:notrunAll();" title="Set all cases' result to N/A">
                                 N</td>
                             </tr>
                           </table></td>
@@ -511,6 +511,9 @@ function filter(reg) {
 			if (temp_id == bg_reg) {
 				page[i].style.backgroundColor = "#BAE9FD";
 			}
+		}
+		if (temp_id.indexOf("_all_button") >= 0) {
+			page[i].checked = false;
 		}
 	}
 }

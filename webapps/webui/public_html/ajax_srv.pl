@@ -622,6 +622,7 @@ sub construct_progress_data($) {
 
 sub getUpdateInfoFromNetwork {
 	my @package_name = @_;
+	my @package_name_bak = @package_name;
 	my @rpm          = ();
 	my $repo         = get_repo();
 	my @repo_all     = split( "::", $repo );
@@ -649,7 +650,8 @@ sub getUpdateInfoFromNetwork {
 		foreach (@package_name) {
 			my $temp_rpm_count   = 0;
 			my $package_name_tmp = $_;
-			my $cmd = "sdb shell 'rpm -qa | grep " . $package_name_tmp . "'";
+			my $cmd =
+			  sdb_cmd( "shell 'rpm -qa | grep " . $package_name_tmp . "'" );
 			my $package_version_installed = `$cmd`;
 			my $version_installed         = "none";
 			if ( $package_version_installed =~ /-(\d\.\d\.\d-\d)/ ) {
@@ -680,7 +682,7 @@ sub getUpdateInfoFromNetwork {
 		}
 
 		$temp_package_count = 0;
-		foreach (@package_name) {
+		foreach (@package_name_bak) {
 			my $package_name_tmp = $_;
 			my $temp_rpm_count   = 0;
 			foreach (@rpm) {
@@ -912,7 +914,7 @@ elsif ( $_GET{'action'} eq 'run_tests' ) {
 
 		if ( $status->{'IS_RUNNING'} ) {
 			$error_text =
-"A test is already running.<br />You cannot run another instance before it is finished.<br />Start watching the current run?";
+"A test is already running.<br />You cannot run another instance before it is finished.<br />Start watching the current run...";
 		}
 		else {
 			my $profile_path =
@@ -1280,12 +1282,12 @@ elsif ( $_GET{'action'} eq 'install_package' ) {
 
 #update package
 elsif ( $_GET{'action'} eq 'update_package' ) {
-	my $package_name  = $_GET{'package_name'};
-	my $count         = $_GET{'package_count'};
-	my $cmd           = "sdb shell 'rpm -qa | grep " . $package_name . "'";
-	my $version_old   = `$cmd`;
-	my $version       = $version_old;
-	my $flag          = $_GET{'flag'};
+	my $package_name = $_GET{'package_name'};
+	my $count        = $_GET{'package_count'};
+	my $cmd         = sdb_cmd( "shell 'rpm -qa | grep " . $package_name . "'" );
+	my $version_old = `$cmd`;
+	my $version     = $version_old;
+	my $flag        = $_GET{'flag'};
 	my $check_install = install_package($package_name);
 	if ( $version =~ /-(\d\.\d\.\d-\d)/ ) {
 		$version = $1;
@@ -1299,7 +1301,7 @@ elsif ( $_GET{'action'} eq 'update_package' ) {
 
 			# remove old version's widget
 			my $cmd =
-			  "sdb shell 'wrt-launcher -l | grep " . $package_name . "'";
+			  sdb_cmd( "shell 'wrt-launcher -l | grep " . $package_name . "'" );
 			my @package_items = `$cmd`;
 			pop @package_items;
 			foreach (@package_items) {
@@ -1309,7 +1311,9 @@ elsif ( $_GET{'action'} eq 'update_package' ) {
 				}
 				if ( $package_id ne "none" ) {
 					system(
-						"sdb shell wrt-installer -u $package_id 2>&1 >/dev/null"
+						sdb_cmd(
+							"shell wrt-installer -u $package_id 2>&1 >/dev/null"
+						)
 					);
 				}
 			}
@@ -1529,7 +1533,7 @@ elsif ( $_GET{'action'} eq "check_package_isExist" ) {
 		}
 	}
 	for ( my $i = 0 ; $i < @packages_need ; $i++ ) {
-		my $cmd  = "sdb shell ls /usr/share/$packages_need[$i]/tests.xml";
+		my $cmd  = sdb_cmd("shell ls /usr/share/$packages_need[$i]/tests.xml");
 		my $temp = `$cmd`;
 		if ( $temp !~ /No such file or directory/ ) {
 			$packages_isExist_flag[$i] = "1";
@@ -1792,6 +1796,38 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 	$data .= "<save_manual_time>$time</save_manual_time>\n";
 	$data .= "<save_manual_refresh>1</save_manual_refresh>\n";
 }
+elsif ( $_GET{'action'} eq 'set_device' ) {
+	my $serial_new = $_GET{'serial'};
+	my $serial_old = get_serial();
+	if ( $serial_old eq "Error" ) {
+		$data .= "<set_device>FALSE</set_device>\n";
+		$data .=
+"<set_device_error>Can't find 'sdb_serial =' in the configuration file.</set_device_error>\n";
+	}
+	else {
+		my $status = set_serial($serial_new);
+		{
+			if ( $status eq "Error" ) {
+				$data .= "<set_device>FALSE</set_device>\n";
+				$data .=
+"<set_device_error>Can't find 'sdb_serial =' in the configuration file.</set_device_error>\n";
+			}
+			else {
+				my $serial_temp = get_serial();
+				if ( $serial_temp eq $serial_new ) {
+					$data .= "<set_device>TRUE</set_device>\n";
+					$data .= "<sdb_serial>$serial_new</sdb_serial>\n";
+				}
+				else {
+					$data .= "<set_device>FALSE</set_device>\n";
+					$data .=
+"<set_device_error>'sdb_serial' in the configuration file is $serial_temp, not equal to $serial_new</set_device_error>\n";
+				}
+			}
+		}
+	}
+}
+
 elsif ( $_GET{'action'} eq 'read_result_xml' ) {
 	my $result_path = $_GET{'file'};
 	use FileHandle;
@@ -1817,12 +1853,14 @@ elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests
 				if ( $status->{'IS_RUNNING'} ) {
 					if ( kill( 'TERM', $status->{'PID'} ) ) {
 						while (1) {
-							my $kill_result = `sdb shell killall testkit-lite`;
+							my $kill_result_tmp =
+							  sdb_cmd("shell killall testkit-lite");
+							my $kill_result = `$kill_result_tmp`;
 							if ( $kill_result =~ /no process killed/ ) {
 								last;
 							}
 						}
-						my $cmd           = "sdb shell 'wrt-launcher -l'";
+						my $cmd           = sdb_cmd("shell 'wrt-launcher -l'");
 						my @package_items = `$cmd`;
 						foreach (@package_items) {
 							my $package_id = "none";
@@ -1830,11 +1868,12 @@ elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests
 								$package_id = $2;
 							}
 							if ( $package_id ne "none" ) {
-								my $cmd =
-"sdb shell 'ps aux | grep /bin/$package_id | sed -n '1,1p''";
+								my $cmd = sdb_cmd(
+"shell 'ps aux | grep /bin/$package_id | sed -n '1,1p''"
+								);
 								my $pid = `$cmd`;
 								if ( $pid =~ /app\s*(\d*)\s*/ ) {
-									system("sdb shell kill $1");
+									system( sdb_cmd("shell kill $1") );
 								}
 							}
 						}

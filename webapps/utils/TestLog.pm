@@ -39,9 +39,10 @@ our @EXPORT = qw(
 );
 
 # where is the result home folder
-my $result_dir_manager = $FindBin::Bin . "/../../results/";
-my $definition_dir     = $FindBin::Bin . "/../../definition/";
-my $result_dir_lite    = $FindBin::Bin . "/../../lite";
+my $result_dir_manager  = $FindBin::Bin . "/../../results/";
+my $test_definition_dir = $FindBin::Bin . "/../../definition/";
+my $opt_dir             = $FindBin::Bin . "/../../package/";
+my $result_dir_lite     = $FindBin::Bin . "/../../lite";
 
 # save time -> package_name -> package_dir
 my @time_package_dir = ();
@@ -166,7 +167,7 @@ sub writeResultInfo_wanted {
 		my $package_name = $1;
 
 		my $test_definition_xml =
-		  $definition_dir . $package_name . "/tests.xml";
+		  $test_definition_dir . $package_name . "/tests.xml";
 		system( 'cp '
 			  . $test_definition_xml . ' '
 			  . $result_dir_manager
@@ -397,7 +398,7 @@ sub rewriteXmlFile {
 	my $content      = "none";
 	my $package_name = "none";
 	while (<FILE>) {
-		if ( $_ =~ /<suite name="(.*?)">/ ) {
+		if ( $_ =~ /<suite.*name="(.*?)">/ ) {
 			$package_name = $1;
 			$content      = $_;
 		}
@@ -468,20 +469,67 @@ sub mkdirWriteXmlResult {
 	close $file;
 }
 
+# should alway copy from Templates.pm
 sub syncDefinition {
-	system( "rm -rf $definition_dir" . "*" );
-	my $cmd_definition = "sdb shell ls /usr/share/*/tests.xml";
+
+	# sync xml definition files
+	system( "rm -rf $test_definition_dir" . "*" );
+	system( "rm -rf $opt_dir" . "*" );
+	my $cmd_definition = sdb_cmd("shell 'ls /usr/share/*/tests.xml'");
 	my @definitions    = `$cmd_definition`;
-	foreach (@definitions) {
-		my $definition = "";
-		if ( $_ =~ /(\/usr\/share\/.*\/tests.xml)/ ) {
-			$definition = $1;
+	if (   ( @definitions >= 1 )
+		&& ( $definitions[0] !~ /No such file or directory/ ) )
+	{
+		foreach (@definitions) {
+			my $definition = "";
+			if ( $_ =~ /(\/usr\/share\/.*\/tests.xml)/ ) {
+				$definition = $1;
+			}
+			$definition =~ s/\s*$//;
+			if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
+				my $package_name = $1;
+				system("mkdir $test_definition_dir$package_name");
+				system(
+					sdb_cmd(
+"pull $definition $test_definition_dir$package_name &>/dev/null"
+					)
+				);
+				system("mkdir $opt_dir$package_name");
+				system("echo 'No readme info' > $opt_dir$package_name/README");
+				system(
+					"echo 'No license info' > $opt_dir$package_name/LICENSE");
+			}
 		}
-		$definition =~ s/\s*$//;
-		if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
-			my $package_name = $1;
-			system("mkdir $definition_dir$package_name");
-			system("sdb pull $definition $definition_dir$package_name");
+	}
+
+	# sync readme files and license files
+	my $cmd_readme = sdb_cmd("shell 'ls /opt/*/README'");
+	my $readme     = `$cmd_readme`;
+	my @readmes    = $readme =~ /(\/opt\/.*?\/README)/g;
+	if ( ( @readmes >= 1 ) && ( $readmes[0] !~ /No such file or directory/ ) ) {
+		foreach (@readmes) {
+			my $readme = "";
+			if ( $_ =~ /(\/opt\/.*\/README)/ ) {
+				$readme = $1;
+			}
+			$readme =~ s/^\s//;
+			$readme =~ s/\s$//;
+			if ( $readme =~ /opt\/(.*)\/README/ ) {
+				my $package_name = $1;
+				system(
+					sdb_cmd("pull $readme $opt_dir$package_name &>/dev/null") );
+				my $license_cmd_tmp =
+				  sdb_cmd("shell 'ls /opt/$package_name/LICENSE'");
+				my $license_cmd = `$license_cmd_tmp`;
+				if ( $license_cmd !~ /No such file or directory/ ) {
+					my $license = $readme;
+					$license =~ s/README/LICENSE/;
+					system(
+						sdb_cmd(
+							"pull $license $opt_dir$package_name &>/dev/null")
+					);
+				}
+			}
 		}
 	}
 }

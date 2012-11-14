@@ -69,13 +69,31 @@
 }
 
 .report_list_inside {
+	height: 30px;
 	border-top: 0px;
 	border-bottom: 1px solid #E2E3E3;
 	border-left: 1px solid #E2E3E3;
 	border-right: 1px solid #E2E3E3;
 }
 
+.report_list_inside_two {
+	height: 61px;
+	border-top: 0px;
+	border-bottom: 1px solid #E2E3E3;
+	border-left: 1px solid #E2E3E3;
+	border-right: 1px solid #E2E3E3;
+}
+
+.report_list_inside_two_no_border {
+	height: 61px;
+	border-top: 0px;
+	border-bottom: 1px solid #ffffff;;
+	border-left: 1px solid #ffffff;;
+	border-right: 1px solid #ffffff;;
+}
+
 .report_list_outside_left {
+	height: 30px;
 	border-top: 0px;
 	border-bottom: 1px solid #E2E3E3;
 	border-left: 0px;
@@ -97,6 +115,15 @@
 }
 
 .report_list_outside_right {
+	height: 30px;
+	border-top: 0px;
+	border-bottom: 1px solid #E2E3E3;
+	border-left: 1px solid #E2E3E3;
+	border-right: 0px;
+}
+
+.report_list_outside_right_two {
+	height: 61px;
 	border-top: 0px;
 	border-bottom: 1px solid #E2E3E3;
 	border-left: 1px solid #E2E3E3;

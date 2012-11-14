@@ -36,19 +36,24 @@ my $need_update_progress_bar    = "var need_update_progress_bar = true;";
 my $selected_profile            = "none";
 my $have_progress_bar           = "TRUE";
 my %profile_list;    #parse and save all information from profile files
-my @progress_bar_max_value     = ();     #save all auto progress bar's max value
-my @package_list               = ();     #save all the packages
-my @complete_package_list      = ();     #save all complete packages
-my $have_testkit_lite          = "FALSE";
-my $have_correct_testkit_lite  = "FALSE";
-my $testkit_lite_status        = "FALSE";
-my $testkit_lite_error_message = "none";
+my @progress_bar_max_value    = ();      #save all auto progress bar's max value
+my @package_list              = ();      #save all the packages
+my @complete_package_list     = ();      #save all complete packages
+my $have_testkit_lite         = "FALSE";
+my $have_correct_testkit_lite = "FALSE";
+my $testkit_lite_status       = "FALSE";
+my $have_correct_sdb_serial   = "FALSE";
+my $testkit_lite_error_message = check_testkit_sdb();
 
-check_testkit_lite();
+if ( $testkit_lite_error_message eq "" ) {
+	$have_correct_sdb_serial = "TRUE";
+	check_testkit_lite();
+}
 
 if ( $_GET{'profile'} ) {
 	if (    ( $have_testkit_lite eq "TRUE" )
-		and ( $have_correct_testkit_lite eq "TRUE" ) )
+		and ( $have_correct_testkit_lite eq "TRUE" )
+		and ( $have_correct_sdb_serial   eq "TRUE" ) )
 	{
 		my $status = read_status();
 		if ( $status->{'IS_RUNNING'} ) {
@@ -77,7 +82,8 @@ if ( $_GET{'profile'} ) {
 }
 else {
 	if (    ( $have_testkit_lite eq "TRUE" )
-		and ( $have_correct_testkit_lite eq "TRUE" ) )
+		and ( $have_correct_testkit_lite eq "TRUE" )
+		and ( $have_correct_sdb_serial   eq "TRUE" ) )
 	{
 		my $status = read_status();
 		if ( $status->{'IS_RUNNING'} ) {
@@ -108,7 +114,8 @@ print "Content-type: text/html" . CRLF . CRLF;
 print_header( "$MTK_BRANCH Manager Main Page", "execute" );
 
 if (   ( $have_testkit_lite eq "FALSE" )
-	or ( $have_correct_testkit_lite eq "FALSE" ) )
+	or ( $have_correct_testkit_lite eq "FALSE" )
+	or ( $have_correct_sdb_serial   eq "FALSE" ) )
 {
 	print show_error_dlg($testkit_lite_error_message);
 }
@@ -217,7 +224,8 @@ if ($found) {
             <select name="test_profile" id="test_profile" style="width: 11em"; onchange="javascript:filter_progress_bar();">$profiles_list</select></td>
 DATA
 	if (    ( $have_testkit_lite eq "TRUE" )
-		and ( $have_correct_testkit_lite eq "TRUE" ) )
+		and ( $have_correct_testkit_lite eq "TRUE" )
+		and ( $have_correct_sdb_serial   eq "TRUE" ) )
 	{
 		print <<DATA;
             <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" class="top_button" onclick="javascript:startTests('');"></td>
@@ -460,33 +468,27 @@ DATA
 print_footer("");
 
 sub check_testkit_lite {
-	my @device = `sdb devices`;
-	if ( $device[1] =~ /device/ ) {
-		my $cmd          = "sdb shell 'rpm -qa | grep testkit-lite'";
-		my $testkit_lite = `$cmd`;
-		if ( $testkit_lite =~ /testkit-lite-(.*)-\d\.noarch/ ) {
-			$have_testkit_lite = "TRUE";
-			my $version = $1;
-			if ( $version eq $MTK_VERSION ) {
+	my $cmd          = sdb_cmd("shell 'rpm -qa | grep testkit-lite'");
+	my $testkit_lite = `$cmd`;
+	if ( $testkit_lite =~ /testkit-lite-(.*)-\d\.noarch/ ) {
+		$have_testkit_lite = "TRUE";
+		my $version = $1;
+		if ( $version eq $MTK_VERSION ) {
 
-				# everthing is fine here
-				$have_correct_testkit_lite = "TRUE";
-			}
-			else {
-
-				# have testkit-lite but version is not correct
-				$have_correct_testkit_lite = "FALSE";
-				install_testkit_lite();
-			}
+			# everthing is fine here
+			$have_correct_testkit_lite = "TRUE";
 		}
 		else {
 
-			# don't have testkit-lite
+			# have testkit-lite but version is not correct
+			$have_correct_testkit_lite = "FALSE";
 			install_testkit_lite();
 		}
 	}
 	else {
-		$testkit_lite_error_message = "Can't find a connected device";
+
+		# don't have testkit-lite
+		install_testkit_lite();
 	}
 }
 
@@ -544,11 +546,13 @@ sub install_testkit_lite {
 		{
 			my $main_version = $1;
 			my $sub_version  = $2;
-			if (   ( $have_testkit_lite eq "TRUE" )
-				&& ( $have_correct_testkit_lite eq "FALSE" ) )
+			if (    ( $have_testkit_lite eq "TRUE" )
+				and ( $have_correct_testkit_lite eq "FALSE" ) )
 			{
 				system(
-					"sdb shell 'rpm -e testkit-lite &>/dev/null' &>/dev/null");
+					sdb_cmd(
+						"shell 'rpm -e testkit-lite &>/dev/null' &>/dev/null")
+				);
 			}
 			if (   ( $have_testkit_lite eq "FALSE" )
 				or ( $have_correct_testkit_lite eq "FALSE" ) )
@@ -558,20 +562,29 @@ sub install_testkit_lite {
 						  . "testkit-lite-$main_version-$sub_version.noarch.rpm -P /tmp -q -N"
 					);
 					system(
-"sdb push /tmp/testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
+						sdb_cmd(
+"push /tmp/testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
+						)
 					);
 				}
 				if ( $repo_type =~ /local/ ) {
-					system( "sdb push $repo_url"
-						  . "testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
+					system(
+						sdb_cmd(
+							    "push $repo_url"
+							  . "testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
+						)
 					);
 				}
 				sleep 3;
-				system( "sdb shell 'rpm -ivh /tmp/"
-					  . "testkit-lite-$main_version-$sub_version.noarch.rpm --nodeps"
-					  . " &>/dev/null' &>/dev/null" );
+				system(
+					sdb_cmd(
+						    "shell 'rpm -ivh /tmp/"
+						  . "testkit-lite-$main_version-$sub_version.noarch.rpm --nodeps"
+						  . " &>/dev/null' &>/dev/null"
+					)
+				);
 				sleep 3;
-				my $cmd          = "sdb shell 'rpm -qa | grep testkit-lite'";
+				my $cmd = sdb_cmd("shell 'rpm -qa | grep testkit-lite'");
 				my $testkit_lite = `$cmd`;
 				if ( $testkit_lite =~ /testkit-lite-(.*)-\d\.noarch/ ) {
 					$have_testkit_lite = "TRUE";

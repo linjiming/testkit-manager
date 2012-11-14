@@ -2,7 +2,7 @@
 
 Summary: Testkit Manager
 Name: testkit-manager
-Version: 2.2.6
+Version: 2.2.7
 Release: 1
 License: GPLv2
 Group: System/Libraries

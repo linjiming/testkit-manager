@@ -131,3 +131,12 @@ testkit-manager 2.2.6:
   - add support to install package with a lower version
   - update plan page's UI to display the package version in the repo
   - add clear button in the plan page to erase all the filters
+
+testkit-manager 2.2.7:
+===================
+* Thu Nov 8 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.7-1
+  - filter set and component alien with the selected suite
+  - update case detailed view's font size and table layout
+  - add support to operate more than one connected devices
+  - change tree widget from yahooui to jstree
+  - update text for all action confirmation dialogs

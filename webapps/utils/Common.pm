@@ -48,7 +48,7 @@ our @EXPORT = qw(
 	@all_archs
 	$last_cmd_output &last_line
 	&complain &debug_inform &fail &inform &warning &capture &cmd
-	&sleep_ms 
+	&sleep_ms &check_sdb_device &sdb_cmd &get_serial &set_serial
 );
 
 push @EXPORT, @Error::EXPORT;
@@ -73,6 +73,83 @@ sub location  {
 our $TESTKIT_ROOT = dirname(location())."/../../"; 
 
 our $DEFAULT_TEMP_DIR = $TESTKIT_ROOT."/tmp"; 
+
+# ---------------------------------------------------------------------
+
+my $configuration_file = $TESTKIT_ROOT . "/CONF";
+
+sub check_sdb_device {
+	my @device        = `sdb devices`;
+	my @sdb_serial = ();
+	foreach (@device) {
+		my $device = $_;
+		if ( $device =~ /(.*?)\sdevice$/ ) {
+			my $sdb_serial = $1;
+			push( @sdb_serial, $sdb_serial );
+		}
+	}
+	return @sdb_serial;
+}
+
+sub sdb_cmd {
+	my ($cmd_content) = @_;
+	my $sdb_serial    = get_serial();
+	my $whole_cmd     = "";
+	if ( ( $sdb_serial eq "none" ) or ( $sdb_serial eq "Error" ) ) {
+		$whole_cmd = "sdb " . $cmd_content;
+	}
+	else {
+		$whole_cmd = "sdb -s " . $sdb_serial . " " . $cmd_content;
+	}
+	return $whole_cmd;
+}
+
+sub get_serial {
+	my $sdb_serial = "none";
+	open FILE, $configuration_file or die $!;
+	while (<FILE>) {
+		if ( $_ =~ /^sdb_serial/ ) {
+			$sdb_serial = $_;
+			last;
+		}
+	}
+	close(FILE);
+	if ( $sdb_serial eq "none" ) {
+		return "Error";
+	}
+	else {
+		my @serial = split( "=", $sdb_serial );
+		my $serial_number = $serial[1];
+		$serial_number =~ s/^\s*//;
+		$serial_number =~ s/\s*$//;
+		if ( $serial_number eq "" ) {
+			$serial_number = "none";
+		}
+		return $serial_number;
+	}
+}
+
+sub set_serial {
+	my ($serial) = @_;
+	my $sdb_serial = "none";
+	open FILE, $configuration_file or die $!;
+	while (<FILE>) {
+		if ( $_ =~ /^sdb_serial/ ) {
+			$sdb_serial = $_;
+			last;
+		}
+	}
+	close(FILE);
+	if ( $sdb_serial eq "none" ) {
+		return "Error";
+	}
+	else {
+		system(
+			"sed -i 's/$sdb_serial/sdb_serial = $serial/' $configuration_file"
+		);
+		return "OK";
+	}
+}
 
 # ---------------------------------------------------------------------
 

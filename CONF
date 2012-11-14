@@ -10,3 +10,10 @@
 #a-z, A-Z, 0-9, '-', '_', ':', '/', '.', ' '
 
 repo_url = /home/package/
+
+#sdb device serial number
+#if more than one sdb device is connected to the host,
+#only the serial number of the one which is selected as the active device,
+#will be set here.
+
+sdb_serial = 

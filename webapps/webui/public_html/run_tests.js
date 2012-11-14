@@ -93,6 +93,9 @@ function startTestsPrepareGUI(clean_progress_bar) {
 				document.getElementById(temp_id).style.color = "";
 				document.getElementById(text_id).style.color = "";
 				document.getElementById(bar_id).innerHTML = "";
+				global_package_name = 'none';
+				global_case_number = 0;
+				global_case_number_all = 0;
 			}
 		}
 	}
@@ -564,7 +567,7 @@ function ajaxProcessResult(responseXML) {
 			}
 		} else if ((tid != "save") && (tid.indexOf("save") == 0)) {
 			if (confirm("Test plan " + tid.slice(4)
-					+ " exists. Are you sure to overwirte it?")) {
+					+ " exists.\nAre you sure to overwirte it?")) {
 				var save_test_plan_select = document
 						.getElementById("save_test_plan_select");
 				ajax_call_get('action=save_profile&save_profile_name='
@@ -893,6 +896,9 @@ function ajaxProcessResult(responseXML) {
 						}
 						global_case_number_all = global_case_number_all
 								+ manual_case_number;
+						if (global_case_number_all >= max_value_all) {
+							global_case_number_all = max_value_all;
+						}
 						if (max_value_all > 0) {
 							document.getElementById('text_progress_'
 									+ global_profile_name + '_all').innerHTML = global_case_number_all
@@ -1120,6 +1126,21 @@ function ajaxProcessResult(responseXML) {
 				}
 			}
 		}
+		if (responseXML.getElementsByTagName('set_device').length > 0) {
+			var status = responseXML.getElementsByTagName('set_device')[0].childNodes[0].nodeValue;
+			if (status == 'TRUE') {
+				var value = responseXML.getElementsByTagName('sdb_serial')[0].childNodes[0].nodeValue;
+				alert("Device serial number is set to " + value
+						+ ",\nthe current page will be refreshed...");
+				window.top.location.reload();
+			} else {
+				var error_message = responseXML
+						.getElementsByTagName('set_device_error')[0].childNodes[0].nodeValue;
+				alert("Fail to set device serial number, error message:\n"
+						+ error_message);
+				window.top.location.reload();
+			}
+		}
 		if (responseXML.getElementsByTagName('tid').length > 0) {
 			tid = responseXML.getElementsByTagName('tid')[0].childNodes[0].nodeValue;
 		}
@@ -1197,7 +1218,8 @@ function installPackage(count) {
 	var uninstall_package_count_max = document
 			.getElementById('uninstall_package_count_max').value;
 
-	if (confirm('Are you sure to install ' + pkg_name.name + "?")) {
+	if (confirm('Are you sure to install package:\n' + pkg_name.name
+			+ "?\nAny existing version will be deleted.")) {
 		document.getElementById(install_pkg_pic).src = "images/ajax_progress.gif";
 		document.getElementById(install_pkg_pic).onclick = "";
 		document.getElementById(install_pkg_pic).style.cursor = "default";
@@ -1273,7 +1295,7 @@ function updatePackage(count) {
 	var uninstall_package_count_max = document
 			.getElementById('uninstall_package_count_max').value;
 
-	if (confirm('Are you sure to upgrade ' + package_name + "?")) {
+	if (confirm('Are you sure to upgrade package:\n' + package_name + "?")) {
 		document.getElementById(update_pkg_pic).src = "images/ajax_progress.gif";
 		document.getElementById(update_pkg_pic).style.cursor = "default";
 		document.getElementById(update_pkg_pic).onclick = "";
@@ -1388,7 +1410,7 @@ function save_profile(type) {
 		var str = save_test_plan.value;
 		var result = reg.exec(str);
 		if (!result) {
-			alert('Test plan name should start with a letter and follow by letters, numbers or "_",\nand maximum length is 20 characters');
+			alert('Test plan name should start with a letter and follow by letters, numbers or "_", and maximum length is 20 characters');
 			return false;
 		}
 	} else {
@@ -1553,42 +1575,46 @@ function updateTestPlanSelect() {
 }
 
 function saveManual() {
-	var arr = new Array();
-	var transfer = "";
-	var time = document.getElementById('time').innerHTML;
-	transfer += time + "!:::!";
-	var page = document.getElementsByTagName("*");
-	for ( var i = 0; i < page.length; i++) {
-		var temp_id = page[i].id;
-		if (temp_id.indexOf("radio__") >= 0) {
-			if (page[i].checked) {
-				var result = page[i].value;
-				var name_all = temp_id.split("__");
-				var case_type_temp = name_all[2].split(":");
-				var package_temp = name_all[3].split(":");
-				var name_temp = name_all[4].split(":");
-				var case_type = case_type_temp[1];
-				var package_name = package_temp[1];
-				var name = name_temp[1];
-				var transfer_temp = "none";
-				if (case_type == "manual") {
-					var testarea = document.getElementById('textarea__'
-							+ name_all[3] + "__" + name_all[4]);
-					var bugnumber = document.getElementById('bugnumber__'
-							+ name_all[3] + "__" + name_all[4]);
-					transfer_temp = package_name + "!__!" + name + "!:!"
-							+ result + "!__!" + testarea.value + "!__!"
-							+ bugnumber.value;
-				} else {
-					transfer_temp = package_name + "!__!" + name + "!:!"
-							+ result + "!__!auto!__!auto";
+	var truthBeTold = window
+			.confirm("Are you sure to save the modified test results?");
+	if (truthBeTold) {
+		var arr = new Array();
+		var transfer = "";
+		var time = document.getElementById('time').innerHTML;
+		transfer += time + "!:::!";
+		var page = document.getElementsByTagName("*");
+		for ( var i = 0; i < page.length; i++) {
+			var temp_id = page[i].id;
+			if (temp_id.indexOf("radio__") >= 0) {
+				if (page[i].checked) {
+					var result = page[i].value;
+					var name_all = temp_id.split("__");
+					var case_type_temp = name_all[2].split(":");
+					var package_temp = name_all[3].split(":");
+					var name_temp = name_all[4].split(":");
+					var case_type = case_type_temp[1];
+					var package_name = package_temp[1];
+					var name = name_temp[1];
+					var transfer_temp = "none";
+					if (case_type == "manual") {
+						var testarea = document.getElementById('textarea__'
+								+ name_all[3] + "__" + name_all[4]);
+						var bugnumber = document.getElementById('bugnumber__'
+								+ name_all[3] + "__" + name_all[4]);
+						transfer_temp = package_name + "!__!" + name + "!:!"
+								+ result + "!__!" + testarea.value + "!__!"
+								+ bugnumber.value;
+					} else {
+						transfer_temp = package_name + "!__!" + name + "!:!"
+								+ result + "!__!auto!__!auto";
+					}
+					arr.push(transfer_temp);
 				}
-				arr.push(transfer_temp);
 			}
 		}
+		transfer += arr.join("!::!");
+		ajax_call_get('action=save_manual&content=' + transfer);
 	}
-	transfer += arr.join("!::!");
-	ajax_call_get('action=save_manual&content=' + transfer);
 }
 
 function finishManual() {
@@ -1658,4 +1684,9 @@ function notrunAll() {
 			document.getElementById("not_run__radio__" + radio_id).checked = true;
 		}
 	}
+}
+
+function setDevice() {
+	var sdb_serial = document.getElementById('device_list').value;
+	ajax_call_get('action=set_device&serial=' + sdb_serial);
 }
