@@ -1058,15 +1058,16 @@ sub syncLiteResult {
 		foreach (@package_items) {
 			my $package_item = $_;
 			my $package_id   = "none";
-			if ( $package_item =~ /^\s+(\d+)\s+(\d+)/ ) {
-				$package_id = $2;
+			if ( $package_item =~ /\[NULL\]\s*(.*?)\s*$/ ) {
+				$package_id = $1;
 			}
 			if ( $package_id ne "none" ) {
 				my $cmd = sdb_cmd(
-					"shell 'ps aux | grep /bin/$package_id | sed -n '1,1p''");
+"shell 'ps aux | grep /opt/apps/$package_id | sed -n '1,1p''"
+				);
 				my $pid = `$cmd`;
 				if ( $pid =~ /app\s*(\d*)\s*/ ) {
-					system( sdb_cmd("shell kill $1") );
+					system( sdb_cmd("shell 'kill -9 $1'") );
 				}
 			}
 		}

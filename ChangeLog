@@ -140,3 +140,6 @@ testkit-manager 2.2.7:
   - add support to operate more than one connected devices
   - change tree widget from yahooui to jstree
   - update text for all action confirmation dialogs
+
+* Thu Nov 16 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.7-2
+  - update stop function according to the new image

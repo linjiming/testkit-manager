@@ -621,14 +621,14 @@ sub construct_progress_data($) {
 }
 
 sub getUpdateInfoFromNetwork {
-	my @package_name = @_;
+	my @package_name     = @_;
 	my @package_name_bak = @package_name;
-	my @rpm          = ();
-	my $repo         = get_repo();
-	my @repo_all     = split( "::", $repo );
-	my $repo_type    = $repo_all[0];
-	my $repo_url     = $repo_all[1];
-	my $GREP_PATH    = $repo_url;
+	my @rpm              = ();
+	my $repo             = get_repo();
+	my @repo_all         = split( "::", $repo );
+	my $repo_type        = $repo_all[0];
+	my $repo_url         = $repo_all[1];
+	my $GREP_PATH        = $repo_url;
 	$GREP_PATH =~ s/\:/\\:/g;
 	$GREP_PATH =~ s/\//\\\//g;
 	$GREP_PATH =~ s/\./\\\./g;
@@ -1864,20 +1864,20 @@ elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests
 						my @package_items = `$cmd`;
 						foreach (@package_items) {
 							my $package_id = "none";
-							if ( $_ =~ /^\s+(\d+)\s+(\d+)/ ) {
-								$package_id = $2;
+							if ( $_ =~ /\[NULL\]\s*(.*?)\s*$/ ) {
+								$package_id = $1;
 							}
 							if ( $package_id ne "none" ) {
 								my $cmd = sdb_cmd(
-"shell 'ps aux | grep /bin/$package_id | sed -n '1,1p''"
+"shell 'ps aux | grep /opt/apps/$package_id | sed -n '1,1p''"
 								);
 								my $pid = `$cmd`;
 								if ( $pid =~ /app\s*(\d*)\s*/ ) {
-									system( sdb_cmd("shell kill $1") );
+									system( sdb_cmd("shell 'kill -9 $1'") );
 								}
 							}
 						}
-						$data .= '<stopped>1</stopped>';
+						$data .= "<stopped>1</stopped>";
 					}
 					else {
 						$error_text =
