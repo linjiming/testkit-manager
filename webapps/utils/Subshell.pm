@@ -1,15 +1,9 @@
-# Distribution Checker
-# ptyshell Tool Integration Module (Subshell.pm)
-#
-# Copyright (C) 2007-2009 The Linux Foundation. All rights reserved.
-#
-# This program has been developed by ISP RAS for LF.
-# The ptyshell tool is originally written by Jiri Dluhos <jdluhos@suse.cz>
-# Copyright (C) 2005-2007 SuSE Linux Products GmbH
-#
+# Copyright (C) 2012 Intel Corporation
+# 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
-# version 2 as published by the Free Software Foundation.
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,8 +12,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#              Zhang, Huihui <huihuix.zhang@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 
 package Subshell;
 use strict;
@@ -212,7 +209,7 @@ sub ExpectLogout {
 	$subshell->{DETACHED} = 1;
 	$subshell->Close();
 
-	inform "Waiting for logout...";
+	#inform "Waiting for logout...";
 	{
 		my $ret = wait_for_pid( $subshell->{PTY_PID}, $maxtime );
 		if ( is_ok $ret ) { $subshell->{EXIT_CODE} = $ret; last }
@@ -264,12 +261,12 @@ sub ExpectLogout {
 		}
 	}
 
-	inform "Subshell closed"
-	  . (
-		defined $subshell->{EXIT_CODE}
-		? " with exit code " . $subshell->{EXIT_CODE}
-		: ""
-	  ) . ".";
+	#inform "Subshell closed"
+	#  . (
+	#	defined $subshell->{EXIT_CODE}
+	#	? " with exit code " . $subshell->{EXIT_CODE}
+	#	: ""
+	#  ) . ".";
 
 	$subshell->{TERMINATED} = 1;
 	return 1;    # OK
@@ -372,7 +369,7 @@ sub Read {
 			elsif ($!) {
 				debug_inform "Error at the subshell (" . int($!) . "): $!.";
 			}
-			inform "PTY FINISH: DETACHED";
+			inform "\ntestkit-lite is finished, start handling results\nthis might take some time, please wait";
 			$subshell->{DETACHED} = 1;
 			last READ_LOOP;
 		}
@@ -470,7 +467,7 @@ sub WaitForSubshell {
 		$max_silence_time = $subshell->{DEFAULT_TIMEOUT};
 	}
 
-	inform "Waiting for subshell...";
+	#inform "Waiting for subshell...";
 
 	while ( !$subshell->{DETACHED} ) {
 		$subshell->Read($max_silence_time);

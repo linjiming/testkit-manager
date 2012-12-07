@@ -1,0 +1,19 @@
+[Auto]
+webapi-w3c-networking-tests(367 127)
+webapi-w3c-perf-tests(108 52)
+[/Auto]
+
+[Advanced-feature]
+select_arc=Any Architecture
+select_ver=Any Version
+select_category=Any Category
+select_pri=Any Priority
+select_status=Any Status
+select_exe=Any Execution Type
+select_testsuite=Any Test Suite
+select_type=Any Type
+select_testset=Any Test Set
+select_com=Any Component
+
+[select-packages]: webapi-w3c-networking-tests
+[select-packages]: webapi-w3c-perf-tests

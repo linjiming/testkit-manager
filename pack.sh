@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Copyright (C) 2010 Intel Corporation
-#
+# Copyright (C) 2012 Intel Corporation
+# 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -17,11 +17,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 # Authors:
-#              Zhang, Wei <wei.z.zhang@intel.com>
-#              Chen, Hao <hao.h.chen@intel.com>
+#              Zhang, Huihui <huihuix.zhang@intel.com>
 #              Wendong,Sui  <weidongx.sun@intel.com>
-#
-# script create rpm package
 
 
 # parse spec required name

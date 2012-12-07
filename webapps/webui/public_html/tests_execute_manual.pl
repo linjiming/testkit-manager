@@ -15,12 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#   Authors:
 #
-#          Wendong,Sui  <weidongx.sun@intel.com>
-#          Tao,Lin  <taox.lin@intel.com>
-#
-#
+# Authors:
+#              Zhang, Huihui <huihuix.zhang@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 
 use FindBin;
 use strict;
@@ -111,20 +109,20 @@ DATA
                 <td width="100%"><div style="height:450px;overflow:auto;text-wrap:none;">
                     <table width="100%" border="0" cellspacing="0" cellpadding="0">
                       <tr>
-                        <td><table width="100%" border="1" cellpadding="0" cellspacing="0" style="table-layout:fixed" frame="below" rules="all">
+                        <td><table width="100%" border="1" cellpadding="0" cellspacing="0" class="table_normal" frame="below" rules="all">
                             <tr>
                               <td align="left" height="30" class="report_list_one_row">&nbsp;Manual execution for&nbsp;&nbsp;$time</td>
                             </tr>
                           </table></td>
                       </tr>
                       <tr>
-                        <td><table width="100%" border="1" cellpadding="0" cellspacing="0" style="table-layout:fixed" frame="below" rules="all">
+                        <td><table width="100%" border="1" cellpadding="0" cellspacing="0" class="table_normal" frame="below" rules="all">
                             <tr>
                               <td rowspan="2" height="61" align="left" width="30%" class="report_list_outside_left">&nbsp;Name</td>
                               <td rowspan="2" align="left" width="30%" class="report_list_one_row">&nbsp;Description</td>
                               <td colspan="4" height="30" align="center" width="40%" class="report_list_outside_right">Result</td>
                             </tr>
-                            <tr>
+                            <tr class="change_all_result" title="Attention! unsaved results will be lost, if you change them all">
                               <td height="30" class="report_list_outside_right">&nbsp;
                                 <input id="pass_all_button" type="radio" name="radiobutton" onclick="javascript:passAll();" title="Set all cases' result to PASS">
                                 P</td>
@@ -199,7 +197,7 @@ DATA
 					print "\n";
 				}
 				print <<DATA;
-                        <td><table width="100%" border="1" cellpadding="0" cellspacing="0" frame="below" rules="all" style="table-layout:fixed">
+                        <td><table width="100%" border="1" cellpadding="0" cellspacing="0" frame="below" rules="all" class="table_normal">
                             <tr>
                               <td align="left" height="30" width="30%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
                               <td align="left" width="30%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
@@ -354,7 +352,7 @@ DATA
 					print "\n";
 				}
 				print <<DATA;
-                        <td><table width="100%" border="1" cellpadding="0" cellspacing="0" frame="below" rules="all" style="table-layout:fixed">
+                        <td><table width="100%" border="1" cellpadding="0" cellspacing="0" frame="below" rules="all" class="table_normal">
                             <tr>
                               <td height="30" align="left" width="30%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
                               <td align="left" width="30%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
@@ -483,7 +481,6 @@ DATA
       </table></td>
   </tr>
 </table>
-<script type="text/javascript" src="run_tests.js"></script>
 <script language="javascript" type="text/javascript">
 // <![CDATA[
 function show_case_detail(id) {

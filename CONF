@@ -1,5 +1,8 @@
 #this the main configuration file for testkit-manager
 
+#top level key words to show results view of statistic page
+category_key = [Tizen Device API Specifications,Web UI Framework Reference,Tizen W3C API Specifications,Tizen Supplementary API Specifications]
+
 #repository URL, currently two kinds of repos are supported,
 #remote HTTP repo and local folder repo, and here are two examples:
 #repo_url = http://somewhere/
@@ -9,7 +12,7 @@
 #the following set of characters are supported in the repo URL:
 #a-z, A-Z, 0-9, '-', '_', ':', '/', '.', ' '
 
-repo_url = /home/package/
+repo_url = http://
 
 #sdb device serial number
 #if more than one sdb device is connected to the host,

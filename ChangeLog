@@ -143,3 +143,18 @@ testkit-manager 2.2.7:
 
 * Thu Nov 16 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.7-2
   - update stop function according to the new image
+
+testkit-manager 2.2.8:
+===================
+* Thu Nov 21 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.8-1
+  - add support to detect arm rpm package
+  - add feature to show statistic of the pass rate of all the executed test plans
+  - implement filter Architecture
+  - update delete package command according to the new image
+  - add background color and warning message for change all results radio button
+  - use external command to execute wrt packages
+  - add a switcher to change between short and detailed case view
+  - add a new bar chart to show three level of pass rate from the spec attribute
+  - add feature to install missing packages automatically when load test plan
+  - add pre-defined test plan
+  - cleanup codes and update copyright

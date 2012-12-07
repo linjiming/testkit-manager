@@ -15,12 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#   Authors:
 #
-#          Wendong,Sui  <weidongx.sun@intel.com>
-#          Tao,Lin  <taox.lin@intel.com>
-#
-#
+# Authors:
+#              Zhang, Huihui <huihuix.zhang@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 
 use strict;
 use Templates;
@@ -29,94 +27,101 @@ use FindBin;
 use Data::Dumper;
 use Digest::SHA qw(sha1_hex);
 
-my $profile_dir_manager = $FindBin::Bin . "/../../../profiles/test/";
+my $profile_dir_manager = $FindBin::Bin . "/../../../plans/";
+my $result_dir_manager  = $FindBin::Bin . "/../../../results/";
+my $definition_dir      = $FindBin::Bin . "/../../../definition/";
+my $test_definition_dir = $definition_dir;
+
 if ( !( -e $profile_dir_manager ) ) {
 	system( 'mkdir ' . $profile_dir_manager );
 }
 
-my @package_name           = ();
-my @package_name_webapi    = ();
-my @package_webapi_item    = ();
-my @package_webapi_item_id = ();
-my @testsxml               = ();
-my @category               = ();
-my @category_num           = ();
-my @test_suite             = ();
-my @test_suite_num         = ();
-my @status                 = ();
-my @status_num             = ();
-my @type                   = ();
-my @type_num               = ();
-my @priority               = ();
-my @priority_num           = ();
-my @component              = ();
-my @component_num          = ();
-my @category_item          = ();
-my @test_suite_item        = ();
-my @status_item            = ();
-my @type_item              = ();
-my @priority_item          = ();
-my @component_item         = ();
-
-my $testSuitesPath                = "none";
-my $package_name_number           = 0;
-my $package_webapi_number         = 0;
-my $package_webapi_item_num_total = 0;
-my $count_num                     = 0;
-my $category_number               = 0;
-my $test_suite_number             = 0;
-my $status_number                 = 0;
-my $priority_number               = 0;
-my $type_number                   = 0;
-my $component_number              = 0;
-
-my $result_dir_manager = $FindBin::Bin . "/../../../results/";
+my @package_name                    = ();
+my @package_name_webapi             = ();
+my @package_webapi_item             = ();
+my @package_webapi_item_id          = ();
+my @testsxml                        = ();
+my @resultsxml                      = ();
+my @category                        = ();
+my @category_num                    = ();
+my @test_suite                      = ();
+my @test_suite_num                  = ();
+my @status                          = ();
+my @status_num                      = ();
+my @type                            = ();
+my @type_num                        = ();
+my @priority                        = ();
+my @priority_num                    = ();
+my @component                       = ();
+my @component_num                   = ();
+my @category_item                   = ();
+my @test_suite_item                 = ();
+my @status_item                     = ();
+my @type_item                       = ();
+my @priority_item                   = ();
+my @component_item                  = ();
+my $testSuitesPath                  = "none";
+my $package_name_number             = 0;
+my $package_webapi_number           = 0;
+my $package_webapi_item_num_total   = 0;
+my $count_num                       = 0;
+my $category_number                 = 0;
+my $test_suite_number               = 0;
+my $status_number                   = 0;
+my $priority_number                 = 0;
+my $type_number                     = 0;
+my $component_number                = 0;
+my $result_file_number              = 0;
+my $result_no                       = 0;
+my @result_file_name                = ();
+my @filter_suite_item               = ();
+my @filter_component_item           = ();
+my @filter_suite_value              = ();
+my @filter_type_value               = ();
+my @filter_status_value             = ();
+my @filter_component_value          = ();
+my @filter_priority_value           = ();
+my @filter_spec_value               = ();
+my @filter_category_value           = ();
+my @filter_result_value             = ();
+my @filter_category_key_second      = ();
+my @filter_category_key_third       = ();
+my @filter_category_key_second_item = ();
+my @filter_category_key_third_item  = ();
+my $case_count_total                = 0;
+my @one_package_case_count_total    = ();
+my @one_webapi_package_item_count   = ();
 my %spec_list;
-
-my @filter_suite_value            = ();
-my @filter_type_value             = ();
-my @filter_status_value           = ();
-my @filter_component_value        = ();
-my @filter_priority_value         = ();
-my @filter_spec_value             = ();
-my @filter_category_value         = ();
-my $case_count_total              = 0;
-my @one_package_case_count_total  = ();
-my @one_webapi_package_item_count = ();
-my $definition_dir                = $FindBin::Bin . "/../../../definition/";
-my $test_definition_dir           = $definition_dir;
-
 my %caseInfo;
-
 my $testkit_lite_error_message = check_testkit_sdb();
+my @category_key               = get_category_key;
 
 syncDefinition();
+if ( $_GET{'case_view'} ) {
+	ScanPackages();
+	CountPackages();
+	CreateFilePath();
+	AnalysisTestsXML( $package_name_number, @testsxml );
 
-ScanPackages();
-CountPackages();
-CreateFilePath();
-AnalysisTestsXML();
-
-if ( $package_name_number > 0 ) {
-	GetSelectItem();
-	FilterCaseValue();
-}
-
-for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
-	if ( $package_name[$count] =~ /webapi/ ) {
-		push( @package_name_webapi, $package_name[$count] );
-		$package_webapi_number++;
+	if ( $package_name_number > 0 ) {
+		GetSelectItem();
+		FilterCaseValue( $definition_dir, @package_name );
 	}
-}
 
-print "HTTP/1.0 200 OK" . CRLF;
-print "Content-type: text/html" . CRLF . CRLF;
+	for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
+		if ( $package_name[$count] =~ /webapi/ ) {
+			push( @package_name_webapi, $package_name[$count] );
+			$package_webapi_number++;
+		}
+	}
 
-print_header( "$MTK_BRANCH Manager Main Page", "statistic" );
+	print "HTTP/1.0 200 OK" . CRLF;
+	print "Content-type: text/html" . CRLF . CRLF;
 
-print show_error_dlg($testkit_lite_error_message);
+	print_header( "$MTK_BRANCH Manager Main Page", "statistic" );
 
-print <<DATA;
+	print show_error_dlg($testkit_lite_error_message);
+	print <<DATA;
 <div id="ajax_loading" style="display:none"></div>
 <style type="text/css">
       .ygtvlabel, .ygtvlabel:link, .ygtvlabel:visited, .ygtvlabel:hover { 
@@ -128,17 +133,18 @@ print <<DATA;
       }
     </style>
 <div id="message"></div>
-<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
   <tr>
-    <td><form id="tests_custom" name="tests_custom" method="post" action="">
+    <td><form id="tests_statistic" name="tests_custom" method="post" action="tests_statistic.pl">
       <table width="100%" border="0" cellspacing="0" cellpadding="0">
-     
 		 <tr>
           <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
             <tr>
                <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="package_bar_chart" src="images/package_bar_chart_selected.png" title="Package Chart" style="cursor:default" width="73" height="30"  onclick=""/></td>
                <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="package_tree_diagram" src="images/package_tree_diagram.png" title="Tree Diagram (This diaram is generated only for WebAPI packages. The branches are extracted from [Spec] filed inside the tests.xml file.)" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawTree();"/></td>
-               <td width="94%" align="left" height="30"  nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawComponent();"/></td>                      
+               <td width="74%" align="left" height="30"  nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawComponent();"/></td>
+               <td width="10%" align="left" height="30"  nowrap="nowrap"><input id="view_test_result" name="view_test_result" type="button" class="medium_button" value="Results" onclick=javascript:select_result_file("init")></td>
+               <td width="10%" align="left" height="30"  nowrap="nowrap"><input id="view_test_case" name="view_test_case" type="button" class="medium_button" value="Cases" onclick="javascript:onCaseView()";></td>
             </tr>
           </table></td>
         </tr>
@@ -151,8 +157,8 @@ print <<DATA;
 					<td width="30%" height="30" ="50" align="left" class="custom_title">&nbsp;Category</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
-DrawCategorySelect();
-print <<DATA;
+	DrawCategorySelect();
+	print <<DATA;
                     </select>
                     </td>
                   <td width="20%">&nbsp;</td>
@@ -163,8 +169,8 @@ print <<DATA;
 					<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Type</td><td>
                     <select name="select_type" align="20px" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
-DrawTypeSelect();
-print <<DATA;
+	DrawTypeSelect();
+	print <<DATA;
                     </select>
                     </td>
                   <td width="20%">&nbsp;</td>
@@ -178,8 +184,8 @@ print <<DATA;
                    	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Status</td><td>
                     <select name="select_status" align="20px" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
-DrawStatusSelect();
-print <<DATA;
+	DrawStatusSelect();
+	print <<DATA;
                     </select>
                     </td>
                   <td width="20%">&nbsp;</td>
@@ -190,8 +196,8 @@ print <<DATA;
                    	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Priority</td><td>
                     <select name="select_priority" align="20px" id="select_priority" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
-DrawPrioritySelect();
-print <<DATA;
+	DrawPrioritySelect();
+	print <<DATA;
                     </select>
                     </td>
                   <td width="20%">&nbsp;</td>
@@ -202,11 +208,11 @@ print <<DATA;
             <tr>
               <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Test suite</td><td>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Test Suite</td><td>
                     <select name="select_testsuite" align="20px" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
-DrawTestsuiteSelect();
-print <<DATA;
+	DrawTestsuiteSelect();
+	print <<DATA;
                     </select>
                     </td>
                   <td width="20%">&nbsp;</td>
@@ -224,8 +230,8 @@ print <<DATA;
                    	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Package</td><td>
                     <select name="select_package" align="20px" id="select_package" class="custom_select" style="width:70%" onchange="javascript:draw_package_tree();">
 DATA
-DrawPackageSelect();
-print <<DATA;
+	DrawPackageSelect();
+	print <<DATA;
                     </select>
                     </td>
                   <td width="20%">&nbsp;</td>
@@ -238,7 +244,7 @@ print <<DATA;
          
 DATA
 
-print <<DATA;
+	print <<DATA;
         <tr id="background_top" style="display:">
 	       <td><table width="100%" height="15" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
 		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
@@ -246,7 +252,7 @@ print <<DATA;
 	     </tr>     
 DATA
 
-print <<DATA;
+	print <<DATA;
         <tr id="no_webapi_attention_div" style="background-color:#E9F6FC;display:none">
 	       <td><table width="100%" height="120" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
 		        <td width="100%" align="middle" valign="middle" class="static_chart_select">
@@ -255,7 +261,7 @@ print <<DATA;
 	     </tr>     
 DATA
 
-print <<DATA;
+	print <<DATA;
         <tr id="no_pkg_attention_div" style="background-color:#E9F6FC;display:none">
 	       <td><table width="100%" height="120" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
 		        <td width="100%" align="middle" valign="middle" class="static_chart_select">
@@ -264,17 +270,17 @@ print <<DATA;
 	     </tr>     
 DATA
 
-for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
-	my $frame;
-	if ( $count eq "0" ) {
-		$frame = "hsides";
-	}
-	else {
-		$frame = "below";
-	}
-	print <<DATA;
+	for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
+		my $frame;
+		if ( $count eq "0" ) {
+			$frame = "hsides";
+		}
+		else {
+			$frame = "below";
+		}
+		print <<DATA;
 	     <tr id="static_list_$package_name[$count]" style="display:">
-	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" style="table-layout:fixed">	
+	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
 		        <td width="25%" height="30"  align="right" class="static_list_packagename" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$package_name[$count]">$package_name[$count]</td>
 		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
 		        <td id="static_list_bar_td_$package_name[$count]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_bar_$package_name[$count]"></span></td>
@@ -284,9 +290,9 @@ for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
 	       </table></td>
 	      </tr>
 DATA
-}
+	}
 
-print <<DATA;
+	print <<DATA;
         <tr id="background_top1" style="display:">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
 		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
@@ -294,7 +300,7 @@ print <<DATA;
 	     </tr>  
 DATA
 
-print <<DATA;
+	print <<DATA;
         <tr id="static_scale" style="display:">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
 	       		<td width="29%" align="right" class="static_list_scale_head"></td>
@@ -309,7 +315,7 @@ print <<DATA;
 	     </tr>  
 DATA
 
-print <<DATA;
+	print <<DATA;
         <tr id="static_scale_number" style="display:">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
 	       		<td width="28%" align="left" class="static_list_scale_num"></td>
@@ -324,9 +330,9 @@ print <<DATA;
 	     </tr>  
 DATA
 
-my $one_webapi_package_item_count = 0;
-for ( my $count = 0 ; $count < $package_webapi_number ; $count++ ) {
-	print <<DATA;
+	my $one_webapi_package_item_count = 0;
+	for ( my $count = 0 ; $count < $package_webapi_number ; $count++ ) {
+		print <<DATA;
              <tr id="tree_area_$package_name_webapi[$count]" style="display:none">
               	<td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" rules="all">
               	<tr>
@@ -354,62 +360,62 @@ for ( my $count = 0 ; $count < $package_webapi_number ; $count++ ) {
 				"xml_data" : {
 					"data" : "" + "<root>"
 DATA
-	updateStaticSpecList( $package_name_webapi[$count] );
-	my $spec_depth = keys %spec_list;
-	for ( my $i = 1 ; $i <= $spec_depth ; $i++ ) {
+		updateStaticSpecList( $package_name_webapi[$count] );
+		my $spec_depth = keys %spec_list;
+		for ( my $i = 1 ; $i <= $spec_depth ; $i++ ) {
 
-		# get spec list of a specific level
-		my @temp = split( "__", $spec_list{$i} );
-		foreach (@temp) {
+			# get spec list of a specific level
+			my @temp = split( "__", $spec_list{$i} );
+			foreach (@temp) {
 
-			# get item and its parent
-			my @temp_inside = split( "::", $_ );
-			my $item        = shift(@temp_inside);
-			my $parent      = shift(@temp_inside);
+				# get item and its parent
+				my @temp_inside = split( "::", $_ );
+				my $item        = shift(@temp_inside);
+				my $parent      = shift(@temp_inside);
 
-			if ( $i == 1 ) {
-				print "+ \"<item id='SP_" . sha1_hex($parent) . "'>\"\n";
-				print "+ \"<content><name>" 
-				  . $item
-				  . '<span id=\'SP_'
-				  . $count
-				  . sha1_hex($parent)
-				  . '\' class=\'static_tree_count\'></span>'
-				  . "</name></content>\"\n";
-				print "+ \"</item>\"\n";
-				push( @package_webapi_item, $item );
-				push( @package_webapi_item_id,
-					'SP_' . $count . sha1_hex($parent) );
-				$one_webapi_package_item_count++;
-				$package_webapi_item_num_total++;
+				if ( $i == 1 ) {
+					print "+ \"<item id='SP_" . sha1_hex($parent) . "'>\"\n";
+					print "+ \"<content><name>" 
+					  . $item
+					  . '<span id=\'SP_'
+					  . $count
+					  . sha1_hex($parent)
+					  . '\' class=\'static_tree_count\'></span>'
+					  . "</name></content>\"\n";
+					print "+ \"</item>\"\n";
+					push( @package_webapi_item, $item );
+					push( @package_webapi_item_id,
+						'SP_' . $count . sha1_hex($parent) );
+					$one_webapi_package_item_count++;
+					$package_webapi_item_num_total++;
+				}
+				else {
+					print "+ \"<item id='SP_"
+					  . sha1_hex( $parent . ':' . $item )
+					  . "' parent_id='SP_"
+					  . sha1_hex($parent)
+					  . "'>\"\n";
+					print "+ \"<content><name>" 
+					  . $item
+					  . '<span id=\'SP_'
+					  . $count
+					  . sha1_hex( $parent . ':' . $item )
+					  . '\' class=\'static_tree_count\'></span>'
+					  . "</name></content>\"\n";
+					print "+ \"</item>\"\n";
+					push( @package_webapi_item, $parent . ":" . $item );
+					push( @package_webapi_item_id,
+						'SP_' . $count . sha1_hex( $parent . ':' . $item ) );
+					$one_webapi_package_item_count++;
+					$package_webapi_item_num_total++;
+				}
 			}
-			else {
-				print "+ \"<item id='SP_"
-				  . sha1_hex( $parent . ':' . $item )
-				  . "' parent_id='SP_"
-				  . sha1_hex($parent)
-				  . "'>\"\n";
-				print "+ \"<content><name>" 
-				  . $item
-				  . '<span id=\'SP_'
-				  . $count
-				  . sha1_hex( $parent . ':' . $item )
-				  . '\' class=\'static_tree_count\'></span>'
-				  . "</name></content>\"\n";
-				print "+ \"</item>\"\n";
-				push( @package_webapi_item, $parent . ":" . $item );
-				push( @package_webapi_item_id,
-					'SP_' . $count . sha1_hex( $parent . ':' . $item ) );
-				$one_webapi_package_item_count++;
-				$package_webapi_item_num_total++;
+			if ( $i == $spec_depth ) {
+				push( @one_webapi_package_item_count,
+					$one_webapi_package_item_count );
 			}
 		}
-		if ( $i == $spec_depth ) {
-			push( @one_webapi_package_item_count,
-				$one_webapi_package_item_count );
-		}
-	}
-	print <<DATA;
+		print <<DATA;
 	+ "</root>"
 				},
 				"plugins" : [ "themes", "xml_data", "ui" ]
@@ -418,19 +424,19 @@ DATA
 // ]]>
 </script>
 DATA
-}
+	}
 
-for ( my $count = 0 ; $count < @component ; $count++ ) {
-	my $frame;
-	if ( $count eq "0" ) {
-		$frame = "hsides";
-	}
-	else {
-		$frame = "below";
-	}
-	print <<DATA;
+	for ( my $count = 0 ; $count < @component ; $count++ ) {
+		my $frame;
+		if ( $count eq "0" ) {
+			$frame = "hsides";
+		}
+		else {
+			$frame = "below";
+		}
+		print <<DATA;
 	     <tr id="static_list_component_$component[$count]" style="display:none">
-	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" style="table-layout:fixed">	
+	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
 		        <td width="35%" height="30"  align="right" class="static_list_packagename" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$component[$count]">$component[$count]</td>
 		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
 		        <td id="static_list_component_bar_td_$component[$count]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_component_bar_$component[$count]"></span></td>
@@ -440,9 +446,9 @@ for ( my $count = 0 ; $count < @component ; $count++ ) {
 	       </table></td>
 	      </tr>
 DATA
-}
+	}
 
-print <<DATA;
+	print <<DATA;
         <tr id="background_top2" style="display:none">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
 		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
@@ -450,7 +456,7 @@ print <<DATA;
 	     </tr>  
 DATA
 
-print <<DATA;
+	print <<DATA;
         <tr id="static_scale_component" style="display:none">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
 	       		<td width="38%" align="right" class="static_list_scale_head"></td>
@@ -465,7 +471,7 @@ print <<DATA;
 	     </tr>  
 DATA
 
-print <<DATA;
+	print <<DATA;
         <tr id="static_scale_number_component" style="display:none">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
 	       		<td width="38%" align="left" class="static_list_scale_num"></td>
@@ -480,7 +486,7 @@ print <<DATA;
 	     </tr>  
 DATA
 
-print <<DATA;
+	print <<DATA;
         <tr id="background_bottom" style="display:">
 	       <td><table width="100%" height="25" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
 		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
@@ -488,15 +494,15 @@ print <<DATA;
 	     </tr>  
 DATA
 
-if ( $package_name_number ne "0" ) {
-	print <<DATA;
+	if ( $package_name_number ne "0" ) {
+		print <<DATA;
 	<script>
 	document.getElementById("no_pkg_attention_div").style.display = "none";
 	</script>   
 DATA
-}
-else {
-	print <<DATA;
+	}
+	else {
+		print <<DATA;
 	<script>
 	document.getElementById("no_pkg_attention_div").style.display = "";
 	document.getElementById("static_scale").style.display = "none";
@@ -504,8 +510,8 @@ else {
 	document.getElementById("background_bottom").style.display = "none";
 	</script>   
 DATA
-}
-print <<DATA;
+	}
+	print <<DATA;
         </table>
        </form>
       </td>
@@ -514,13 +520,495 @@ print <<DATA;
 		
 DATA
 
+}
+else {
+	if ( $_GET{'result_file'} ) {
+		$result_no = $_GET{'result_file'} - 1;
+	}
+	else {
+		$result_no = 0;
+	}
+	ScanResultFile();
+	CountResultFiles();
+	CreateResultFilePath();
+
+	if ( $result_file_number > 0 ) {
+		AnalysisTestsXML( 1, $resultsxml[$result_no] );
+		GetSelectItem();
+		FilterCaseValue( $result_dir_manager, $result_file_name[$result_no] );
+	}
+
+	print "HTTP/1.0 200 OK" . CRLF;
+	print "Content-type: text/html" . CRLF . CRLF;
+
+	print_header( "$MTK_BRANCH Manager Main Page", "statistic" );
+
+	print show_error_dlg($testkit_lite_error_message);
+
+	print <<DATA;
+<div id="ajax_loading" style="display:none"></div>
+<style type="text/css">
+      .ygtvlabel, .ygtvlabel:link, .ygtvlabel:visited, .ygtvlabel:hover { 
+          background-color: #FAFAFA;
+      }
+      .ygtvrow {
+          height: 30px;
+          background-color: #FAFAFA;
+      }
+    </style>
+<div id="message"></div>
+<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+  <tr>
+    <td><form id="tests_statistic" name="tests_custom" method="post" action="tests_statistic.pl">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0">
+     	
+		 <tr>
+          <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
+            <tr>
+               <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="package_bar_chart" src="images/package_bar_chart_selected.png" title="Package Chart" style="cursor:default" width="73" height="30"  onclick=""/></td>
+               <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawResultComponent();"/></td>
+               <td width="81%" align="left" height="30"  nowrap="nowrap"><img id="spec_bar_chart" src="images/package_tree_diagram.png" title="Spec Chart" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawResultSpec();"/></td>
+               <td width="10%" align="left" height="30"  nowrap="nowrap"><input id="view_test_result" name="view_test_result" type="button" class="medium_button" value="Results" onclick=javascript:select_result_file("init");></td>
+               <td width="10%" align="left" height="30"  nowrap="nowrap"><input id="view_test_case" name="view_test_case" type="button" class="medium_button" value="Cases" onclick="javascript:onCaseView();"></td>
+            </tr>
+          </table></td>
+        </tr>
+               
+        <tr>
+          <td id="list_advanced"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
+            <tr>
+              <td width="100%" nowrap="nowrap" colspan="2" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+					<td width="15%" height="30" ="50" align="left" class="custom_title">&nbsp;Test Time</td><td>
+                    <select name="select_result" align="20px" id="select_result" class="custom_select" style="width:90%" onchange="javascript:select_result_file();">
+DATA
+	DrawResultSelect();
+	print <<DATA;
+                    </select>
+                    </td>
+                  <td width="10%">&nbsp;</td>
+                </tr>
+              </table></td>
+            </tr>
+            
+            <tr>
+              <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+					<td width="30%" height="30" ="50" align="left" class="custom_title">&nbsp;Category</td><td>
+                    <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
+DATA
+	DrawCategorySelect();
+	print <<DATA;
+                    </select>
+                    </td>
+                  <td width="20%">&nbsp;</td>
+                </tr>
+              </table></td>
+              <td width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+					<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Type</td><td>
+                    <select name="select_type" align="20px" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
+DATA
+	DrawTypeSelect();
+	print <<DATA;
+                    </select>
+                    </td>
+                  <td width="20%">&nbsp;</td>
+                </tr>
+              </table></td>
+            </tr>
+            
+            <tr>
+              <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Status</td><td>
+                    <select name="select_status" align="20px" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
+DATA
+	DrawStatusSelect();
+	print <<DATA;
+                    </select>
+                    </td>
+                  <td width="20%">&nbsp;</td>
+                </tr>
+              </table></td>
+              <td width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Priority</td><td>
+                    <select name="select_priority" align="20px" id="select_priority" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
+DATA
+	DrawPrioritySelect();
+	print <<DATA;
+                    </select>
+                    </td>
+                  <td width="20%">&nbsp;</td>
+                </tr>
+              </table></td>
+            </tr>
+            
+            <tr>
+              <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Test Suite</td><td>
+                    <select name="select_testsuite" align="20px" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
+DATA
+	DrawResultsuiteSelect();
+	print <<DATA;
+                    </select>
+                    </td>
+                  <td width="20%">&nbsp;</td>
+                </tr>
+              </table></td>
+              
+              <td id="td_category_key_null" width="50%" nowrap="nowrap" class="custom_list_type_bottom" style="display:"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="100%">&nbsp;</td>
+                </tr>
+              </table></td>
+              
+              <td id="td_category_key" width="50%" nowrap="nowrap" class="custom_list_type_bottom" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="30%" height="30"  align="left" class="custom_title">&nbsp;Spec</td><td>
+                    <select name="select_category_key" align="20px" id="select_category_key" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
+DATA
+	DrawCategoryKeySelect();
+	print <<DATA;
+                    </select>
+                    </td>
+                  <td width="20%">&nbsp;</td>
+                </tr>
+              </table></td>
+             </tr>
+           </table></td>
+         </tr>
+         
+DATA
+
+	print <<DATA;
+        <tr id="background_top" style="display:">
+	       <td><table width="100%" height="15" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
+		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+	       </table></td>
+	     </tr>     
+DATA
+
+	print <<DATA;
+        <tr id="no_pkg_attention_div" style="background-color:#E9F6FC;display:none">
+	       <td><table width="100%" height="120" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
+		        <td width="100%" align="middle" valign="middle" class="static_chart_select">
+		        No result files !</td> 
+	       </table></td>
+	     </tr>     
+DATA
+
+	for ( my $count = 0 ; $count < @filter_suite_item ; $count++ ) {
+		my $frame;
+		if ( $count eq "0" ) {
+			$frame = "hsides";
+		}
+		else {
+			$frame = "below";
+		}
+		print <<DATA;
+	     <tr id="static_list_$filter_suite_item[$count]" style="display:">
+	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
+		        <td width="25%" height="30"  align="right" class="static_list_packagename" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$filter_suite_item[$count]">$filter_suite_item[$count]</td>
+		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
+		        <td id="static_list_bar_td_$filter_suite_item[$count]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_bar_$filter_suite_item[$count]"></span></td>
+		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
+		        <td id="static_list_num_$filter_suite_item[$count]" align="left" height="30"  class="static_list_num" ><span id="static_list_num_$filter_suite_item[$count]"></span></td> 
+		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+	       </table></td>
+	      </tr>
+DATA
+	}
+
+	print <<DATA;
+        <tr id="background_top1" style="display:">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
+		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+	       </table></td>
+	     </tr>  
+DATA
+
+	print <<DATA;
+        <tr id="static_scale" style="display:">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
+	       		<td width="29%" align="right" class="static_list_scale_head"></td>
+		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="19%" class="static_list_scale_head"></td>
+	       </table></td>
+	     </tr>  
+DATA
+
+	print <<DATA;
+        <tr id="static_scale_number" style="display:">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
+	       		<td width="29%" align="left" class="static_list_scale_num"></td>
+		        <td width="4.4%" id="static_scale_number0" align="left" valign="middle" class="static_list_scale_num">0</td> 
+		        <td width="5.4%" id="static_scale_number1" align="left" valign="middle" class="static_list_scale_num">10</td> 
+		        <td width="5.4%" id="static_scale_number2" align="left" valign="middle" class="static_list_scale_num">20</td> 
+		        <td width="5.4%" id="static_scale_number3" align="left" valign="middle" class="static_list_scale_num">30</td> 
+		        <td width="5.4%" id="static_scale_number4" align="left" valign="middle" class="static_list_scale_num">40</td> 
+		        <td width="5.4%" id="static_scale_number5" align="left" valign="middle" class="static_list_scale_num">50</td>
+		        <td width="5.4%" id="static_scale_number6" align="left" valign="middle" class="static_list_scale_num">60</td> 
+		        <td width="5.4%" id="static_scale_number7" align="left" valign="middle" class="static_list_scale_num">70</td> 
+		        <td width="5.4%" id="static_scale_number8" align="left" valign="middle" class="static_list_scale_num">80</td> 
+		        <td width="5.4%" id="static_scale_number9" align="left" valign="middle" class="static_list_scale_num">90</td>  
+		        <td width="18%" id="static_scale_number10"class="static_list_scale_num">100&nbsp;(%)</td>
+	       </table></td>
+	     </tr>  
+DATA
+
+	for ( my $count = 0 ; $count < @filter_component_item ; $count++ ) {
+		my $frame;
+		if ( $count eq "0" ) {
+			$frame = "hsides";
+		}
+		else {
+			$frame = "below";
+		}
+		print <<DATA;
+	     <tr id="static_list_component_$filter_component_item[$count]" style="display:none">
+	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
+		        <td width="35%" height="30"  align="right" class="static_list_packagename" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$filter_component_item[$count]">$filter_component_item[$count]</td>
+		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
+		        <td id="static_list_component_bar_td_$filter_component_item[$count]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_component_bar_$filter_component_item[$count]"></span></td>
+		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
+		        <td id="static_list_component_num_$filter_component_item[$count]" align="left" height="30"  class="static_list_num" ><span id="static_list_component_num_$filter_component_item[$count]"></span></td> 
+		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+	       </table></td>
+	      </tr>
+DATA
+	}
+
+	print <<DATA;
+        <tr id="background_top2" style="display:none">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
+		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+	       </table></td>
+	     </tr>  
+DATA
+
+	print <<DATA;
+        <tr id="static_scale_component" style="display:none">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
+	       		<td width="38%" align="right" class="static_list_scale_head"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="19%" class="static_list_scale_head"></td>
+	       </table></td>
+	     </tr>  
+DATA
+
+	print <<DATA;
+        <tr id="static_scale_number_component" style="display:none">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
+	       		<td width="38%" align="left" class="static_list_scale_num"></td>
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">0</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">10</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">20</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">30</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">40</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">50</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">60</td>
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">70</td>
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">80</td>
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">90</td>
+		        <td width="20%" class="static_list_scale_num">100 &nbsp;(%)</td>
+	       </table></td>
+	     </tr>  
+DATA
+
+	if ( @filter_suite_item > 0 ) {
+		my $count = 0;
+		for ( $count = 0 ; $count < @category_key ; $count++ ) {
+			my $frame;
+			if ( $count eq "0" ) {
+				$frame = "hsides";
+			}
+			else {
+				$frame = "below";
+			}
+			print <<DATA;
+	     <tr id="static_list_category_key_$count" style="display:none">
+	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
+		        <td width="35%" height="30"  align="right" class="static_list_packagename_first" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$category_key[$count]">$category_key[$count]</td>
+		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
+		        <td id="static_list_category_key_bar_td_$count" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_category_key_bar_$count"></span></td>
+		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
+		        <td id="static_list_category_key_num_$count" align="left" height="30"  class="static_list_num" ><span id="static_list_category_key_num_$count"></span></td> 
+		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+	       </table></td>
+	      </tr>
+DATA
+			for ( my $j = 0 ; $j < @filter_category_key_second_item ; $j++ ) {
+				if ( $filter_category_key_second_item[$j] =~
+					/$category_key[$count]/ )
+				{
+					my @second_key =
+					  split( ":", $filter_category_key_second_item[$j] );
+					print <<DATA;
+	     <tr id="static_list_category_key_second_$filter_category_key_second_item[$j]" style="display:none">
+	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
+		        <td width="35%" height="30"  align="right" class="static_list_packagename_second" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$second_key[1]">$second_key[1]</td>
+		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
+		        <td id="static_list_bar_td_category_key_second_$filter_category_key_second_item[$j]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_bar_category_key_second_$filter_category_key_second_item[$j]"></span></td>
+		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
+		        <td id="static_list_num_category_key_second_$filter_category_key_second_item[$j]" align="left" height="30"  class="static_list_num" ><span id="static_list_num_category_key_second_$filter_category_key_second_item[$j]"></span></td> 
+		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+	       </table></td>
+	      </tr>
+DATA
+					for (
+						my $k = 0 ;
+						$k < @filter_category_key_third_item ;
+						$k++
+					  )
+					{
+						my $second_temp = $filter_category_key_second_item[$j];
+						my $third_temp  = $filter_category_key_third_item[$k];
+						$second_temp =~ s/\(/XXX/g;
+						$second_temp =~ s/\)/XXX/g;
+						$second_temp =~ s/\,/OOO/g;
+						$second_temp =~ s/\//MMM/g;
+						$third_temp  =~ s/\(/XXX/g;
+						$third_temp  =~ s/\)/XXX/g;
+						$third_temp  =~ s/\,/OOO/g;
+						$third_temp  =~ s/\//MMM/g;
+
+						if ( $third_temp =~ /$second_temp/ ) {
+							my @third_key =
+							  split( ":", $filter_category_key_third_item[$k] );
+							print <<DATA;
+			     <tr id="static_list_category_key_third_$filter_category_key_third_item[$k]" style="display:none">
+			       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
+				        <td width="35%" height="30"  align="right" class="static_list_packagename_third" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$third_key[2]">$third_key[2]</td>
+				        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
+				        <td id="static_list_bar_td_category_key_third_$filter_category_key_third_item[$k]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_bar_category_key_third_$filter_category_key_third_item[$k]"></span></td>
+				        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
+				        <td id="static_list_num_category_key_third_$filter_category_key_third_item[$k]" align="left" height="30"  class="static_list_num" ><span id="static_list_num_category_key_third_$filter_category_key_third_item[$k]"></span></td> 
+				        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+			       </table></td>
+			      </tr>
+DATA
+						}
+					}
+				}
+			}
+		}
+
+		print <<DATA;
+        <tr id="background_top2" style="display:">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
+		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+	       </table></td>
+	     </tr>  
+DATA
+
+		print <<DATA;
+        <tr id="static_scale_category_key" style="display:none">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
+	       		<td width="38%" align="right" class="static_list_scale_head"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td> 
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
+		        <td width="19%" class="static_list_scale_head"></td>
+	       </table></td>
+	     </tr>  
+DATA
+
+		print <<DATA;
+        <tr id="static_scale_number_category_key" style="display:none">
+	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
+	       		<td width="38%" align="left" class="static_list_scale_num"></td>
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">0</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">10</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">20</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">30</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">40</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">50</td> 
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">60</td>
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">70</td>
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">80</td>
+		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">90</td>
+		        <td width="20%" class="static_list_scale_num">100 &nbsp;(%)</td>
+	       </table></td>
+	     </tr>  
+DATA
+	}
+
+	print <<DATA;
+        <tr id="background_bottom" style="display:">
+	       <td><table width="100%" height="25" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
+		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+	       </table></td>
+	     </tr>  
+DATA
+
+	if ( @filter_suite_item ne "0" ) {
+		print <<DATA;
+	<script>
+	document.getElementById("no_pkg_attention_div").style.display = "none";
+	</script>   
+DATA
+	}
+	else {
+		print <<DATA;
+	<script>
+	document.getElementById("no_pkg_attention_div").style.display = "";
+	document.getElementById("background_top").style.display = "none";
+	document.getElementById("background_bottom").style.display = "none";
+	document.getElementById("static_scale").style.display = "none";
+	document.getElementById("static_scale_number").style.display = "none";
+	
+	</script>   
+DATA
+	}
+	print <<DATA;
+        </table>
+       </form>
+      </td>
+     </tr>
+    </table> 
+		
+DATA
+}
+
 print <<DATA;
-<script type="text/javascript" src="run_tests.js"></script>
 <script language="javascript" type="text/javascript">
 
 var package_name_number = 
 DATA
 print $package_name_number. ";";
+
+print <<DATA;
+var case_count_total = 
+DATA
+print $case_count_total. ";";
 
 print <<DATA;
 var component_number = 
@@ -653,6 +1141,153 @@ print <<DATA;
 DATA
 
 print <<DATA;
+var static_list_bar_result = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @filter_suite_item ; $count_num++ ) {
+	if ( $count_num == @filter_suite_item - 1 ) {
+		print '"' . "static_list_bar_" . $filter_suite_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_bar_"
+		  . $filter_suite_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_bar_component_result = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @filter_component_item ; $count_num++ ) {
+	if ( $count_num == @filter_component_item - 1 ) {
+		print '"'
+		  . "static_list_component_bar_"
+		  . $filter_component_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_component_bar_"
+		  . $filter_component_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_bar_category_key_result = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @category_key ; $count_num++ ) {
+	if ( $count_num == @category_key - 1 ) {
+		print '"' . "static_list_category_key_bar_" . $count_num . '"';
+	}
+	else {
+		print '"' . "static_list_category_key_bar_" . $count_num . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_bar_category_key_second_result = new Array(
+DATA
+for (
+	$count_num = 0 ;
+	$count_num < @filter_category_key_second_item ;
+	$count_num++
+  )
+{
+	if ( $count_num == @filter_category_key_second_item - 1 ) {
+		print '"'
+		  . "static_list_bar_category_key_second_"
+		  . $filter_category_key_second_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_bar_category_key_second_"
+		  . $filter_category_key_second_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_bar_category_key_third_result = new Array(
+DATA
+for (
+	$count_num = 0 ;
+	$count_num < @filter_category_key_third_item ;
+	$count_num++
+  )
+{
+	if ( $count_num == @filter_category_key_third_item - 1 ) {
+		print '"'
+		  . "static_list_bar_category_key_third_"
+		  . $filter_category_key_third_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_bar_category_key_third_"
+		  . $filter_category_key_third_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_bar_td_category_key_second_result = new Array(
+DATA
+for (
+	$count_num = 0 ;
+	$count_num < @filter_category_key_second_item ;
+	$count_num++
+  )
+{
+	if ( $count_num == @filter_category_key_second_item - 1 ) {
+		print '"'
+		  . "static_list_bar_td_category_key_second_"
+		  . $filter_category_key_second_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_bar_td_category_key_second_"
+		  . $filter_category_key_second_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_bar_td_category_key_third_result = new Array(
+DATA
+for (
+	$count_num = 0 ;
+	$count_num < @filter_category_key_third_item ;
+	$count_num++
+  )
+{
+	if ( $count_num == @filter_category_key_third_item - 1 ) {
+		print '"'
+		  . "static_list_bar_td_category_key_third_"
+		  . $filter_category_key_third_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_bar_td_category_key_third_"
+		  . $filter_category_key_third_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
 var static_list_num = new Array(
 DATA
 for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
@@ -661,6 +1296,105 @@ for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
 	}
 	else {
 		print '"' . "static_list_num_" . $package_name[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_num_result = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @filter_suite_item ; $count_num++ ) {
+	if ( $count_num == @filter_suite_item - 1 ) {
+		print '"' . "static_list_num_" . $filter_suite_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_num_"
+		  . $filter_suite_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_num_component_result = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @filter_component_item ; $count_num++ ) {
+	if ( $count_num == @filter_component_item - 1 ) {
+		print '"'
+		  . "static_list_component_num_"
+		  . $filter_component_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_component_num_"
+		  . $filter_component_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_num_category_key_result = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @category_key ; $count_num++ ) {
+	if ( $count_num == @category_key - 1 ) {
+		print '"' . "static_list_category_key_num_" . $count_num . '"';
+	}
+	else {
+		print '"' . "static_list_category_key_num_" . $count_num . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_num_category_key_second_result = new Array(
+DATA
+for (
+	$count_num = 0 ;
+	$count_num < @filter_category_key_second_item ;
+	$count_num++
+  )
+{
+	if ( $count_num == @filter_category_key_second_item - 1 ) {
+		print '"'
+		  . "static_list_num_category_key_second_"
+		  . $filter_category_key_second_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_num_category_key_second_"
+		  . $filter_category_key_second_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_num_category_key_third_result = new Array(
+DATA
+for (
+	$count_num = 0 ;
+	$count_num < @filter_category_key_third_item ;
+	$count_num++
+  )
+{
+	if ( $count_num == @filter_category_key_third_item - 1 ) {
+		print '"'
+		  . "static_list_num_category_key_third_"
+		  . $filter_category_key_third_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_num_category_key_third_"
+		  . $filter_category_key_third_item[$count_num] . '"' . ",";
 	}
 }
 print <<DATA;
@@ -678,6 +1412,59 @@ for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
 		print '"'
 		  . "static_list_bar_td_"
 		  . $package_name[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_bar_td_result = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @filter_suite_item ; $count_num++ ) {
+	if ( $count_num == @filter_suite_item - 1 ) {
+		print '"'
+		  . "static_list_bar_td_"
+		  . $filter_suite_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_bar_td_"
+		  . $filter_suite_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_bar_td_component_result = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @filter_component_item ; $count_num++ ) {
+	if ( $count_num == @filter_component_item - 1 ) {
+		print '"'
+		  . "static_list_component_bar_td_"
+		  . $filter_component_item[$count_num] . '"';
+	}
+	else {
+		print '"'
+		  . "static_list_component_bar_td_"
+		  . $filter_component_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);
+DATA
+
+print <<DATA;
+var static_list_bar_td_category_key_result = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @category_key ; $count_num++ ) {
+	if ( $count_num == @category_key - 1 ) {
+		print '"' . "static_list_category_key_bar_td_" . $count_num . '"';
+	}
+	else {
+		print '"' . "static_list_category_key_bar_td_" . $count_num . '"' . ",";
 	}
 }
 print <<DATA;
@@ -828,6 +1615,106 @@ print <<DATA;
 DATA
 
 print <<DATA;
+var result_value = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
+	if ( $count_num == $case_count_total - 1 ) {
+		print '"' . $filter_result_value[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_result_value[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var suite_item = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @filter_suite_item ; $count_num++ ) {
+	if ( $count_num == @filter_suite_item - 1 ) {
+		print '"' . $filter_suite_item[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_suite_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var category_key = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @category_key ; $count_num++ ) {
+	if ( $count_num == @category_key - 1 ) {
+		print '"' . $category_key[$count_num] . '"';
+	}
+	else {
+		print '"' . $category_key[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var category_key_second = new Array(
+DATA
+for (
+	$count_num = 0 ;
+	$count_num < @filter_category_key_second_item ;
+	$count_num++
+  )
+{
+	if ( $count_num == @filter_category_key_second_item - 1 ) {
+		print '"' . $filter_category_key_second_item[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_category_key_second_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var category_key_third = new Array(
+DATA
+for (
+	$count_num = 0 ;
+	$count_num < @filter_category_key_third_item ;
+	$count_num++
+  )
+{
+	if ( $count_num == @filter_category_key_third_item - 1 ) {
+		print '"' . $filter_category_key_third_item[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_category_key_third_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
+var component_item = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < @filter_component_item ; $count_num++ ) {
+	if ( $count_num == @filter_component_item - 1 ) {
+		print '"' . $filter_component_item[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_component_item[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
 var one_package_case_count_total = new Array(
 DATA
 for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
@@ -841,6 +1728,16 @@ for ( $count_num = 0 ; $count_num < $package_name_number ; $count_num++ ) {
 print <<DATA;
 	);				
 DATA
+
+if ( @one_package_case_count_total > 0 ) {
+	print <<DATA;
+var one_package_case_count_total_result = 
+DATA
+	print '"' . $one_package_case_count_total[0] . '"';
+	print <<DATA;
+;				
+DATA
+}
 
 print <<DATA;
 var component = new Array(
@@ -876,6 +1773,7 @@ print <<DATA;
 var chart_id 			= document.getElementById('package_bar_chart');
 var tree_id 			= document.getElementById('package_tree_diagram');
 var component_id 		= document.getElementById('component_bar_chart');
+var spec_id				= document.getElementById('spec_bar_chart');
 var sel_category_id 	= document.getElementById('select_category');
 var sel_type_id 		= document.getElementById('select_type');
 var sel_testsuite_id 	= document.getElementById('select_testsuite');
@@ -905,10 +1803,40 @@ function disabledSelectButton(){
 	adv_value_package.disabled	= true;
 }
 
-function static_pkg_list_display(style){
-	for ( var count = 0 ; count < package_name_number ; count++ ) {
-	   var id = "static_list_"+package_name[count];
-	   document.getElementById(id).style.display = style;
+function static_pkg_list_display(count_num,style,file){
+	for ( var count = 0 ; count < count_num ; count++ ) {
+		if(file == "case"){
+			var id = "static_list_"+package_name[count];
+		}
+		else if(file == "result"){
+			var id = "static_list_"+suite_item[count];
+		}
+		document.getElementById(id).style.display = style;
+	}
+}
+
+function static_spec_list_display(count_first,style_first,count_second,style_second,count_third,style_third){
+	for ( var count = 0 ; count < count_first ; count++ ) {
+		var id_first = "static_list_category_key_" + count;
+		document.getElementById(id_first).style.display = style_first;
+	}
+	for ( var count = 0 ; count < count_second ; count++ ) {
+		var id_second = "static_list_category_key_second_" + category_key_second[count];
+		var reg = new RegExp("&amp;");
+		id_second = id_second.replace(reg,"&");
+		var flag = check_conf_category_key(id_second);
+		if(flag){
+			document.getElementById(id_second).style.display = style_second;
+		}
+	}
+	for ( var count = 0 ; count < count_third ; count++ ) {
+		var id_third = "static_list_category_key_third_" + category_key_third[count];
+		var reg = new RegExp("&amp;");
+		id_third = id_third.replace(reg,"&");
+		var flag = check_conf_category_key(id_third);
+		if(flag){
+			document.getElementById(id_third).style.display = style_third;
+		}
 	}
 }
 
@@ -919,10 +1847,15 @@ function static_tree_display(style){
 	}
 }
 
-function static_component_display(style){
-	for ( var count = 0 ; count < component_number ; count++ ) {
-	   var id = "static_list_component_"+component[count];
-	   document.getElementById(id).style.display = style;
+function static_component_display(count_num,style,file){
+	for ( var count = 0 ; count < count_num ; count++ ) {
+		if (file == "case"){
+			var id = "static_list_component_"+component[count];
+		}
+		else if(file == "result"){
+			var id = "static_list_component_"+component_item[count];
+		}
+		document.getElementById(id).style.display = style;
 	}
 }
 
@@ -933,6 +1866,10 @@ function static_scale_display(style1,style2){
 	background_top2_id.style.display = style2;
 	static_scale_component_id.style.display = style2;
 	static_scale_number_component_id.style.display = style2;
+}
+
+function onCaseView(){
+	document.location="tests_statistic.pl?case_view=1"
 }
 
 function onDrawCylindrical(){
@@ -968,13 +1905,10 @@ function onDrawCylindrical(){
 		bottom_id.style.display	= "none";
 		disabledSelectButton();
 	}
-	static_pkg_list_display("");
+	static_pkg_list_display(package_name_number,"","case");
 	filter_case_item();	
 	static_tree_display("none");	
-	static_component_display("none");
-	
-
-	
+	static_component_display(component_number,"none","case");
 }
 
 function onDrawTree(){
@@ -1001,8 +1935,8 @@ function onDrawTree(){
 		return onDrawComponent();
 	};
 	
-	static_pkg_list_display("none");	
-	static_component_display("none");	
+	static_pkg_list_display(package_name_number,"none","case");	
+	static_component_display(component_number,"none","case");	
 
 	
 	if(package_name_webapi_number == 0){
@@ -1050,10 +1984,128 @@ function onDrawComponent(){
 		bottom_id.style.display	= "none";
 		disabledSelectButton();
 	}
-	static_component_display("");
+	static_component_display(component_number,"","case");
 	filter_case_item();
-	static_pkg_list_display("none");	
+	static_pkg_list_display(package_name_number,"none","case");	
 	static_tree_display("none");
+}
+
+function onDrawResultCylindrical(){
+	top_id.style.display		 = "";
+	bottom_id.style.display		 = "";
+	no_pkg_id.style.display		 = "none";
+	component_id.src			 = "images/component_bar_chart.png";
+	chart_id.src				 = "images/package_bar_chart_selected.png";
+	spec_id.src					 = "images/package_tree_diagram.png";
+	component_id.style.cursor	 = "pointer";
+	chart_id.style.cursor 		 = "default";
+	spec_id.style.cursor 		 = "pointer";
+	
+	chart_id.onclick		 = "";
+	
+	component_id.onclick = function(){
+		return onDrawResultComponent();
+	};	
+	spec_id.onclick = function(){
+		return onDrawResultSpec();
+	};
+	
+	if(component_item.length == 0){
+		no_pkg_id.style.display	= "";
+		top_id.style.display	= "none";
+		bottom_id.style.display	= "none";
+		static_scale_display("none","none");
+	}
+	else{
+		static_component_display(component_item.length,"none","result");
+		static_scale_display("","none");
+		document.getElementById("static_scale_category_key").style.display = "none";
+		document.getElementById("static_scale_number_category_key").style.display = "none";
+		static_pkg_list_display(suite_item.length,"","result");	
+		static_spec_list_display(category_key.length,"none",category_key_second.length,"none",category_key_third.length,"none");
+		document.getElementById("td_category_key_null").style.display = "";
+		document.getElementById("td_category_key").style.display = "none";
+		filter_result_item();
+	}
+}
+
+function onDrawResultComponent(){
+	top_id.style.display		 = "";
+	bottom_id.style.display		 = "";
+	no_pkg_id.style.display		 = "none";
+	component_id.src			 = "images/component_bar_chart_selected.png";
+	chart_id.src				 = "images/package_bar_chart.png";
+	spec_id.src					 = "images/package_tree_diagram.png";
+	component_id.style.cursor	 = "default";
+	chart_id.style.cursor 		 = "pointer";
+	spec_id.style.cursor 		 = "pointer";
+	
+	component_id.onclick		 = "";
+	
+	chart_id.onclick = function(){
+		return onDrawResultCylindrical();
+	};	
+	spec_id.onclick = function(){
+		return onDrawResultSpec();
+	};
+	
+	if(suite_item.length == 0){
+		no_pkg_id.style.display	= "";
+		top_id.style.display	= "none";
+		bottom_id.style.display	= "none";
+		static_scale_display("none","none");
+	}
+	else{
+		static_component_display(component_item.length,"","result");
+		static_scale_display("none","");
+		document.getElementById("static_scale_category_key").style.display = "none";
+		document.getElementById("static_scale_number_category_key").style.display = "none";
+		static_pkg_list_display(suite_item.length,"none","result");	
+		static_spec_list_display(category_key.length,"none",category_key_second.length,"none",category_key_third.length,"none");
+		document.getElementById("td_category_key_null").style.display = "";
+		document.getElementById("td_category_key").style.display = "none";
+		filter_result_item();
+	}
+}
+
+function onDrawResultSpec(){
+	top_id.style.display		 = "";
+	bottom_id.style.display		 = "";
+	no_pkg_id.style.display		 = "none";
+	component_id.src			 = "images/component_bar_chart.png";
+	chart_id.src				 = "images/package_bar_chart.png";
+	spec_id.src					 = "images/package_tree_diagram_selected.png";
+	component_id.style.cursor	 = "pointer";
+	chart_id.style.cursor 		 = "pointer";
+	spec_id.style.cursor		 = "default";
+	
+	component_id.onclick = function(){
+		return onDrawResultComponent();
+	};	
+	
+	chart_id.onclick = function(){
+		return onDrawResultCylindrical();
+	};	
+	
+	spec_id.onclick = "";
+	
+	if(suite_item.length == 0){
+		no_pkg_id.style.display	= "";
+		top_id.style.display	= "none";
+		bottom_id.style.display	= "none";
+		static_scale_display("none","none");
+	}
+	else{
+		static_component_display(component_item.length,"none","result");
+		static_scale_display("none","none");
+		document.getElementById("static_scale_category_key").style.display = "";
+		document.getElementById("static_scale_number_category_key").style.display = "";
+		static_pkg_list_display(suite_item.length,"none","result");	
+		static_spec_list_display(category_key.length,"",category_key_second.length,"",category_key_third.length,"");
+		document.getElementById("td_category_key_null").style.display = "none";
+		document.getElementById("td_category_key").style.display = "";
+		filter_result_item();
+	}
 }
 
 function draw_package_tree(){
@@ -1461,9 +2513,444 @@ function filter_case_item(){
 		page[i].style.borderStyle = "none";
 	}
 }
+DATA
+print <<DATA;
+function select_result_file(type){
+	if(type == "init"){
+		document.location = "tests_statistic.pl?result_file=1";
+	}
+	else{
+		var id = document.getElementById('select_result');
+		var count = id.selectedIndex+1;
+		document.location = "tests_statistic.pl?result_file="+count;
+	}
+}
 
-filter_case_item();
+function filter_result_item(){
+	var suite_count_total = new Array;
+	var suite_count_pass = new Array;
+	var component_count_total = new Array;
+	var component_count_pass = new Array;
+	var category_key_count_total = new Array;
+	var category_key_count_pass = new Array;
+	var category_key_second_count_total = new Array;
+	var category_key_second_count_pass = new Array;
+	var category_key_third_count_total = new Array;
+	var category_key_third_count_pass = new Array;
+	var select_category_key_id = document.getElementById("select_category_key");
+	
+	if(suite_item.length == 0){
+		var item = new Option("No result file","No result file");
+		document.getElementById("select_result").options.add(item);
+	}
+	
+	for(var i=0; i< suite_item.length; i++){
+		suite_count_total[i] = 0;
+		suite_count_pass[i] = 0;
+	}
+	
+	for(var i=0; i< component_item.length; i++){
+		component_count_total[i] = 0;
+		component_count_pass[i] = 0;
+	}
+	
+	for(var i=0; i< category_key.length; i++){
+		category_key_count_total[i] = 0;
+		category_key_count_pass[i] = 0;
+	}
+	
+	for(var i=0; i< category_key_second.length; i++){
+		category_key_second_count_total[i] = 0;
+		category_key_second_count_pass[i] = 0;
+	}
+	
+	for(var i=0; i< category_key_third.length; i++){
+		category_key_third_count_total[i] = 0;
+		category_key_third_count_pass[i] = 0;
+	}
+	
+	for (var j=0;j<suite_item.length; j++){
+		for(var i=0;i<one_package_case_count_total_result; i++){
+			if (suite_value[i] == suite_item[j]){	
+				if (((sel_testsuite_id.value == "Any Test Suite")
+				||(sel_testsuite_id.value == suite_value[i]))
+				&& ((sel_type_id.value == "Any Type")
+				||(sel_type_id.value == type_value[i]))
+				&& ((sel_status_id.value == "Any Status")
+				||(sel_status_id.value == status_value[i]))
+				&& ((sel_priority_id.value == "Any Priority")
+				||(sel_priority_id.value == priority_value[i]))
+				&& ((sel_category_id.value == "Any Category")
+				||(category_value[i].indexOf(sel_category_id.value))>0)
+				){
+					suite_count_total[j] ++;
+					if(result_value[i] == "PASS"){
+						suite_count_pass[j] ++;
+					}
+				}
+			}
+		}
+	}
+	
+	for(var k=0; k<component_item.length; k++){
+		for(var i=0;i<one_package_case_count_total_result; i++){	
+			if (component_value[i] == component_item[k]){	
+				if (((sel_testsuite_id.value == "Any Test Suite")
+				||(sel_testsuite_id.value == suite_value[i]))
+				&& ((sel_type_id.value == "Any Type")
+				||(sel_type_id.value == type_value[i]))
+				&& ((sel_status_id.value == "Any Status")
+				||(sel_status_id.value == status_value[i]))
+				&& ((sel_priority_id.value == "Any Priority")
+				||(sel_priority_id.value == priority_value[i]))
+				&& ((sel_category_id.value == "Any Category")
+				||(category_value[i].indexOf(sel_category_id.value))>0)
+				){
+					component_count_total[k] ++;
+					if(result_value[i] == "PASS"){
+						component_count_pass[k] ++;
+					}
+				}
+			}	
+		}
+	}
+	
+	if(suite_item.length > 0){
+		for(var k=0; k<category_key.length; k++){
+			for(var i=0;i<one_package_case_count_total_result; i++){	
+				if (spec_value[i].indexOf(category_key[k]+":") == 0){	
+					if (((sel_testsuite_id.value == "Any Test Suite")
+					||(sel_testsuite_id.value == suite_value[i]))
+					&& ((sel_type_id.value == "Any Type")
+					||(sel_type_id.value == type_value[i]))
+					&& ((sel_status_id.value == "Any Status")
+					||(sel_status_id.value == status_value[i]))
+					&& ((sel_priority_id.value == "Any Priority")
+					||(sel_priority_id.value == priority_value[i]))
+					&& ((sel_category_id.value == "Any Category")
+					||(category_value[i].indexOf(sel_category_id.value))>0)
+					){
+						category_key_count_total[k] ++;
+						if(result_value[i] == "PASS"){
+							category_key_count_pass[k] ++;
+						}
+					}
+				}	
+			}
+		}
+		
+		for(var k=0; k<category_key_second.length; k++){
+			for(var i=0;i<one_package_case_count_total_result; i++){	
+				if (spec_value[i].indexOf(category_key_second[k]+":") == 0){	
+					if (((sel_testsuite_id.value == "Any Test Suite")
+					||(sel_testsuite_id.value == suite_value[i]))
+					&& ((sel_type_id.value == "Any Type")
+					||(sel_type_id.value == type_value[i]))
+					&& ((sel_status_id.value == "Any Status")
+					||(sel_status_id.value == status_value[i]))
+					&& ((sel_priority_id.value == "Any Priority")
+					||(sel_priority_id.value == priority_value[i]))
+					&& ((sel_category_id.value == "Any Category")
+					||(category_value[i].indexOf(sel_category_id.value))>0)
+					){
+						category_key_second_count_total[k] ++;
+						if(result_value[i] == "PASS"){
+							category_key_second_count_pass[k] ++;
+						}
+					}
+				}	
+			}
+		}
+		
+		for(var k=0; k<category_key_third.length; k++){
+			for(var i=0;i<one_package_case_count_total_result; i++){	
+				if (spec_value[i].indexOf(category_key_third[k]+":") == 0){	
+					if (((sel_testsuite_id.value == "Any Test Suite")
+					||(sel_testsuite_id.value == suite_value[i]))
+					&& ((sel_type_id.value == "Any Type")
+					||(sel_type_id.value == type_value[i]))
+					&& ((sel_status_id.value == "Any Status")
+					||(sel_status_id.value == status_value[i]))
+					&& ((sel_priority_id.value == "Any Priority")
+					||(sel_priority_id.value == priority_value[i]))
+					&& ((sel_category_id.value == "Any Category")
+					||(category_value[i].indexOf(sel_category_id.value))>0)
+					){
+						category_key_third_count_total[k] ++;
+						if(result_value[i] == "PASS"){
+							category_key_third_count_pass[k] ++;
+						}
+					}
+				}	
+			}
+		}
+	}
+	for (var i=0; i<suite_item.length; i++) {
+		var list_bar = document.getElementById(static_list_bar_td_result[i]);
+		var list_num = document.getElementById(static_list_num_result[i]);
+		
+		var id 	 = static_list_bar_result[i];
+		document.getElementById(id).innerHTML = "";
+		var pb = new YAHOO.widget.ProgressBar().render(static_list_bar_result[i]);
+		if(	suite_count_total[i] == 0){
+			var rate = 0;
+			list_bar.width = 1;
+			list_num.innerHTML = suite_count_total[i]+"%";
+		}
+		else{
+			var rate = parseFloat((suite_count_pass[i]/case_count_total*100).toFixed(2));
+			pb.set('minValue', 0);
+			pb.set('maxValue', rate);
+		}	
+		
+		if(rate <1 ){
+			pb.set('width', 1);
+			list_bar.width = 1;
+		}
+		else{
+			pb.set('width', rate*3.98);
+			list_bar.width = rate*3.98;
+		}
+		
+		pb.set('height', 15);
+		//case_number_before
+		pb.set('value', 0);
+	
+		pb.set('anim', true);
+		var anim = pb.get('anim');
+		anim.duration = 1;
+		anim.method = YAHOO.util.Easing.easeBothStrong;
+	
+		//global_case_number
+		pb.set('value', rate);
+		
+		list_num.innerHTML =rate+"%";
+	}
+	
+	for (var i=0; i<component_item.length; i++) {
+		var list_bar = document.getElementById(static_list_bar_td_component_result[i]);
+		var list_num = document.getElementById(static_list_num_component_result[i]);
+		
+		var id 	 = static_list_bar_component_result[i];
+		document.getElementById(id).innerHTML = "";
+		var pb = new YAHOO.widget.ProgressBar().render(static_list_bar_component_result[i]);
+		if(	component_count_total[i] == 0){
+			var rate = 0;
+			list_bar.width = 1;
+			list_num.innerHTML = component_count_total[i]+"%";
+		}
+		else{
+			var rate = parseFloat((component_count_pass[i]/case_count_total*100).toFixed(2));
+			pb.set('minValue', 0);
+			pb.set('maxValue', rate);
+		}	
+		if(rate <1 ){
+			pb.set('width', 1);
+			list_bar.width = 1;
+		}
+		else{
+			pb.set('width', rate*3.13);
+			list_bar.width = rate*3.13;
+		}
+		pb.set('height', 15);
+		//case_number_before
+		pb.set('value', 0);
+	
+		pb.set('anim', true);
+		var anim = pb.get('anim');
+		anim.duration = 1;
+		anim.method = YAHOO.util.Easing.easeBothStrong;
+	
+		//global_case_number
+		pb.set('value', rate);
+		list_num.innerHTML =rate+"%";
+	}
+	
+	if( suite_item.length >0 ){
+		for (var i=0; i<category_key.length; i++) {
+			var list_bar = document.getElementById(static_list_bar_td_category_key_result[i]);
+			var list_num = document.getElementById(static_list_num_category_key_result[i]);
+			
+			var id 	 = static_list_bar_category_key_result[i];
+			document.getElementById(id).innerHTML = "";
+			var pb = new YAHOO.widget.ProgressBar().render(static_list_bar_category_key_result[i]);
+			if(	category_key_count_total[i] == 0){
+				var rate = 0;
+				list_bar.width = 1;
+				list_num.innerHTML = category_key_count_total[i]+"%";
+			}
+			else{
+				var rate = parseFloat((category_key_count_pass[i]/case_count_total*100).toFixed(2));
+				pb.set('minValue', 0);
+				pb.set('maxValue', rate);
+			}	
+			if(rate <1 ){
+				pb.set('width', 1);
+				list_bar.width = 1;
+			}
+			else{
+				pb.set('width', rate*3.13);
+				list_bar.width = rate*3.13;
+			}
+			pb.set('height', 15);
+			//case_number_before
+			pb.set('value', 0);
+		
+			pb.set('anim', true);
+			var anim = pb.get('anim');
+			anim.duration = 1;
+			anim.method = YAHOO.util.Easing.easeBothStrong;
+		
+			//global_case_number
+			pb.set('value', rate);
+			list_num.innerHTML =rate+"%";
+		}
+	
+		for (var i=0; i<category_key_second.length; i++) {
+			var id 	 = static_list_bar_category_key_second_result[i];
+			var td_id = static_list_bar_td_category_key_second_result[i];
+			var num_id = static_list_num_category_key_second_result[i];
+			var reg = new RegExp("&amp;");
+			id = id.replace(reg,"&");
+			num_id = num_id.replace(reg,"&");
+			td_id = td_id.replace(reg,"&");
+			var flag = check_conf_category_key(id);
+			if(flag){
+				var list_bar = document.getElementById(td_id);
+				var list_num = document.getElementById(num_id);
+				document.getElementById(id).innerHTML = "";
+				var pb = new YAHOO.widget.ProgressBar().render(id);
+				if(	category_key_second_count_total[i] == 0){
+					var rate = 0;
+					list_bar.width = 1;
+					list_num.innerHTML = category_key_second_count_total[i]+"%";
+				}
+				else{
+					var rate = parseFloat((category_key_second_count_pass[i]/case_count_total*100).toFixed(2));
+					pb.set('minValue', 0);
+					pb.set('maxValue', rate);
+				}	
+				if(rate <1 ){
+					pb.set('width', 1);
+					list_bar.width = 1;
+				}
+				else{
+					pb.set('width', rate*3.13);
+					list_bar.width = rate*3.13;
+				}
+				pb.set('height', 15);
+				//case_number_before
+				pb.set('value', 0);
+			
+				pb.set('anim', true);
+				var anim = pb.get('anim');
+				anim.duration = 1;
+				anim.method = YAHOO.util.Easing.easeBothStrong;
+			
+				//global_case_number
+				pb.set('value', rate);
+				list_num.innerHTML =rate+"%";
+			}
+		}
+		
+		for (var i=0; i<category_key_third.length; i++) {
+			var id 	 = static_list_bar_category_key_third_result[i];
+			var num_id = static_list_num_category_key_third_result[i];
+			var td_id = static_list_bar_td_category_key_third_result[i];
+			var reg = new RegExp("&amp;");
+			id = id.replace(reg,"&");
+			num_id = num_id.replace(reg,"&");
+			td_id = td_id.replace(reg,"&");
+			var flag = check_conf_category_key(id);
+			if(flag){
+				var list_bar = document.getElementById(td_id);
+				var list_num = document.getElementById(num_id);
+				document.getElementById(id).innerHTML = "";
+				var pb = new YAHOO.widget.ProgressBar().render(id);
+				if(	category_key_third_count_total[i] == 0){
+					var rate = 0;
+					list_bar.width = 1;
+					list_num.innerHTML = category_key_third_count_total[i]+"%";
+				}
+				else{
+					var rate = parseFloat((category_key_third_count_pass[i]/case_count_total*100).toFixed(2));
+					pb.set('minValue', 0);
+					pb.set('maxValue', rate);
+				}	
+				if(rate <1 ){
+					pb.set('width', 1);
+					list_bar.width = 1;
+				}
+				else{
+					pb.set('width', rate*3.13);
+					list_bar.width = rate*3.13;
+				}
+				pb.set('height', 15);
+				//case_number_before
+				pb.set('value', 0);
+			
+				pb.set('anim', true);
+				var anim = pb.get('anim');
+				anim.duration = 1;
+				anim.method = YAHOO.util.Easing.easeBothStrong;
+			
+				//global_case_number
+				pb.set('value', rate);
+				list_num.innerHTML =rate+"%";
+			}
+		}
+	}
+	//change color
+	var color_list = new Array("#BDD484", "#D5B584", "#83D4CE", "#D48483");
+	var page = document.getElementsByClassName("yui-pb-bar");
+	for ( var i = 0; i < page.length; i++) {
+		page[i].style.backgroundColor = color_list[i%4];
+	}
+	var page = document.getElementsByClassName("yui-pb");
+	for ( var i = 0; i < page.length; i++) {
+		page[i].style.borderStyle = "none";
+	}
+	if(document.getElementById("td_category_key").style.display == ""){
+		if(select_category_key_id.selectedIndex == 0){
+			static_spec_list_display(category_key.length,"",category_key_second.length,"none",category_key_third.length,"none");
+		}
+		else if(select_category_key_id.selectedIndex == 1){
+			static_spec_list_display(category_key.length,"",category_key_second.length,"",category_key_third.length,"none");
+		}
+		else if(select_category_key_id.selectedIndex == 2){
+			static_spec_list_display(category_key.length,"",category_key_second.length,"",category_key_third.length,"");
+		}
+	}
+}
 
+function check_conf_category_key(id){
+	var flag = 0;
+	for (var j = 0; j<category_key.length; j++){
+		if(id.indexOf("_"+category_key[j]+":") > 0){
+			flag = 1;
+		}
+	}
+	return flag;
+}
+
+DATA
+if ( $_GET{'case_view'} ) {
+	print <<DATA;
+	filter_case_item();
+	document.getElementById('view_test_case').disabled = "true";
+	document.getElementById('view_test_case').style.cursor = "default";
+
+DATA
+}
+else {
+	print <<DATA;
+	filter_result_item();
+	document.getElementById("select_result").selectedIndex = $result_no;
+	document.getElementById('view_test_result').disabled = "true";
+	document.getElementById('view_test_result').style.cursor = "default";
+DATA
+}
+print <<DATA;
 </script>
 DATA
 
@@ -1476,9 +2963,23 @@ sub GetPackageName {
 	}
 }
 
+sub GetResultFileName {
+	if ( $_ =~ /^tests\.result\.xml$/ ) {
+		my $relative = $File::Find::dir;
+		$relative =~ s/$testSuitesPath//g;
+		my @temp_result_file_name = split( "\/", $relative );
+		push( @result_file_name, @temp_result_file_name );
+	}
+}
+
 sub ScanPackages {
 	$testSuitesPath = $definition_dir;
 	find( \&GetPackageName, $testSuitesPath );
+}
+
+sub ScanResultFile {
+	$testSuitesPath = $result_dir_manager;
+	find( \&GetResultFileName, $testSuitesPath );
 }
 
 sub CountPackages {
@@ -1487,11 +2988,26 @@ sub CountPackages {
 	}
 }
 
+sub CountResultFiles {
+	while ( $result_file_number < @result_file_name ) {
+		$result_file_number++;
+	}
+}
+
 sub CreateFilePath {
 	my $count = 0;
 	while ( $count < $package_name_number ) {
 		$testsxml[$count] =
 		  $definition_dir . $package_name[$count] . "/tests.xml";
+		$count++;
+	}
+}
+
+sub CreateResultFilePath {
+	my $count = 0;
+	while ( $count < $result_file_number ) {
+		$resultsxml[$count] =
+		  $result_dir_manager . $result_file_name[$count] . "/tests.result.xml";
 		$count++;
 	}
 }
@@ -1507,9 +3023,10 @@ sub AnalysisTestsXML {
 	my $type_number_temp      = 0;
 	my $component_number_temp = 0;
 	my $temp;
+	my ( $number_temp, @xml_temp ) = @_;
 
-	while ( $count < $package_name_number ) {
-		open FILE, $testsxml[$count] or die $!;
+	while ( $count < $number_temp ) {
+		open FILE, $xml_temp[$count] or die $!;
 		while (<FILE>) {
 			if ( $_ =~ /<category>(.*?)</ ) {
 
@@ -1596,7 +3113,9 @@ sub AnalysisTestsXML {
 					}
 				}
 			}
-			if ( $_ =~ / type="(.*?)"/ ) {
+			if (   ( $_ =~ / type="(.*?)"/ )
+				&& ( $_ !~ /xml\-stylesheet type=/ ) )
+			{
 				$temp = $1;
 				if ( $type_number_temp == 0 ) {
 					push( @type, $temp );
@@ -1789,11 +3308,17 @@ sub GetSelectItem {
 sub FilterCaseValue {
 	my $one_package_case_count_total = 0;
 	my $count_tmp                    = 0;
-	my @package_name_tmp             = @package_name;
+	my ( $xml_dir, @xml_file_tmp ) = @_;
 
-	foreach (@package_name_tmp) {
-		my $package       = $_;
-		my $tests_xml_dir = $test_definition_dir . $package . "/tests.xml";
+	foreach (@xml_file_tmp) {
+		my $package = $_;
+		my $tests_xml_dir;
+		if ( $xml_dir eq $definition_dir ) {
+			$tests_xml_dir = $xml_dir . $package . "/tests.xml";
+		}
+		else {
+			$tests_xml_dir = $xml_dir . $package . "/tests.result.xml";
+		}
 		my $suite_value;
 		my $type_value;
 		my $case_value;
@@ -1801,6 +3326,7 @@ sub FilterCaseValue {
 		my $component_value;
 		my $priority_value;
 		my $category_value;
+		my $result_value;
 		my $spec        = "none";
 		my $spec_number = 0;
 		my $startCase   = "FALSE";
@@ -1828,6 +3354,7 @@ sub FilterCaseValue {
 				$priority_value  = $caseInfo{"priority"};
 				$category_value  = $caseInfo{"categories"};
 				$spec            = $caseInfo{"specs"};
+				$result_value    = $caseInfo{"result"};
 
 				push( @filter_suite_value,     $suite_value );
 				push( @filter_type_value,      $type_value );
@@ -1835,6 +3362,36 @@ sub FilterCaseValue {
 				push( @filter_component_value, $component_value );
 				push( @filter_priority_value,  $priority_value );
 				push( @filter_category_value,  $category_value );
+				push( @filter_result_value,    $result_value );
+
+				my @temp = ();
+
+				push( @temp, $filter_suite_value[0] );
+				for ( my $j = 1 ; $j < @filter_suite_value ; $j++ ) {
+					for ( my $i = 0 ; $i < @temp ; $i++ ) {
+						if ( $filter_suite_value[$j] eq $temp[$i] ) {
+							last;
+						}
+						if ( $i == @temp - 1 ) {
+							push( @temp, $filter_suite_value[$j] );
+						}
+					}
+				}
+				@filter_suite_item = sort @temp;
+				@temp              = ();
+
+				push( @temp, $filter_component_value[0] );
+				for ( my $j = 1 ; $j < @filter_component_value ; $j++ ) {
+					for ( my $i = 0 ; $i < @temp ; $i++ ) {
+						if ( $filter_component_value[$j] eq $temp[$i] ) {
+							last;
+						}
+						if ( $i == @temp - 1 ) {
+							push( @temp, $filter_component_value[$j] );
+						}
+					}
+				}
+				@filter_component_item = sort @temp;
 
 				if (
 					(
@@ -1871,6 +3428,69 @@ sub FilterCaseValue {
 	}
 	foreach (@filter_suite_value) {
 		$case_count_total++;
+	}
+	foreach (@filter_spec_value) {
+		if ( $_ =~ /(.*?)\:(.*?)\:(.*)/ ) {
+			my $category_key_temp = $1 . ":" . $2;
+			push( @filter_category_key_second, $category_key_temp );
+		}
+		if ( $_ =~ /(.*?)\:(.*?)\:(.*?):(.*)/ ) {
+			my $category_key_temp = $1 . ":" . $2 . ":" . $3;
+			push( @filter_category_key_third, $category_key_temp );
+		}
+	}
+
+	my @temp = ();
+	my $k    = 0;
+	for ( ; $k < @filter_category_key_second ; $k++ ) {
+		if ( $filter_category_key_second[$k] !~ /unknown/ ) {
+			push( @temp, $filter_category_key_second[$k] );
+			last;
+		}
+	}
+
+	for ( my $j = 1 ; $j < @filter_category_key_second ; $j++ ) {
+		for ( my $i = 0 ; $i < @temp ; $i++ ) {
+			if ( $filter_category_key_second[$j] eq $temp[$i] ) {
+				last;
+			}
+			if ( $i == @temp - 1 ) {
+				if ( $filter_category_key_second[$j] !~ /unknown/ ) {
+					push( @temp, $filter_category_key_second[$j] );
+				}
+			}
+		}
+	}
+	@filter_category_key_second_item = sort @temp;
+	@temp                            = ();
+
+	$k = 0;
+	for ( ; $k < @filter_category_key_third ; $k++ ) {
+		if ( $filter_category_key_third[$k] !~ /unknown/ ) {
+			push( @temp, $filter_category_key_third[$k] );
+			last;
+		}
+	}
+	for ( my $j = 1 ; $j < @filter_category_key_third ; $j++ ) {
+		for ( my $i = 0 ; $i < @temp ; $i++ ) {
+			if ( $filter_category_key_third[$j] eq $temp[$i] ) {
+				last;
+			}
+			if ( $i == @temp - 1 ) {
+				if ( $filter_category_key_third[$j] !~ /unknown/ ) {
+					push( @temp, $filter_category_key_third[$j] );
+				}
+			}
+		}
+	}
+	@filter_category_key_third_item = sort @temp;
+}
+
+sub DrawResultSelect {
+	for ( my $count = 0 ; $count < @result_file_name ; $count++ ) {
+		print <<DATA;
+		<option>$result_file_name[$count]</option>
+DATA
 	}
 }
 
@@ -1934,6 +3554,27 @@ DATA
 		<option>$test_suite_item[$count]</option>
 DATA
 	}
+}
+
+sub DrawResultsuiteSelect {
+	my $count = 0;
+	print <<DATA;
+		<option selected="selected">Any Test Suite</option>
+DATA
+	for ( ; $count < @filter_suite_item ; $count++ ) {
+		print <<DATA;
+		<option>$filter_suite_item[$count]</option>
+DATA
+	}
+}
+
+sub DrawCategoryKeySelect {
+	my $count = 0;
+	print <<DATA;
+		<option selected="selected">category</option>
+		<option>section</option>
+		<option>specification</option>
+DATA
 }
 
 sub DrawPackageSelect {

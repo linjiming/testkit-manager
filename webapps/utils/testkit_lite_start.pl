@@ -1,14 +1,11 @@
 #!/usr/bin/perl -w
 #
-# Copyright (C) 2007-2009 The Linux Foundation. All rights reserved.
-#
-# This program has been developed by ISP RAS for LF.
-# The ptyshell tool is originally written by Jiri Dluhos <jdluhos@suse.cz>
-# Copyright (C) 2005-2007 SuSE Linux Products GmbH
+# Copyright (C) 2012 Intel Corporation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
-# version 2 as published by the Free Software Foundation.
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,19 +14,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
-#   Changlog:
-#			07/16/2010,
-#			1\ Update the method 'Setup' for change the kit name by Tang, Shao-Feng <shaofeng.tang@intel.com>.
-#			2\ Add a new method 'initProfileInfo' for reading selected test-packages by Tang, Shao-Feng <shaofeng.tang@intel.com>.
-#			3\ Add a new method 'readProfile' for querying the path of the selected XML files '/usr/share/$package/tests.xml' by Tang, Shao-Feng <shaofeng.tang@intel.com>.
-#			4\ Add a new method 'getBackupResultXMLCMD' for the commands which are porposed to copy/backup the result XML files by Tang, Shao-Feng <shaofeng.tang@intel.com>.
-#			5\ Update the block 'run test in ptyshell' for adapting the new test runner 'testkit-lite' by Tang, Shao-Feng <shaofeng.tang@intel.com>.
-#			6\ Update the block 'backup report' for adapting the test runner 'testkit-lite', and generateing the new format test-report by Tang, Shao-Feng <shaofeng.tang@intel.com>.
-#
-#
+# Authors:
+#              Zhang, Huihui <huihuix.zhang@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 
 use strict;
 use IO::Handle;    # for autoflush();
@@ -95,12 +84,7 @@ my $_END = sub {
 	print_stderr "Finished.\n" if $globals->{'webui'};
 	$globals->{'finish_time'} = time();
 
-#backup test_status file
-#if(!defined $globals->{'not-run'} && defined $globals->{'result_dir'} && -f $globals->{'result_dir'}."/../test_status"){
 	if ( !defined $globals->{'not-run'} && defined $globals->{'result_dir'} ) {
-
-#cmd("cp -f ".$globals->{'result_dir'}."/../test_status ".$globals->{'result_dir'}."/.") == 0
-#       or fail "can not copy ".$globals->{'result_dir'}."/../test_status to".$globals->{'result_dir'}."/.";
 		my $status_summary = "NotFinished";
 		if ( defined $globals->{'testkitdone'}
 			&& $globals->{'testkitdone'} eq "Finished" )
@@ -110,9 +94,7 @@ my $_END = sub {
 		$status_summary = "Auto: $status_summary\n";
 		write_string_as_file( $globals->{'result_dir'} . "/test_status",
 			$status_summary );
-
 	}
-
 	inform "Finished.";
 };
 
@@ -331,7 +313,7 @@ sub Setup {
 
 	# Default user profile
 	$globals->{'userprofile'} =
-	  $FindBin::Bin . "/../../profiles/user/user.profile";
+	  $FindBin::Bin . "/../../plans/user/user.profile";
 
 	# Auto test config under testrun_id folder
 	$globals->{'auto_profile'} = "profile.auto";
@@ -346,10 +328,8 @@ sub Setup {
 	$globals->{'auto'} = 1;
 
 	# Have manula test?
-	$globals->{'manual'}           = 1;
-	$globals->{'testkit_lite_dir'} = $FindBin::Bin . "/../../tests";
-	$globals->{'testlog_dir'}      = $FindBin::Bin . "/../../log";
-	$globals->{'testkit_dir'}      = $FindBin::Bin . "/../..";
+	$globals->{'manual'}      = 1;
+	$globals->{'testkit_dir'} = $FindBin::Bin . "/../..";
 
 	if ( $options->{'userprofile'} ) {
 		$globals->{'userprofile'} = $options->{'userprofile'};
@@ -685,7 +665,7 @@ sub Check_subshell_off {
 
 	# write test_status file under results
 	my $test_plan_name = $profile_name;
-	$test_plan_name =~ s/\/.*profiles\/test\///;
+	$test_plan_name =~ s/\/.*plans\///;
 	$globals->{'test_plan'} = $test_plan_name;
 	write_status();
 
@@ -815,34 +795,6 @@ sub send_results {
 	}
 }
 
-# test prepration
-{
-
-	# copy test configure file
-	cmd(    "cp -f "
-		  . $globals->{'result_dir'} . "/"
-		  . $globals->{'auto_profile'} . " "
-		  . $globals->{'testkit_lite_dir'}
-		  . "/testkit" ) == 0
-	  or fail "Can not copy "
-	  . $globals->{'result_dir'} . "/"
-	  . $globals->{'auto_profile'} . " to "
-	  . $globals->{'testkit_lite_dir'}
-	  . "/testkit";
-
-#inform "[CMD]: cp -f ".$globals->{'result_dir'}."/".$globals->{'auto_profile'}." ".$globals->{'testkit_lite_dir'}."/testkit";
-
-	# clean up test enviroment
-	if ( -d $globals->{'testlog_dir'} . "/runtest/latest" ) {
-		cmd(
-			"rm -rf " . $globals->{'testkit_lite_dir'} . "/log/runtest/latest" )
-		  == 0
-		  or warning "Can not clean up latest log under "
-		  . $globals->{'testkit_lite_dir'}
-		  . "/log/runtest/latest";
-	}
-}
-
 # Added by Shao-Feng, for reading the profile.
 my @thisTargetPackages;
 my @thisTargetFilter;
@@ -928,8 +880,9 @@ sub initProfileInfo {
 }
 
 sub readProfile {
-	my $targetPackages = "";
-	my $wrtPackages    = "-e \"WRTLauncher";
+	my $targetPackages      = "";
+	my $wrtPackages         = "-e \"WRTLauncher";
+	my @uninstalledPackages = ();
 	if ( !@thisTargetPackages ) {
 		&initProfileInfo();
 	}
@@ -940,15 +893,17 @@ sub readProfile {
 		my $cmd = sdb_cmd("shell ls /usr/share/$thisTargetPackage/tests.xml");
 		my $isInstalled = `$cmd`;
 		if ( $isInstalled !~ /No such file or directory/ ) {
-
-			if ( $thisTargetPackage =~ /webapi/ ) {
+			if (   ( $thisTargetPackage =~ /^webapi/ )
+				or ( $thisTargetPackage =~ /^cts-webapi/ )
+				or ( $thisTargetPackage =~ /^wrt/ ) )
+			{
 				$isWebApi = "True";
-				$targetPackages .= "/usr/share/$thisTargetPackage/tests.xml ";
 				$wrtPackages .= " " . $thisTargetPackage;
 			}
-			else {
-				$targetPackages .= "/usr/share/$thisTargetPackage/tests.xml ";
-			}
+			$targetPackages .= "/usr/share/$thisTargetPackage/tests.xml ";
+		}
+		else {
+			push( @uninstalledPackages, $thisTargetPackage );
 		}
 	}
 	if ( $targetPackages ne "" ) {
@@ -963,29 +918,14 @@ sub readProfile {
 			}
 		}
 	}
+	if ( @uninstalledPackages > 0 ) {
+		my $uninstall = join( ",", @uninstalledPackages );
+		return $uninstall;
+	}
 	return $targetPackages;
 }
 
 sub getBackupResultXMLCMD {
-	my ( $profile_path, $result_path ) = @_;
-
-	my @copyCommands;
-
-	if ( $profile_path && $result_path ) {
-		if ( !@thisTargetPackages ) {
-			&initProfileInfo($profile_path);
-		}
-		foreach (@thisTargetPackages) {
-			my $thisTargetPackage = $_;
-			push( @copyCommands, "mkdir $result_path/$thisTargetPackage" );
-			push( @copyCommands,
-"cp -rf /opt/testkit/lite/latest/usr/share/$thisTargetPackage/tests.xml.xmlresult $result_path/$thisTargetPackage/result.tests.xml"
-			);
-			push( @copyCommands,
-"more /opt/testkit/lite/latest/usr/share/$thisTargetPackage/tests.xml.textresult >> $result_path/auto_summary"
-			);
-		}
-	}
 
 	# write runconfig and info file under each report folder
 	syncLiteResult();
@@ -995,7 +935,6 @@ sub getBackupResultXMLCMD {
 		$time = $1;
 	}
 	writeResultInfo( $time, $isOnlyAuto, @targetFilter );
-	return \@copyCommands;
 }
 
 sub syncLiteResult {
@@ -1026,31 +965,25 @@ sub syncLiteResult {
 	write_info("Sub shell started");
 
 	# Run the test in ptyshell
-	$profile_content =
-	  &readProfile( $globals->{'testkit_dir'} . "/tests/testkit" );
-	if ( $profile_content eq "" ) {
-		inform "[WARNNING]:\nfound no package\n";
+	$profile_content = &readProfile( $globals->{'testkit_dir'} . "/plans" );
+	if ( $profile_content !~ /usr\/share/ ) {
+		inform "[ERROR]:\nCan't find the following package(s),\n"
+		  . $profile_content
+		  . "\nTry to load this test plan or install package(s) manually to resolve this issue";
 	}
 	else {
 		if ( $isWebApi eq "False" ) {
-			inform "[CMD]:\nrm -rf "
-			  . $globals->{'testlog_dir'}
-			  . "/runtest/latest/*;\n"
+			inform "[CMD]:\n"
 			  . sdb_cmd("shell testkit-lite -f ")
 			  . $profile_content . "\n";
 		}
 		else {
-			inform "[CMD]:\nrm -rf "
-			  . $globals->{'testlog_dir'}
-			  . "/runtest/latest/*;\n"
+			inform "[CMD]:\n"
 			  . sdb_cmd("shell testkit-lite -f ")
 			  . $profile_content . "\n";
 		}
 	}
-
-#$subshell->Send("rm -rf ".$globals->{'testlog_dir'}."/runtest/latest/*;./runtest --testsetfile=./tests/testkit;exit\n");
-#$subshell->Send("rm -rf ".$globals->{'testlog_dir'}."/runtest/latest/*;/usr/local/bin/testrunner-lite -f $profile_content -o ".$globals->{'testlog_dir'}."/runtest/latest/results.xml;exit\n");
-	if ( $profile_content ne "" ) {
+	if ( $profile_content =~ /usr\/share/ ) {
 
 		# kill all existing widgets before testing
 		my $cmd           = sdb_cmd("shell 'wrt-launcher -l'");
@@ -1058,13 +991,12 @@ sub syncLiteResult {
 		foreach (@package_items) {
 			my $package_item = $_;
 			my $package_id   = "none";
-			if ( $package_item =~ /\[NULL\]\s*(.*?)\s*$/ ) {
+			if ( $package_item =~ /\s+([a-zA-Z0-9]*?)\s*$/ ) {
 				$package_id = $1;
 			}
 			if ( $package_id ne "none" ) {
-				my $cmd = sdb_cmd(
-"shell 'ps aux | grep /opt/apps/$package_id | sed -n '1,1p''"
-				);
+				my $cmd =
+				  sdb_cmd("shell 'ps aux | grep $package_id | sed -n '1,1p''");
 				my $pid = `$cmd`;
 				if ( $pid =~ /app\s*(\d*)\s*/ ) {
 					system( sdb_cmd("shell 'kill -9 $1'") );
@@ -1074,20 +1006,16 @@ sub syncLiteResult {
 
 		# start testing
 		if ( $isWebApi eq "False" ) {
-			$subshell->Spawn( "rm -rf "
-				  . $globals->{'testlog_dir'}
-				  . "/runtest/latest/*; "
-				  . sdb_cmd("shell testkit-lite -f $profile_content") );
+			$subshell->Spawn(
+				sdb_cmd("shell testkit-lite -f $profile_content") );
 		}
 		else {
-			$subshell->Spawn( "rm -rf "
-				  . $globals->{'testlog_dir'}
-				  . "/runtest/latest/*; "
-				  . sdb_cmd("shell testkit-lite -f $profile_content") );
+			$subshell->Spawn(
+				sdb_cmd("shell testkit-lite -f $profile_content") );
 		}
 	}
 	else {
-		$subshell->Spawn("echo 'no package found, exit...'; sleep 10");
+		$subshell->Spawn("echo 'Missing package(s) found, exit...'; sleep 10");
 		kill 'TERM', $$;    # send the TERM signal to itself.
 	}
 
@@ -1189,78 +1117,10 @@ sub syncLiteResult {
 		$globals->{'finish_time'} = time();
 		write_status();
 
-		# backup test result file
-		if ( -f $globals->{'testlog_dir'} . "/runtest/latest/tests.summary" ) {
-			inform "[CMD]:cp -f "
-			  . $globals->{'testlog_dir'}
-			  . "/runtest/latest/tests.summary "
-			  . $globals->{'result_dir'}
-			  . "\/autotest.res";
-			cmd(    "cp -f "
-				  . $globals->{'testlog_dir'}
-				  . "/runtest/latest/tests.summary "
-				  . $globals->{'result_dir'}
-				  . "\/autotest.res" );
-		}
-		else {
-
-#fail "can not find ".$globals->{'testlog_dir'}."/runtest/latest/autotest.res";
-#inform  "can not find ".$globals->{'testlog_dir'}."/runtest/latest/autotest.res";
-		}
-
-		# backup the result XML file
-		my $backXmlCmds =
-		  &getBackupResultXMLCMD( $globals->{'testkit_dir'} . "/tests/testkit",
-			$globals->{'result_dir'} );
-		foreach (@$backXmlCmds) {
-
-			# don't execute predefined cmd
-			#cmd($_);
-		}
 		cmd("rm -rf $globals->{'result_dir'}/../latest");
 		cmd( "ln -s $globals->{'result_dir'} $globals->{'result_dir'}/../latest"
 		);
-
-		# Make whole report to send out
-		if ( $globals->{'result_dir'} ) {
-
-			# don't need this part
-			#		rebuild_report(
-			#			$globals->{'report'},
-			#			$globals->{'result_dir'},
-			#			$globals->{'original_profile_path'}
-			#		);
-			#
-			#		#Create tar ball
-			#		{
-			#			$globals->{'results_tarball'} =
-			#			    $globals->{'result_dir'} . "/"
-			#			  . $globals->{'testrun_id'} . ".tgz";
-			#
-			#			my $tmp_file =
-			#			  $globals->{'temp_dir'} . "/"
-			#			  . extract_filename( $globals->{'results_tarball'} );
-			#			cmd(    "cd "
-			#				  . shq( extract_dir( $globals->{'result_dir'} ) )
-			#				  . " && tar czf "
-			#				  . shq($tmp_file) . " "
-			#				  . shq( extract_filename( $globals->{'result_dir'} ) )
-			#				  . " && mv "
-			#				  . shq($tmp_file) . " "
-			#				  . shq( $globals->{'results_tarball'} ) );
-			#		}
-
-			#No more need to Send mail
-			#if ( $globals->{'mailto'} ) {
-			# Send results by e-mail
-			#is_ok send_results( $globals->{'results_tarball'} )
-			#      or complain $Error::Last;
-			#}
-
-		}
-		else {
-			warning "please set testrun_id in reporting mode!";
-		}
+		&getBackupResultXMLCMD();
 	}
 }
 

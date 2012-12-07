@@ -15,12 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#   Authors:
 #
-#          Wendong,Sui  <weidongx.sun@intel.com>
-#          Tao,Lin  <taox.lin@intel.com>
-#
-#
+# Authors:
+#              Zhang, Huihui <huihuix.zhang@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 
 use strict;
 use Templates;
@@ -37,6 +35,7 @@ if ( !( -e $profile_dir_manager ) ) {
 my @package_name         = ();
 my @sort_package_name    = ();
 my @reverse_package_name = ();
+my @architecture         = ();
 my @version              = ();
 my @introduction         = ();
 my @case_number          = ();
@@ -60,6 +59,7 @@ my @component            = ();
 my @component_num        = ();
 my @execution_type       = ();
 my @execution_type_num   = ();
+my @architecture_item    = ();
 my @version_item         = ();
 my @category_item        = ();
 my @test_suite_item      = ();
@@ -128,6 +128,7 @@ my @case_execution_type;
 my @case_xml;
 my $case_value_flag_count = 0;
 
+my @filter_architecture_value    = ();
 my @filter_version_value         = ();
 my @filter_suite_value           = ();
 my @filter_set_value             = ();
@@ -180,6 +181,7 @@ if ( $_GET{"delete_package"} ) {
 			push( @package_name_temp, $_ );
 		}
 	}
+	sleep 3;
 	syncDefinition();
 
 	@package_name = @package_name_temp;
@@ -293,7 +295,7 @@ elsif ( $_GET{'view_single_package'} ) {
 	ListViewDetailedInfo($list_file);
 
 	print <<DATA;
-<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list" style="table-layout:fixed">	
+<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list" class="table_normal">	
   <tr>
     <td>
 DATA
@@ -364,7 +366,7 @@ elsif ( $_POST{'view_package_info'} ) {
 	ListViewDetailedInfo($list_file);
 
 	print <<DATA;
-<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list" style="table-layout:fixed">	
+<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list" class="table_normal">	
   <tr>
     <td>
 DATA
@@ -443,7 +445,7 @@ elsif ( $_POST{'list_view_filter_pkg_info'} ) {
 	ListViewDetailedInfo($list_file);
 
 	print <<DATA;
-<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list" style="table-layout:fixed">	
+<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list" class="table_normal">	
   <tr>
     <td>
 DATA
@@ -457,7 +459,7 @@ DATA
 
 #press load button
 elsif ( $_GET{'load_profile_button'} ) {
-	$refresh_flag = 0;
+	$refresh_flag = 1;
 	syncDefinition();
 	my $file;
 	my $flag_i            = 0;
@@ -595,7 +597,8 @@ sub UpdatePage {
 	<div id="ajax_loading" style="display:none"></div>
 	<iframe id='popIframe' class='popIframe' frameborder='0' ></iframe>
 	<div id="popDiv" class="mydiv" style="overflow-y:auto;overflow-x:auto;height:460px;display:none";></div>
-	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+	<div id="loadProgressBarDiv" class="loadProgressBarDiv" style="text-align:left;overflow-y:auto;overflow-x:auto;height:400px;display:none";></div>
+	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="">
 	      <table width="100%" height="30" border="0" cellspacing="0" cellpadding="0">
@@ -624,7 +627,9 @@ sub UpdatePage {
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Architecture</td><td>
                     <select name="select_arc" align="20px" id="select_arc" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('arc');">
-                    <option>X86</option>
+DATA
+	DrawArcSelect();
+	print <<DATA;
                     </select>
                   </td>
                 </tr>
@@ -736,7 +741,7 @@ DATA
         <tr>
           <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
             <tr>
-              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" style="table-layout:fixed" frame="below" rules="all">
+              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" class="table_normal" frame="below" rules="all">
                 <tr>
               <td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
               <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
@@ -759,7 +764,7 @@ DATA
 	DrawUninstallPackageList();
 
 	my $profiles_list = "";
-	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/profiles/test' ) ) {
+	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 		my @files = sort grep !/^[\.~]/, readdir(DIR);
 		foreach (@files) {
 			my $profile_name = $_;
@@ -906,6 +911,7 @@ sub UpdateNullPage {
 	<div id="ajax_loading" style="display:none"></div>
 	<iframe id='popIframe' class='popIframe' frameborder='0' ></iframe>
 	<div id="popDiv" class="mydiv" style="overflow-y:auto;overflow-x:auto;height:460px;display:none";></div>
+	<div id="loadProgressBarDiv" class="loadProgressBarDiv" style="text-align:left;overflow-y:auto;overflow-x:auto;height:400px;display:none";></div>
 	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="">
@@ -935,7 +941,9 @@ sub UpdateNullPage {
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Architecture</td><td>
                     <select name="select_arc" align="20px" id="select_arc" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
-                    <option>X86</option>
+DATA
+	DrawArcSelect();
+	print <<DATA;
                     </select>
                   </td>
                 </tr>
@@ -1061,7 +1069,7 @@ DATA
 	DrawUninstallPackageList();
 
 	my $profiles_list = "";
-	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/profiles/test' ) ) {
+	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 		my @files = sort grep !/^[\.~]/, readdir(DIR);
 		foreach (@files) {
 			my $profile_name = $_;
@@ -1199,7 +1207,7 @@ sub ViewDetailedInfo {
 	my $case_count_flag = 0;
 	print <<DATA;
 	<tr>
-		<td><table width="100%" height="600px" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none" style="table-layout:fixed">
+		<td><table width="100%" height="600px" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none" class="table_normal">
         	<tr>
 	            <td width="1%" class="report_list_one_row" style="background-color:#E9F6FC">&nbsp;</td>
 	            <td width="39%" valign="top" class="view_package_list_info" style="text-wrap:none;background-color:#E9F6FC">
@@ -1210,7 +1218,6 @@ sub ViewDetailedInfo {
 DATA
 
 	print <<DATA;
-<script type="text/javascript" src="run_tests.js"></script>
 <script language="javascript" type="text/javascript">
 // <![CDATA[
 // package tree
@@ -1597,13 +1604,24 @@ DATA
 // ]]>
 </script>
 		<td width="60%" valign="top" class="view_case_detail_info" >
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal" frame="below" rules="all">
+            <tr>
+              <td align="right" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;"><a id="case_view_switcher" onclick="javascript:switchCaseView();" title="view detailed case info">[Detailed]</a>&nbsp;</td>
+            </tr>
+          </table>
 DATA
 	my $count_temp = 0;
 	if ( @case_value eq "0" ) {
 		print <<DATA;
-			
-	          <div id="view_area_case_info_$count_temp" style="display:"> 
-	                          		
+	          <div id="view_case_short_info_$count_temp" style="display:">
+DATA
+		%caseInfo = updateCaseInfo("none");
+		printShortCaseInfo( "none", "none", %caseInfo );
+		print <<DATA;
+</div>
+DATA
+		print <<DATA;
+	          <div id="view_case_detailed_info_$count_temp" style="display:none">
 DATA
 		%caseInfo = updateCaseInfo("none");
 		printDetailedCaseInfo( "none", "none", %caseInfo );
@@ -1616,8 +1634,15 @@ DATA
 		%caseInfo = updateCaseInfo( $case_xml[$count_temp] );
 		if ( $count_temp eq "0" ) {
 			print <<DATA;
-			
-	          <div id="view_area_case_info_$count_temp" style="display:">                 		
+	          <div id="view_case_short_info_$count_temp" style="display:">
+DATA
+			printShortCaseInfo( $case_id[$count_temp],
+				$case_execution_type[$count_temp], %caseInfo );
+			print <<DATA;
+</div>
+DATA
+			print <<DATA;
+	          <div id="view_case_detailed_info_$count_temp" style="display:none">
 DATA
 			printDetailedCaseInfo( $case_id[$count_temp],
 				$case_execution_type[$count_temp], %caseInfo );
@@ -1627,8 +1652,15 @@ DATA
 		}
 		else {
 			print <<DATA;
-			
-	          <div id="view_area_case_info_$count_temp" style="display:none">                 		
+	          <div id="view_case_short_info_$count_temp" style="display:none">
+DATA
+			printShortCaseInfo( $case_id[$count_temp],
+				$case_execution_type[$count_temp], %caseInfo );
+			print <<DATA;
+</div>
+DATA
+			print <<DATA;
+	          <div id="view_case_detailed_info_$count_temp" style="display:none">
 DATA
 			printDetailedCaseInfo( $case_id[$count_temp],
 				$case_execution_type[$count_temp], %caseInfo );
@@ -1640,11 +1672,11 @@ DATA
 	}
 
 	print <<DATA;
-		</td>
-        	</tr>
-     	</table>
-     	</td>
-	</tr>
+        </td>
+            </tr>
+         </table>
+         </td>
+    </tr>
 DATA
 }
 
@@ -2200,7 +2232,9 @@ DATA
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Architecture</td><td>
                     <select name="select_arc" align="20px" id="select_arc" class="custom_select" style="width:70%">
-                    <option>X86</option>
+DATA
+	LoadDrawArcSelect();
+	print <<DATA;
                     </select></td>
                 </tr>
               </table></td>
@@ -2264,7 +2298,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Suite<td>
-                    <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%">
+                    <select name="select_testsuite" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_view_item('suite');">
 DATA
 	LoadDrawTestsuiteSelect();
 	print <<DATA;
@@ -2286,7 +2320,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
                     <td width="30%" height="30" align="left" class="custom_title">&nbsp;Test Set<td>
-                      <select name="select_testset" id="select_testset" class="custom_select" style="width:70%">
+                      <select name="select_testset" id="select_testset" class="custom_select" style="width:70%" onchange="javascript:filter_view_item('set');">
 DATA
 	LoadDrawTestsetSelect();
 	print <<DATA;
@@ -2296,7 +2330,7 @@ DATA
               <td width="50%" height="30" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Component<td>
-                    <select name="select_com" id="select_com" class="custom_select" style="width:70%">
+                    <select name="select_com" id="select_com" class="custom_select" style="width:70%" onchange="javascript:filter_view_item('component');">
 DATA
 	LoadDrawComponentSelect();
 	print <<DATA;
@@ -2326,6 +2360,7 @@ sub UpdateLoadPageSelectItem {
 	<div id="ajax_loading" style="display:none"></div>
 	<iframe id='popIframe' class='popIframe' frameborder='0' ></iframe>
 	<div id="popDiv" class="mydiv" style="overflow-y:auto;overflow-x:auto;height:460px;display:none";></div>
+	<div id="loadProgressBarDiv" class="loadProgressBarDiv" style="text-align:left;overflow-y:auto;overflow-x:auto;height:400px;display:none";></div>
 	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
 	    <td><form id="tests_custom" name="tests_custom" method="post" action="tests_custom.pl">
@@ -2423,7 +2458,9 @@ DATA
                 <tr>
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Architecture</td><td>
                     <select name="select_arc" align="20px" id="select_arc" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
-                    <option>X86</option>
+DATA
+	LoadDrawArcSelect();
+	print <<DATA;
                     </select>
                   </td>
                 </tr>
@@ -2433,7 +2470,7 @@ DATA
                   <td width="30%" height="30" align="left" class="custom_title">&nbsp;Version<td>
                     <select name="select_ver" id="select_ver" class="custom_select" style="width:70%" onchange="javascript:filter_case_item('version');">
 DATA
-	DrawVersionSelect();
+	LoadDrawVersionSelect();
 	print <<DATA;
                     </select>                    </td>
                 </tr>
@@ -2543,7 +2580,7 @@ sub UpdateLoadPage {
         <tr>
           <td><table width="100%" height="30" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
             <tr>
-              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" style="table-layout:fixed" frame="below" rules="all">
+              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" class="table_normal" frame="below" rules="all">
                 <tr>
               <td width="4%" height="22" align="center" valign="middle" class="custom_list_type_bottomright_title"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
               <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
@@ -2586,7 +2623,7 @@ DATA
 	LoadDrawPackageList();
 	DrawUninstallPackageList();
 	my $profiles_list = "";
-	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/profiles/test' ) ) {
+	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 		my @files = sort grep !/^[\.~]/, readdir(DIR);
 		foreach (@files) {
 			my $profile_name = $_;
@@ -2734,7 +2771,6 @@ print <<DATA;
   </tr>
 </table>
 
-<script type="text/javascript" src="run_tests.js"></script>
 <script language="javascript" type="text/javascript">
 // <![CDATA[
 var check_all_box = document.getElementById('checkbox_all');
@@ -2748,6 +2784,20 @@ print <<DATA;
 var package_name_number = 
 DATA
 print $package_name_number. ";";
+
+print <<DATA;
+var set_init_length = document.getElementById('select_testset').options.length;
+DATA
+
+print <<DATA;
+var list_view_current = 
+DATA
+print $list_view_current. ";";
+
+print <<DATA;
+var tree_view_current = 
+DATA
+print $tree_view_current. ";";
 
 print <<DATA;
 var test_set_item_number = 
@@ -3207,6 +3257,21 @@ print <<DATA;
 DATA
 
 print <<DATA;
+var architecture_value = new Array(
+DATA
+for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
+	if ( $count_num == $case_count_total - 1 ) {
+		print '"' . $filter_architecture_value[$count_num] . '"';
+	}
+	else {
+		print '"' . $filter_architecture_value[$count_num] . '"' . ",";
+	}
+}
+print <<DATA;
+	);				
+DATA
+
+print <<DATA;
 var version_value = new Array(
 DATA
 for ( $count_num = 0 ; $count_num < $case_count_total ; $count_num++ ) {
@@ -3426,6 +3491,10 @@ var filter_manual_count_string;
 var filter_auto_count_reverse_string;
 var filter_manual_count_reverse_string;
 
+if(list_view_current || tree_view_current){
+	filter_view_item('suite');
+}
+
 if(view_page_no_filter_flag){
 	filter_case_item();
 }
@@ -3519,6 +3588,7 @@ function update_state() {
 	var button;
 	var num_checked = count_checked();
 	var num_checkbox = count_checkbox();
+	var advanced_value_architecture = document.getElementById('select_arc');
 	var advanced_value_version = document.getElementById('select_ver');
 	var advanced_value_category	= document.getElementById('select_category');
 	var advanced_value_priority = document.getElementById('select_pri');
@@ -3530,7 +3600,7 @@ function update_state() {
 	var advanced_value_component = document.getElementById('select_com');
 	var clear_flag = 0;
 	
-	if ((advanced_value_version.selectedIndex == 0)&&(advanced_value_category.selectedIndex == 0)&&(advanced_value_priority.selectedIndex == 0)&&(advanced_value_status.selectedIndex == 0)&&(advanced_value_execution_type.selectedIndex == 0)&&(advanced_value_test_suite.selectedIndex == 0)&&(advanced_value_type.selectedIndex == 0)&&(advanced_value_test_set.selectedIndex == 0)&&(advanced_value_component.selectedIndex == 0)){
+	if ((advanced_value_architecture.selectedIndex == 0)&&(advanced_value_version.selectedIndex == 0)&&(advanced_value_category.selectedIndex == 0)&&(advanced_value_priority.selectedIndex == 0)&&(advanced_value_status.selectedIndex == 0)&&(advanced_value_execution_type.selectedIndex == 0)&&(advanced_value_test_suite.selectedIndex == 0)&&(advanced_value_type.selectedIndex == 0)&&(advanced_value_test_set.selectedIndex == 0)&&(advanced_value_component.selectedIndex == 0)){
 		clear_flag = 0;
 	}
 	else{
@@ -3599,6 +3669,7 @@ function check_uncheck_all() {
 }
 
 function onClearinfo(){
+	var advanced_value_architecture = document.getElementById('select_arc');
 	var advanced_value_version = document.getElementById('select_ver');
 	var advanced_value_category	= document.getElementById('select_category');
 	var advanced_value_priority = document.getElementById('select_pri');
@@ -3609,6 +3680,7 @@ function onClearinfo(){
 	var advanced_value_test_set = document.getElementById('select_testset');
 	var advanced_value_component = document.getElementById('select_com');
 	
+	advanced_value_architecture.selectedIndex = 0
 	advanced_value_version.selectedIndex = 0;
 	advanced_value_category.selectedIndex = 0;
 	advanced_value_priority.selectedIndex = 0;
@@ -3632,6 +3704,10 @@ DATA
 print <<DATA;
 function sortPackages(){
 	var img_id = document.getElementById('sort_packages');
+	for(var i = 0; i < package_name_number; i++){
+		var id = "second_list_" + package_name[i];
+		document.getElementById(id).style.display = "none";
+	}
 	if (sort_flag){
 		img_id.src = "images/up_and_down_1.png";
 		for(var count = 0; count < package_name_number; count++){
@@ -3788,8 +3864,9 @@ function sortPackages(){
 DATA
 
 print <<DATA;
-function filter_case_item(type){
+function filter_view_item(type){
 	var filter_option = type;
+	var advanced_value_architecture = document.getElementById('select_arc');
 	var advanced_value_version = document.getElementById('select_ver');
 	var advanced_value_category	= document.getElementById('select_category');
 	var advanced_value_priority = document.getElementById('select_pri');
@@ -3800,13 +3877,7 @@ function filter_case_item(type){
 	var advanced_value_test_set = document.getElementById('select_testset');
 	var advanced_value_component = document.getElementById('select_com');
 	var suite_value_get_flag = 1;
-	
-	var flag_case = new Array( );
-	var check_uncheck_all_button_disable = 1;
-	for (var i=0; i<package_name_number; i++) {	
-		flag_case[i] = "a";
-	}
-	
+
 	if(filter_option == "suite"){
 		for(var k=1; k < advanced_value_test_set.options.length; ) {
 			advanced_value_test_set.options.remove(k);
@@ -4029,6 +4100,257 @@ function filter_case_item(type){
 			}
 		}	
 	}
+}
+
+function filter_case_item(type){
+	var filter_option = type;
+	var advanced_value_architecture = document.getElementById('select_arc');
+	var advanced_value_version = document.getElementById('select_ver');
+	var advanced_value_category	= document.getElementById('select_category');
+	var advanced_value_priority = document.getElementById('select_pri');
+	var advanced_value_status = document.getElementById('select_status');
+	var advanced_value_execution_type = document.getElementById('select_exe');
+	var advanced_value_test_suite = document.getElementById('select_testsuite');
+	var advanced_value_type = document.getElementById('select_type');
+	var advanced_value_test_set = document.getElementById('select_testset');
+	var advanced_value_component = document.getElementById('select_com');
+	var suite_value_get_flag = 1;
+	
+	var flag_case = new Array( );
+	var check_uncheck_all_button_disable = 1;
+	for (var i=0; i<package_name_number; i++) {	
+		flag_case[i] = "a";
+	}
+	
+	if(filter_option == "suite"){
+		for(var k=1; k < advanced_value_test_set.options.length; ) {
+			advanced_value_test_set.options.remove(k);
+		}
+		for(var k=1; k < advanced_value_component.options.length; ) {
+			advanced_value_component.options.remove(k);
+		}
+		
+		if(advanced_value_test_suite.value == "Any Test Suite"){
+			for(var k=0; k<test_set_item_number; k++){
+				var varItem = new Option(test_set_item[k],test_set_item[k]);
+				advanced_value_test_set.options.add(varItem);
+			}
+			for(var k=0; k<test_component_item_number; k++){
+				var varItem = new Option(component_item[k],component_item[k]);
+				advanced_value_component.options.add(varItem);
+			}
+		}
+		
+		for (var i=0; i<package_name_number; i++) {	
+			var j;
+			if(i == "0"){
+				j=0;
+			}
+			else{
+				j = parseInt(one_package_case_count_total[i-1])
+			}		
+			for(j; j < parseInt(one_package_case_count_total[i]); j++) {
+				if(advanced_value_test_suite.value == suite_value[j]){
+					var set_varItem = new Option(set_value[j],set_value[j]);
+					if(advanced_value_test_set.options.length == 0){
+						advanced_value_test_set.options.add(set_varItem);
+					}
+					else{
+						for(var k=0; k < advanced_value_test_set.options.length; k++){
+							if(advanced_value_test_set.options[k].text == set_value[j]){
+								break;
+							}
+							if(k == advanced_value_test_set.options.length-1){
+								advanced_value_test_set.options.add(set_varItem);
+							}	
+						}
+					}
+					
+					var component_varItem = new Option(component_value[j],component_value[j]);
+					if(advanced_value_component.options.length == 0){
+						advanced_value_component.options.add(component_varItem);
+					}
+					else{
+						for(var k=0; k < advanced_value_component.options.length; k++){
+							if(advanced_value_component.options[k].text == component_value[j]){
+								break;
+							}
+							if(k == advanced_value_component.options.length-1){
+								advanced_value_component.options.add(component_varItem);
+							}	
+						}
+					}	
+				}
+			}
+		}
+	}
+	
+	if(filter_option == "set"){
+		advanced_value_component_cp = advanced_value_component.value;
+		for(var k=1; k < advanced_value_component.options.length; ) {
+			advanced_value_component.options.remove(k);
+		}
+		if( advanced_value_test_set.value == "Any Test Set" ){
+			if(advanced_value_test_set.options.length == test_set_item_number + 1){
+				advanced_value_test_suite.selectedIndex = 0;
+				for(var m = 0; m < test_component_item_number; m++){
+					var component_varItem = new Option(component_item[m],component_item[m]);
+					advanced_value_component.options.add(component_varItem);
+				}
+			}
+		}
+		for (var i=0; i<package_name_number; i++) {	
+			var j;
+			if(i == "0"){
+				j=0;
+			}
+			else{
+				j = parseInt(one_package_case_count_total[i-1])
+			}		
+			for(j; j < parseInt(one_package_case_count_total[i]); j++) {
+				if(suite_value_get_flag){
+					if(advanced_value_test_set.value == set_value[j]){
+						var suite_item_temp = suite_value[j];
+						for(var m = 0; m < test_suite_item_number; m++){
+							if(suite_item_temp == test_suite_item[m]){
+								if(advanced_value_test_set.options.length == set_init_length){
+									advanced_value_test_suite.selectedIndex = m+1;
+								}
+								else{
+									if (advanced_value_test_suite.value == "Any Test Suite"){
+										advanced_value_test_suite.selectedIndex = m+1;
+									}
+								}
+							}
+						}
+						suite_value_get_flag = 0;
+					}	
+				}
+				if(advanced_value_test_set.value == "Any Test Set"){
+					if(advanced_value_test_set.options.length != test_set_item_number + 1){
+						if(advanced_value_test_suite.value == suite_value[j]){
+							var component_varItem = new Option(component_value[j],component_value[j]);
+							if(advanced_value_component.options.length == 0){
+								advanced_value_component.options.add(component_varItem);
+							}
+							else{
+								for(var k=0; k < advanced_value_component.options.length; k++){
+									if(advanced_value_component.options[k].text == component_value[j]){
+										break;
+									}
+									if(k == advanced_value_component.options.length-1){
+										advanced_value_component.options.add(component_varItem);
+									}	
+								}
+							}	
+						}
+					}
+				}
+				if(advanced_value_test_set.value == set_value[j]){
+					var component_varItem = new Option(component_value[j],component_value[j]);
+					if(advanced_value_component.options.length == 0){
+						advanced_value_component.options.add(component_varItem);
+					}
+					else{
+						for(var k=0; k < advanced_value_component.options.length; k++){
+							if(advanced_value_component.options[k].text == component_value[j]){
+								break;
+							}
+							if(k == advanced_value_component.options.length-1){
+								advanced_value_component.options.add(component_varItem);
+							}	
+						}
+					}
+				}
+			}
+		}
+		for(var k=0; k < advanced_value_component.options.length; k++ ){
+			if(advanced_value_component_cp == advanced_value_component.options[k].value){
+				advanced_value_component.options.selectedIndex = k;
+			}
+		}		
+	}
+	
+	if(filter_option == "component"){
+		advanced_value_test_set_cp = advanced_value_test_set.value;
+		for(var k=1; k < advanced_value_test_set.options.length; ) {
+			advanced_value_test_set.options.remove(k);
+		}
+		if( advanced_value_component.value == "Any Component" ){
+			if(advanced_value_component.options.length == test_component_item_number + 1){
+				advanced_value_test_suite.selectedIndex = 0;
+				for(var m = 0; m < test_set_item_number; m++){
+					var set_varItem = new Option(test_set_item[m],test_set_item[m]);
+					advanced_value_test_set.options.add(set_varItem);
+				}
+			}
+		}
+		for (var i=0; i<package_name_number; i++) {	
+			var j;
+			if(i == "0"){
+				j=0;
+			}
+			else{
+				j = parseInt(one_package_case_count_total[i-1])
+			}		
+			for(j; j < parseInt(one_package_case_count_total[i]); j++) {
+				if(suite_value_get_flag){
+					if(advanced_value_component.value == component_value[j]){
+						var suite_item_temp = suite_value[j];
+						for(var m = 0; m < test_suite_item_number; m++){
+							if(suite_item_temp == test_suite_item[m]){
+								advanced_value_test_suite.selectedIndex = m+1;
+							}
+						}
+						suite_value_get_flag = 0;
+					}	
+				}
+				if(advanced_value_component.value == "Any Component"){
+					if(advanced_value_component.options.length != test_component_item_number + 1){
+						if(advanced_value_test_suite.value == suite_value[j]){
+							var set_varItem = new Option(set_value[j],set_value[j]);
+							if(advanced_value_test_set.options.length == 0){
+								advanced_value_test_set.options.add(set_varItem);
+							}
+							else{
+								for(var k=0; k < advanced_value_test_set.options.length; k++){
+									if(advanced_value_test_set.options[k].text == set_value[j]){
+										break;
+									}
+									if(k == advanced_value_test_set.options.length-1){
+										advanced_value_test_set.options.add(set_varItem);
+									}	
+								}
+							}	
+						}
+					}
+				}
+				if(advanced_value_component.value == component_value[j]){
+					if(advanced_value_test_suite.value == suite_value[j]){
+						var set_varItem = new Option(set_value[j],set_value[j]);
+						if(advanced_value_test_set.options.length == 0){
+							advanced_value_test_set.options.add(set_varItem);
+						}
+						else{
+							for(var k=0; k < advanced_value_test_set.options.length; k++){
+								if(advanced_value_test_set.options[k].text == set_value[j]){
+									break;
+								}
+								if(k == advanced_value_test_set.options.length-1){
+									advanced_value_test_set.options.add(set_varItem);
+								}	
+							}
+						}
+					}
+				}
+			}
+		}
+		for(var k=0; k < advanced_value_test_set.options.length; k++ ){
+			if(advanced_value_test_set_cp == advanced_value_test_set.options[k].value){
+				advanced_value_test_set.options.selectedIndex = k;
+			}
+		}	
+	}
 	
 	for (var i=0; i<package_name_number; i++) {	
 		var j;
@@ -4042,7 +4364,8 @@ function filter_case_item(type){
 			j = parseInt(one_package_case_count_total[i-1])
 		}		
 		for(j; j < parseInt(one_package_case_count_total[i]); j++) {
-			if (((advanced_value_version.value == "Any Version")||(advanced_value_version.value == version_value[j]))
+			if (((advanced_value_architecture.value == "Any Architecture")||(advanced_value_architecture.value == architecture_value[j]))
+			&& ((advanced_value_version.value == "Any Version")||(advanced_value_version.value == version_value[j]))
 			&& ((advanced_value_test_suite.value == "Any Test Suite")||(advanced_value_test_suite.value == suite_value[j]))
 			&& ((advanced_value_test_set.value == "Any Test Set")||(advanced_value_test_set.value == set_value[j]))
 			&& ((advanced_value_type.value == "Any Type")||(advanced_value_type.value == type_value[j]))
@@ -4122,14 +4445,41 @@ DATA
 
 print <<DATA;
 function onCaseClick(count) {
-	var view_select_testcase_info = "view_area_case_info_"+count;
-	var select_testcase = document.getElementById(view_select_testcase_info);
-	for(var i=0; i<$case_value_flag_count; i++){
-		var view_no_select_testcase_info = "view_area_case_info_"+i;
-		var no_select_testcase = document.getElementById(view_no_select_testcase_info);
-		no_select_testcase.style.display="none";
+	var select_case = "view_case_short_info_" + count;
+	var select_testcase = document.getElementById(select_case);
+	for ( var i = 0; i < $case_value_flag_count; i++) {
+		var select_case_short_id = "view_case_short_info_" + i;
+		var select_case_detailed_id = "view_case_detailed_info_" + i;
+		document.getElementById(select_case_short_id).style.display = "none";
+		document.getElementById(select_case_detailed_id).style.display = "none";
 	}
-	select_testcase.style.display="";
+	select_testcase.style.display = "";
+	document.getElementById("case_view_switcher").innerHTML = "[Detailed]";
+	document.getElementById("case_view_switcher").title = "view detailed case info";
+}
+function switchCaseView() {
+	for ( var i = 0; i < $case_value_flag_count; i++) {
+		var select_case_short_id = "view_case_short_info_" + i;
+		if (document.getElementById(select_case_short_id).style.display != "none") {
+			var select_case_detailed_id = "view_case_detailed_info_" + i;
+			document.getElementById(select_case_detailed_id).style.display = "";
+			document.getElementById(select_case_short_id).style.display = "none";
+			document.getElementById("case_view_switcher").innerHTML = "[Short]";
+			document.getElementById("case_view_switcher").title = "view general case info";
+			return;
+		}
+	}
+	for ( var i = 0; i < $case_value_flag_count; i++) {
+		var select_case_detailed_id = "view_case_detailed_info_" + i;
+		if (document.getElementById(select_case_detailed_id).style.display != "none") {
+			var select_case_short_id = "view_case_short_info_" + i;
+			document.getElementById(select_case_short_id).style.display = "";
+			document.getElementById(select_case_detailed_id).style.display = "none";
+			document.getElementById("case_view_switcher").innerHTML = "[Detailed]";
+			document.getElementById("case_view_switcher").title = "view detailed case info";
+			return;
+		}
+	}
 }
 DATA
 
@@ -4290,6 +4640,7 @@ sub CountPackages {
 
 sub AnalysisVersion {
 	my $temp_version;
+	my $temp_arc;
 	my $temp_count = 0;
 
 	my $cmd_ver = sdb_cmd("shell 'rpm -qa | grep tests'");
@@ -4299,10 +4650,18 @@ sub AnalysisVersion {
 		while ( $temp_count < $package_name_number ) {
 			for ( my $i = 0 ; $i < @temp ; $i++ ) {
 				if (   ( $temp[$i] =~ /$package_name[$temp_count]/ )
-					&& ( $temp[$i] =~ /-(\d\.\d\.\d-\d)/ ) )
+					&& ( $temp[$i] =~ /-(\d\.\d\.\d-\d)(.*)/ ) )
 				{
 					$temp_version = $1;
-					push( @version, $temp_version );
+					$temp_arc     = $2;
+					if ( $temp_arc =~ /arm/ ) {
+						$temp_arc = "arm";
+					}
+					else {
+						$temp_arc = "X86";
+					}
+					push( @version,      $temp_version );
+					push( @architecture, $temp_arc );
 				}
 			}
 			$temp_count++;
@@ -4311,7 +4670,9 @@ sub AnalysisVersion {
 	else {
 		while ( $temp_count < $package_name_number ) {
 			$temp_version = "none";
-			push( @version, $temp_version );
+			$temp_arc     = "none";
+			push( @version,      $temp_version );
+			push( @architecture, $temp_arc );
 			$temp_count++;
 		}
 	}
@@ -4689,7 +5050,7 @@ sub LoadDrawPackageList {
 		}
 		print <<DATA;
             <tr id="main_list_$package_name[$count]" style="display:$display">
-              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" style="table-layout:fixed">
+              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" class="table_normal">
 DATA
 		my $flag = 0;
 		while ( $count_chkbox < $i ) {
@@ -4827,7 +5188,7 @@ sub DrawPackageList {
 		my $sort_count = $package_name_number - 1 - $count;
 		print <<DATA;
             <tr id="main_list_$package_name[$count]">
-              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" style="table-layout:fixed">
+              <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" class="table_normal">
               <td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_package_name$count" name="checkbox_$package_name[$count]" onclick="javascript:update_state()"/></td>
               <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
               <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_packagename" id="pn_$package_name[$count]" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;cursor:pointer;" title="$package_name[$count]" onclick="javascript:show_CaseDetail('second_list_$package_name[$count]');">$package_name[$count]</td>
@@ -4945,7 +5306,7 @@ sub DrawUninstallPackageList {
 	for ( my $i = 0 ; $i < $UNINSTALL_PACKAGE_COUNT_MAX ; $i++ ) {
 		print <<DATA;
 		<tr id="uninstall_$i" style="display:none">
-	        <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" style="table-layout:fixed">
+	        <td><table width="100%" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" class="table_normal">
 	        <td width="4%" height="30" align="center" valign="middle" class="custom_list_type_bottomright"><input type="checkbox" id="checkbox_$i" name="checkbox_$i" disabled="true"/></td>
 	        <td width="0.5%" height="30" align="left" class="custom_list_type_bottom"></td>
 	        <td width="23.5%" height="30" align="left" class="custom_list_type_bottomright_uninstall_packagename" id="pn_$i" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;cursor:default;" title="Uninstalled"></td>
@@ -4978,6 +5339,51 @@ DATA
 	print <<DATA;
 <input type="hidden" id="uninstall_package_count_max" value="$UNINSTALL_PACKAGE_COUNT_MAX">
 DATA
+}
+
+sub LoadDrawArcSelect {
+	my $count = 0;
+	if ( $advanced_value_architecture =~ /\bAny Architecture\b/ ) {
+		print <<DATA;
+		<option selected="selected">Any Architecture</option>
+DATA
+		for ( ; $count < @architecture_item ; $count++ ) {
+			print <<DATA;
+			<option>$architecture_item[$count]</option>
+DATA
+		}
+	}
+	else {
+		print <<DATA;
+		<option>Any Architecture</option>
+DATA
+		for ( ; $count < @architecture_item ; $count++ ) {
+			if ( $advanced_value_architecture =~
+				/\b$architecture_item[$count]\b/ )
+			{
+				print <<DATA;
+				<option selected="selected">$architecture_item[$count]</option>
+DATA
+			}
+			else {
+				print <<DATA;
+				<option>$architecture_item[$count]</option>
+DATA
+			}
+		}
+	}
+}
+
+sub DrawArcSelect {
+	my $count = 0;
+	print <<DATA;
+		<option selected="selected">Any Architecture</option>
+DATA
+	for ( ; $count < @architecture_item ; $count++ ) {
+		print <<DATA;
+		<option>$architecture_item[$count]</option>
+DATA
+	}
 }
 
 sub LoadDrawVersionSelect {
@@ -5383,6 +5789,20 @@ sub GetSelectItem {
 	my $count = 0;
 	my @temp  = ();
 
+	push( @temp, $architecture[0] );
+	for ( $j = 1 ; $j < @architecture ; $j++ ) {
+		for ( $i = 0 ; $i < @temp ; $i++ ) {
+			if ( $architecture[$j] eq $temp[$i] ) {
+				last;
+			}
+			if ( $i == @temp - 1 ) {
+				push( @temp, $architecture[$j] );
+			}
+		}
+	}
+	@architecture_item = sort @temp;
+	@temp              = ();
+
 	push( @temp, $version[0] );
 	for ( $j = 1 ; $j < @version ; $j++ ) {
 		for ( $i = 0 ; $i < @temp ; $i++ ) {
@@ -5530,10 +5950,10 @@ sub FilterCaseValue {
 	my @package_name_tmp             = @package_name;
 
 	foreach (@package_name_tmp) {
-		my $package       = $_;
-		my $tests_xml_dir = $test_definition_dir . $package . "/tests.xml";
-
-		my $version_value = $version[$count_tmp];
+		my $package            = $_;
+		my $tests_xml_dir      = $test_definition_dir . $package . "/tests.xml";
+		my $architecture_value = $architecture[$count_tmp];
+		my $version_value      = $version[$count_tmp];
 		my $suite_value;
 		my $set_value;
 		my $type_value;
@@ -5585,15 +6005,16 @@ sub FilterCaseValue {
 				$category_value = $category_value . "&" . $category_value_tmp;
 			}
 			if ( $_ =~ /\<\/testcase\>/ ) {
-				push( @filter_version_value,   $version_value );
-				push( @filter_suite_value,     $suite_value );
-				push( @filter_set_value,       $set_value );
-				push( @filter_type_value,      $type_value );
-				push( @filter_status_value,    $status_value );
-				push( @filter_component_value, $component_value );
-				push( @filter_execution_value, $execution_value );
-				push( @filter_priority_value,  $priority_value );
-				push( @filter_category_value,  $category_value );
+				push( @filter_architecture_value, $architecture_value );
+				push( @filter_version_value,      $version_value );
+				push( @filter_suite_value,        $suite_value );
+				push( @filter_set_value,          $set_value );
+				push( @filter_type_value,         $type_value );
+				push( @filter_status_value,       $status_value );
+				push( @filter_component_value,    $component_value );
+				push( @filter_execution_value,    $execution_value );
+				push( @filter_priority_value,     $priority_value );
+				push( @filter_category_value,     $category_value );
 				$one_package_case_count_total++;
 			}
 		}
@@ -5627,7 +6048,11 @@ sub FilterCase {
 		for ( $j ; $j < $one_package_case_count_total[$i] ; $j++ ) {
 			if (
 				(
-					( $advanced_value_version =~ /Any Version/ )
+					( $advanced_value_architecture =~ /Any Architecture/ )
+					|| ( $advanced_value_architecture =~
+						/$filter_architecture_value[$j]/ )
+				)
+				&& ( ( $advanced_value_version =~ /Any Version/ )
 					|| (
 						$advanced_value_version =~ /$filter_version_value[$j]/ )
 				)

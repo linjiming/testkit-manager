@@ -1,5 +1,3 @@
-#!/usr/bin/perl -w
-#
 # Copyright (C) 2012 Intel Corporation
 #
 # This program is free software; you can redistribute it and/or
@@ -15,12 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#   Authors:
 #
-#          Wendong,Sui  <weidongx.sun@intel.com>
-#          Tao,Lin  <taox.lin@intel.com>
-#
-#
+# Authors:
+#              Zhang, Huihui <huihuix.zhang@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 
 package TestLog;
 use strict;
@@ -162,7 +158,7 @@ sub writeResultInfo_wanted {
 "cp /opt/testkit/manager/webapps/webui/public_html/images/back_top.png $result_dir_manager$time"
 		);
 		system(
-"cp /opt/testkit/manager/webapps/webui/public_html/application.js $result_dir_manager$time"
+"cp /opt/testkit/manager/webapps/webui/public_html/css/application.js $result_dir_manager$time"
 		);
 		my $package_name = $1;
 

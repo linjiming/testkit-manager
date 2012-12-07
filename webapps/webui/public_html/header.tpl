@@ -3,20 +3,16 @@
 
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="shortcut icon" href="css/favicon.ico" />
 <title>$$$PAGE_TITLE$$$</title>
 
 <style type="text/css" media="screen,projection">/*<![CDATA[*/ @import "css/main.css"; /*]]>*/</style>
     <link rel="stylesheet" type="text/css" media="print" href="css/commonPrint.css" />
     <link rel="stylesheet" type="text/css" href="css/report.css" />
     <link rel="stylesheet" type="text/css" href="css/tests.css" />
-    <!--[if lt IE 5.5000]><style type="text/css">@import "css/IE50Fixes.css";</style><![endif]-->
-    <!--[if IE 5.5000]><style type="text/css">@import "css/IE55Fixes.css";</style><![endif]-->
-    <!--[if IE 6]><style type="text/css">@import "css/IE60Fixes.css";</style><![endif]-->
-    <!--[if IE]><script type="text/javascript" src="css/IEFixes.js"></script>
-    <meta http-equiv="imagetoolbar" content="no" /><![endif]-->
     <script type="text/javascript" src="css/dtk.js"></script>
     <script type="text/javascript" src="css/jquery.min.js"></script>
+    <script type="text/javascript" src="css/run_tests.js"></script>
     
     <!-- begin Script and CSS includes for YUI dependencies on this page -->
     <!-- begin YUI CSS infrastructure -->

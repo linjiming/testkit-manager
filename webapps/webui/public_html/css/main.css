@@ -1,13 +1,8 @@
 /*
-** MediaWiki 'monobook' style sheet for CSS2-capable browsers.
-** Copyright Gabriel Wicke - http://wikidev.net/
-** License: GPL (http://www.gnu.org/copyleft/gpl.html)
-**
-** Loosely based on http://www.positioniseverything.net/ordered-floats.html by Big John
-** and the Plone 2.0 styles, see http://plone.org/ (Alexander Limi,Joe Geldart & Tom Croucher,
-** Michael Zeltner and Geir Bækholt)
-** All you guys rock :)
+** License: GPL V2
+** Authors: Wendong,Sui  <weidongx.sun@intel.com>
 */
+
 /* start header page */
 .main_menu_bg {
 	background-image: url(../images/header_background.png);
@@ -16,11 +11,66 @@
 }
 /* end header page */
 
+/* start execute page */
+.cmd_log {
+	margin-top: 0px;
+	margin-bottom: 3px;
+	margin-left: 3px;
+	height: 310px;
+	width: 384px;
+	overflow: auto;
+	text-wrap: none;
+	border: 1px solid #BCBCBC;
+	background-color: white;
+	color: black;
+	font-family: Arial;
+	font-size: 10px;
+}
+
+.change_all_result {
+	background-color: #B9BAB5;
+}
+/* end execute page */
+
+/* start table general */
+.table_normal {
+	font-family: Arial;
+	font-size: 14px;
+	table-layout: fixed;
+}
+/* end table general */
+
 /* start template page */
 .not_implemented {
 	font-family: Arial;
 	font-size: 16px;
 	background-color: #fafafa;
+}
+
+.error_message_title {
+	border: dashed 1px darkred;
+	background: red;
+	color: white;
+	font-family: Arial;
+	font-size: 12px;
+}
+
+.normal_message_title {
+	border: dashed 1px darkred;
+	background: green;
+	color: white;
+	font-family: Arial;
+	font-size: 12px;
+}
+
+.message_background {
+	border: dashed 1px darkred;
+	border-top: none;
+}
+
+.message_content {
+	font-family: Arial;
+	font-size: 14px;
 }
 /* end template page */
 
@@ -52,6 +102,7 @@
 	font-family: Arial;
 	font-size: 14px;
 	background-color: #fafafa;
+	table-layout: fixed;
 }
 
 .report_list_no_frame {
@@ -1419,7 +1470,7 @@ tr.list_item1 {
 
 input[type=text],input[type=password],textarea {
 	font-family: Arial;
-	font-size: 10px;
+	font-size: 14px;
 	border: solid 1px;
 	border-color: #E2E3E3;
 	border-radius: 2px;
@@ -1682,6 +1733,39 @@ tr.selectable:hover {
 	border-right: 0px;
 }
 
+.static_list_packagename_first {
+	font-family: Arial;
+	font-size: 14px;
+	color: black;
+	background-color: #FAFAFA;
+	border-top: 1px solid #FAFAFA;
+	border-bottom: 1px solid #FAFAFA;
+	border-left: 0px;
+	border-right: 0px;
+}
+
+.static_list_packagename_second {
+	font-family: Arial;
+	font-size: 14px;
+	color: #797373;
+	background-color: #FAFAFA;
+	border-top: 1px solid #FAFAFA;
+	border-bottom: 1px solid #FAFAFA;
+	border-left: 0px;
+	border-right: 0px;
+}
+
+.static_list_packagename_third {
+	font-family: Arial;
+	font-size: 12px;
+	color: #A19E9E;
+	background-color: #FAFAFA;
+	border-top: 1px solid #FAFAFA;
+	border-bottom: 1px solid #FAFAFA;
+	border-left: 0px;
+	border-right: 0px;
+}
+
 .static_list_count_bar {
 	font-family: Arial;
 	font-size: 14px;
@@ -1719,7 +1803,7 @@ tr.selectable:hover {
 	border: 1px;
 	text-align: center;
 	line-height: 30px;
-	font-size: 12px;
+	font-size: 14px;
 	z-index: 999;
 	width: 690px;
 	left: 37%;
@@ -1729,14 +1813,67 @@ tr.selectable:hover {
 	margin-top: 0px;
 	position: fixed !important; /* FF IE7*/
 	position: absolute; /*IE6*/
-	_top: expression(eval(document.compatMode &&   
-               document.compatMode ==     'CSS1Compat') ?   
-               documentElement.scrollTop +       (  
-		  document.documentElement.clientHeight-this.offsetHeight )/2 :   
-		 /*IE6*/   
-               document.body.scrollTop +       (   
-		 document.body.clientHeight -  
-		    this.clientHeight )/2 ); /*IE5 IE5.5*/
+	_top: expression(eval(document.compatMode &&                  
+                              document.compatMode ==  
+		                       
+		        'CSS1Compat') ?          
+		
+		      
+                              documentElement.scrollTop +      
+		                      
+		       (         
+		       
+		               
+		 document.documentElement.clientHeight-this.offsetHeight )/2 :        
+		
+		  
+		     
+		                /*IE6*/                  
+                              document.body.scrollTop +      
+		                              (       
+		 
+		        
+		                document.body.clientHeight -                 
+		                   this.clientHeight )/2 ); /*IE5 IE5.5*/
+}
+
+.loadProgressBarDiv {
+	background-color: #fafafa;
+	border: 1px;
+	text-align: center;
+	line-height: 30px;
+	font-size: 14px;
+	z-index: 999;
+	width: 500px;
+	left: 43%;
+	top: 25%;
+	margin-left: -150px !important;
+	margin-top: -60px !important;
+	margin-top: 0px;
+	position: fixed !important; /* FF IE7*/
+	position: absolute; /*IE6*/
+	_top: expression(eval(document.compatMode &&                  
+                              document.compatMode ==  
+		                       
+		        'CSS1Compat') ?          
+		
+		      
+                              documentElement.scrollTop +      
+		                      
+		       (         
+		       
+		               
+		 document.documentElement.clientHeight-this.offsetHeight )/2 :        
+		
+		  
+		     
+		                /*IE6*/                  
+                              document.body.scrollTop +      
+		                              (       
+		 
+		        
+		                document.body.clientHeight -                 
+		                   this.clientHeight )/2 ); /*IE5 IE5.5*/
 }
 
 .popIframe {
@@ -1746,19 +1883,33 @@ tr.selectable:hover {
 	height: 100%;
 	left: 0;
 	top: 0; /*FF IE7*/
-	filter: alpha(opacity =     50); /*IE*/
+	filter: alpha(opacity =                                   50); /*IE*/
 	opacity: 0.5; /*FF*/
 	z-index: 1;
 	position: fixed !important; /*FF IE7*/
 	position: absolute; /*IE6*/
-	_top: expression(eval(document.compatMode &&   
-               document.compatMode ==     'CSS1Compat') ?   
-               documentElement.scrollTop +       (  
-		  document.documentElement.clientHeight-this.offsetHeight )/2 :   
-		 /*IE6*/   
-               document.body.scrollTop +       (   
-		 document.body.clientHeight -  
-		    this.clientHeight )/2 );
+	_top: expression(eval(document.compatMode &&                  
+                              document.compatMode ==  
+		                       
+		        'CSS1Compat') ?          
+		
+		      
+                              documentElement.scrollTop +      
+		                      
+		       (         
+		       
+		               
+		 document.documentElement.clientHeight-this.offsetHeight )/2 :        
+		
+		  
+		     
+		                /*IE6*/                  
+                              document.body.scrollTop +      
+		                              (       
+		 
+		        
+		                document.body.clientHeight -                 
+		                   this.clientHeight )/2 );
 }
 
 .view_test_plan_popup {
@@ -1788,6 +1939,16 @@ tr.selectable:hover {
 	font-size: 14px;
 	border-top: 0px;
 	border-bottom: 1px solid #FAFAFA;
+	border-left: 0px;
+	border-right: 0px;
+}
+
+.load_test_plan_packages_need {
+	font-family: Arial;
+	font-size: 14px;
+	background-color: #FAFAFA;
+	border-top: 0px;
+	border-bottom: 0px;
 	border-left: 0px;
 	border-right: 0px;
 }

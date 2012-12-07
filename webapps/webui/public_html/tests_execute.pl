@@ -15,12 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#   Authors:
 #
-#          Wendong,Sui  <weidongx.sun@intel.com>
-#          Tao,Lin  <taox.lin@intel.com>
-#
-#
+# Authors:
+#              Zhang, Huihui <huihuix.zhang@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 
 use strict;
 use Templates;
@@ -123,7 +121,7 @@ if (   ( $have_testkit_lite eq "FALSE" )
 my $found         = 0;
 my $profiles_list = '';
 my $app           = $SERVER_PARAM{'APP_DATA'};
-if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/profiles/test' ) ) {
+if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 
 	my @files = sort grep !/^[\.~]/, readdir(DIR);
 	$found = scalar(@files);
@@ -147,7 +145,7 @@ if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/profiles/test' ) ) {
 "    <option value=\"$profile_name\">$profile_name</option>\n";
 			}
 		}
-		open FILE, $SERVER_PARAM{'APP_DATA'} . '/profiles/test/' . $profile_name
+		open FILE, $SERVER_PARAM{'APP_DATA'} . '/plans/' . $profile_name
 		  or die "can't open " . $profile_name;
 		my $theEnd = "False";
 		my $package_name;
@@ -217,7 +215,7 @@ print <<DATA;
           <tr>
             <td width="2%">&nbsp;</td>
             <td width="48%">Execute Tests</td>
-            <td width="30%" style="font-size:14px">Test Plan
+            <td width="30%">Test Plan
 DATA
 if ($found) {
 	print <<DATA;
@@ -374,14 +372,13 @@ print <<DATA;
                 <td align="left" height="30">&nbsp;<span id="exec_info">Nothing started</span>&nbsp;<span id="exec_status"></span></td>
               </tr>
               <tr>
-                <td align="left"><pre id="cmdlog" style="margin-top:0px;margin-bottom:3px; margin-left:3px; height:310px;width:384px;overflow:auto;text-wrap:none;border:1px solid #BCBCBC;background-color:white;color:black;font-family:Arial;font-size:10px;">Execute output will go here...</pre></td>
+                <td align="left"><pre id="cmdlog" class="cmd_log">Execute output will go here...</pre></td>
               </tr>
             </table></td>
         </tr>
       </table></td>
   </tr>
 </table>
-<script type="text/javascript" src="run_tests.js"></script>
 <script language="javascript" type="text/javascript">
 // <![CDATA[
 // Preload images for shadow, various icons, buttons, etc.
@@ -470,7 +467,7 @@ print_footer("");
 sub check_testkit_lite {
 	my $cmd          = sdb_cmd("shell 'rpm -qa | grep testkit-lite'");
 	my $testkit_lite = `$cmd`;
-	if ( $testkit_lite =~ /testkit-lite-(.*)-\d\.noarch/ ) {
+	if ( $testkit_lite =~ /testkit-lite-(\d\.\d\.\d)-(\d)\.(.*)/ ) {
 		$have_testkit_lite = "TRUE";
 		my $version = $1;
 		if ( $version eq $MTK_VERSION ) {
@@ -511,13 +508,11 @@ sub install_testkit_lite {
 			    "wget -r -l 1 -nd -A rpm --spider "
 			  . $repo_url
 			  . " 2>&1 | grep $GREP_PATH"
-			  . "testkit-lite.*.noarch.rpm";
+			  . "testkit-lite.*.rpm";
 		}
 		if ( $repo_type =~ /local/ ) {
-			$cmd = "find "
-			  . $repo_url
-			  . " | grep $GREP_PATH"
-			  . "testkit-lite.*.noarch.rpm";
+			$cmd =
+			  "find " . $repo_url . " | grep $GREP_PATH" . "testkit-lite.*.rpm";
 		}
 		my @testkit_lites = ();
 		@testkit_lites = `$cmd`;
@@ -526,7 +521,7 @@ sub install_testkit_lite {
 		foreach (@testkit_lites) {
 			my $testkit_lite = $_;
 			if ( $testkit_lite =~
-				/$GREP_PATH.*testkit-lite-(\d\.\d\.\d)-(\d).noarch.rpm/ )
+				/$GREP_PATH.*testkit-lite-(\d\.\d\.\d)-(\d)\.(.*)\.rpm/ )
 			{
 				my $version_main   = $1;
 				my $version_sub    = $2;
@@ -541,11 +536,12 @@ sub install_testkit_lite {
 				}
 			}
 		}
-		if (
-			$network_result =~ /$GREP_PATH.*testkit-lite-(.*)-(\d).noarch.rpm/ )
+		if ( $network_result =~
+			/$GREP_PATH.*testkit-lite-(\d\.\d\.\d)-(\d)\.(.*)\.rpm/ )
 		{
 			my $main_version = $1;
 			my $sub_version  = $2;
+			my $arch_info    = $3;
 			if (    ( $have_testkit_lite eq "TRUE" )
 				and ( $have_correct_testkit_lite eq "FALSE" ) )
 			{
@@ -559,11 +555,11 @@ sub install_testkit_lite {
 			{
 				if ( $repo_type =~ /remote/ ) {
 					system( "wget -c $repo_url"
-						  . "testkit-lite-$main_version-$sub_version.noarch.rpm -P /tmp -q -N"
+						  . "testkit-lite-$main_version-$sub_version.$arch_info.rpm -P /tmp -q -N"
 					);
 					system(
 						sdb_cmd(
-"push /tmp/testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
+"push /tmp/testkit-lite-$main_version-$sub_version.$arch_info.rpm /tmp &>/dev/null"
 						)
 					);
 				}
@@ -571,7 +567,7 @@ sub install_testkit_lite {
 					system(
 						sdb_cmd(
 							    "push $repo_url"
-							  . "testkit-lite-$main_version-$sub_version.noarch.rpm /tmp &>/dev/null"
+							  . "testkit-lite-$main_version-$sub_version.$arch_info.rpm /tmp &>/dev/null"
 						)
 					);
 				}
@@ -579,14 +575,14 @@ sub install_testkit_lite {
 				system(
 					sdb_cmd(
 						    "shell 'rpm -ivh /tmp/"
-						  . "testkit-lite-$main_version-$sub_version.noarch.rpm --nodeps"
+						  . "testkit-lite-$main_version-$sub_version.$arch_info.rpm --nodeps"
 						  . " &>/dev/null' &>/dev/null"
 					)
 				);
 				sleep 3;
 				my $cmd = sdb_cmd("shell 'rpm -qa | grep testkit-lite'");
 				my $testkit_lite = `$cmd`;
-				if ( $testkit_lite =~ /testkit-lite-(.*)-\d\.noarch/ ) {
+				if ( $testkit_lite =~ /testkit-lite-(\d\.\d\.\d)-(\d)\.(.*)/ ) {
 					$have_testkit_lite = "TRUE";
 					my $version = $1;
 					if ( $version eq $MTK_VERSION ) {
@@ -604,17 +600,17 @@ sub install_testkit_lite {
 				or ( $have_correct_testkit_lite eq "FALSE" ) )
 			{
 				$testkit_lite_error_message =
-"testkit-lite-$main_version-$sub_version.noarch.rpm is find in the repo, however we failed to install it, please try manually";
+"testkit-lite-$main_version-$sub_version.$arch_info.rpm is find in the repo, however we failed to install it, please try manually";
 			}
 		}
 		else {
 			$testkit_lite_error_message =
-"Can't find testkit-lite-$MTK_VERSION-x.noarch.rpm in the repo, please install it manually";
+"Can't find testkit-lite-$MTK_VERSION-x.*.rpm in the repo, please install it manually";
 		}
 	}
 	else {
 		$testkit_lite_error_message =
-"Can't connect to the repo, please install testkit-lite-$MTK_VERSION-x.noarch.rpm manually";
+"Can't connect to the repo, please install testkit-lite-$MTK_VERSION-x.*.rpm manually";
 	}
 }
 

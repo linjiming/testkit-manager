@@ -1,17 +1,11 @@
 #!/usr/bin/perl -w
-
-# Distribution Checker
-# AJAX Server Module (ajax_srv.pl)
 #
-# Copyright (C) 2007-2009 The Linux Foundation. All rights reserved.
-#
-# This program has been developed by ISP RAS for LF.
-# The ptyshell tool is originally written by Jiri Dluhos <jdluhos@suse.cz>
-# Copyright (C) 2005-2007 SuSE Linux Products GmbH
+# Copyright (C) 2012 Intel Corporation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
-# version 2 as published by the Free Software Foundation.
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,33 +14,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
-#   Changlog:
-#			07/16/2010,
-#			1\ Add a new function 'push_result_back' for pushing the manual result XML back to the testkit side by Tang, Shao-Feng  <shaofeng.tang@intel.com>.
-#			2\ Update the function 'send_reply' for supporting the 'JSON' and 'Whole XML' format by Tang, Shao-Feng  <shaofeng.tang@intel.com>.
-#			3\ Mark the below methods as '@deprecated' by Tang, Shao-Feng  <shaofeng.tang@intel.com>.
-#			          'list_testcase',
-#			          'list_case',
-#			          'list_subdir',
-#			          'list_profiled_subdir',
-#			          'list_profiled_caselist',
-#			          'save_case_result',
-#			          'save_user'.
-#			4\ Add a new action 'load_testcase' for querying the detail information of test case by Tang, Shao-Feng  <shaofeng.tang@intel.com>.
-#			5\ Add a new action 'load_manual_testcase' for querying the detail information of manual test case by Tang, Shao-Feng  <shaofeng.tang@intel.com>.
-#			6\ Add a new action 'load_package' for querying the detail information of test package which is a XML root element in 'tests.xml' by Tang, Shao-Feng  <shaofeng.tang@intel.com>.
-#			7\ Add a new action 'load_suit' for querying the detail information of test suit which is a XML element in 'tests.xml' by Tang, Shao-Feng  <shaofeng.tang@intel.com>.
-#			8\ Add a new action 'load_set' for querying the detail information of test set which is a XML element in 'tests.xml' by Tang, Shao-Feng  <shaofeng.tang@intel.com>.
-#			9\ Update the action 'mantest_submit' for saving the manual test result into the new result XML file 'result.tests.xml' by Tang, Shao-Feng  <shaofeng.tang@intel.com>.
-#			10\ Update the action 'mantest_finish' for re-generating the new format test-report by Tang, Shao-Feng  <shaofeng.tang@intel.com>.
-#
-#
+# Authors:
+#              Zhang, Huihui <huihuix.zhang@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 
 use Templates;
-use UserProfile;
 use TestStatus;
 use Common;
 use Error;
@@ -55,7 +29,6 @@ use File::Temp qw/tmpnam tempfile/;
 use JSON;
 use File::Find;
 use Data::Dumper;
-use TestKitLogger;
 
 autoflush_on();
 
@@ -81,22 +54,6 @@ my $output_xml =
   . CRLF
   . "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n";
 
-sub push_result_back() {
-	my ($this_result_path) = @_;
-	if ($this_result_path) {
-		use ProcessSummary;
-		my $paksRef = &getSelectedPackages($this_result_path);
-		foreach (@$paksRef) {
-			my $push_cmd =
-"cp -rf $this_result_path/$_/result.tests.xml /opt/testkit/lite/latest/usr/share/$_/tests.xml.xmlresult";
-			$TestKitLogger::logger->log(
-				message => "Push the Result File back, CMD: $push_cmd" );
-			system($push_cmd);
-		}
-		no ProcessSummary;
-	}
-}
-
 # If error happened, returns it as the only AJAX reply, else sends the informative data.
 sub send_reply() {
 	if ($error_text) {
@@ -112,8 +69,6 @@ sub send_reply() {
 		  . "Content-type: application/json"
 		  . CRLF
 		  . CRLF . "$data";
-		$TestKitLogger::logger->log(
-			message => "[ajax_srv.pl]: the response:\n$response" );
 		print $response;
 	}
 	elsif ($isWholeXML) {
@@ -132,15 +87,13 @@ s/<\?xml version=(\"|\')1.0(\"|\') encoding=(\"|\')(.*)(\"|\')\?>/<\?xml version
 	}
 	else {
 		my $response = $output_xml . "<root>\n$data</root>";
-		$TestKitLogger::logger->log(
-			message => "[ajax_srv.pl]: the response:\n$response" );
 		print $response;
 	}
 }
 
 # Reads the list of user profiles and adds it in XML form into $data variable.
 sub list_dir() {
-	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/profiles/test' ) ) {
+	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 		$data .= "<profiles>\n";
 		foreach ( sort( grep( !/^[~\.]/, readdir(DIR) ) ) ) {
 			$data .= "<name>$_</name>\n";
@@ -462,12 +415,8 @@ sub load_profile($) {
 	$data .= "<test_packages>";
 	while (<FILE>) {
 		my $line = $_;
-		$TestKitLogger::logger->log(
-			message => "[ajax_srv.pl]: Profile line:$line" );
 		if ( $line !~ s/(\[Auto\]|\[Manual\])// ) {
 			$line =~ s/\n//g;
-			$TestKitLogger::logger->log(
-				message => "[ajax_srv.pl]: Processed test_package:$line" );
 			$data .= "<test_package>$line</test_package>";
 		}
 	}
@@ -827,34 +776,26 @@ if ( !$_GET{'action'} ) {
 }
 elsif ( $_GET{'action'} eq 'check_run' ) {  # Check whether test run is possible
 	my $full_save_name;
-	if ( !-d $SERVER_PARAM{'APP_DATA'} . '/profiles/test' ) {
-		system( 'mkdir -p ' . $SERVER_PARAM{'APP_DATA'} . '/profiles/test' );
-		if ( !-d $SERVER_PARAM{'APP_DATA'} . '/profiles/test' ) {
+	if ( !-d $SERVER_PARAM{'APP_DATA'} . '/plans' ) {
+		system( 'mkdir -p ' . $SERVER_PARAM{'APP_DATA'} . '/plans' );
+		if ( !-d $SERVER_PARAM{'APP_DATA'} . '/plans' ) {
 			$error_text =
 			    'Could not create profile directory:<br />'
 			  . $SERVER_PARAM{'APP_DATA'}
-			  . '/profiles/test';
+			  . '/plans';
 		}
 	}
 	if ( !$error_text ) {
 		if ( $_COOKIE{'session_id'} ) {
 			$full_save_name =
 			    $SERVER_PARAM{'APP_DATA'}
-			  . '/profiles/test/~session.'
+			  . '/plans/~session.'
 			  . $SERVER_PARAM{'PEER_IP'} . '.'
 			  . $_COOKIE{'session_id'};
 		}
 		else {
 			$error_text =
 'Cannot retrieve session ID! Please, allow cookies in your browser.';
-		}
-	}
-	if ( !$error_text ) {
-		if ( write_profile( $full_save_name, \%_POST ) ) {
-			list_dir();
-		}
-		else {
-			$error_text = $profile_error;
 		}
 	}
 	if ( !$error_text ) {
@@ -918,7 +859,7 @@ elsif ( $_GET{'action'} eq 'run_tests' ) {
 		}
 		else {
 			my $profile_path =
-			  $SERVER_PARAM{'APP_DATA'} . '/profiles/test/' . $_GET{'profile'};
+			  $SERVER_PARAM{'APP_DATA'} . '/plans/' . $_GET{'profile'};
 			my $tef_stderr = $SERVER_PARAM{'APP_DATA'} . "/log/err";
 			my $child      = fork();
 			if ( !defined($child) ) {
@@ -948,10 +889,6 @@ elsif ( $_GET{'action'} eq 'run_tests' ) {
 					$status = read_status();
 					my $is_running = is_process_running($child);
 					my $tef_reply  = read_file($tef_stderr);
-					$TestKitLogger::logger->log( message =>
-"[ajax_srv.pl]: The profile = $profile_path tef_stderr=$tef_stderr is_running= $is_running, reply = $tef_reply\n"
-					);
-
 					if ( !is_ok($tef_reply) ) {
 						next;
 					}
@@ -970,9 +907,6 @@ elsif ( $_GET{'action'} eq 'run_tests' ) {
 							# .pl started and finished immediately.
 							else {
 								$data .= construct_progress_data($status);
-								$TestKitLogger::logger->log( message =>
-"[ajax_srv.pl]: started and finished data = $data\n"
-								);
 								$tid = $status->{'RESULT_DIR'};
 								$log_file =
 								  $CONFIG{'RESULTS_DIR'} . '/' . $tid . '/log';
@@ -1042,8 +976,6 @@ elsif ( $_GET{'action'} eq 'run_tests' ) {
 						else {
 							$data .= "<started>$_GET{'profile'}</started>\n";
 							$data .= construct_progress_data($status);
-							$TestKitLogger::logger->log( message =>
-								  "[ajax_srv.pl]: Started data = $data\n" );
 						}
 						last;
 					}
@@ -1306,13 +1238,13 @@ elsif ( $_GET{'action'} eq 'update_package' ) {
 			pop @package_items;
 			foreach (@package_items) {
 				my $package_id = "none";
-				if ( $_ =~ /^\s+(\d+)\s+(\d+)/ ) {
-					$package_id = $2;
+				if ( $_ =~ /\s+([a-zA-Z0-9]*?)\s*$/ ) {
+					$package_id = $1;
 				}
 				if ( $package_id ne "none" ) {
 					system(
 						sdb_cmd(
-							"shell wrt-installer -u $package_id 2>&1 >/dev/null"
+"shell 'wrt-installer -un $package_id &>/dev/null' &>/dev/null"
 						)
 					);
 				}
@@ -1543,11 +1475,43 @@ elsif ( $_GET{'action'} eq "check_package_isExist" ) {
 		}
 	}
 	$data .= "<load_profile>1</load_profile>\n";
+	$data .= "<load_profile_title>1</load_profile_title>\n";
 	$data .= "<profile_name>$load_profile_name</profile_name>\n";
 	$data .= "<packages_need>@packages_need</packages_need>\n";
 	$data .=
 	  "<packages_isExist_flag>@packages_isExist_flag</packages_isExist_flag>\n";
 	closedir LOADPROFILE;
+}
+
+elsif ( $_GET{'action'} eq "install_plan_package" ) {
+	my $packages_need = $_GET{'packages_need'};
+	my @packages_need = split( " ", $packages_need );
+	my @packages_isExist_flag;
+	my $package = shift(@packages_need);
+	install_package($package);
+	my $cmd          = sdb_cmd("shell ls /usr/share/$package/tests.xml");
+	my $temp         = `$cmd`;
+	my $return_value = "none";
+	if ( $temp !~ /No such file or directory/ ) {
+		$return_value = "[PASS]";
+	}
+	else {
+		$return_value = "[FAIL]";
+	}
+	for ( my $i = 0 ; $i < @packages_need ; $i++ ) {
+		$packages_isExist_flag[$i] = "0";
+	}
+	$data .= "<load_profile>1</load_profile>\n";
+	if ( @packages_need > 0 ) {
+		$data .= "<packages_need>@packages_need</packages_need>\n";
+		$data .=
+"<packages_isExist_flag>@packages_isExist_flag</packages_isExist_flag>\n";
+	}
+	else {
+		$data .= "<packages_need>end</packages_need>\n";
+		$data .= "<packages_isExist_flag>2</packages_isExist_flag>\n";
+	}
+	$data .= "<return_value>$return_value</return_value>\n";
 }
 
 # delete profile
@@ -1856,7 +1820,7 @@ elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests
 							my $kill_result_tmp =
 							  sdb_cmd("shell killall testkit-lite");
 							my $kill_result = `$kill_result_tmp`;
-							if ( $kill_result =~ /no process killed/ ) {
+							if ( $kill_result =~ /no process/ ) {
 								last;
 							}
 						}
@@ -1864,12 +1828,12 @@ elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests
 						my @package_items = `$cmd`;
 						foreach (@package_items) {
 							my $package_id = "none";
-							if ( $_ =~ /\[NULL\]\s*(.*?)\s*$/ ) {
+							if ( $_ =~ /\s+([a-zA-Z0-9]*?)\s*$/ ) {
 								$package_id = $1;
 							}
 							if ( $package_id ne "none" ) {
 								my $cmd = sdb_cmd(
-"shell 'ps aux | grep /opt/apps/$package_id | sed -n '1,1p''"
+"shell 'ps aux | grep $package_id | sed -n '1,1p''"
 								);
 								my $pid = `$cmd`;
 								if ( $pid =~ /app\s*(\d*)\s*/ ) {
@@ -2219,49 +2183,6 @@ elsif ( $_GET{'action'} eq 'load_child' ) {
 	list_subdir($tests_node);
 
 }
-elsif ( $_GET{'action'} eq 'load_testcase' ) {
-	my $test_case = $_GET{'case'};
-
-	#list_testcase($test_case);
-	use QueryTestXml;
-	$data .= &query_testcase( $test_case, 0 );
-	no QueryTestXml;
-	$isJson = 1;
-}
-elsif ( $_GET{'action'} eq 'load_manual_testcase' ) {
-	my $test_case = $_GET{'case'};
-	use QueryTestXml;
-	$data .= &query_testcase( $test_case, 1 );
-	no QueryTestXml;
-	$isJson = 1;
-}
-elsif ( $_GET{'action'} eq 'load_package' ) {
-	my $test_package = $_GET{'case'};
-
-	#list_testcase($test_case);
-	use QueryTestXml;
-	$data .= &query_testpackage($test_package);
-	no QueryTestXml;
-	$isJson = 1;
-}
-elsif ( $_GET{'action'} eq 'load_suit' ) {
-	my $test_suit = $_GET{'case'};
-
-	#list_testcase($test_case);
-	use QueryTestXml;
-	$data .= &query_testsuit($test_suit);
-	no QueryTestXml;
-	$isJson = 1;
-}
-elsif ( $_GET{'action'} eq 'load_set' ) {
-	my $test_set = $_GET{'case'};
-
-	#list_testcase($test_case);
-	use QueryTestXml;
-	$data .= &query_testset($test_set);
-	no QueryTestXml;
-	$isJson = 1;
-}
 elsif ( $_GET{'action'} eq 'load_prochild' ) {
 	my $tests_node = $_GET{'node'};
 	my $testrun_id = $_GET{'test_run'};
@@ -2286,13 +2207,13 @@ elsif ( $_GET{'action'} eq 'load_caselist' ) {
 	}
 	if ( !-e $tests_profile ) {
 		my $copycmd =
-"cp /tmp/moblin-testkit/profiles/test/~manual_test.profile $tests_profile";
+		  "cp /tmp/moblin-testkit/plans/~manual_test.profile $tests_profile";
 		my $ret = `$copycmd`;
 	}
 
 #	if (! -e $tests_result)
 #	{
-#		my $copy_testcase = "cp /tmp/moblin-testkit/profiles/test/~manual_test.res $tests_result";
+#		my $copy_testcase = "cp /tmp/moblin-testkit/plans/~manual_test.res $tests_result";
 #		my $ret = `$copy_testcase`;
 #	}
 	if ( !-e $tests_result ) {
@@ -2341,102 +2262,16 @@ elsif ( $_GET{'action'} eq 'load_caselist' ) {
 	close(NEW_FILE);
 	list_profiled_caselist( $tests_node, $tests_result );
 }
-elsif ( $_GET{'action'} eq 'mantest_submit' ) {
-	my $testrun_id = $_GET{'test_run'};
-	my $nodePath   = $_GET{'case'};
-	my $caseStatus = $_GET{'teststatus'};
-
-	my @folders = split( "\/\/\/", $nodePath );
-	my $packageName = shift @folders;
-
-	if ($nodePath) {
-		$nodePath =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
-	}
-
-	$TestKitLogger::logger->log( message =>
-"\n[ajax_srv.pl]: testrun_id:\n$testrun_id\n NodePath: \n$nodePath\nCaseStatus: $caseStatus\n"
-	);
-
-#my $tests_result = $CONFIG{'RESULTS_DIR'}.'/'.$testrun_id.'/results/manualtest.res';
-	my $tests_result =
-	    $CONFIG{'RESULTS_DIR'} . '/'
-	  . $testrun_id . '/'
-	  . $packageName
-	  . '/result.tests.xml';
-	$TestKitLogger::logger->log( message => "Result File: $tests_result" );
-
-	#my $result_jsonStr = $_POST{'jsonStr'};
-	#save_case_result($tests_result, $result_jsonStr);
-	use QueryTestXml;
-	&updateCaseResult( $tests_result, $nodePath, $caseStatus );
-	no QueryTestXml;
-
-	$data .= "<man_result>Manual Test Result Save Succeed</man_result>";
-}
-elsif ( $_GET{'action'} eq 'mantest_finish' ) {
-	my $testrun_id = $_GET{'test_run'};
-
-	use ProcessSummary;
-	my $na_num =
-	  &generateManualSummary( $CONFIG{'RESULTS_DIR'} . '/' . $testrun_id );
-	no ProcessSummary;
-
-	my $tests_status =
-	  $CONFIG{'RESULTS_DIR'} . '/' . $testrun_id . '/test_status';
-
-	if ( $$na_num == 0 ) {
-		if ( open( NEW_FILE, ">$tests_status" ) ) {
-			print NEW_FILE "Auto: Finished\nManual: Finished";
-			close(NEW_FILE);
-		}
-
-		#&push_result_back($CONFIG{'RESULTS_DIR'}.'/'.$testrun_id);
-
-		$data .= "<man_result>test status saved</man_result>";
-	}
-	else {
-		$data .= "<man_result>$na_num manual case is NotRun</man_result>";
-	}
-}
-
-#elsif ( $_GET{'action'} eq 'save_profile' ) {
-#	if ( !-e $SERVER_PARAM{'APP_DATA'} . '/profiles/test/' ) {
-#		system("mkdir $SERVER_PARAM{'APP_DATA'}/profiles/test");
-#	}
-#	my $profile_path =
-#	  $SERVER_PARAM{'APP_DATA'} . '/profiles/test/' . $_GET{'profile'};
-#	my $profile_js = $_POST{'jsonStr'};
-#	save_profile( $profile_path, $profile_js );
-#}
-#elsif ( $_GET{'action'} eq 'delete_profile' ) {
-#	my $profile =
-#	  $SERVER_PARAM{'APP_DATA'} . '/profiles/test/"' . $_GET{'profile'} . '"';
-#	my $rmcmd = "rm -f $profile";
-#	my $ret   = `$rmcmd`;
-
-#	$data .=
-#	    "<profile_result>Profile "
-#	  . $_GET{'profile'}
-#	  . " remove Succeed</profile_result>";
-
-##       $data .= "<profile_result>User ".$rmcmd." delete Succeed</profile_result>";
-#}
-#elsif ( $_GET{'action'} eq 'load_profile' ) {
-#	my $profile_path =
-#	  $SERVER_PARAM{'APP_DATA'} . '/profiles/test/' . $_GET{'profile'};
-#	load_profile($profile_path);
-#}
 elsif ( $_GET{'action'} eq 'load_user' ) {
-	my $default_user =
-	  $SERVER_PARAM{'APP_DATA'} . '/profiles/user/user.profile';
-	my $user    = $SERVER_PARAM{'APP_DATA'} . '/profiles/user/' . $_GET{'user'};
+	my $default_user = $SERVER_PARAM{'APP_DATA'} . '/plans/user/user.profile';
+	my $user    = $SERVER_PARAM{'APP_DATA'} . '/plans/user/' . $_GET{'user'};
 	my $copycmd = "cp $user $default_user";
 	my $ret     = `$copycmd`;
 
 	$data .= "<profile_result>User Load Succeed</profile_result>";
 }
 elsif ( $_GET{'action'} eq 'delete_user' ) {
-	my $user  = $SERVER_PARAM{'APP_DATA'} . '/profiles/user/' . $_GET{'user'};
+	my $user  = $SERVER_PARAM{'APP_DATA'} . '/plans/user/' . $_GET{'user'};
 	my $rmcmd = "rm -f $user";
 	my $ret   = `$rmcmd`;
 
@@ -2448,9 +2283,8 @@ elsif ( $_GET{'action'} eq 'delete_user' ) {
    #	$data .= "<profile_result>User ".$rmcmd." delete Succeed</profile_result>";
 }
 elsif ( $_GET{'action'} eq 'save_user' ) {
-	my $default_user =
-	  $SERVER_PARAM{'APP_DATA'} . '/profiles/user/user.profile';
-	my $user = $SERVER_PARAM{'APP_DATA'} . '/profiles/user/' . $_GET{'user'};
+	my $default_user = $SERVER_PARAM{'APP_DATA'} . '/plans/user/user.profile';
+	my $user = $SERVER_PARAM{'APP_DATA'} . '/plans/user/' . $_GET{'user'};
 	my $user_jsonStr = $_POST{'jsonStr'};
 	save_user( $user, $user_jsonStr );
 

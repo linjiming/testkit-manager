@@ -15,12 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-#   Authors:
 #
-#          Wendong,Sui  <weidongx.sun@intel.com>
-#          Tao,Lin  <taox.lin@intel.com>
-#
-#
+# Authors:
+#              Zhang, Huihui <huihuix.zhang@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 
 use FindBin;
 use strict;
@@ -66,10 +64,10 @@ if ( $_POST{'compare'} ) {
 	if ( @same_package_list > 0 ) {
 		print <<DATA;
 <div id="message"></div>
-<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list" style="table-layout:fixed">
+<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
   <tr>
-    <td height="30"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0" style="table-layout:fixed">
-        <tr style="font-size:14px">
+    <td height="30"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0" class="table_normal">
+        <tr>
 DATA
 		for ( my $i = 0 ; $i < @select_dir ; $i++ ) {
 			my $time       = $select_dir[$i];
@@ -89,7 +87,7 @@ DATA
 			my $package_temp = $package;
 			$package_temp =~ s/_tests.xml//;
 			print <<DATA;
-  <tr style="font-size:14px">
+  <tr>
     <td height="30" class="report_list_outside_left_compare" align="left" style="background-color:#89D6F2">&nbsp;Package Name: $package_temp</td>
   </tr>
   <tr>
@@ -112,8 +110,8 @@ DATA
 				}
 				if ( $should_print eq "TRUE" ) {
 					print <<DATA;
-          <td valign="top" class="$class_td_border"><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
-              <tr style="font-size:14px">
+          <td valign="top" class="$class_td_border"><table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal">
+              <tr>
                 <td width="80%" height="30" class="$class_name" align="left">&nbsp;Name</td>
                 <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">Result</td>
               </tr>
@@ -260,8 +258,8 @@ DATA
 				else {
 					$class_td_border = "report_list_outside_left_compare_empty";
 					print <<DATA;
-          <td valign="top" class="$class_td_border"><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
-              <tr style="font-size:14px">
+          <td valign="top" class="$class_td_border"><table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal">
+              <tr>
                 <td width="80%" height="30" class="$class_name" align="left">&nbsp;Name</td>
                 <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">Result</td>
               </tr>
@@ -522,7 +520,7 @@ elsif ( $_GET{'submit'} ) {
         </tr>
         <tr>
           <td><table width="100%" border="1" cellpadding="0" cellspacing="0" class="report_list" frame="below" rules="all">
-            <tr style="font-size:14px">
+            <tr>
               <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
               <td align="left" height="30" class="report_list_one_row">The following report will be submitted to the QA report server:</td>
             </tr>
@@ -703,8 +701,8 @@ sub showReport {
           </table></td>
         </tr>
         <tr>
-          <td><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" style="table-layout:fixed">
-            <tr style="font-size:14px">
+          <td><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" class="table_normal">
+            <tr>
               <td width="4%" height="30" align="center" valign="middle" class="report_list_outside_left"><label>
                 <input type="checkbox" name="check_all" id="check_all" onclick="javascript:check_uncheck_all();" />
               </label></td>
@@ -893,8 +891,8 @@ sub showSummaryReport {
 	my $result_dir = $result_dir_manager . $time;
 
 	print <<DATA;
-<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list" style="table-layout:fixed">
-  <tr style="font-size:14px">
+<table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
+  <tr>
     <td align="left" height="30" class="top_button_bg"><form id="detailed_report" name="detailed_report" method="post" action="tests_report.pl"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
       <tr>
         <td width="2%">&nbsp;</td>
@@ -947,17 +945,17 @@ sub showDetailedReport {
             </table></td>
           </tr>
           <tr>
-            <td align="center" height="30" class="report_list_one_row"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+            <td align="center" height="30" class="report_list_one_row"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0" class="table_normal">
               <tr>
                 <td width="5%">&nbsp;</td>
-                <td width="30%" style="font-size:14px" align="right">View by
+                <td width="30%" align="right">View by
                   <select name="select_view" id="select_view" onchange="javascript:filter_view();">
                     <option selected="selected">Package</option>
                     <option>Component</option>
                     <option>Test type</option>
                   </select>
                 </td>
-                <td width="30%" style="font-size:14px" align="center">
+                <td width="30%" align="center">
                   Result
                   <select name="select_result" id="select_result" onchange="javascript:filter();">
                     <option selected="selected">FAIL</option>
@@ -967,7 +965,7 @@ sub showDetailedReport {
                     <option>All</option>
                   </select>
                 </td>
-                <td width="30%" style="font-size:14px" align="left">
+                <td width="30%" align="left">
                   Type
                   <select name="select_type" id="select_type" onchange="javascript:filter();">
                     <option selected="selected">All</option>
@@ -980,7 +978,7 @@ sub showDetailedReport {
             </table></td>
           </tr>
           <tr>
-            <td><table width="100%" border="1" cellspacing="0" cellpadding="0" style="table-layout:fixed" frame="void" rules="all">
+            <td><table width="100%" border="1" cellspacing="0" cellpadding="0" class="table_normal" frame="void" rules="all">
               <tr>
                 <td width="1%" class="report_list_one_row" style="background-color:#E9F6FC">&nbsp;</td>
                 <td width="39%" valign="top" class="report_list_outside_left_bold" style="background-color:#E9F6FC">
@@ -991,8 +989,8 @@ sub showDetailedReport {
                   <div id="view_area_package_reg" style="display:none"></div>
                   <table width="100%" border="0" cellspacing="0" cellpadding="0">
                     <tr>
-                      <td><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
-                          <tr style="font-size:14px">
+                      <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal">
+                          <tr>
                             <td align="left" width="40%" height="30" class="report_list_outside_left">&nbsp;Name</td>
                             <td align="left" width="40%" height="30" class="report_list_one_row">&nbsp;Description</td>
                             <td width="20%" height="30" class="report_list_outside_right" align="center">Result</td>
@@ -1174,8 +1172,8 @@ DATA
                   <div id="view_area_component_reg" style="display:none"></div>
                   <table width="100%" border="0" cellspacing="0" cellpadding="0">
                     <tr>
-                      <td><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
-                          <tr style="font-size:14px">
+                      <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal">
+                          <tr>
                             <td align="left" width="40%" height="30" class="report_list_outside_left">&nbsp;Name</td>
                             <td align="left" width="40%" height="30" class="report_list_one_row">&nbsp;Description</td>
                             <td width="20%" height="30" class="report_list_outside_right" align="center">Result</td>
@@ -1348,8 +1346,8 @@ DATA
                   <div id="view_area_test_type_reg" style="display:none"></div>
                   <table width="100%" border="0" cellspacing="0" cellpadding="0">
                     <tr>
-                      <td><table width="100%" border="0" cellspacing="0" cellpadding="0" style="table-layout:fixed">
-                          <tr style="font-size:14px">
+                      <td><table width="100%" border="0" cellspacing="0" cellpadding="0"class="table_normal">
+                          <tr>
                             <td align="left" width="40%" height="30" class="report_list_outside_left">&nbsp;Name</td>
                             <td align="left" width="40%" height="30" class="report_list_one_row">&nbsp;Description</td>
                             <td width="20%" height="30" class="report_list_outside_right" align="center">Result</td>
@@ -1438,6 +1436,8 @@ DATA
 					}
 				}
 				elsif ( $test_type eq "compliance" ) {
+
+					# print error message when there is no spec in case xml
 					print
 					  '<p style="font-size:10px">&nbsp;<span style="color:red">'
 					  . $name
@@ -1566,6 +1566,8 @@ DATA
 						}
 					}
 					elsif ( $test_type eq "compliance" ) {
+
+						# print error message when there is no spec in case xml
 						print
 '<p style="font-size:10px">&nbsp;<span style="color:red">'
 						  . $name

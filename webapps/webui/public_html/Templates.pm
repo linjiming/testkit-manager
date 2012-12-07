@@ -1,15 +1,9 @@
-# Testkit
-# General Templates and Functions Module (Templates.pm)
-#
-# Copyright (C) 2007-2009 The Linux Foundation. All rights reserved.
-#
-# This program has been developed by ISP RAS for LF.
-# The ptyshell tool is originally written by Jiri Dluhos <jdluhos@suse.cz>
-# Copyright (C) 2005-2007 SuSE Linux Products GmbH
+# Copyright (C) 2012 Intel Corporation
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
-# version 2 as published by the Free Software Foundation.
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,8 +12,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+#
+# Authors:
+#              Zhang, Huihui <huihuix.zhang@intel.com>
+#              Wendong,Sui  <weidongx.sun@intel.com>
 
 use FindBin;
 
@@ -43,8 +40,8 @@ $Common::debug_inform_sub = sub { };
 	  $result_dir_manager $result_dir_lite $test_definition_dir $opt_dir $profile_dir_manager $configuration_file $DOWNLOAD_CMD
 	  $cert_sys_host $cert_sys_base
 	  &print_header &print_footer
-	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg
-	  &updatePackageList &updateCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &remove_package &syncDefinition &compare_version &check_network &get_repo &xml2xsl &xml2xsl_case &check_testkit_sdb
+	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg &get_category_key
+	  &updatePackageList &updateCaseInfo &printShortCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &remove_package &syncDefinition &compare_version &check_network &get_repo &xml2xsl &xml2xsl_case &check_testkit_sdb
 	  ),
 	@Common::EXPORT,
 	@Manifest::EXPORT
@@ -213,10 +210,10 @@ sub print_footer {
 
 # Remove old session profiles
 my $tm = time();
-if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/profiles' ) ) {
+if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 	my @files = grep /^~session\./, readdir(DIR);
 	foreach (@files) {
-		my $name = $SERVER_PARAM{'APP_DATA'} . "/profiles/$_";
+		my $name = $SERVER_PARAM{'APP_DATA'} . "/plans/$_";
 
 		# Session expiration time is 7 days
 		if ( $tm - ( stat($name) )[8] > 7 * 86400 ) {
@@ -253,7 +250,7 @@ if (!elem) {
 <div id="msg_area_error" style="border: none;$error_show">
 <table border="0" cellpadding="1" cellspacing="1" width="768" align="center">
   <tr>
-    <th style="border: dashed 1px darkred; background: red; color: white; font-family: Arial; font-size: 12px;">
+    <th class="error_message_title">
       <table border="0" cellpadding="0" cellspacing="0" align="center">
         <tr>
           <td width="100%">Attention</td>
@@ -262,10 +259,10 @@ if (!elem) {
       </table>
     </th>
   </tr>
-  <tr><td align="center" style="border: dashed 1px darkred; border-top: none;">
+  <tr><td align="center" class="message_background">
     <table border="0" cellpadding="0" cellspacing="0">
       <tr><td height="6" colspan="3"></td></tr>
-      <tr><td width="10%"></td><td align="left" id="msg_text_error" style="font-size: 14px; font-family: Arial">$error_text</td><td width="10%"></td></tr>
+      <tr><td width="10%"></td><td align="left" id="msg_text_error" class="message_content">$error_text</td><td width="10%"></td></tr>
       <tr><td height="6" colspan="3"></td></tr>
     </table>
   </td></tr>
@@ -293,7 +290,7 @@ if (!elem) {
 <div id="msg_area" style="border: none;$message_show">
 <table border="0" cellpadding="1" cellspacing="1" width="768" align="center">
   <tr>
-    <th style="border: dashed 1px darkred; background: green; color: white; font-family: Arial; font-size: 12px;">
+    <th class="normal_message_title">
       <table border="0" cellpadding="0" cellspacing="0" align="center">
         <tr>
           <td width="100%">Message</td>
@@ -302,10 +299,10 @@ if (!elem) {
       </table>
     </th>
   </tr>
-  <tr><td align="center" style="border: dashed 1px darkred; border-top: none;">
+  <tr><td align="center" class="message_background">
     <table border="0" cellpadding="0" cellspacing="0">
       <tr><td height="6" colspan="3"></td></tr>
-      <tr><td width="10%"></td><td align="left" id="msg_text" style="font-size: 14px; font-family: Arial">$message_text</td><td width="10%"></td></tr>
+      <tr><td width="10%"></td><td align="left" id="msg_text" class="message_content">$message_text</td><td width="10%"></td></tr>
       <tr><td height="6" colspan="3"></td></tr>
     </table>
   </td></tr>
@@ -329,7 +326,7 @@ our $result_dir_manager  = "/opt/testkit/manager/results/";
 our $result_dir_lite     = "/opt/testkit/manager/lite/";
 our $test_definition_dir = "/opt/testkit/manager/definition/";
 our $opt_dir             = "/opt/testkit/manager/package/";
-our $profile_dir_manager = $FindBin::Bin . "/../../../profiles/test/";
+our $profile_dir_manager = $FindBin::Bin . "/../../../plans/";
 our $configuration_file  = $FindBin::Bin . "/../../../CONF";
 our $DOWNLOAD_CMD        = "wget -r -l 1 -nd -A rpm --spider";
 
@@ -638,7 +635,7 @@ sub printManualCaseInfo {
 	}
 
 	print <<DATA;
-<table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:14px;table-layout:fixed" frame="below" rules="all">
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal" frame="below" rules="all">
   <tr>
     <td align="left" height="61" width="1%" class="report_list_one_row"></td>
     <td align="left" height="61" width="21%" class="report_list_outside_left">Pre-conditions:</td>
@@ -671,15 +668,130 @@ DATA
     <td align="left" width="1%" class="report_list_one_row"></td>
     <td align="left" width="21%" class="report_list_outside_left">Comments:</td>
     <td align="left" width="1%" class="report_list_one_row"></td>
-    <td align="left" width="77%" class="report_list_one_row"><textarea id="$id_textarea" name="textarea" cols="53" rows="3" style="font-size:14px;">$comment</textarea></td>
+    <td align="left" width="77%" class="report_list_one_row"><textarea id="$id_textarea" name="textarea" cols="53" rows="3">$comment</textarea></td>
   </tr>
   <tr>
     <td align="left" width="1%" class="report_list_one_row"></td>
     <td align="left" width="21%" class="report_list_outside_left">Bug Number:</td>
     <td align="left" width="1%" class="report_list_one_row"></td>
-    <td align="left" width="77%" class="report_list_one_row"><input type="text" id="$id_bugnumber" name="textfield" value="$bugnumber" style="font-size:14px;"></td>
+    <td align="left" width="77%" class="report_list_one_row"><input type="text" id="$id_bugnumber" name="textfield" value="$bugnumber"></td>
   </tr>
 </table>
+DATA
+}
+
+sub printShortCaseInfo {
+	my ( $name, $execution_type, %caseInfo ) = @_;
+	my $description = $caseInfo{"description"};
+	my $specs       = $caseInfo{"specs"};
+	print <<DATA;
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal" frame="below" rules="all">
+                              <tr>
+                                <td align="left" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="TC Purpose:">&nbsp;TC Purpose:</td>
+                              </tr>
+                              <tr>
+                                <td class="report_list_inside_two" style="text-overflow:ellipsis; overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+                                  <tr>
+                                    <td align="left" width="2%" class="report_list_inside_two_no_border" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;"></td>
+                                    <td align="left" width="98%" class="report_list_inside_two" style="text-overflow:ellipsis; overflow:hidden;" title="$description">$description</td>
+                                  </tr>
+                                </table></td>
+                              </tr>
+DATA
+
+	my @temp_specs = split( "!__!", $specs );
+	for ( my $i = 0 ; $i < @temp_specs ; $i++ ) {
+		my @temp               = split( "!::!", $temp_specs[$i] );
+		my $spec_category      = shift @temp;
+		my $spec_section       = shift @temp;
+		my $spec_specification = shift @temp;
+		my $spec_interface     = shift @temp;
+		my $spec_element_name  = shift @temp;
+		my $spec_usage         = shift @temp;
+		my $spec_element_type  = shift @temp;
+		my $spec_url           = shift @temp;
+		my $spec_statement     = shift @temp;
+
+		# only print SPEC for one time
+		if ( $i == 0 ) {
+			print <<DATA;
+                              <tr>
+                                <td align="left" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Spec">&nbsp;Spec</td>
+                              <tr>
+DATA
+		}
+		print <<DATA;
+                              <tr>
+                                <td align="left" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Assertion:">&nbsp;&nbsp;&nbsp;Assertion:</td>
+                              <tr>
+                              <tr>
+                                <td class="report_list_inside" style="text-overflow:ellipsis; overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+                                  <tr>
+                                    <td align="left" width="28%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="category:">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;category:</td>
+                                    <td align="left" width="72%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_category">&nbsp;$spec_category</td>
+                                  </tr>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                <td class="report_list_inside" style="text-overflow:ellipsis; overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+                                  <tr>
+                                    <td align="left" width="28%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="section:">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;section:</td>
+                                    <td align="left" width="72%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_section">&nbsp;$spec_section</td>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                <td class="report_list_inside" style="text-overflow:ellipsis; overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+                                  <tr>
+                                    <td align="left" width="28%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="specification:">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;specification:</td>
+                                    <td align="left" width="72%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_specification">&nbsp;$spec_specification</td>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                <td class="report_list_inside" style="text-overflow:ellipsis; overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+                                  <tr>
+                                    <td align="left" width="28%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="interface:">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;interface:</td>
+                                    <td align="left" width="72%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_interface">&nbsp;$spec_interface</td>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                <td class="report_list_inside" style="text-overflow:ellipsis; overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+                                  <tr>
+                                    <td align="left" width="28%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="element_name:">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;element_name:</td>
+                                    <td align="left" width="72%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_element_name">&nbsp;$spec_element_name</td>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                <td class="report_list_inside" style="text-overflow:ellipsis; overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+                                  <tr>
+                                    <td align="left" width="28%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage:">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;usage:</td>
+                                    <td align="left" width="72%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_usage">&nbsp;$spec_usage</td>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                <td class="report_list_inside" style="text-overflow:ellipsis; overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+                                  <tr>
+                                    <td align="left" width="28%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="element_type:">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;element_type:</td>
+                                    <td align="left" width="72%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_element_type">&nbsp;$spec_element_type</td>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                <td class="report_list_inside" style="text-overflow:ellipsis; overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+                                  <tr>
+                                    <td align="left" width="28%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="URL:">&nbsp;&nbsp;&nbsp;URL:</td>
+                                    <td align="left" width="72%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_url">&nbsp;$spec_url</td>
+                                </table></td>
+                              </tr>
+                              <tr>
+                                <td class="report_list_inside" style="text-overflow:ellipsis; overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+                                  <tr>
+                                    <td align="left" width="28%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Statement:">&nbsp;&nbsp;&nbsp;Statement:</td>
+                                    <td align="left" width="72%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_statement">&nbsp;$spec_statement</td>
+                                </table></td>
+                              </tr>
+DATA
+	}
+	print <<DATA;
+                            </table>
 DATA
 }
 
@@ -710,7 +822,7 @@ sub printDetailedCaseInfo {
 	my $specs                       = $caseInfo{"specs"};
 	my $steps                       = $caseInfo{"steps"};
 	print <<DATA;
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:14px;table-layout:fixed" frame="below" rules="all">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal" frame="below" rules="all">
                               <tr>
                                 <td align="left" width="15%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="TC ID:">&nbsp;TC ID:</td>
                                 <td align="left" colspan="3" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name">&nbsp;$name</td>
@@ -754,7 +866,7 @@ sub printDetailedCaseInfo {
                               </tr>
                               <tr>
                                 <td align="left" width="35%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;" title="Steps">&nbsp;Steps</td>
-                                <td colspan="2" class="report_list_outside_right_two"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                <td colspan="2" class="report_list_outside_right_two"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
 DATA
 
 	my @temp_steps = split( "!__!", $steps );
@@ -764,13 +876,13 @@ DATA
 		my $expected_result  = shift @temp;
 		print <<DATA;
                                   <tr>
-                                    <td align="left" width="30%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                    <td align="left" width="30%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                       <tr>
                                         <td align="left" width="4%" class="report_list_inside_two_no_border" style="text-overflow:ellipsis;overflow:hidden;"></td>
                                         <td align="left" width="96%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;" title="Step Description:">Step Description:</td>
                                       </tr>
                                     </table></td>
-                                    <td align="left" width="70%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                    <td align="left" width="70%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                       <tr>
                                         <td align="left" width="2%" class="report_list_inside_two_no_border" style="text-overflow:ellipsis;overflow:hidden;"></td>
                                         <td align="left" width="98%" class="report_list_outside_right_two" style="text-overflow:ellipsis;overflow:hidden;" title="$step_description">$step_description</td>
@@ -778,13 +890,13 @@ DATA
                                     </table></td>
                                   </tr>
                                   <tr>
-                                    <td align="left" width="30%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                    <td align="left" width="30%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                       <tr>
                                         <td align="left" width="4%" class="report_list_inside_two_no_border" style="text-overflow:ellipsis;overflow:hidden;"></td>
                                         <td align="left" width="96%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;" title="Expected Result:">Expected Result:</td>
                                       </tr>
                                     </table></td>
-                                    <td align="left" width="70%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                    <td align="left" width="70%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                       <tr>
                                         <td align="left" width="2%" class="report_list_inside_two_no_border" style="text-overflow:ellipsis;overflow:hidden;"></td>
                                         <td align="left" width="98%" class="report_list_outside_right_two" style="text-overflow:ellipsis;overflow:hidden;" title="$expected_result">$expected_result</td>
@@ -856,57 +968,57 @@ DATA
 		}
 		print <<DATA;
                                 <td align="left" width="35%" rowspan="7" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Assertion:">&nbsp;Assertion:</td>
-                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                     <tr>
-                                        <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="category">&nbsp;category:</td>
+                                        <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="category:">&nbsp;category:</td>
                                         <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_category">&nbsp;$spec_category</td>
                                     </tr>
                                 </table></td>
                               </tr>
                               <tr>
-                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                      <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="section">&nbsp;section:</td>
+                                      <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="section:">&nbsp;section:</td>
                                       <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_section">&nbsp;$spec_section</td>
                                      </tr>
                                   </table></td>
                               </tr>
                               <tr>
-                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="specification">&nbsp;specification:</td>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="specification:">&nbsp;specification:</td>
                                          <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_specification">&nbsp;$spec_specification</td>
                                      </tr>
                                 </table></td>
                               </tr>
                               <tr>
-                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="interface">&nbsp;interface:</td>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="interface:">&nbsp;interface:</td>
                                          <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_interface">&nbsp;$spec_interface</td>
                                      </tr>
                                   </table></td>
                               </tr>
                               <tr>
-                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;element_name:</td>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="element_name:">&nbsp;element_name:</td>
                                          <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_element_name">&nbsp;$spec_element_name</td>
                                      </tr>
                                 </table></td>
                               </tr>
                               <tr>
-                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;usage:</td>
+                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage:">&nbsp;usage:</td>
                                           <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_usage">&nbsp;$spec_usage</td>
                                      </tr>
                                 </table></td>
                               </tr>
                               <tr>
-                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;element_type:</td>
+                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="element_type:">&nbsp;element_type:</td>
                                           <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_element_type">&nbsp;$spec_element_type</td>
                                      </tr>
                                 </table></td>
@@ -984,7 +1096,7 @@ sub printDetailedCaseInfoWithComment {
 		}
 	}
 	print <<DATA;
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size:14px;table-layout:fixed" frame="below" rules="all">
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal" frame="below" rules="all">
                               <tr>
                                 <td align="left" width="15%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="TC ID:">&nbsp;TC ID:</td>
                                 <td align="left" colspan="3" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name">&nbsp;$name</td>
@@ -1036,7 +1148,7 @@ sub printDetailedCaseInfoWithComment {
                               </tr>
                               <tr>
                                 <td align="left" width="35%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Steps">&nbsp;Steps</td>
-                                <td align="left" colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                <td align="left" colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
 DATA
 
 	my @temp_steps = split( "!__!", $steps );
@@ -1046,13 +1158,13 @@ DATA
 		my $expected_result  = shift @temp;
 		print <<DATA;
                                   <tr>
-                                    <td align="left" width="30%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                    <td align="left" width="30%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                       <tr>
                                         <td align="left" width="4%" class="report_list_inside_two_no_border" style="text-overflow:ellipsis;overflow:hidden;"></td>
                                         <td align="left" width="96%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;" title="Step Description:">Step Description:</td>
                                       </tr>
                                     </table></td>
-                                    <td align="left" width="70%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                    <td align="left" width="70%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                       <tr>
                                         <td align="left" width="2%" class="report_list_inside_two_no_border" style="text-overflow:ellipsis;overflow:hidden;"></td>
                                         <td align="left" width="98%" class="report_list_outside_right_two" style="text-overflow:ellipsis;overflow:hidden;" title="$step_description">$step_description</td>
@@ -1060,13 +1172,13 @@ DATA
                                     </table></td>
                                   </tr>
                                   <tr>
-                                    <td align="left" width="30%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                    <td align="left" width="30%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                       <tr>
                                         <td align="left" width="4%" class="report_list_inside_two_no_border" style="text-overflow:ellipsis;overflow:hidden;"></td>
                                         <td align="left" width="96%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;" title="Expected Result:">Expected Result:</td>
                                       </tr>
                                     </table></td>
-                                    <td align="left" width="70%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                    <td align="left" width="70%" class="report_list_inside_two" style="text-overflow:ellipsis;overflow:hidden;"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                       <tr>
                                         <td align="left" width="2%" class="report_list_inside_two_no_border" style="text-overflow:ellipsis;overflow:hidden;"></td>
                                         <td align="left" width="98%" class="report_list_outside_right_two" style="text-overflow:ellipsis;overflow:hidden;" title="$expected_result">$expected_result</td>
@@ -1137,57 +1249,57 @@ DATA
 		}
 		print <<DATA;
                                 <td align="left" width="35%" rowspan="7" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Assertion:">&nbsp;Assertion:</td>
-                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                     <tr>
-                                        <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="category">&nbsp;category:</td>
+                                        <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="category:">&nbsp;category:</td>
                                         <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_category">&nbsp;$spec_category</td>
                                     </tr>
                                 </table></td>
                               </tr>
                               <tr>
-                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                      <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="section">&nbsp;section:</td>
+                                      <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="section:">&nbsp;section:</td>
                                       <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_section">&nbsp;$spec_section</td>
                                      </tr>
                                   </table></td>
                               </tr>
                               <tr>
-                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="specification">&nbsp;specification:</td>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="specification:">&nbsp;specification:</td>
                                          <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_specification">&nbsp;$spec_specification</td>
                                      </tr>
                                 </table></td>
                               </tr>
                               <tr>
-                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                  <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="interface">&nbsp;interface:</td>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="interface:">&nbsp;interface:</td>
                                          <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_interface">&nbsp;$spec_interface</td>
                                      </tr>
                                   </table></td>
                               </tr>
                               <tr>
-                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;element_name:</td>
+                                         <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="element_name">&nbsp;element_name:</td>
                                          <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_element_name">&nbsp;$spec_element_name</td>
                                      </tr>
                                 </table></td>
                               </tr>
                               <tr>
-                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;usage:</td>
+                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage:">&nbsp;usage:</td>
                                           <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_usage">&nbsp;$spec_usage</td>
                                      </tr>
                                 </table></td>
                               </tr>
                               <tr>
-                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" style="table-layout:fixed">
+                                 <td colspan="2" class="report_list_outside_right"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
                                      <tr>
-                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="usage">&nbsp;element_type:</td>
+                                          <td align="left" width="30%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="element_type:">&nbsp;element_type:</td>
                                           <td align="left" width="70%" class="report_list_outside_right" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$spec_element_type">&nbsp;$spec_element_type</td>
                                      </tr>
                                 </table></td>
@@ -1381,9 +1493,10 @@ sub syncDefinition {
 	system( "rm -rf $test_definition_dir" . "*" );
 	system( "rm -rf $opt_dir" . "*" );
 	my $cmd_definition = sdb_cmd("shell 'ls /usr/share/*/tests.xml'");
-	my @definitions    = `$cmd_definition`;
+	my $definition     = `$cmd_definition`;
+	my @definitions    = $definition =~ /(\/usr\/share\/.*?\/tests.xml)/g;
 	if (   ( @definitions >= 1 )
-		&& ( $definitions[0] !~ /No such file or directory/ ) )
+		&& ( $definition !~ /No such file or directory/ ) )
 	{
 		foreach (@definitions) {
 			my $definition = "";
@@ -1411,7 +1524,7 @@ sub syncDefinition {
 	my $cmd_readme = sdb_cmd("shell 'ls /opt/*/README'");
 	my $readme     = `$cmd_readme`;
 	my @readmes    = $readme =~ /(\/opt\/.*?\/README)/g;
-	if ( ( @readmes >= 1 ) && ( $readmes[0] !~ /No such file or directory/ ) ) {
+	if ( ( @readmes >= 1 ) && ( $readme !~ /No such file or directory/ ) ) {
 		foreach (@readmes) {
 			my $readme = "";
 			if ( $_ =~ /(\/opt\/.*\/README)/ ) {
@@ -1446,13 +1559,13 @@ sub remove_package {
 	my @package_items = `$cmd`;
 	foreach (@package_items) {
 		my $package_id = "none";
-		if ( $_ =~ /^\s+(\d+)\s+(\d+)/ ) {
-			$package_id = $2;
+		if ( $_ =~ /\s+([a-zA-Z0-9]*?)\s*$/ ) {
+			$package_id = $1;
 		}
 		if ( $package_id ne "none" ) {
 			system(
 				sdb_cmd(
-"shell 'wrt-installer -u $package_id &>/dev/null' &>/dev/null"
+"shell 'wrt-installer -un $package_id &>/dev/null' &>/dev/null"
 				)
 			);
 		}
@@ -1525,6 +1638,24 @@ sub compare_version {
 	}
 }
 
+sub get_category_key {
+	my $category_key = "none";
+	open FILE, $configuration_file or die $!;
+	while (<FILE>) {
+		if ( $_ =~ /^category_key/ ) {
+			$category_key = $_;
+			last;
+		}
+	}
+	close(FILE);
+	my @category_temp = split( "=", $category_key );
+	$category_key = $category_temp[1];
+	$category_key =~ s/^\s*\[//;
+	$category_key =~ s/\]\s*$//;
+	my @category_keys = split( ',', $category_key );
+	return @category_keys;
+}
+
 sub get_repo {
 	my $repo_url = "none";
 	open FILE, $configuration_file or die $!;
@@ -1536,7 +1667,8 @@ sub get_repo {
 	}
 	close(FILE);
 	if ( $repo_url eq "none" ) {
-		return "none, Can't find 'repo_url =' in the configuration file.";
+		return
+"none, Can't find 'repo_url =' in the configuration file /opt/testkit/manager/CONF";
 	}
 	else {
 		my @repo = split( "=", $repo_url );
@@ -1546,9 +1678,15 @@ sub get_repo {
 		if ( $repo_url !~ /\/$/ ) {
 			$repo_url = $repo_url . "/";
 		}
+		if ( $repo_url =~ /^\/$/ ) {
+			return
+"none, 'repo_url' is empty in the configuration file /opt/testkit/manager/CONF";
+		}
 		if ( $repo_url =~ /^[a-zA-Z0-9\-\_\:\.\/ ]*$/ ) {
 			$repo_url =~ s/ /\\ /g;
-			if ( $repo_url =~ /^http:\/\// ) {
+			if (   ( $repo_url =~ /^http:\/\// )
+				or ( $repo_url =~ /^https:\/\// ) )
+			{
 				return "remote::$repo_url";
 			}
 			elsif ( $repo_url =~ /^\// ) {
@@ -1556,12 +1694,12 @@ sub get_repo {
 			}
 			else {
 				return
-				  "none, Repo URL should either starts with 'http://' or '/'.";
+"none, Repo URL should either starts with 'http://', 'https://' or '/'";
 			}
 		}
 		else {
 			return
-"none, Format of the repo URL is not correct. It only supports 'a-z', 'A-Z', '0-9', '-', '_', ':', '.', '/' and ' '";
+"none, Format of the repo URL is not correct, it only supports 'a-z', 'A-Z', '0-9', '-', '_', ':', '.', '/' and ' '";
 		}
 	}
 }
@@ -1581,17 +1719,20 @@ sub check_network {
 				return "OK";
 			}
 			else {
-				return "Can't connect to the remote repo $repo_url";
+				return
+"Can't connect to the remote repo $repo_url, please check your network or change 'repo_url' in the configuration file /opt/testkit/manager/CONF";
 			}
 		}
 		if ( $repo_type =~ /local/ ) {
 			my $network = `ls $repo_url 2>&1`;
 			if ( $network =~ /No such file or directory/ ) {
-				return "Can't find local repo $repo_url";
+				return
+"Can't find local repo $repo_url, please change 'repo_url' in the configuration file /opt/testkit/manager/CONF";
 			}
 			$network = `find $repo_url 2>&1`;
 			if ( $network =~ /Not a directory/ ) {
-				return "Local repo $repo_url is not a directory";
+				return
+"Local repo $repo_url is not a directory, please change 'repo_url' in the configuration file /opt/testkit/manager/CONF";
 			}
 			return "OK";
 		}
@@ -1611,7 +1752,7 @@ sub check_testkit_sdb {
 		{
 			if ( $status eq "Error" ) {
 				$testkit_lite_error_message =
-				  "Can't find 'sdb_serial =' in the configuration file.";
+"Can't find 'sdb_serial =' in the configuration file /opt/testkit/manager/CONF";
 			}
 			else {
 				my $serial_temp = get_serial();
