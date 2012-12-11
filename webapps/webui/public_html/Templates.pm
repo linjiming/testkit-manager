@@ -1550,6 +1550,7 @@ sub syncDefinition {
 			}
 		}
 	}
+	sleep 3;
 }
 
 sub remove_package {

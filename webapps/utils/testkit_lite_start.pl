@@ -1005,14 +1005,19 @@ sub syncLiteResult {
 		}
 
 		# start testing
-		if ( $isWebApi eq "False" ) {
-			$subshell->Spawn(
-				sdb_cmd("shell testkit-lite -f $profile_content") );
-		}
-		else {
-			$subshell->Spawn(
-				sdb_cmd("shell testkit-lite -f $profile_content") );
-		}
+		write_string_as_file(
+			"$globals->{'temp_dir'}/lite-command",
+			"testkit-lite -f $profile_content"
+		);
+		system(
+			sdb_cmd(
+				"push $globals->{'temp_dir'}/lite-command /tmp &>/dev/null")
+		);
+
+		# wait command file ready
+		sleep(2);
+		system( sdb_cmd("shell 'chmod 755 /tmp/lite-command'") );
+		$subshell->Spawn( sdb_cmd("shell './tmp/lite-command'") );
 	}
 	else {
 		$subshell->Spawn("echo 'Missing package(s) found, exit...'; sleep 10");

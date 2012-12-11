@@ -181,7 +181,6 @@ if ( $_GET{"delete_package"} ) {
 			push( @package_name_temp, $_ );
 		}
 	}
-	sleep 3;
 	syncDefinition();
 
 	@package_name = @package_name_temp;

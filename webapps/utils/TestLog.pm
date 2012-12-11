@@ -472,9 +472,10 @@ sub syncDefinition {
 	system( "rm -rf $test_definition_dir" . "*" );
 	system( "rm -rf $opt_dir" . "*" );
 	my $cmd_definition = sdb_cmd("shell 'ls /usr/share/*/tests.xml'");
-	my @definitions    = `$cmd_definition`;
+	my $definition     = `$cmd_definition`;
+	my @definitions    = $definition =~ /(\/usr\/share\/.*?\/tests.xml)/g;
 	if (   ( @definitions >= 1 )
-		&& ( $definitions[0] !~ /No such file or directory/ ) )
+		&& ( $definition !~ /No such file or directory/ ) )
 	{
 		foreach (@definitions) {
 			my $definition = "";
@@ -502,7 +503,7 @@ sub syncDefinition {
 	my $cmd_readme = sdb_cmd("shell 'ls /opt/*/README'");
 	my $readme     = `$cmd_readme`;
 	my @readmes    = $readme =~ /(\/opt\/.*?\/README)/g;
-	if ( ( @readmes >= 1 ) && ( $readmes[0] !~ /No such file or directory/ ) ) {
+	if ( ( @readmes >= 1 ) && ( $readme !~ /No such file or directory/ ) ) {
 		foreach (@readmes) {
 			my $readme = "";
 			if ( $_ =~ /(\/opt\/.*\/README)/ ) {
@@ -528,6 +529,7 @@ sub syncDefinition {
 			}
 		}
 	}
+	sleep 3;
 }
 
 1;

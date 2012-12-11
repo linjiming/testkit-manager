@@ -158,3 +158,6 @@ testkit-manager 2.2.8:
   - add feature to install missing packages automatically when load test plan
   - add pre-defined test plan
   - cleanup codes and update copyright
+
+* Thu Dec 12 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.8-2
+  - use text file to transfer command to the device
