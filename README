@@ -59,9 +59,15 @@ Startup:
 2. open web page on browser: http://<test-machine-name>:8899
 
 
+Suggestion:
+===========
+1. firefox is the preferred web browser to open testkit-manger
+
+
 Limitation:
 ===========
 1. only support devices that have 'sdb' communication module
+
 
 Known Issues:
 ===========

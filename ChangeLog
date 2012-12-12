@@ -159,5 +159,8 @@ testkit-manager 2.2.8:
   - add pre-defined test plan
   - cleanup codes and update copyright
 
-* Thu Dec 12 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.8-2
+* Thu Dec 11 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.8-2
   - use text file to transfer command to the device
+
+* Thu Dec 12 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.8-3
+  - add error handler when the command of testkit-lite can't finish properly

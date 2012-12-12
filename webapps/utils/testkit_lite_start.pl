@@ -1038,7 +1038,7 @@ sub syncLiteResult {
 		my ($line) = @_;
 		defined $line or $line = "";
 
-		if ( $line =~ /^Testkit-lite FINISHED!$/ ) {
+		if ( $line =~ /\[ all complete, bye \]/ ) {
 			return 1;
 		}
 
@@ -1064,6 +1064,7 @@ sub syncLiteResult {
 			$current_run_number              = 0;
 			$globals->{'current_run_number'} = $current_run_number;
 			write_status();
+			return 0;
 		}
 
 		# record manual package
@@ -1088,6 +1089,7 @@ sub syncLiteResult {
 			$current_run_number              = 0;
 			$globals->{'current_run_number'} = $current_run_number;
 			write_status();
+			return 0;
 		}
 
 		# record case number
@@ -1096,15 +1098,23 @@ sub syncLiteResult {
 			$current_run_number += @matches;
 			$globals->{'current_run_number'} = $current_run_number;
 			write_status();
+			return 0;
 		}
 	}
 
 	# monitor test status
 	while ( my $line = $subshell->Read(50) ) {
-		check_run_done($line);
+		my $read_status = check_run_done($line);
+		if ($read_status) {
+			last;
+		}
 	}
 
-	$subshell->WaitForSubshell();
+	# wait some time to print out all messages
+	for ( my $i = 0 ; $i < 30 ; $i++ ) {
+		$subshell->Read(50);
+		sleep 0.1;
+	}
 
 	if ( $subshell->{EXIT_CODE} ) {
 		warning "subshell exited with code "
