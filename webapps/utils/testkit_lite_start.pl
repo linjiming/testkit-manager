@@ -944,7 +944,7 @@ sub syncLiteResult {
 		sdb_cmd("shell 'cd /opt/testkit/lite; tar -czvf /tmp/lite.tar.gz .'") );
 	system( sdb_cmd("pull /tmp/lite.tar.gz $result_dir_lite") );
 	system( sdb_cmd("shell rm -rf /tmp/lite.tar.gz") );
-	system("cd $result_dir_lite;tar -xzvf $result_dir_lite/lite.tar.gz");
+	system("cd $result_dir_lite;tar -xzvf lite.tar.gz");
 	system("rm -rf $result_dir_lite/lite.tar.gz");
 }
 
@@ -974,13 +974,15 @@ sub syncLiteResult {
 	else {
 		if ( $isWebApi eq "False" ) {
 			inform "[CMD]:\n"
-			  . sdb_cmd("shell testkit-lite -f ")
-			  . $profile_content . "\n";
+			  . sdb_cmd("shell 'testkit-lite -f ")
+			  . $profile_content
+			  . " --non-active'\n";
 		}
 		else {
 			inform "[CMD]:\n"
-			  . sdb_cmd("shell testkit-lite -f ")
-			  . $profile_content . "\n";
+			  . sdb_cmd("shell 'testkit-lite -f ")
+			  . $profile_content
+			  . " --non-active'\n";
 		}
 	}
 	if ( $profile_content =~ /usr\/share/ ) {
@@ -1007,7 +1009,7 @@ sub syncLiteResult {
 		# start testing
 		write_string_as_file(
 			"$globals->{'temp_dir'}/lite-command",
-			"testkit-lite -f $profile_content"
+			"testkit-lite -f $profile_content --non-active"
 		);
 		system(
 			sdb_cmd(
@@ -1038,7 +1040,9 @@ sub syncLiteResult {
 		my ($line) = @_;
 		defined $line or $line = "";
 
-		if ( $line =~ /\[ all complete, bye \]/ ) {
+		if ( $line =~
+			/\[ all tasks for testkit lite are accomplished, goodbye \]/ )
+		{
 			return 1;
 		}
 

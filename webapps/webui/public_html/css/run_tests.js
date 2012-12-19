@@ -57,8 +57,10 @@ function updateTestTimer() {
 
 function stopTests() {
 	if (confirm('Are you sure to terminate test execution?')) {
-		if (stop_button)
+		if (stop_button) {
 			stop_button.disabled = true;
+			stop_button.className = "medium_button_disable";
+		}
 		var page = document.getElementsByTagName("*");
 		exec_info.innerHTML = 'Tests are stopping&hellip;';
 		ajax_call_get('action=stop_tests&tree=tests');
@@ -93,14 +95,19 @@ function startTestsPrepareGUI(clean_progress_bar) {
 			}
 		}
 	}
-	if (start_button)
+	if (start_button) {
 		start_button.disabled = true;
-	if (stop_button)
+		start_button.className = "medium_button_disable";
+	}
+	if (stop_button) {
 		stop_button.disabled = false;
-	if (test_profile)
+		stop_button.className = "medium_button";
+	}
+	if (test_profile) {
 		test_profile.disabled = true;
-	exec_info.innerHTML = 'Preparing to run the tests&hellip;';
-	exec_status.innerHTML = '&nbsp;&nbsp;&nbsp;<img src="images/ajax_progress.gif" width="16" height="16" alt="" />';
+	}
+	exec_info.innerHTML = 'Preparing to run the tests&hellip;&nbsp;&nbsp;&nbsp;<img src="images/ajax_progress.gif" width="16" height="16" alt="progress gif"/>';
+	exec_status.innerHTML = '';
 	cmdlog.innerHTML = '';
 	cmdlog.style.color = 'black';
 	log_contents = '';
@@ -137,14 +144,16 @@ function startRefresh(profile_name, have_alert) {
 	if (have_alert == "true") {
 		alert("A test is already running.\nYou cannot run another instance before it is finished.\nStart watching the current run...");
 	}
-	exec_info.innerHTML = 'Test cases are running &hellip;';
-	exec_status.innerHTML = '&nbsp;&nbsp;&nbsp;<img src="images/ajax_progress.gif" width="16" height="16" alt="" />';
+	exec_info.innerHTML = 'Test cases are running &hellip;&nbsp;&nbsp;&nbsp;<img src="images/ajax_progress.gif" width="16" height="16" alt="progress gif"/>';
+	exec_status.innerHTML = '';
 	cmdlog.innerHTML = '';
 	cmdlog.style.color = 'black';
 	log_contents = '';
 	last_line = '';
 	start_button.disabled = true;
+	start_button.className = "medium_button_disable";
 	stop_button.disabled = false;
+	stop_button.className = "medium_button";
 	global_profile_name = profile_name;
 	for ( var i = 0; i < test_profile.length; i++) {
 		if (test_profile.options[i].value == profile_name) {
@@ -331,10 +340,19 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('save_profile_panel_button').disabled = false;
 		document.getElementById('load_profile_panel_button').disabled = false;
 		document.getElementById('manage_profile_panel_button').disabled = false;
-		// document.getElementById('update_package_list').value = "Reload";
-		// document.getElementById('update_package_list').title = "Refresh
-		// current page and load only installed packages, so you can start
-		// testing.";
+
+		document.getElementById('button_adv').className = "medium_button";
+		document.getElementById('update_package_list').className = "medium_button";
+		document.getElementById('save_profile_panel_button').className = "medium_button";
+		document.getElementById('load_profile_panel_button').className = "medium_button";
+		document.getElementById('manage_profile_panel_button').className = "medium_button";
+
+		document.getElementById('button_adv').style.cursor = "pointer";
+		document.getElementById('update_package_list').style.cursor = "pointer";
+		document.getElementById('save_profile_panel_button').style.cursor = "pointer";
+		document.getElementById('load_profile_panel_button').style.cursor = "pointer";
+		document.getElementById('manage_profile_panel_button').style.cursor = "pointer";
+
 		document.getElementById('update_package_list').onclick = function() {
 			document.getElementById('update_package_list').disabled = true;
 			// document.location = "tests_custom.pl";
@@ -405,7 +423,7 @@ function ajaxProcessResult(responseXML) {
 				if (responseXML.getElementsByTagName('return_value').length > 0) {
 					var return_value = responseXML
 							.getElementsByTagName('return_value')[0].childNodes[0].nodeValue;
-					loaddiv_string = "<span class='load_test_plan_packages_need'>&nbsp;&nbsp;"
+					loaddiv_string = "<span class=' report_list_no_border '>&nbsp;&nbsp;"
 							+ return_value + "</span></br>";
 					document.getElementById('loadProgressBarDiv').innerHTML += loaddiv_string;
 				}
@@ -428,7 +446,7 @@ function ajaxProcessResult(responseXML) {
 				} else {
 					var packages = "packages that need";
 				}
-				document.getElementById('loadProgressBarDiv').innerHTML = '<tr><table width="450" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="10" width="3%" align="left" class="view_test_plan_edge"></td><td height="10" align="left" class="view_test_plan_edge" width="94%">&nbsp;</td><td height="10" width="3%" class="view_test_plan_edge" align="left"></td></tr><tr><td height="30" width="3%" align="left" class="view_test_plan_edge"></td><td id="loadtitle" height="30" align="left" class="view_test_plan_title" width="94%">&nbsp;Find '
+				document.getElementById('loadProgressBarDiv').innerHTML = '<tr><table width="450" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="10" width="3%" align="left" class="report_list view_test_plan_edge"></td><td height="10" align="left" class="view_test_plan_edge" width="94%">&nbsp;</td><td height="10" width="3%" class="view_test_plan_edge" align="left"></td></tr><tr><td height="30" width="3%" align="left" class="view_test_plan_edge"></td><td id="loadtitle" height="30" align="left" class="view_test_plan_title" width="94%">&nbsp;Find '
 						+ packages_need_count
 						+ ' missing '
 						+ packages
@@ -440,7 +458,7 @@ function ajaxProcessResult(responseXML) {
 			if (responseXML.getElementsByTagName('return_value').length > 0) {
 				var return_value = responseXML
 						.getElementsByTagName('return_value')[0].childNodes[0].nodeValue;
-				loaddiv_string = "<span class='load_test_plan_packages_need'>&nbsp;&nbsp;"
+				loaddiv_string = "<span class=' report_list_no_border '>&nbsp;&nbsp;"
 						+ return_value + "</span></br>";
 			}
 			var loadtitle = document.getElementById('loadtitle').innerHTML;
@@ -448,13 +466,13 @@ function ajaxProcessResult(responseXML) {
 			var install_count = packages_need_count_total[1]
 					- packages_need_count + 1;
 			if (message_not_load_arr[0]) {
-				loaddiv_string += "<span class='load_test_plan_packages_need'>&nbsp;&nbsp;&nbsp;&nbsp;Install package "
+				loaddiv_string += "<span class=' report_list_no_border '>&nbsp;&nbsp;&nbsp;&nbsp;Install package "
 						+ install_count
 						+ ": "
 						+ message_not_load_arr[0]
 						+ "...</span>";
 			} else {
-				loaddiv_string += "<span class='load_test_plan_packages_need'>&nbsp;&nbsp;&nbsp;&nbsp;Install package "
+				loaddiv_string += "<span class=' report_list_no_border '>&nbsp;&nbsp;&nbsp;&nbsp;Install package "
 						+ install_count
 						+ ": "
 						+ message_not_load_arr[1]
@@ -501,16 +519,16 @@ function ajaxProcessResult(responseXML) {
 		var package_name = view_profile_package_name.split("!__! ");
 		var auto_case_number = view_profile_auto_case_number.split("!__! ");
 		var manual_case_number = view_profile_manual_case_number.split("!__! ");
-		var popdiv_string = "";
+		var planDiv_string = "";
 
 		var advanced_key = new Array("Architecture", "Version", "Category",
 				"Priority", "Status", "Execution Type", "Test Suite", "Type",
 				"Test Set", "Component");
 
-		popdiv_string += '<tr><td height="30" width="100%" align="left" class="view_test_plan_edge">&nbsp;</td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="93%" align="left" class="view_test_plan_edge">Test Plan: '
+		planDiv_string += '<tr><td height="30" width="100%" align="left" class="report_list view_test_plan_edge">&nbsp;</td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="93%" align="left" class="view_test_plan_edge">Test Plan: '
 				+ test_plan_name
 				+ '</td></tr></table></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" align="left" class="view_test_plan_title" width="90%">&nbsp;Package</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">';
-		popdiv_string += '<tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="60%" align="left" class="view_test_plan_popup">&nbsp;Name</td><td height="30" width="15%" align="left" class="view_test_plan_popup">&nbsp;Auto</td><td height="30" width="15%" align="left" class="view_test_plan_popup">&nbsp;Manual</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr>';
+		planDiv_string += '<tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="60%" align="left" class="view_test_plan_popup ">&nbsp;Name</td><td height="30" width="15%" align="left" class="view_test_plan_popup ">&nbsp;Auto</td><td height="30" width="15%" align="left" class="view_test_plan_popup ">&nbsp;Manual</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr>';
 		for ( var i = 0; i < package_name.length; i++) {
 			if (package_name[i].indexOf('!__!') >= 0) {
 				package_name[i] = package_name[i].split('!__!')[0];
@@ -518,16 +536,16 @@ function ajaxProcessResult(responseXML) {
 				manual_case_number[i] = manual_case_number[i].split('!__!')[0];
 			}
 			if (package_name[i]) {
-				popdiv_string += '<tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="60%" align="left" class="view_test_plan_popup">&nbsp;'
+				planDiv_string += '<tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="60%" align="left" class="view_test_plan_popup ">&nbsp;'
 						+ package_name[i]
-						+ '</td><td height="30" width="15%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ '</td><td height="30" width="15%" align="left" class="view_test_plan_popup ">&nbsp;'
 						+ auto_case_number[i]
-						+ '</td><td height="30" width="15%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ '</td><td height="30" width="15%" align="left" class="view_test_plan_popup ">&nbsp;'
 						+ manual_case_number[i]
 						+ '</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr>';
 			}
 		}
-		popdiv_string += '</table></tr></table></tr><tr><td height="30" width="100%" align="left" class="view_test_plan_edge">&nbsp;</td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" align="left" class="view_test_plan_title" width="90%">&nbsp;Filter</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">';
+		planDiv_string += '</table></tr></table></tr><tr><td height="30" width="100%" align="left" class="view_test_plan_edge">&nbsp;</td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" align="left" class="view_test_plan_title" width="90%">&nbsp;Filter</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">';
 		var advanced_value = view_profile_advanced_value.split("!::!");
 		for ( var i = 0; i < advanced_value.length; i++) {
 			if (advanced_value[i].indexOf('Any') >= 0) {
@@ -538,20 +556,20 @@ function ajaxProcessResult(responseXML) {
 			if (i % 2 == 0) {
 				var j = i;
 				var k = j + 1;
-				popdiv_string += '<tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="18%" align="left" class="view_test_plan_popup">&nbsp;'
+				planDiv_string += '<tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="18%" align="left" class="view_test_plan_popup ">&nbsp;'
 						+ advanced_key[j]
-						+ '</td><td height="30" width="27%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ '</td><td height="30" width="27%" align="left" class="view_test_plan_popup ">&nbsp;'
 						+ advanced_value[j]
-						+ '</td><td height="30" width="18%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ '</td><td height="30" width="18%" align="left" class="view_test_plan_popup ">&nbsp;'
 						+ advanced_key[k]
-						+ '</td><td height="30" width="27%" align="left" class="view_test_plan_popup">&nbsp;'
+						+ '</td><td height="30" width="27%" align="left" class="view_test_plan_popup ">&nbsp;'
 						+ advanced_value[k]
 						+ '</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr>';
 			}
 		}
-		popdiv_string += '</table></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="95%" align="right" class="view_test_plan_edge">&nbsp;</td><td height="30" width="5%" align="right" class="view_test_plan_edge">&nbsp;</td></tr><tr><td height="30" width="95%" align="right" class="view_test_plan_edge"><input type="button" id="close_view_popup" name="close_view_popup" value="Close" onclick="javascript:onClosePopup();"></td><td height="30" width="5%" align="right" class="view_test_plan_edge">&nbsp;</td></tr><tr><td height="30" width="95%" align="right" class="view_test_plan_edge">&nbsp;</td><td height="30" width="5%" align="right" class="view_test_plan_edge">&nbsp;</td></tr></table></tr></table></tr>';
-		document.getElementById('popDiv').innerHTML = popdiv_string;
-		document.getElementById('popDiv').style.display = 'block';
+		planDiv_string += '</table></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="95%" align="right" class="view_test_plan_edge">&nbsp;</td><td height="30" width="5%" align="right" class="view_test_plan_edge">&nbsp;</td></tr><tr><td height="30" width="95%" align="right" class="view_test_plan_edge"><input type="button" class="small_button" id="close_view_popup" name="close_view_popup" value="Close" onclick="javascript:onClosePopup();"></td><td height="30" width="5%" align="right" class="view_test_plan_edge">&nbsp;</td></tr><tr><td height="30" width="95%" align="right" class="view_test_plan_edge">&nbsp;</td><td height="30" width="5%" align="right" class="view_test_plan_edge">&nbsp;</td></tr></table></tr></table></tr>';
+		document.getElementById('planDiv').innerHTML = planDiv_string;
+		document.getElementById('planDiv').style.display = 'block';
 		document.getElementById('popIframe').style.display = 'block';
 	}
 
@@ -879,10 +897,10 @@ function ajaxProcessResult(responseXML) {
 							}
 						}
 						document.getElementById('text_' + global_profile_name
-								+ '_' + global_package_name).style.color = "#137717";
+								+ '_' + global_package_name).style.color = "#248BD1";
 						document.getElementById('text_progress_'
 								+ global_profile_name + '_'
-								+ global_package_name).style.color = "#137717";
+								+ global_package_name).style.color = "#248BD1";
 					}
 					// get maunal package name
 					re_manual = new RegExp("testing xml:.*" + package_list[i]
@@ -899,10 +917,10 @@ function ajaxProcessResult(responseXML) {
 							}
 						}
 						document.getElementById('text_' + global_profile_name
-								+ '_' + global_package_name).style.color = "#137717";
+								+ '_' + global_package_name).style.color = "#248BD1";
 						document.getElementById('text_progress_'
 								+ global_profile_name + '_'
-								+ global_package_name).style.color = "#137717";
+								+ global_package_name).style.color = "#248BD1";
 						// add progress bar for manual package, will remove
 						// later
 						var max_value = 0;
@@ -1133,9 +1151,9 @@ function ajaxProcessResult(responseXML) {
 				if (global_package_name != 'none') {
 					// change color for current run package's progress bar
 					document.getElementById('text_' + global_profile_name + '_'
-							+ global_package_name).style.color = "#137717";
+							+ global_package_name).style.color = "#248BD1";
 					document.getElementById('text_progress_'
-							+ global_profile_name + '_' + global_package_name).style.color = "#137717";
+							+ global_profile_name + '_' + global_package_name).style.color = "#248BD1";
 					// update progress bar for current run package
 					var max_value = 0;
 					for ( var i = 0; i < progress_bar_max_value_list.length; i++) {
@@ -1210,7 +1228,7 @@ function ajaxProcessResult(responseXML) {
 		} else {
 			if ((responseXML.getElementsByTagName('tr_status').length > 0)
 					|| (responseXML.getElementsByTagName('stopped').length > 0)) {
-				exec_info.innerHTML = 'The test has been stopped.';
+				exec_info.innerHTML = 'The test has been stopped';
 				exec_status.innerHTML = '';
 				stopRefresh();
 			}
@@ -1218,10 +1236,12 @@ function ajaxProcessResult(responseXML) {
 				if (responseXML.getElementsByTagName('lose_connection').length > 0) {
 					stopRefresh();
 					exec_info.style.color = 'red';
-					exec_info.innerHTML = 'Lost connection to the device,';
-					exec_status.innerHTML = 'refresh this page to restart testing.';
-					if (start_button)
+					exec_info.innerHTML = 'Lost connection to the device';
+					exec_status.innerHTML = 'Refresh this page to restart testing';
+					if (start_button) {
 						start_button.disabled = true;
+						start_button.className = "medium_button_disable";
+					}
 				} else {
 					if (responseXML.getElementsByTagName('redirect_manual').length > 0) {
 						document.location = 'tests_execute_manual.pl?time='
@@ -1250,12 +1270,17 @@ function stopRefresh() {
 }
 
 function stopTestsPrepareGUI() {
-	if (start_button)
+	if (start_button) {
 		start_button.disabled = false;
-	if (stop_button)
+		start_button.className = "medium_button";
+	}
+	if (stop_button) {
 		stop_button.disabled = true;
-	if (test_profile)
+		stop_button.className = "medium_button_disable";
+	}
+	if (test_profile) {
 		test_profile.disabled = false;
+	}
 }
 
 function onAjaxError() {
@@ -1335,6 +1360,23 @@ function onUpdatePackages() {
 	document.getElementById('save_profile_panel_button').disabled = true;
 	document.getElementById('load_profile_panel_button').disabled = true;
 	document.getElementById('manage_profile_panel_button').disabled = true;
+
+	document.getElementById('update_package_list').style.cursor = "default";
+	document.getElementById('execute_profile').style.cursor = "default";
+	document.getElementById('clear_information').style.cursor = "default";
+	document.getElementById('view_package_info').style.cursor = "default";
+	document.getElementById('save_profile_panel_button').style.cursor = "default";
+	document.getElementById('load_profile_panel_button').style.cursor = "default";
+	document.getElementById('manage_profile_panel_button').style.cursor = "default";
+
+	document.getElementById('button_adv').className = "medium_button_disable";
+	document.getElementById('update_package_list').className = "medium_button_disable";
+	document.getElementById('execute_profile').className = "medium_button_disable";
+	document.getElementById('clear_information').className = "medium_button_disable";
+	document.getElementById('view_package_info').className = "medium_button_disable";
+	document.getElementById('save_profile_panel_button').className = "medium_button_disable";
+	document.getElementById('load_profile_panel_button').className = "medium_button_disable";
+	document.getElementById('manage_profile_panel_button').className = "medium_button_disable";
 	close_all_test_plan_panel();
 	if (document.getElementById('update_null_page_div')) {
 		document.getElementById('update_null_page_div').style.display = "none";
@@ -1507,7 +1549,7 @@ function show_save_panel() {
 		document.getElementById("save_profile_panel_button").title = "Close save test plan panel";
 		document.getElementById("save_profile_panel_button").value = "Close";
 		document.getElementById("load_profile_panel_button").value = "Load";
-		document.getElementById("manage_profile_panel_button").value = "Manage";
+		document.getElementById("manage_profile_panel_button").value = "Delete";
 	} else {
 		document.getElementById("save_profile_panel").style.display = "none";
 		document.getElementById("save_profile_panel_button").title = "Open save test plan panel";
@@ -1525,7 +1567,7 @@ function show_load_panel() {
 		document.getElementById("load_profile_panel_button").title = "Close load test plan panel";
 		document.getElementById("save_profile_panel_button").value = "Save";
 		document.getElementById("load_profile_panel_button").value = "Close";
-		document.getElementById("manage_profile_panel_button").value = "Manage";
+		document.getElementById("manage_profile_panel_button").value = "Delete";
 	} else {
 		document.getElementById("load_profile_panel").style.display = "none";
 		document.getElementById("load_profile_panel_button").title = "Open load test plan panel";
@@ -1547,7 +1589,7 @@ function show_manage_panel() {
 	} else {
 		document.getElementById("manage_profile_panel").style.display = "none";
 		document.getElementById("manage_profile_panel_button").title = "Open manage test plan panel";
-		document.getElementById("manage_profile_panel_button").value = "Manage";
+		document.getElementById("manage_profile_panel_button").value = "Delete";
 	}
 }
 
@@ -1558,7 +1600,7 @@ function refresh_custom_page() {
 function close_all_test_plan_panel() {
 	document.getElementById("save_profile_panel_button").value = "Save";
 	document.getElementById("load_profile_panel_button").value = "Load";
-	document.getElementById("manage_profile_panel_button").value = "Manage";
+	document.getElementById("manage_profile_panel_button").value = "Delete";
 	document.getElementById("save_profile_panel_button").title = "Open save test plan panel";
 	document.getElementById("load_profile_panel_button").title = "Open load test plan panel";
 	document.getElementById("manage_profile_panel_button").title = "Open manage test plan panel";
@@ -1579,13 +1621,23 @@ function view_profile(type) {
 		test_plan_select = document.getElementById("manage_test_plan_select");
 	}
 	var test_plan_name = test_plan_select.value;
-	document.getElementById('popDiv').innerHTML = "";
+	document.getElementById('planDiv').innerHTML = "";
 	ajax_call_get('action=view_test_plan&test_plan_name=' + test_plan_name);
 }
 
 function onClosePopup() {
-	document.getElementById('popDiv').style.display = 'none';
-	document.getElementById('popIframe').style.display = 'none';
+	var pop_div = document.getElementById('planDiv');
+	var about_div = document.getElementById('aboutDiv');
+	var pop_iframe = document.getElementById('popIframe');
+	if (pop_div) {
+		pop_div.style.display = 'none';
+	}
+	if (about_div) {
+		about_div.style.display = 'none';
+	}
+	if (pop_iframe) {
+		pop_iframe.style.display = 'none';
+	}
 }
 
 function updateTestPlanSelect() {
@@ -1751,4 +1803,11 @@ function notrunAll() {
 function setDevice() {
 	var sdb_serial = document.getElementById('device_list').value;
 	ajax_call_get('action=set_device&serial=' + sdb_serial);
+}
+
+function showAbout() {
+	about_div_string = '<table width="100%" border="0" cellspacing="0" cellpadding="0"><tr><td align="left">Testkit-manager is a GUI for testkit-lite. With this tool, we can filter cases with several properties\' value. The filtered cases can be run automatically and the report will be generated after finishing running. We can also submit report and view report with this tool.</td></tr><tr><td align="right"><label><input class="small_button" type="button" name="close_about_popup" id="close_about_popup" value="Close" onclick="javascript:onClosePopup();" /></label>&nbsp;&nbsp;</td></tr></table>';
+	document.getElementById('aboutDiv').innerHTML = about_div_string;
+	document.getElementById('aboutDiv').style.display = 'block';
+	document.getElementById('popIframe').style.display = 'block';
 }

@@ -122,80 +122,81 @@ my $found         = 0;
 my $profiles_list = '';
 my $app           = $SERVER_PARAM{'APP_DATA'};
 if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
-
 	my @files = sort grep !/^[\.~]/, readdir(DIR);
 	$found = scalar(@files);
 	my $have_selected = "FALSE";
 	foreach (@files) {
 		my $profile_name = $_;
-		if ( $_GET{'profile'} and ( $_GET{'profile'} eq $profile_name ) ) {
-			$selected_profile = $profile_name;
-			$profiles_list .=
-"    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
-		}
-		else {
-			if ( ( $have_selected eq "FALSE" ) and !$_GET{'profile'} ) {
+		if ( $profile_name !~ /pre_template/ ) {
+			if ( $_GET{'profile'} and ( $_GET{'profile'} eq $profile_name ) ) {
+				$selected_profile = $profile_name;
 				$profiles_list .=
 "    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
-				$selected_profile = $profile_name;
-				$have_selected    = "TRUE";
 			}
 			else {
-				$profiles_list .=
+				if ( ( $have_selected eq "FALSE" ) and !$_GET{'profile'} ) {
+					$profiles_list .=
+"    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
+					$selected_profile = $profile_name;
+					$have_selected    = "TRUE";
+				}
+				else {
+					$profiles_list .=
 "    <option value=\"$profile_name\">$profile_name</option>\n";
+				}
 			}
-		}
-		open FILE, $SERVER_PARAM{'APP_DATA'} . '/plans/' . $profile_name
-		  or die "can't open " . $profile_name;
-		my $theEnd = "False";
-		my $package_name;
-		my $auto_number;
-		my $manual_number;
-		while (<FILE>) {
-			my $line = $_;
-			$line =~ s/\n//g;
-			if ( $line =~ /\[\/Auto\]/ ) {
-				$theEnd = "True";
-			}
-			if ( $theEnd eq "False" ) {
-				if ( $line !~ /Auto/ ) {
-					if ( $line =~ /(.*)\((\d*) (\d*)\)/ ) {
-						$package_name  = $1;
-						$auto_number   = $2;
-						$manual_number = $3;
+			open FILE, $SERVER_PARAM{'APP_DATA'} . '/plans/' . $profile_name
+			  or die "can't open " . $profile_name;
+			my $theEnd = "False";
+			my $package_name;
+			my $auto_number;
+			my $manual_number;
+			while (<FILE>) {
+				my $line = $_;
+				$line =~ s/\n//g;
+				if ( $line =~ /\[\/Auto\]/ ) {
+					$theEnd = "True";
+				}
+				if ( $theEnd eq "False" ) {
+					if ( $line !~ /Auto/ ) {
+						if ( $line =~ /(.*)\((\d*) (\d*)\)/ ) {
+							$package_name  = $1;
+							$auto_number   = $2;
+							$manual_number = $3;
 
-						# push package into list
-						my $have_one          = "FALSE";
-						my @package_list_temp = @package_list;
-						foreach (@package_list_temp) {
-							if ( $_ eq $package_name ) {
-								$have_one = "TRUE";
+							# push package into list
+							my $have_one          = "FALSE";
+							my @package_list_temp = @package_list;
+							foreach (@package_list_temp) {
+								if ( $_ eq $package_name ) {
+									$have_one = "TRUE";
+								}
 							}
-						}
-						if ( $have_one eq "FALSE" ) {
-							push( @package_list, $package_name );
-						}
+							if ( $have_one eq "FALSE" ) {
+								push( @package_list, $package_name );
+							}
 
-						# push profile_name and case number into hash
-						if ( defined $profile_list{$profile_name} ) {
-							$profile_list{$profile_name} .= '__'
-							  . $package_name . ':'
-							  . $auto_number . ':'
-							  . $manual_number;
-						}
-						else {
-							$profile_list{$profile_name} =
-							    $package_name . ':'
-							  . $auto_number . ':'
-							  . $manual_number;
+							# push profile_name and case number into hash
+							if ( defined $profile_list{$profile_name} ) {
+								$profile_list{$profile_name} .= '__'
+								  . $package_name . ':'
+								  . $auto_number . ':'
+								  . $manual_number;
+							}
+							else {
+								$profile_list{$profile_name} =
+								    $package_name . ':'
+								  . $auto_number . ':'
+								  . $manual_number;
+							}
 						}
 					}
 				}
-			}
-			if ( $theEnd eq "True" ) {
-				if ( $line =~ /select_exe=(.*)/ ) {
-					if ( $1 eq "manual" ) {
-						$have_progress_bar = "FALSE";
+				if ( $theEnd eq "True" ) {
+					if ( $line =~ /select_exe=(.*)/ ) {
+						if ( $1 eq "manual" ) {
+							$have_progress_bar = "FALSE";
+						}
 					}
 				}
 			}
@@ -210,7 +211,7 @@ print <<DATA;
 <div id="message"></div>
 <table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
   <tr>
-    <td height="30" class="top_button_bg"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+    <td class="top_button_bg"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
         <tbody>
           <tr>
             <td width="2%">&nbsp;</td>
@@ -219,29 +220,29 @@ print <<DATA;
 DATA
 if ($found) {
 	print <<DATA;
-            <select name="test_profile" id="test_profile" style="width: 11em"; onchange="javascript:filter_progress_bar();">$profiles_list</select></td>
+            <select name="test_profile" id="test_profile" style="width: 11em;" onchange="javascript:filter_progress_bar();">$profiles_list</select></td>
 DATA
 	if (    ( $have_testkit_lite eq "TRUE" )
 		and ( $have_correct_testkit_lite eq "TRUE" )
 		and ( $have_correct_sdb_serial   eq "TRUE" ) )
 	{
 		print <<DATA;
-            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" class="top_button" onclick="javascript:startTests('');"></td>
-            <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
+            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" class="medium_button" onclick="javascript:startTests('');"></td>
+            <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="medium_button_disable" onclick="javascript:stopTests();"></td>
 DATA
 	}
 	else {
 		print <<DATA;
-            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start to test" value="Start Test" disabled="disabled" class="top_button" onclick="javascript:startTests('');"></td>
-            <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
+            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" disabled="disabled" class="medium_button_disable" onclick="javascript:startTests('');"></td>
+            <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="medium_button_disable" onclick="javascript:stopTests();"></td>
 DATA
 	}
 }
 else {
 	print <<DATA;
-            <select name="test_profile_no" id="test_profile_no" style="width: 11em"; disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
-            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start to test" value="Start Test" disabled="disabled" class="top_button" onclick="javascript:startTests('');"></td>
-            <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="top_button" onclick="javascript:stopTests();"></td>
+            <select name="test_profile_no" id="test_profile_no" style="width: 11em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" disabled="disabled" class="medium_button_disable" onclick="javascript:startTests('');"></td>
+            <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="medium_button_disable" onclick="javascript:stopTests();"></td>
 DATA
 }
 print <<DATA;
@@ -250,9 +251,20 @@ print <<DATA;
       </table></td>
   </tr>
   <tr>
+    <td class="top_button_bg"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
+        <tbody>
+          <tr height="50%">
+            <td align="center"><span id="exec_info">Nothing started</span></td>
+          </tr>
+          <tr height="50%">
+            <td align="center"><span id="exec_status"></span></td>
+          </tr>
+        </tbody>
+    </table></td>
+  <tr>
     <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
-          <td width="50%" valign="top" class="report_list_outside_left_bold">
+          <td width="50%" valign="top" class="report_list_outside_left_bold navigation_bar_bg">
 DATA
 foreach ( keys %profile_list ) {
 	my $profile_name = $_;
@@ -297,12 +309,12 @@ DATA
 	print <<DATA;
             <table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
               <tr>
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td width="65%" align="left" class="report_list_one_row"><span id="$text_id">Total&nbsp;</span><span id="$progress_id">($case_all)</span></td>
                 <td width="31%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
               <tr>
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td width="65%" align="left" class="report_list_one_row">Auto Test</td>
                 <td width="31%" align="left" class="report_list_one_row"></td>
               </tr>
@@ -323,7 +335,7 @@ DATA
 		  'text_progress_' . $profile_name . '_' . $package_name . '_auto';
 		print <<DATA;
               <tr>
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td width="65%" align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$auto_text_id">$package_name&nbsp;</span><span id="$progress_id">($auto)</span></td>
                 <td width="31%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
@@ -331,7 +343,7 @@ DATA
 	}
 	print <<DATA;
               <tr>
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td width="65%" align="left" class="report_list_one_row">Manual Test</td>
                 <td width="31%" align="left" class="report_list_one_row"></td>
               </tr>
@@ -355,7 +367,7 @@ DATA
 		  'text_progress_' . $profile_name . '_' . $package_name . '_manual';
 		print <<DATA;
               <tr>
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td width="65%" align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$manual_text_id">$package_name&nbsp;</span><span id="$progress_id">($manual)</span></td>
                 <td width="31%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
@@ -368,9 +380,6 @@ DATA
 print <<DATA;
           </td>
           <td width="50%" valign="top" class="report_list_outside_right_bold"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-              <tr>
-                <td align="left" height="30">&nbsp;<span id="exec_info">Nothing started</span>&nbsp;<span id="exec_status"></span></td>
-              </tr>
               <tr>
                 <td align="left"><pre id="cmdlog" class="cmd_log">Execute output will go here...</pre></td>
               </tr>

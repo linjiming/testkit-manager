@@ -27,14 +27,9 @@ use FindBin;
 use Data::Dumper;
 use Digest::SHA qw(sha1_hex);
 
-my $profile_dir_manager = $FindBin::Bin . "/../../../plans/";
 my $result_dir_manager  = $FindBin::Bin . "/../../../results/";
 my $definition_dir      = $FindBin::Bin . "/../../../definition/";
 my $test_definition_dir = $definition_dir;
-
-if ( !( -e $profile_dir_manager ) ) {
-	system( 'mkdir ' . $profile_dir_manager );
-}
 
 my @package_name                    = ();
 my @package_name_webapi             = ();
@@ -133,28 +128,30 @@ if ( $_GET{'case_view'} ) {
       }
     </style>
 <div id="message"></div>
-<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="report_list table_normal">
   <tr>
     <td><form id="tests_statistic" name="tests_custom" method="post" action="tests_statistic.pl">
       <table width="100%" border="0" cellspacing="0" cellpadding="0">
 		 <tr>
           <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
             <tr>
-               <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="package_bar_chart" src="images/package_bar_chart_selected.png" title="Package Chart" style="cursor:default" width="73" height="30"  onclick=""/></td>
-               <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="package_tree_diagram" src="images/package_tree_diagram.png" title="Tree Diagram (This diaram is generated only for WebAPI packages. The branches are extracted from [Spec] filed inside the tests.xml file.)" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawTree();"/></td>
-               <td width="74%" align="left" height="30"  nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawComponent();"/></td>
-               <td width="10%" align="left" height="30"  nowrap="nowrap"><input id="view_test_result" name="view_test_result" type="button" class="medium_button" value="Results" onclick=javascript:select_result_file("init")></td>
-               <td width="10%" align="left" height="30"  nowrap="nowrap"><input id="view_test_case" name="view_test_case" type="button" class="medium_button" value="Cases" onclick="javascript:onCaseView()";></td>
+               <td width="3%" align="left" class="custom_line_height"  nowrap="nowrap"><img id="package_bar_chart" src="images/package_bar_chart_selected.png" title="Package Chart" class="statistic_chart_pic_selected"/></td>
+               <td width="3%" align="left" class="custom_line_height"  nowrap="nowrap"><img id="package_tree_diagram" src="images/package_tree_diagram.png" title="Tree Diagram (This diaram is generated only for WebAPI packages. The branches are extracted from [Spec] filed inside the tests.xml file.)" class="statistic_chart_pic_unselected"  onclick="javascript:onDrawTree();"/></td>
+               <td width="73%" align="left" class="custom_line_height"  nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" class="statistic_chart_pic_unselected" onclick="javascript:onDrawComponent();"/></td>
+               <td width="10%" align="left" class="custom_line_height"  nowrap="nowrap"><input id="view_test_result" name="view_test_result" type="button" class="medium_button" value="Results" onclick=javascript:select_result_file("init")></td>
+               <td width="10%" align="left" class="custom_line_height"  nowrap="nowrap"><input id="view_test_case" name="view_test_case" type="button" class="medium_button" value="Cases" onclick="javascript:onCaseView()";></td>
+               <td width="1%" align="left" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
                
         <tr>
-          <td id="list_advanced"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
+          <td id="list_advanced" class="custom_panel_background_color"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-					<td width="30%" height="30" ="50" align="left" class="custom_title">&nbsp;Category</td><td>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+					<td width="30%" class="custom_line_height"align="left" class="custom_font report_list_no_border">&nbsp;Category</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawCategorySelect();
@@ -164,9 +161,10 @@ DATA
                   <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-					<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Type</td><td>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                    <td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Type</td><td>
                     <select name="select_type" align="20px" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawTypeSelect();
@@ -179,9 +177,10 @@ DATA
             </tr>
             
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Status</td><td>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                   	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Status</td><td>
                     <select name="select_status" align="20px" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawStatusSelect();
@@ -191,9 +190,10 @@ DATA
                   <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Priority</td><td>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                   	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Priority</td><td>
                     <select name="select_priority" align="20px" id="select_priority" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawPrioritySelect();
@@ -206,9 +206,10 @@ DATA
             </tr>
             
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Test Suite</td><td>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                   	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Test Suite</td><td>
                     <select name="select_testsuite" align="20px" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_case_item();">
 DATA
 	DrawTestsuiteSelect();
@@ -219,15 +220,16 @@ DATA
                 </tr>
               </table></td>
               
-              <td id="select_package_disabled_td" width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
+              <td id="select_package_disabled_td" width="50%" nowrap="nowrap" class="custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
                 <tr>
                   <td width="100%">&nbsp;</td>
                 </tr>
               </table></td>
               
-              <td id="select_package_td" width="50%" nowrap="nowrap" class="custom_list_type_bottom" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td id="select_package_td" width="50%" nowrap="nowrap" class="custom_bottom" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Package</td><td>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                   	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Package</td><td>
                     <select name="select_package" align="20px" id="select_package" class="custom_select" style="width:70%" onchange="javascript:draw_package_tree();">
 DATA
 	DrawPackageSelect();
@@ -247,24 +249,24 @@ DATA
 	print <<DATA;
         <tr id="background_top" style="display:">
 	       <td><table width="100%" height="15" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+		        <td width="100%" align="right" valign="middle" class=""></td> 
 	       </table></td>
 	     </tr>     
 DATA
 
 	print <<DATA;
-        <tr id="no_webapi_attention_div" style="background-color:#E9F6FC;display:none">
+        <tr id="no_webapi_attention_div" class="view_edge_color" style="display:none">
 	       <td><table width="100%" height="120" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="middle" valign="middle" class="static_chart_select">
+		        <td width="100%" align="middle" valign="middle" class="report_list_outside_left_no_height static_chart_select">
 		        No webapi packages !</td> 
 	       </table></td>
 	     </tr>     
 DATA
 
 	print <<DATA;
-        <tr id="no_pkg_attention_div" style="background-color:#E9F6FC;display:none">
+        <tr id="no_pkg_attention_div" class="view_edge_color" style="display:none">
 	       <td><table width="100%" height="120" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="middle" valign="middle" class="static_chart_select">
+		        <td width="100%" align="middle" valign="middle" class="report_list_outside_left_no_height static_chart_select">
 		        No packages !</td> 
 	       </table></td>
 	     </tr>     
@@ -280,13 +282,13 @@ DATA
 		}
 		print <<DATA;
 	     <tr id="static_list_$package_name[$count]" style="display:">
-	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
-		        <td width="25%" height="30"  align="right" class="static_list_packagename" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$package_name[$count]">$package_name[$count]</td>
-		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
-		        <td id="static_list_bar_td_$package_name[$count]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_bar_$package_name[$count]"></span></td>
-		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
-		        <td id="static_list_num_$package_name[$count]" align="left" height="30"  class="static_list_num" ><span id="static_list_num_$package_name[$count]"></span></td> 
-		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+	       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="custom_line_height table_normal">	
+		        <td width="25%" align="right" class="static_list_packagename" class="cut_long_string_one_line" title="$package_name[$count]">$package_name[$count]</td>
+		        <td width="3%" class="static_list_packagename">&nbsp;</td> 
+		        <td id="static_list_bar_td_$package_name[$count]" align="left" class="static_list_count_bar " ><span id="static_list_bar_$package_name[$count]"></span></td>
+		        <td width="1%" class="static_list_num">&nbsp;</td>  
+		        <td id="static_list_num_$package_name[$count]" align="left" class="static_list_num" ><span id="static_list_num_$package_name[$count]"></span></td> 
+		        <td width="12%" class="static_list_packagename">&nbsp;</td>      
 	       </table></td>
 	      </tr>
 DATA
@@ -295,7 +297,7 @@ DATA
 	print <<DATA;
         <tr id="background_top1" style="display:">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+		        <td width="100%" align="right" valign="middle" class=""></td> 
 	       </table></td>
 	     </tr>  
 DATA
@@ -303,14 +305,14 @@ DATA
 	print <<DATA;
         <tr id="static_scale" style="display:">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
-	       		<td width="29%" align="right" class="static_list_scale_head"></td>
-		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="9%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="19%" class="static_list_scale_head"></td>
+	       		<td width="29%" align="right" class=" static_list_scale_head"></td>
+		        <td width="9%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="9%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="9%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="9%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="9%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="9%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="19%" class=" static_list_scale_head"></td>
 	       </table></td>
 	     </tr>  
 DATA
@@ -318,14 +320,14 @@ DATA
 	print <<DATA;
         <tr id="static_scale_number" style="display:">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
-	       		<td width="28%" align="left" class="static_list_scale_num"></td>
-		        <td width="8%" id="static_scale_number0" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="9%" id="static_scale_number1" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="9%" id="static_scale_number2" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="9%" id="static_scale_number3" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="9%" id="static_scale_number4" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="9%" id="static_scale_number5" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="19%" id="static_scale_number6"class="static_list_scale_num"></td>
+	       		<td width="28%" align="left" class=" report_list_no_border "></td>
+		        <td width="8%" id="static_scale_number0" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="9%" id="static_scale_number1" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="9%" id="static_scale_number2" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="9%" id="static_scale_number3" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="9%" id="static_scale_number4" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="9%" id="static_scale_number5" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="19%" id="static_scale_number6"class=" report_list_no_border "></td>
 	       </table></td>
 	     </tr>  
 DATA
@@ -334,12 +336,12 @@ DATA
 	for ( my $count = 0 ; $count < $package_webapi_number ; $count++ ) {
 		print <<DATA;
              <tr id="tree_area_$package_name_webapi[$count]" style="display:none">
-              	<td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" rules="all">
+              	<td><table width="100%" class="custom_line_height"  border="0" cellspacing="0" cellpadding="0" rules="all">
               	<tr>
-              		<td width="21%" class="static_list_packagename" ><img src="images/statistic_background_left.png"></td>
-                	<td width="40%" align="left" valign="top" class="static_list_packagename" >
-                  	<div id="tree_area_test_type_$package_name_webapi[$count]" style="background-color:transparent;display:"></div></td>
-                  	<td width="12%" align="right" valign="bottom" class="static_list_packagename" ><img src="images/statistic_background_right.png"></td>
+              		<td width="21%" class=" static_list_packagename " ><img src="images/statistic_background_left.png"></td>
+                	<td width="40%" align="left" valign="top" class=" static_list_packagename " >
+                  	<div id="tree_area_test_type_$package_name_webapi[$count]" class="backgroud_color_transparent" style="display:"></div></td>
+                  	<td width="12%" align="right" valign="bottom" class=" static_list_packagename " ><img src="images/statistic_background_right.png"></td>
                  </tr>
                  </table></td>
                </tr>
@@ -436,13 +438,13 @@ DATA
 		}
 		print <<DATA;
 	     <tr id="static_list_component_$component[$count]" style="display:none">
-	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
-		        <td width="35%" height="30"  align="right" class="static_list_packagename" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$component[$count]">$component[$count]</td>
-		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
-		        <td id="static_list_component_bar_td_$component[$count]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_component_bar_$component[$count]"></span></td>
-		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
-		        <td id="static_list_component_num_$component[$count]" align="left" height="30"  class="static_list_num" ><span id="static_list_component_num_$component[$count]"></span></td> 
-		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+	       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="custom_line_height table_normal">	
+		        <td width="35%" align="right" class="static_list_packagename" class="cut_long_string_one_line" title="$component[$count]">$component[$count]</td>
+		        <td width="3%" class="static_list_packagename">&nbsp;</td> 
+		        <td id="static_list_component_bar_td_$component[$count]" align="left" class="static_list_count_bar" ><span id="static_list_component_bar_$component[$count]"></span></td>
+		        <td width="1%" class="static_list_num">&nbsp;</td>  
+		        <td id="static_list_component_num_$component[$count]" align="left" class="static_list_num" ><span id="static_list_component_num_$component[$count]"></span></td> 
+		        <td width="12%" class="static_list_packagename">&nbsp;</td>      
 	       </table></td>
 	      </tr>
 DATA
@@ -451,7 +453,7 @@ DATA
 	print <<DATA;
         <tr id="background_top2" style="display:none">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+		        <td width="100%" align="right" valign="middle" class=""></td> 
 	       </table></td>
 	     </tr>  
 DATA
@@ -459,14 +461,14 @@ DATA
 	print <<DATA;
         <tr id="static_scale_component" style="display:none">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
-	       		<td width="38%" align="right" class="static_list_scale_head"></td>
-		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="7.5%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="19%" class="static_list_scale_head"></td>
+	       		<td width="38%" align="right" class=" static_list_scale_head"></td>
+		        <td width="7.5%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="7.5%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="7.5%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="7.5%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="7.5%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="7.5%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="19%" class=" static_list_scale_head"></td>
 	       </table></td>
 	     </tr>  
 DATA
@@ -474,14 +476,14 @@ DATA
 	print <<DATA;
         <tr id="static_scale_number_component" style="display:none">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
-	       		<td width="38%" align="left" class="static_list_scale_num"></td>
-		        <td width="6.5%" id="static_scale_number_component0" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="7.5%" id="static_scale_number_component1" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="7.5%" id="static_scale_number_component2" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="7.5%" id="static_scale_number_component3" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="7.5%" id="static_scale_number_component4" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="7.5%" id="static_scale_number_component5" align="left" valign="middle" class="static_list_scale_num"></td> 
-		        <td width="20%" id="static_scale_number_component6"class="static_list_scale_num"></td>
+	       		<td width="38%" align="left" class=" report_list_no_border "></td>
+		        <td width="6.5%" id="static_scale_number_component0" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="7.5%" id="static_scale_number_component1" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="7.5%" id="static_scale_number_component2" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="7.5%" id="static_scale_number_component3" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="7.5%" id="static_scale_number_component4" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="7.5%" id="static_scale_number_component5" align="left" valign="middle" class=" report_list_no_border "></td> 
+		        <td width="20%" id="static_scale_number_component6"class=" report_list_no_border "></td>
 	       </table></td>
 	     </tr>  
 DATA
@@ -489,7 +491,7 @@ DATA
 	print <<DATA;
         <tr id="background_bottom" style="display:">
 	       <td><table width="100%" height="25" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+		        <td width="100%" align="right" valign="middle" class=""></td> 
 	       </table></td>
 	     </tr>  
 DATA
@@ -557,7 +559,7 @@ else {
       }
     </style>
 <div id="message"></div>
-<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
+<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="report_list table_normal">
   <tr>
     <td><form id="tests_statistic" name="tests_custom" method="post" action="tests_statistic.pl">
       <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -565,21 +567,23 @@ else {
 		 <tr>
           <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
             <tr>
-               <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="package_bar_chart" src="images/package_bar_chart_selected.png" title="Package Chart" style="cursor:default" width="73" height="30"  onclick=""/></td>
-               <td width="3%" align="left" height="30"  nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawResultComponent();"/></td>
-               <td width="81%" align="left" height="30"  nowrap="nowrap"><img id="spec_bar_chart" src="images/package_tree_diagram.png" title="Spec Chart" style="cursor:pointer" width="73" height="30"  onclick="javascript:onDrawResultSpec();"/></td>
-               <td width="10%" align="left" height="30"  nowrap="nowrap"><input id="view_test_result" name="view_test_result" type="button" class="medium_button" value="Results" onclick=javascript:select_result_file("init");></td>
-               <td width="10%" align="left" height="30"  nowrap="nowrap"><input id="view_test_case" name="view_test_case" type="button" class="medium_button" value="Cases" onclick="javascript:onCaseView();"></td>
+               <td width="3%" align="left" class="custom_line_height" nowrap="nowrap"><img id="package_bar_chart" src="images/package_bar_chart_selected.png" title="Package Chart" class="statistic_chart_pic_selected"  onclick=""/></td>
+               <td width="3%" align="left" class="custom_line_height" nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" class="statistic_chart_pic_unselected"  onclick="javascript:onDrawResultComponent();"/></td>
+               <td width="73%" align="left" class="custom_line_height" nowrap="nowrap"><img id="spec_bar_chart" src="images/package_tree_diagram.png" title="Spec Chart" class="statistic_chart_pic_unselected"  onclick="javascript:onDrawResultSpec();"/></td>
+               <td width="10%" align="left" class="custom_line_height" nowrap="nowrap"><input id="view_test_result" name="view_test_result" type="button" class="medium_button" value="Results" onclick=javascript:select_result_file("init");></td>
+               <td width="10%" align="left" class="custom_line_height" nowrap="nowrap"><input id="view_test_case" name="view_test_case" type="button" class="medium_button" value="Cases" onclick="javascript:onCaseView();"></td>
+               <td width="1%" align="left" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
                
         <tr>
-          <td id="list_advanced"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
+          <td id="list_advanced" class="custom_panel_background_color"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
             <tr>
-              <td width="100%" nowrap="nowrap" colspan="2" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="100%" nowrap="nowrap" colspan="2" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-					<td width="15%" height="30" ="50" align="left" class="custom_title">&nbsp;Test Time</td><td>
+                    <td width="2%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                    <td width="15%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Test Time</td><td>
                     <select name="select_result" align="20px" id="select_result" class="custom_select" style="width:90%" onchange="javascript:select_result_file();">
 DATA
 	DrawResultSelect();
@@ -592,9 +596,10 @@ DATA
             </tr>
             
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-					<td width="30%" height="30" ="50" align="left" class="custom_title">&nbsp;Category</td><td>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                    <td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Category</td><td>
                     <select name="select_category" align="20px" id="select_category" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
 DATA
 	DrawCategorySelect();
@@ -604,9 +609,10 @@ DATA
                   <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-					<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Type</td><td>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                    <td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Type</td><td>
                     <select name="select_type" align="20px" id="select_type" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
 DATA
 	DrawTypeSelect();
@@ -619,9 +625,10 @@ DATA
             </tr>
             
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Status</td><td>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                   	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Status</td><td>
                     <select name="select_status" align="20px" id="select_status" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
 DATA
 	DrawStatusSelect();
@@ -631,9 +638,10 @@ DATA
                   <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_list_type_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Priority</td><td>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                   	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Priority</td><td>
                     <select name="select_priority" align="20px" id="select_priority" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
 DATA
 	DrawPrioritySelect();
@@ -646,9 +654,10 @@ DATA
             </tr>
             
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_list_type_bottomright"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                   	<td width="30%" height="30"  align="left" class="custom_title">&nbsp;Test Suite</td><td>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                   	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Test Suite</td><td>
                     <select name="select_testsuite" align="20px" id="select_testsuite" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
 DATA
 	DrawResultsuiteSelect();
@@ -659,15 +668,16 @@ DATA
                 </tr>
               </table></td>
               
-              <td id="td_category_key_null" width="50%" nowrap="nowrap" class="custom_list_type_bottom" style="display:"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td id="td_category_key_null" width="50%" nowrap="nowrap" class="custom_bottom" style="display:"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="100%">&nbsp;</td>
                 </tr>
               </table></td>
               
-              <td id="td_category_key" width="50%" nowrap="nowrap" class="custom_list_type_bottom" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td id="td_category_key" width="50%" nowrap="nowrap" class="custom_bottom" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="30%" height="30"  align="left" class="custom_title">&nbsp;Spec</td><td>
+                  <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Spec</td><td>
                     <select name="select_category_key" align="20px" id="select_category_key" class="custom_select" style="width:70%" onchange="javascript:filter_result_item();">
 DATA
 	DrawCategoryKeySelect();
@@ -686,15 +696,15 @@ DATA
 	print <<DATA;
         <tr id="background_top" style="display:">
 	       <td><table width="100%" height="15" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+		        <td width="100%" align="right" valign="middle" class=""></td> 
 	       </table></td>
 	     </tr>     
 DATA
 
 	print <<DATA;
-        <tr id="no_pkg_attention_div" style="background-color:#E9F6FC;display:none">
+        <tr id="no_pkg_attention_div" class="view_edge_color" style="display:none">
 	       <td><table width="100%" height="120" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="middle" valign="middle" class="static_chart_select">
+		        <td width="100%" align="middle" valign="middle" class="report_list_outside_left_no_height static_chart_select">
 		        No result files !</td> 
 	       </table></td>
 	     </tr>     
@@ -710,13 +720,13 @@ DATA
 		}
 		print <<DATA;
 	     <tr id="static_list_$filter_suite_item[$count]" style="display:">
-	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
-		        <td width="25%" height="30"  align="right" class="static_list_packagename" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$filter_suite_item[$count]">$filter_suite_item[$count]</td>
-		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
-		        <td id="static_list_bar_td_$filter_suite_item[$count]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_bar_$filter_suite_item[$count]"></span></td>
-		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
-		        <td id="static_list_num_$filter_suite_item[$count]" align="left" height="30"  class="static_list_num" ><span id="static_list_num_$filter_suite_item[$count]"></span></td> 
-		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+	       <td><table width="100%" class="custom_line_height"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
+		        <td width="25%" align="right" class="custom_line_height  static_list_packagename " class="cut_long_string_one_line" title="$filter_suite_item[$count]">$filter_suite_item[$count]</td>
+		        <td width="3%" class="custom_line_height  static_list_packagename ">&nbsp;</td> 
+		        <td id="static_list_bar_td_$filter_suite_item[$count]" align="left" class="custom_line_height  static_list_count_bar " ><span id="static_list_bar_$filter_suite_item[$count]"></span></td>
+		        <td width="1%" class="custom_line_height  static_list_num ">&nbsp;</td>  
+		        <td id="static_list_num_$filter_suite_item[$count]" align="left" class="custom_line_height  static_list_num " ><span id="static_list_num_$filter_suite_item[$count]"></span></td> 
+		        <td width="12%" class="custom_line_height  static_list_packagename ">&nbsp;</td>      
 	       </table></td>
 	      </tr>
 DATA
@@ -725,7 +735,7 @@ DATA
 	print <<DATA;
         <tr id="background_top1" style="display:">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+		        <td width="100%" align="right" valign="middle" class=""></td> 
 	       </table></td>
 	     </tr>  
 DATA
@@ -733,18 +743,18 @@ DATA
 	print <<DATA;
         <tr id="static_scale" style="display:">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
-	       		<td width="29%" align="right" class="static_list_scale_head"></td>
-		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="5.4%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="19%" class="static_list_scale_head"></td>
+	       		<td width="29%" align="right" class=" static_list_scale_head"></td>
+		        <td width="5.4%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="5.4%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="5.4%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="19%" class=" static_list_scale_head"></td>
 	       </table></td>
 	     </tr>  
 DATA
@@ -752,18 +762,18 @@ DATA
 	print <<DATA;
         <tr id="static_scale_number" style="display:">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
-	       		<td width="29%" align="left" class="static_list_scale_num"></td>
-		        <td width="4.4%" id="static_scale_number0" align="left" valign="middle" class="static_list_scale_num">0</td> 
-		        <td width="5.4%" id="static_scale_number1" align="left" valign="middle" class="static_list_scale_num">10</td> 
-		        <td width="5.4%" id="static_scale_number2" align="left" valign="middle" class="static_list_scale_num">20</td> 
-		        <td width="5.4%" id="static_scale_number3" align="left" valign="middle" class="static_list_scale_num">30</td> 
-		        <td width="5.4%" id="static_scale_number4" align="left" valign="middle" class="static_list_scale_num">40</td> 
-		        <td width="5.4%" id="static_scale_number5" align="left" valign="middle" class="static_list_scale_num">50</td>
-		        <td width="5.4%" id="static_scale_number6" align="left" valign="middle" class="static_list_scale_num">60</td> 
-		        <td width="5.4%" id="static_scale_number7" align="left" valign="middle" class="static_list_scale_num">70</td> 
-		        <td width="5.4%" id="static_scale_number8" align="left" valign="middle" class="static_list_scale_num">80</td> 
-		        <td width="5.4%" id="static_scale_number9" align="left" valign="middle" class="static_list_scale_num">90</td>  
-		        <td width="18%" id="static_scale_number10"class="static_list_scale_num">100&nbsp;(%)</td>
+	       		<td width="29%" align="left" class=" report_list_no_border "></td>
+		        <td width="4.4%" id="static_scale_number0" align="left" valign="middle" class=" report_list_no_border ">0</td> 
+		        <td width="5.4%" id="static_scale_number1" align="left" valign="middle" class=" report_list_no_border ">10</td> 
+		        <td width="5.4%" id="static_scale_number2" align="left" valign="middle" class=" report_list_no_border ">20</td> 
+		        <td width="5.4%" id="static_scale_number3" align="left" valign="middle" class=" report_list_no_border ">30</td> 
+		        <td width="5.4%" id="static_scale_number4" align="left" valign="middle" class=" report_list_no_border ">40</td> 
+		        <td width="5.4%" id="static_scale_number5" align="left" valign="middle" class=" report_list_no_border ">50</td>
+		        <td width="5.4%" id="static_scale_number6" align="left" valign="middle" class=" report_list_no_border ">60</td> 
+		        <td width="5.4%" id="static_scale_number7" align="left" valign="middle" class=" report_list_no_border ">70</td> 
+		        <td width="5.4%" id="static_scale_number8" align="left" valign="middle" class=" report_list_no_border ">80</td> 
+		        <td width="5.4%" id="static_scale_number9" align="left" valign="middle" class=" report_list_no_border ">90</td>  
+		        <td width="18%" id="static_scale_number10"class=" report_list_no_border ">100&nbsp;(%)</td>
 	       </table></td>
 	     </tr>  
 DATA
@@ -778,13 +788,13 @@ DATA
 		}
 		print <<DATA;
 	     <tr id="static_list_component_$filter_component_item[$count]" style="display:none">
-	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
-		        <td width="35%" height="30"  align="right" class="static_list_packagename" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$filter_component_item[$count]">$filter_component_item[$count]</td>
-		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
-		        <td id="static_list_component_bar_td_$filter_component_item[$count]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_component_bar_$filter_component_item[$count]"></span></td>
-		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
-		        <td id="static_list_component_num_$filter_component_item[$count]" align="left" height="30"  class="static_list_num" ><span id="static_list_component_num_$filter_component_item[$count]"></span></td> 
-		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+	       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="custom_line_height table_normal">	
+		        <td width="35%" align="right" class="custom_line_height  static_list_packagename " class="cut_long_string_one_line" title="$filter_component_item[$count]">$filter_component_item[$count]</td>
+		        <td width="3%" class="custom_line_height  static_list_packagename ">&nbsp;</td> 
+		        <td id="static_list_component_bar_td_$filter_component_item[$count]" align="left" class="custom_line_height  static_list_count_bar " ><span id="static_list_component_bar_$filter_component_item[$count]"></span></td>
+		        <td width="1%" class="custom_line_height  static_list_num ">&nbsp;</td>  
+		        <td id="static_list_component_num_$filter_component_item[$count]" align="left" class="custom_line_height  static_list_num " ><span id="static_list_component_num_$filter_component_item[$count]"></span></td> 
+		        <td width="12%" class="custom_line_height  static_list_packagename ">&nbsp;</td>      
 	       </table></td>
 	      </tr>
 DATA
@@ -793,7 +803,7 @@ DATA
 	print <<DATA;
         <tr id="background_top2" style="display:none">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+		        <td width="100%" align="right" valign="middle" class=""></td> 
 	       </table></td>
 	     </tr>  
 DATA
@@ -801,18 +811,18 @@ DATA
 	print <<DATA;
         <tr id="static_scale_component" style="display:none">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
-	       		<td width="38%" align="right" class="static_list_scale_head"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="19%" class="static_list_scale_head"></td>
+	       		<td width="38%" align="right" class=" static_list_scale_head"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="19%" class=" static_list_scale_head"></td>
 	       </table></td>
 	     </tr>  
 DATA
@@ -820,18 +830,18 @@ DATA
 	print <<DATA;
         <tr id="static_scale_number_component" style="display:none">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
-	       		<td width="38%" align="left" class="static_list_scale_num"></td>
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">0</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">10</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">20</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">30</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">40</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">50</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">60</td>
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">70</td>
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">80</td>
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">90</td>
-		        <td width="20%" class="static_list_scale_num">100 &nbsp;(%)</td>
+	       		<td width="38%" align="left" class=" report_list_no_border "></td>
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">0</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">10</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">20</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">30</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">40</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">50</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">60</td>
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">70</td>
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">80</td>
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">90</td>
+		        <td width="20%" class=" report_list_no_border ">100 &nbsp;(%)</td>
 	       </table></td>
 	     </tr>  
 DATA
@@ -848,13 +858,13 @@ DATA
 			}
 			print <<DATA;
 	     <tr id="static_list_category_key_$count" style="display:none">
-	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
-		        <td width="35%" height="30"  align="right" class="static_list_packagename_first" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$category_key[$count]">$category_key[$count]</td>
-		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
-		        <td id="static_list_category_key_bar_td_$count" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_category_key_bar_$count"></span></td>
-		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
-		        <td id="static_list_category_key_num_$count" align="left" height="30"  class="static_list_num" ><span id="static_list_category_key_num_$count"></span></td> 
-		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+	       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="custom_line_height table_normal">	
+		        <td width="35%" align="right" class="custom_line_height  static_list_packagename_first " class="cut_long_string_one_line" title="$category_key[$count]">$category_key[$count]</td>
+		        <td width="3%" class="custom_line_height  static_list_packagename ">&nbsp;</td> 
+		        <td id="static_list_category_key_bar_td_$count" align="left" class="custom_line_height  static_list_count_bar " ><span id="static_list_category_key_bar_$count"></span></td>
+		        <td width="1%" class="custom_line_height  static_list_num ">&nbsp;</td>  
+		        <td id="static_list_category_key_num_$count" align="left" class="custom_line_height  static_list_num " ><span id="static_list_category_key_num_$count"></span></td> 
+		        <td width="12%" class="custom_line_height  static_list_packagename ">&nbsp;</td>      
 	       </table></td>
 	      </tr>
 DATA
@@ -866,13 +876,13 @@ DATA
 					  split( ":", $filter_category_key_second_item[$j] );
 					print <<DATA;
 	     <tr id="static_list_category_key_second_$filter_category_key_second_item[$j]" style="display:none">
-	       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
-		        <td width="35%" height="30"  align="right" class="static_list_packagename_second" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$second_key[1]">$second_key[1]</td>
-		        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
-		        <td id="static_list_bar_td_category_key_second_$filter_category_key_second_item[$j]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_bar_category_key_second_$filter_category_key_second_item[$j]"></span></td>
-		        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
-		        <td id="static_list_num_category_key_second_$filter_category_key_second_item[$j]" align="left" height="30"  class="static_list_num" ><span id="static_list_num_category_key_second_$filter_category_key_second_item[$j]"></span></td> 
-		        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+	       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="custom_line_height table_normal">	
+		        <td width="35%" align="right" class="custom_line_height  static_list_packagename_second " class="cut_long_string_one_line" title="$second_key[1]">$second_key[1]</td>
+		        <td width="3%" class="custom_line_height  static_list_packagename ">&nbsp;</td> 
+		        <td id="static_list_bar_td_category_key_second_$filter_category_key_second_item[$j]" align="left" class="custom_line_height  static_list_count_bar " ><span id="static_list_bar_category_key_second_$filter_category_key_second_item[$j]"></span></td>
+		        <td width="1%" class="custom_line_height  static_list_num ">&nbsp;</td>  
+		        <td id="static_list_num_category_key_second_$filter_category_key_second_item[$j]" align="left" class="custom_line_height  static_list_num " ><span id="static_list_num_category_key_second_$filter_category_key_second_item[$j]"></span></td> 
+		        <td width="12%" class="custom_line_height  static_list_packagename ">&nbsp;</td>      
 	       </table></td>
 	      </tr>
 DATA
@@ -898,13 +908,13 @@ DATA
 							  split( ":", $filter_category_key_third_item[$k] );
 							print <<DATA;
 			     <tr id="static_list_category_key_third_$filter_category_key_third_item[$k]" style="display:none">
-			       <td><table width="100%" height="30"  border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="table_normal">	
-				        <td width="35%" height="30"  align="right" class="static_list_packagename_third" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$third_key[2]">$third_key[2]</td>
-				        <td width="3%" height="30"  class="static_list_packagename">&nbsp;</td> 
-				        <td id="static_list_bar_td_category_key_third_$filter_category_key_third_item[$k]" align="left" height="30"  class="static_list_count_bar" ><span id="static_list_bar_category_key_third_$filter_category_key_third_item[$k]"></span></td>
-				        <td width="1%" height="30"  class="static_list_num">&nbsp;</td>  
-				        <td id="static_list_num_category_key_third_$filter_category_key_third_item[$k]" align="left" height="30"  class="static_list_num" ><span id="static_list_num_category_key_third_$filter_category_key_third_item[$k]"></span></td> 
-				        <td width="12%" height="30"  class="static_list_packagename">&nbsp;</td>      
+			       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="$frame" rules="all" class="custom_line_height table_normal">	
+				        <td width="35%" align="right" class="custom_line_height  static_list_packagename_third" class="cut_long_string_one_line" title="$third_key[2]">$third_key[2]</td>
+				        <td width="3%" class="custom_line_height  static_list_packagename ">&nbsp;</td> 
+				        <td id="static_list_bar_td_category_key_third_$filter_category_key_third_item[$k]" align="left" class="custom_line_height  static_list_count_bar " ><span id="static_list_bar_category_key_third_$filter_category_key_third_item[$k]"></span></td>
+				        <td width="1%" class="custom_line_height  static_list_num ">&nbsp;</td>  
+				        <td id="static_list_num_category_key_third_$filter_category_key_third_item[$k]" align="left" class="custom_line_height  static_list_num " ><span id="static_list_num_category_key_third_$filter_category_key_third_item[$k]"></span></td> 
+				        <td width="12%" class="custom_line_height  static_list_packagename ">&nbsp;</td>      
 			       </table></td>
 			      </tr>
 DATA
@@ -917,7 +927,7 @@ DATA
 		print <<DATA;
         <tr id="background_top2" style="display:">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+		        <td width="100%" align="right" valign="middle" class=""></td> 
 	       </table></td>
 	     </tr>  
 DATA
@@ -925,18 +935,18 @@ DATA
 		print <<DATA;
         <tr id="static_scale_category_key" style="display:none">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="below" rules="all">
-	       		<td width="38%" align="right" class="static_list_scale_head"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td> 
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="4.5%" align="right" valign="middle" class="static_list_scale"></td>
-		        <td width="19%" class="static_list_scale_head"></td>
+	       		<td width="38%" align="right" class=" static_list_scale_head"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td> 
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="4.5%" align="right" valign="middle" class=" static_list_scale"></td>
+		        <td width="19%" class=" static_list_scale_head"></td>
 	       </table></td>
 	     </tr>  
 DATA
@@ -944,18 +954,18 @@ DATA
 		print <<DATA;
         <tr id="static_scale_number_category_key" style="display:none">
 	       <td><table width="100%" height="8" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
-	       		<td width="38%" align="left" class="static_list_scale_num"></td>
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">0</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">10</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">20</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">30</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">40</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">50</td> 
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">60</td>
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">70</td>
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">80</td>
-		        <td width="4.4%" align="left" valign="middle" class="static_list_scale_num">90</td>
-		        <td width="20%" class="static_list_scale_num">100 &nbsp;(%)</td>
+	       		<td width="38%" align="left" class=" report_list_no_border "></td>
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">0</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">10</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">20</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">30</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">40</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">50</td> 
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">60</td>
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">70</td>
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">80</td>
+		        <td width="4.4%" align="left" valign="middle" class=" report_list_no_border ">90</td>
+		        <td width="20%" class=" report_list_no_border ">100 &nbsp;(%)</td>
 	       </table></td>
 	     </tr>  
 DATA
@@ -964,7 +974,7 @@ DATA
 	print <<DATA;
         <tr id="background_bottom" style="display:">
 	       <td><table width="100%" height="25" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">	
-		        <td width="100%" align="right" valign="middle" class="backbackground_button"></td> 
+		        <td width="100%" align="right" valign="middle" class=""></td> 
 	       </table></td>
 	     </tr>  
 DATA
@@ -2939,6 +2949,7 @@ if ( $_GET{'case_view'} ) {
 	filter_case_item();
 	document.getElementById('view_test_case').disabled = "true";
 	document.getElementById('view_test_case').style.cursor = "default";
+	document.getElementById('view_test_case').className = "medium_button_disable";
 
 DATA
 }
@@ -2948,6 +2959,7 @@ else {
 	document.getElementById("select_result").selectedIndex = $result_no;
 	document.getElementById('view_test_result').disabled = "true";
 	document.getElementById('view_test_result').style.cursor = "default";
+	document.getElementById('view_test_result').className = "medium_button_disable";
 DATA
 }
 print <<DATA;

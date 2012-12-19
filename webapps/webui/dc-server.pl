@@ -65,8 +65,7 @@ if (open(INFO, $SERVER_ROOT.'/../utils/VERSION')) {
 $MTK_BRANCH = 'Testkit' if (!$MTK_BRANCH);
 $MTK_VERSION = '' if ($MTK_VERSION !~ m/^\d/);    # Version should start with digit
 
-#my $APP_DATA = '/var/opt/'.(lc($MTK_BRANCH)).'/test/manager';                    # Directory where Distribution Checker's data are stored.
-my $APP_DATA = $FindBin::Bin.'/../..'; 
+my $APP_DATA = '/opt/'.(lc($MTK_BRANCH)).'/manager';        # Directory where testkit-manager's data are stored.
 my $CONF_FILE = $FindBin::Bin.'/dc-server.conf.default';    # Location of the configuration file.
 
 my $port = shift;

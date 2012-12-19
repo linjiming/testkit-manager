@@ -164,3 +164,8 @@ testkit-manager 2.2.8:
 
 * Thu Dec 12 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.8-3
   - add error handler when the command of testkit-lite can't finish properly
+
+testkit-manager 2.2.9:
+===================
+* Thu Dec 18 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.9-1
+  - apply new theme and layout

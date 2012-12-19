@@ -66,14 +66,13 @@ if ( $_POST{'compare'} ) {
 <div id="message"></div>
 <table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
   <tr>
-    <td height="30"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0" class="table_normal">
+    <td height="30"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0" class="table_normal">
         <tr>
 DATA
 		for ( my $i = 0 ; $i < @select_dir ; $i++ ) {
-			my $time       = $select_dir[$i];
-			my $class_time = "report_list_outside_left_compare_empty";
+			my $time = $select_dir[$i];
 			print <<DATA;
-          <td class="$class_time" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$time">$time</td>
+          <td class="report_list_outside_left_compare_empty cut_long_string_one_line" align="center" title="$time">$time</td>
 DATA
 		}
 		print <<DATA;
@@ -88,7 +87,7 @@ DATA
 			$package_temp =~ s/_tests.xml//;
 			print <<DATA;
   <tr>
-    <td height="30" class="report_list_outside_left_compare" align="left" style="background-color:#89D6F2">&nbsp;Package Name: $package_temp</td>
+    <td class="report_list_outside_left_compare" align="left" style="background-color:#89D6F2">&nbsp;Package Name: $package_temp</td>
   </tr>
   <tr>
     <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -97,10 +96,7 @@ DATA
 			my %case_result;
 			my @color_change = ();
 			for ( my $i = 0 ; $i < @select_dir ; $i++ ) {
-				my $time            = $select_dir[$i];
-				my $class_td_border = "report_list_outside_left_compare";
-				my $class_name      = "report_list_outside_left";
-				my $class_result    = "report_list_one_row";
+				my $time = $select_dir[$i];
 
 				my $should_print = "FALSE";
 				foreach (@which_report) {
@@ -110,10 +106,10 @@ DATA
 				}
 				if ( $should_print eq "TRUE" ) {
 					print <<DATA;
-          <td valign="top" class="$class_td_border"><table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal">
+          <td valign="top" class="report_list_outside_left_compare"><table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal">
               <tr>
-                <td width="80%" height="30" class="$class_name" align="left">&nbsp;Name</td>
-                <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">Result</td>
+                <td width="80%" class="report_list_outside_left" align="left">&nbsp;Name</td>
+                <td width="20%" class="report_list_one_row cut_long_string_one_line" align="center" title="Result">Result</td>
               </tr>
 DATA
 
@@ -162,8 +158,8 @@ DATA
 							$id .= '_' . $i;
 							print <<DATA;
               <tr id = "$id">
-                <td width="80%" height="30" class="$class_name" align="left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_$id');">&nbsp;$name</a></td>
-                <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$result">$result</td>
+                <td width="80%" class="report_list_outside_left cut_long_string_one_line" align="left" title="$name"><a onclick="javascript:show_case_detail('detailed_$id');">&nbsp;$name</a></td>
+                <td width="20%" class="report_list_one_row cut_long_string_one_line" align="center" title="$result">$result</td>
               </tr>
 DATA
 							print <<DATA;
@@ -236,8 +232,8 @@ DATA
 								$id .= '_' . $i;
 								print <<DATA;
               <tr id = "$id">
-                <td width="80%" height="30" class="$class_name" align="left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_$id');">&nbsp;$name</a></td>
-                <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$result">$result</td>
+                <td width="80%" class="report_list_outside_left cut_long_string_one_line" align="left" title="$name"><a onclick="javascript:show_case_detail('detailed_$id');">&nbsp;$name</a></td>
+                <td width="20%" class="report_list_one_row cut_long_string_one_line" align="center" title="$result">$result</td>
               </tr>
 DATA
 								print <<DATA;
@@ -256,16 +252,15 @@ DATA
 					}
 				}
 				else {
-					$class_td_border = "report_list_outside_left_compare_empty";
 					print <<DATA;
-          <td valign="top" class="$class_td_border"><table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal">
+          <td valign="top" class="report_list_outside_left_compare_empty"><table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal">
               <tr>
-                <td width="80%" height="30" class="$class_name" align="left">&nbsp;Name</td>
-                <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">Result</td>
+                <td width="80%" class="report_list_outside_left" align="left">&nbsp;Name</td>
+                <td width="20%" class="report_list_one_row cut_long_string_one_line" align="center" title="Result">Result</td>
               </tr>
               <tr>
-                <td width="80%" height="30" class="$class_name" align="left">&nbsp;None</td>
-                <td width="20%" height="30" class="$class_result" align="center" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="Result">None</td>
+                <td width="80%" class="report_list_outside_left" align="left">&nbsp;None</td>
+                <td width="20%" class="report_list_one_row cut_long_string_one_line" align="center" title="Result">None</td>
               </tr>
 DATA
 				}
@@ -463,8 +458,8 @@ elsif ( $_GET{'submit'} ) {
     <td><form id="submit_server" name="submit_server" method="post" action="tests_report.pl">
       <table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
-          <td height="30" class="top_button_bg">
-<table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+          <td class="top_button_bg">
+<table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
   <tr>
     <td width="15">&nbsp;</td>
     <td width="110" align="left" valign="middle"><input name="server_name" type="text" class="submit_server" id="server_name" onfocus="javascript:submit_perpare('server_name');" onblur="javascript:update_submit_text_field();" value="Input Server Name" /></td>
@@ -512,7 +507,7 @@ elsif ( $_GET{'submit'} ) {
       </select>
     </td>
     <td width="5">&nbsp;</td>
-    <td width="75" align="center" valign="middle"><input type="submit" name="submit_server" id="submit_button" value="Submit" disabled="disabled" class="bottom_button" /></td>
+    <td width="75" align="center" valign="middle"><input type="submit" name="submit_server" id="submit_button" value="Submit" disabled="disabled" class="small_button_disable" /></td>
     <td>&nbsp;</td>
   </tr>
 </table>
@@ -521,14 +516,14 @@ elsif ( $_GET{'submit'} ) {
         <tr>
           <td><table width="100%" border="1" cellpadding="0" cellspacing="0" class="report_list" frame="below" rules="all">
             <tr>
-              <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-              <td align="left" height="30" class="report_list_one_row">The following report will be submitted to the QA report server:</td>
+              <td width="4%" class="report_list_one_row">&nbsp;</td>
+              <td align="left" class="report_list_one_row">The following report will be submitted to the QA report server:</td>
             </tr>
 DATA
 	print <<DATA;
             <tr>
-              <td align="left" width="4%" height="30" class="report_list_outside_left">&nbsp;&nbsp;&nbsp;1.</td>
-              <td align="left" height="30" class="report_list_outside_right">&nbsp;$time<input type="text" name="$time" value="" style="display:none" /></td>
+              <td align="left" width="4%" class="report_list_outside_left">&nbsp;&nbsp;&nbsp;1.</td>
+              <td align="left" class="report_list_outside_right">&nbsp;$time<input type="text" name="$time" value="" style="display:none" /></td>
             </tr>
 DATA
 	print <<DATA;
@@ -613,9 +608,11 @@ function update_submit_text_field() {
 
 	if (button && server_name_status && token_status && image_date_status
 			&& target_status && testtype_status && hwproduct_status) {
-		button.disabled = 0;
+		button.disabled = false;
+		button.className = "small_button";
 	} else {
-		button.disabled = 1;
+		button.disabled = true;
+		button.className = "small_button_disable";
 	}
 }
 
@@ -689,10 +686,10 @@ sub showReport {
     <td><form id="report_list" name="report_list" method="post" action="tests_report.pl">
       <table width="768" border="0" cellspacing="0" cellpadding="0">
         <tr>
-          <td height="30" class="top_button_bg"><table width="768" height="30" border="0" cellpadding="0" cellspacing="0">
+          <td class="top_button_bg"><table width="768" height="100%" border="0" cellpadding="0" cellspacing="0">
             <tr>
               <td width="2%">&nbsp;</td>
-              <td><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+              <td><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>Test report for all executions</td>
                 </tr>
@@ -703,13 +700,13 @@ sub showReport {
         <tr>
           <td><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" class="table_normal">
             <tr>
-              <td width="4%" height="30" align="center" valign="middle" class="report_list_outside_left"><label>
+              <td width="4%" align="center" valign="middle" class="report_list_outside_left"><label>
                 <input type="checkbox" name="check_all" id="check_all" onclick="javascript:check_uncheck_all();" />
               </label></td>
               <td align="left" width="26%" class="report_list_inside">&nbsp;Test Time</td>
               <td align="left" width="12%" class="report_list_inside">&nbsp;Test Plan</td>
               <td align="left" width="12%" class="report_list_inside">&nbsp;Device Name</td>
-              <td width="24%" class="report_list_inside"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+              <td width="24%" class="report_list_inside"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td width="45%" align="left">&nbsp;Auto Status</td>
                   <td width="1%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="12" /></td>
@@ -731,13 +728,13 @@ DATA
 		my $result_dir_tgz = $result_dir_manager . $time . "/" . $time . ".tgz";
 		print <<DATA;
             <tr>
-              <td width="4%" height="30" align="center" valign="middle" class="report_list_outside_left"><label>
+              <td width="4%" align="center" valign="middle" class="report_list_outside_left"><label>
                 <input type="checkbox" id="$time" name="$time" onclick="javascript:update_state();" />
               </label></td>
               <td align="left" width="26%" class="report_list_inside"><a href="tests_report.pl?time=$time&detailed=1">&nbsp;$time</a></td>
-              <td align="left" width="12%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$test_plan">&nbsp;$test_plan</td>
-              <td align="left" width="12%" class="report_list_inside" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$device_name">&nbsp;$device_name</td>
-              <td width="24%" class="report_list_inside"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+              <td align="left" width="12%" class="report_list_inside cut_long_string_one_line" title="$test_plan">&nbsp;$test_plan</td>
+              <td align="left" width="12%" class="report_list_inside cut_long_string_one_line" title="$device_name">&nbsp;$device_name</td>
+              <td width="24%" class="report_list_inside"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
                 <tr>
 DATA
 		if ( $not_run_auto == 0 ) {
@@ -765,7 +762,7 @@ DATA
 		print <<DATA;
                 </tr>
               </table></td>
-              <td align="left" width="22%" class="report_list_outside_right"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+              <td align="left" width="22%" class="report_list_outside_right"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
                 <tr>
                   <td><a href="tests_report.pl?time=$time&summary=1"><img title="View report in list view" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="23" height="23" /></a></td>
                   <td><a href="tests_execute_manual.pl?time=$time"><img title="Continue execution" src="images/operation_continue_execution_enable.png" alt="operation_continue_execution_enable" width="23" height="23" /></a></td>
@@ -781,14 +778,14 @@ DATA
           </table></td>
         </tr>
         <tr>
-          <td height="30"><table width="768" height="30" border="0" cellpadding="0" cellspacing="0">
+          <td height="30"><table width="768" height="100%" border="0" cellpadding="0" cellspacing="0">
             <tr>
               <td>
-                <table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+                <table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
                   <tr>
                     <td width="80%">&nbsp;</td>
-                    <td width="10%" align="center"><input type="submit" name="compare" id="compare_button" title="Compare two or more reports that include at least one same package" value="Compare" disabled="disabled" class="top_button" /></td>
-                    <td width="10%" align="center"><input type="submit" name="delete" id="delete_button" title="Delete reports" value="Delete" disabled="disabled" onclick="javascript:return confirm_remove();" class="top_button" /></td>
+                    <td width="10%" align="center"><input type="submit" name="compare" id="compare_button" title="Compare two or more reports that include at least one same package" value="Compare" disabled="disabled" class="medium_button_disable" /></td>
+                    <td width="10%" align="center"><input type="submit" name="delete" id="delete_button" title="Delete reports" value="Delete" disabled="disabled" onclick="javascript:return confirm_remove();" class="medium_button_disable" /></td>
                   </tr>
                 </table></td>
             </tr>
@@ -834,11 +831,23 @@ function update_state() {
 	var num_checkbox = count_checkbox();
 	button = document.getElementById('delete_button');
 	if (button) {
-		button.disabled = (num_checked == 0);
+		if (num_checked == 0) {
+			button.disabled = true;
+			button.className = "medium_button_disable";
+		} else {
+			button.disabled = false;
+			button.className = "medium_button";
+		}
 	}
 	button = document.getElementById('compare_button');
 	if (button) {
-		button.disabled = (num_checked < 2);
+		if (num_checked < 2) {
+			button.disabled = true;
+			button.className = "medium_button_disable";
+		} else {
+			button.disabled = false;
+			button.className = "medium_button";
+		}
 	}
 	var elem = document.getElementById('check_all');
 	if (num_checked == num_checkbox){
@@ -893,12 +902,12 @@ sub showSummaryReport {
 	print <<DATA;
 <table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
   <tr>
-    <td align="left" height="30" class="top_button_bg"><form id="detailed_report" name="detailed_report" method="post" action="tests_report.pl"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+    <td align="left" class="top_button_bg"><form id="detailed_report" name="detailed_report" method="post" action="tests_report.pl"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
       <tr>
         <td width="2%">&nbsp;</td>
         <td width="78%">Test report for $time in list view<input type="text" name="time_flag" value="$time" style="display:none" /></td>
-        <td width="10%" align="center"><input type="submit" name="summary_report" id="summary_report_button" title="View test report in list view" value="List View" disabled="disabled" class="top_button" /></td>
-        <td width="10%" align="center"><input type="submit" name="detailed_report" id="detailed_report_button" title="View test report in tree view" value="Tree View" class="top_button" /></td>
+        <td width="10%" align="center"><input type="submit" name="summary_report" id="summary_report_button" title="View test report in list view" value="List View" disabled="disabled" class="medium_button_disable" /></td>
+        <td width="10%" align="center"><input type="submit" name="detailed_report" id="detailed_report_button" title="View test report in tree view" value="Tree View" class="medium_button" /></td>
       </tr>
     </table></form></td>
   </tr>
@@ -935,17 +944,17 @@ sub showDetailedReport {
       <td><form id="detailed_report" name="detailed_report" method="post" action="tests_report.pl">
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
           <tr>
-            <td align="left" height="30" class="top_button_bg"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+            <td align="left" class="top_button_bg"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
               <tr>
                 <td width="2%">&nbsp;</td>
                 <td width="78%">Test report for $time in tree view<input type="text" name="time_flag" value="$time" style="display:none" /></td>
-                <td width="10%" align="center"><input type="submit" name="summary_report" id="summary_report_button" title="View test report in list view" value="List View" class="top_button" /></td>
-                <td width="10%" align="center"><input type="submit" name="detailed_report" id="detailed_report_button" title="View test report in tree view" value="Tree View" disabled="disabled" class="top_button" /></td>
+                <td width="10%" align="center"><input type="submit" name="summary_report" id="summary_report_button" title="View test report in list view" value="List View" class="medium_button" /></td>
+                <td width="10%" align="center"><input type="submit" name="detailed_report" id="detailed_report_button" title="View test report in tree view" value="Tree View" disabled="disabled" class="medium_button_disable" /></td>
               </tr>
             </table></td>
           </tr>
           <tr>
-            <td align="center" height="30" class="report_list_one_row"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0" class="table_normal">
+            <td align="center" class="report_list_one_row navigation_bar_bg"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0" class="table_normal">
               <tr>
                 <td width="5%">&nbsp;</td>
                 <td width="30%" align="right">View by
@@ -980,8 +989,8 @@ sub showDetailedReport {
           <tr>
             <td><table width="100%" border="1" cellspacing="0" cellpadding="0" class="table_normal" frame="void" rules="all">
               <tr>
-                <td width="1%" class="report_list_one_row" style="background-color:#E9F6FC">&nbsp;</td>
-                <td width="39%" valign="top" class="report_list_outside_left_bold" style="background-color:#E9F6FC">
+                <td width="1%" class="report_list_one_row tree_view_bg">&nbsp;</td>
+                <td width="39%" valign="top" class="report_list_outside_left_bold tree_view_bg">
                   <div id="tree_area_package" style="background:transparent; overflow-x:auto; overflow-y:hidden;"></div>
                   <div id="tree_area_component" style="background:transparent; display:none; overflow-x:auto; overflow-y:hidden;"></div>
                   <div id="tree_area_test_type" style="background:transparent; display:none; overflow-x:auto; overflow-y:hidden;"></div></td>
@@ -991,9 +1000,9 @@ sub showDetailedReport {
                     <tr>
                       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal">
                           <tr>
-                            <td align="left" width="40%" height="30" class="report_list_outside_left">&nbsp;Name</td>
-                            <td align="left" width="40%" height="30" class="report_list_one_row">&nbsp;Description</td>
-                            <td width="20%" height="30" class="report_list_outside_right" align="center">Result</td>
+                            <td align="left" width="40%" class="report_list_outside_left">&nbsp;Name</td>
+                            <td align="left" width="40%" class="report_list_one_row">&nbsp;Description</td>
+                            <td width="20%" class="report_list_outside_right" align="center">Result</td>
                           </tr>
 DATA
 
@@ -1066,9 +1075,9 @@ DATA
 					print "\n";
 				}
 				print <<DATA;
-                            <td align="left" width="40%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="40%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="20%" height="30" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+                            <td width="20%" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_package_$name" style="display:none">
                             <td height="30" colspan="3">
@@ -1147,9 +1156,9 @@ DATA
 					}
 
 					print <<DATA;
-                            <td align="left" width="40%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="40%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="20%" height="30" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+                            <td width="20%" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_package_$name" style="display:none">
                             <td height="30" colspan="3">
@@ -1174,9 +1183,9 @@ DATA
                     <tr>
                       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal">
                           <tr>
-                            <td align="left" width="40%" height="30" class="report_list_outside_left">&nbsp;Name</td>
-                            <td align="left" width="40%" height="30" class="report_list_one_row">&nbsp;Description</td>
-                            <td width="20%" height="30" class="report_list_outside_right" align="center">Result</td>
+                            <td align="left" width="40%" class="report_list_outside_left">&nbsp;Name</td>
+                            <td align="left" width="40%" class="report_list_one_row">&nbsp;Description</td>
+                            <td align="center" width="20%" class="report_list_outside_right">Result</td>
                           </tr>
 DATA
 
@@ -1244,9 +1253,9 @@ DATA
 					print "\n";
 				}
 				print <<DATA;
-                            <td align="left" width="40%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="40%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="20%" height="30" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+                            <td width="20%" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_component_$name" style="display:none">
                             <td height="30" colspan="3">
@@ -1321,9 +1330,9 @@ DATA
 						print "\n";
 					}
 					print <<DATA;
-                            <td align="left" width="40%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="40%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="20%" height="30" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+                            <td width="20%" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_component_$name" style="display:none">
                             <td height="30" colspan="3">
@@ -1348,9 +1357,9 @@ DATA
                     <tr>
                       <td><table width="100%" border="0" cellspacing="0" cellpadding="0"class="table_normal">
                           <tr>
-                            <td align="left" width="40%" height="30" class="report_list_outside_left">&nbsp;Name</td>
-                            <td align="left" width="40%" height="30" class="report_list_one_row">&nbsp;Description</td>
-                            <td width="20%" height="30" class="report_list_outside_right" align="center">Result</td>
+                            <td align="left" width="40%" class="report_list_outside_left">&nbsp;Name</td>
+                            <td align="left" width="40%" class="report_list_one_row">&nbsp;Description</td>
+                            <td width="20%" class="report_list_outside_right" align="center">Result</td>
                           </tr>
 DATA
 
@@ -1479,9 +1488,9 @@ DATA
 					print "\n";
 				}
 				print <<DATA;
-                            <td align="left" width="40%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="40%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="20%" height="30" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+                            <td width="20%" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_test_type_$name" style="display:none">
                             <td height="30" colspan="3">
@@ -1615,9 +1624,9 @@ DATA
 						print "\n";
 					}
 					print <<DATA;
-                            <td align="left" width="40%" height="30" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
-                            <td align="left" width="40%" height="30" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
-                            <td width="20%" height="30" class="report_list_outside_right" align="center">$result</td>
+                            <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
+                            <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+                            <td width="20%" class="report_list_outside_right" align="center">$result</td>
                           </tr>
                           <tr id="detailed_case_test_type_$name" style="display:none">
                             <td height="30" colspan="3">

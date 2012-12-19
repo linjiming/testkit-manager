@@ -18,7 +18,7 @@
 #              Zhang, Huihui <huihuix.zhang@intel.com>
 #              Wendong,Sui  <weidongx.sun@intel.com>
 
-AC_INIT([testkit-manager], [2.2.8], [weidongx.sun@intel.com])
+AC_INIT([testkit-manager], [2.2.9], [weidongx.sun@intel.com])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 # Checks for programs.

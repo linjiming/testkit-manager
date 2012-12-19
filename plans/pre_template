@@ -1,6 +1,6 @@
 [Auto]
-webapi-w3c-networking-tests(367 127)
-webapi-w3c-perf-tests(108 52)
+package_name_1(367 127)
+package_name_2(108 52)
 [/Auto]
 
 [Advanced-feature]
@@ -15,5 +15,5 @@ select_type=Any Type
 select_testset=Any Test Set
 select_com=Any Component
 
-[select-packages]: webapi-w3c-networking-tests
-[select-packages]: webapi-w3c-perf-tests
+[select-packages]: package_name_1
+[select-packages]: package_name_2

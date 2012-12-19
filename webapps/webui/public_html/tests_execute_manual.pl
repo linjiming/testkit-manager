@@ -50,7 +50,7 @@ if ( $_GET{'time'} ) {
 <div id="time" style="display:none">$time</div>
 <table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
   <tr>
-    <td height="30" class="top_button_bg"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+    <td class="top_button_bg"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
         <tbody>
           <tr>
             <td width="2%">&nbsp;</td>
@@ -62,19 +62,19 @@ if ( $_GET{'time'} ) {
   <tr>
     <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
-          <td width="35%" valign="top" class="report_list_outside_left_bold"><table width="100%" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
+          <td width="35%" valign="top" class="report_list_outside_left_bold navigation_bar_bg"><table width="100%" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
               <tr id="background_summary_case_">
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('summary_case_');" style="color:#000000">Total</a></td>
+                <td width="4%" class="report_list_one_row">&nbsp;</td>
+                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('summary_case_');" class="navigation_normal_text">Total</a></td>
                 <td class="report_list_one_row"></td>
               </tr>
               <tr id="background_T:auto">
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:auto');" title="(Total Pass Fail Block N/A)">&nbsp;&nbsp;$total_auto</a></td>
                 <td class="report_list_one_row"></td>
               </tr>
-              <tr id="background_T:manual" style="background-color:#BAE9FD">
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
+              <tr id="background_T:manual" class="navigation_focus">
+                <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:manual');" title="(Total Pass Fail Block N/A)">&nbsp;&nbsp;$total_manual</a></td>
                 <td class="report_list_one_row"></td>
               </tr>
@@ -86,17 +86,17 @@ DATA
 		my $manual_result = $progress_bar_result{ $package . "_manual" };
 		print <<DATA;
               <tr id="background_P:$package">
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
-                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('P:$package');" style="color:#000000">$package</a></td>
+                <td width="4%" class="report_list_one_row">&nbsp;</td>
+                <td align="left" class="report_list_one_row"><a onclick="javascript:filter('P:$package');" class="navigation_normal_text">$package</a></td>
                 <td class="report_list_one_row"></td>
               </tr>
               <tr id="background_T:auto_P:$package">
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:auto_P:$package');" title="(Total Pass Fail Block N/A)">&nbsp;&nbsp;$auto_result</a></td>
                 <td class="report_list_one_row"><div id="progress_bar_auto_$package"></div></td>
               </tr>
               <tr id="background_T:manual_P:$package">
-                <td width="4%" height="30" class="report_list_one_row">&nbsp;</td>
+                <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:manual_P:$package');" title="(Total Pass Fail Block N/A)">&nbsp;&nbsp;$manual_result</a></td>
                 <td class="report_list_one_row"><div id="progress_bar_$package"></div></td>
               </tr>
@@ -106,24 +106,24 @@ DATA
             </table></td>
           <td width="65%" valign="top" class="report_list_outside_right_bold"><table width="100%" border="0" cellspacing="0" cellpadding="0">
               <tr>
-                <td width="100%"><div style="height:450px;overflow:auto;text-wrap:none;">
+                <td width="100%"><div class="cmd_log_border">
                     <table width="100%" border="0" cellspacing="0" cellpadding="0">
                       <tr>
                         <td><table width="100%" border="1" cellpadding="0" cellspacing="0" class="table_normal" frame="below" rules="all">
                             <tr>
-                              <td align="left" height="30" class="report_list_one_row">&nbsp;Manual execution for&nbsp;&nbsp;$time</td>
+                              <td align="left" class="report_list_one_row">&nbsp;Manual execution for&nbsp;&nbsp;$time</td>
                             </tr>
                           </table></td>
                       </tr>
                       <tr>
                         <td><table width="100%" border="1" cellpadding="0" cellspacing="0" class="table_normal" frame="below" rules="all">
                             <tr>
-                              <td rowspan="2" height="61" align="left" width="30%" class="report_list_outside_left">&nbsp;Name</td>
+                              <td rowspan="2" align="left" width="30%" class="report_list_outside_left_two">&nbsp;Name</td>
                               <td rowspan="2" align="left" width="30%" class="report_list_one_row">&nbsp;Description</td>
-                              <td colspan="4" height="30" align="center" width="40%" class="report_list_outside_right">Result</td>
+                              <td colspan="4" align="center" width="40%" class="report_list_outside_right">Result</td>
                             </tr>
                             <tr class="change_all_result" title="Attention! unsaved results will be lost, if you change them all">
-                              <td height="30" class="report_list_outside_right">&nbsp;
+                              <td class="report_list_outside_right">&nbsp;
                                 <input id="pass_all_button" type="radio" name="radiobutton" onclick="javascript:passAll();" title="Set all cases' result to PASS">
                                 P</td>
                               <td class="report_list_one_row">&nbsp;
@@ -199,8 +199,8 @@ DATA
 				print <<DATA;
                         <td><table width="100%" border="1" cellpadding="0" cellspacing="0" frame="below" rules="all" class="table_normal">
                             <tr>
-                              <td align="left" height="30" width="30%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
-                              <td align="left" width="30%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                              <td align="left" width="30%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
+                              <td align="left" width="30%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
                               <td align="center" width="40%" class="report_list_outside_right"><table width="100%" border="0" cellpadding="0" cellspacing="0">
 DATA
 				if ( $result eq "PASS" ) {
@@ -354,8 +354,8 @@ DATA
 				print <<DATA;
                         <td><table width="100%" border="1" cellpadding="0" cellspacing="0" frame="below" rules="all" class="table_normal">
                             <tr>
-                              <td height="30" align="left" width="30%" class="report_list_outside_left" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$name"><a onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
-                              <td align="left" width="30%" class="report_list_one_row" style="text-overflow:ellipsis; white-space:nowrap; overflow:hidden;" title="$description">&nbsp;$description</td>
+                              <td align="left" width="30%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_$name');">&nbsp;$name</a></td>
+                              <td align="left" width="30%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
                               <td align="center" width="40%" class="report_list_outside_right"><table width="100%" border="0" cellpadding="0" cellspacing="0">
 DATA
 				if ( $result eq "PASS" ) {
@@ -464,13 +464,13 @@ DATA
                   </div></td>
               </tr>
               <tr>
-                <td height="30"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+                <td height="30"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
                     <tr>
                       <td width="75%">&nbsp;</td>
-                      <td width="25%"><table width="100%" height="30" border="0" cellpadding="0" cellspacing="0">
+                      <td width="25%"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
                           <tr>
-                            <td align="center"><input type="submit" name="button_save" title="Save modification of case results" value="Save" class="bottom_button" onclick="javascript:saveManual();"></td>
-                            <td align="center"><input type="submit" name="button_finish" value="Finish" title="Finish editing result, and go to report page" class="bottom_button" onclick="javascript:finishManual();"></td>
+                            <td align="center"><input type="submit" name="button_save" title="Save modification of case results" value="Save" class="small_button" onclick="javascript:saveManual();"></td>
+                            <td align="center"><input type="submit" name="button_finish" value="Finish" title="Finish editing result, and go to report page" class="small_button" onclick="javascript:finishManual();"></td>
                           </tr>
                         </table></td>
                     </tr>
@@ -504,6 +504,7 @@ function filter(reg) {
 		}
 		if (temp_id.indexOf("background_") >= 0) {
 			page[i].style.backgroundColor = "";
+			page[i].className = "";
 			var bg_reg = "background_" + reg;
 			if (temp_id == bg_reg) {
 				page[i].style.backgroundColor = "#BAE9FD";
@@ -700,7 +701,7 @@ sub updateProgressBarResult {
 		}
 		my $auto_result =
 		    $auto_result_text
-		  . '<span style="color:#000000">('
+		  . '<span class=\'navigation_normal_text\'>('
 		  . $total_auto
 		  . '</span> <span class=\'result_pass\'>'
 		  . $pass_auto
@@ -710,10 +711,10 @@ sub updateProgressBarResult {
 		  . $block_auto
 		  . '</span> <span class=\'result_not_run\'>'
 		  . $not_run_auto
-		  . '</span><span style="color:#000000">)</span>';
+		  . '</span><span class=\'navigation_normal_text\'>)</span>';
 		my $manual_result =
 		    $manual_result_text
-		  . '<span style="color:#000000">('
+		  . '<span class=\'navigation_normal_text\'>('
 		  . $total_manual
 		  . '</span> <span class=\'result_pass\'>'
 		  . $pass_manual
@@ -723,7 +724,7 @@ sub updateProgressBarResult {
 		  . $block_manual
 		  . '</span> <span class=\'result_not_run\'>'
 		  . $not_run_manual
-		  . '</span><span style="color:#000000">)</span>';
+		  . '</span><span class=\'navigation_normal_text\'>)</span>';
 		$progress_bar_result{ $package . "_auto" }   = $auto_result;
 		$progress_bar_result{ $package . "_manual" } = $manual_result;
 
@@ -770,7 +771,7 @@ sub updateProgressBarResult {
 	}
 	my $total_auto =
 	    $total_auto_result_text
-	  . '<span style="color:#000000">('
+	  . '<span class=\'navigation_normal_text\'>('
 	  . $total_a
 	  . '</span> <span class=\'result_pass\'>'
 	  . $pass_a
@@ -780,10 +781,10 @@ sub updateProgressBarResult {
 	  . $block_a
 	  . '</span> <span class=\'result_not_run\'>'
 	  . $not_run_a
-	  . '</span><span style="color:#000000">)</span>';
+	  . '</span><span class=\'navigation_normal_text\'>)</span>';
 	my $total_manual =
 	    $total_manual_result_text
-	  . '<span style="color:#000000">('
+	  . '<span class=\'navigation_normal_text\'>('
 	  . $total_m
 	  . '</span> <span class=\'result_pass\'>'
 	  . $pass_m
@@ -793,7 +794,7 @@ sub updateProgressBarResult {
 	  . $block_m
 	  . '</span> <span class=\'result_not_run\'>'
 	  . $not_run_m
-	  . '</span><span style="color:#000000">)</span>';
+	  . '</span><span class=\'navigation_normal_text\'>)</span>';
 	$progress_bar_result{"total_auto"}   = $total_auto;
 	$progress_bar_result{"total_manual"} = $total_manual;
 }

@@ -967,7 +967,7 @@ elsif ( $_GET{'action'} eq 'run_tests' ) {
 						# Test run has crashed; show status and do not redirect.
 								else {
 									$data .=
-"<tr_status>&lt;span style=\"color: red;\"&gt;The test seems to have crashed.&lt;/span&gt;</tr_status>\n";
+"<tr_status>&lt;span class=\"result_fail\"&gt;The test seems to have crashed.&lt;/span&gt;</tr_status>\n";
 								}
 							}
 						}
@@ -1110,13 +1110,13 @@ elsif ( $_GET{'action'} eq 'get_test_log' ) {
 				  # Test run was forcibly stopped; show status, do not redirect.
 						elsif ( $status->{'STATUS'} eq 'Terminated' ) {
 							$data .=
-"<tr_status>&lt;span style=\"color: red;\"&gt;The test has been stopped.&lt;/span&gt;</tr_status>\n";
+"<tr_status>&lt;span class=\"result_fail\"&gt;The test has been stopped.&lt;/span&gt;</tr_status>\n";
 						}
 
 						# Test run has crashed; show status and do not redirect.
 						else {
 							$data .=
-"<tr_status>&lt;span style=\"color: red;\"&gt;The test seems to have crashed.&lt;/span&gt;</tr_status>\n";
+"<tr_status>&lt;span class=\"result_fail\"&gt;The test seems to have crashed.&lt;/span&gt;</tr_status>\n";
 						}
 					}
 				}

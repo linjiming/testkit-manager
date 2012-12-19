@@ -67,6 +67,8 @@ Suggestion:
 Limitation:
 ===========
 1. only support devices that have 'sdb' communication module
+2. only support testing package with standard version number which is x-x-x.x
+3. local repository doesn't support subfolder
 
 
 Known Issues:

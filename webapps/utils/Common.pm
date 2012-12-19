@@ -129,10 +129,12 @@ sub get_serial {
 }
 
 sub set_serial {
-	my ($serial) = @_;
-	my $sdb_serial = "none";
+	my ($serial)    = @_;
+	my $sdb_serial  = "none";
+	my $line_number = 0;
 	open FILE, $configuration_file or die $!;
 	while (<FILE>) {
+		$line_number++;
 		if ( $_ =~ /^sdb_serial/ ) {
 			$sdb_serial = $_;
 			last;
@@ -143,11 +145,8 @@ sub set_serial {
 		return "Error";
 	}
 	else {
-		$sdb_serial =~ s/^\s*//;
-		$sdb_serial =~ s/\s*$//;
-		system(
-			"sed -i 's/$sdb_serial/sdb_serial = $serial/' $configuration_file"
-		);
+		system( "sed -i '$line_number"
+			  . "c sdb_serial = $serial' $configuration_file" );
 		return "OK";
 	}
 }

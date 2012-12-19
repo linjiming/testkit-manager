@@ -35,28 +35,8 @@ print <<DATA;
   <area href="tests_help.pl" alt="Help" title="View Help Document" shape="rect" coords="509,102,700,248" />
   <area href="tests_execute.pl" alt="Execute" title="Execute Test Plan" shape="rect" coords="204,175,378,317" />
   <area href="tests_statistic.pl" alt="Statistic" title="View Test Packages' Statistics" shape="rect" coords="379,266,570,411" />
-  <area href="#about" alt="About" title="About" shape="rect" coords="674,402,766,442" onclick="javascript:showAbout()" />
 </map>
 <img src="images/home_menu.png" width="768" height="444" alt="home_menu" usemap="#home_menu" />
-<div id="about" style="display:none" onclick="javascript:showAbout()">
-  <div align="left">
-    <div style="position:relative; width:200px; height:100px; left: 57px; top: 35px;">Testkit-manager is a GUI for &quot;testkit-lite&quot;. With this tool, we can filter cases with several properties' value. The filtered cases can be run automatically and the report will be generated after finishing running. We can also submit report and view report with this tool.</div>
-    </div>
-  </div>
-</div>
-
-<script language="javascript" type="text/javascript">
-// <![CDATA[
-function showAbout() {
-	var about = document.getElementById('about');
-	if (about.style.display == "none") {
-		about.style.display = "";
-	} else {
-		about.style.display = "none";
-	}
-}
-// ]]>
-</script>
 DATA
 
 print_footer("footer_home");
