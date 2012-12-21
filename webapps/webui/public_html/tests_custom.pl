@@ -606,7 +606,7 @@ sub UpdatePage {
 	              <td width="2%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
 	              <td width="63%" id="name" align="left" nowrap="nowrap" class="custom_line_height report_list_no_border">Create Test Plan</td>
 	              <td width="4%" id="name" nowrap="nowrap" class="custom_line_height  report_list_no_border">Packages &nbsp</td>
-	              <td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List();"/></td>
+	              <td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
 	              <td width="10%" class="custom_line_height" align="left" nowrap="nowrap">
 	                <input type="submit" id="view_package_info" name="view_package_info" class="large_button_disable" disabled="true" value="View" title="View detailed information of selected packages" />
 	              </td>
@@ -619,9 +619,9 @@ sub UpdatePage {
           </table></td>
         </tr>
 		<tr>
-          <td id="list_advanced" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="below" rules="none">
+          <td id="list_advanced" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
         <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Suite<td>
@@ -632,7 +632,7 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Execution Type<td>
@@ -646,7 +646,7 @@ DATA
             </tr>
         <tr>
         
-        <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                     <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Set<td>
@@ -657,7 +657,7 @@ DATA
                     </select>                    </td>
                   </tr>
               </table></td>
-          <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Priority<td>
@@ -670,7 +670,7 @@ DATA
               </table></td>
             </tr>
         <tr>
-        <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Component<td>
@@ -682,7 +682,7 @@ DATA
                 </tr>
               </table></td>
               
-          <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Type<td>
@@ -694,8 +694,22 @@ DATA
            </tr>
           </table></td>
             </tr>
-            <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+            </table></td>
+        </tr>
+        
+        <tr id="button_adv_sec_td" style="display:none">
+	       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="custom_line_height custom_panel_background_color">
+	         <tr>
+	           <td width="45%" align="right" ><img id="pic_adv_sec" src="images/up_and_down_1.png" width="23" height="23"/></td>	
+	           <td width="55%" align="left" nowrap="nowrap"><input id="button_adv_sec" name="button_adv_sec" title="Show advanced list" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List('button_adv_sec');"/></td>
+	         </tr>
+          </table></td>
+        </tr>
+        
+        <tr>
+          <td id="list_advanced_sec" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        <tr>
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Category</td><td>
@@ -706,7 +720,7 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Status<td>
@@ -719,7 +733,7 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Architecture</td><td>
@@ -732,7 +746,7 @@ DATA
                 </tr>
               </table></td>
               
-              <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                     <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Version<td>
@@ -744,7 +758,7 @@ DATA
                   </tr>
               </table></td>
         </tr>
-       </table></td>
+        </table></td>
         </tr>
         <tr>
           <td></td>
@@ -937,7 +951,7 @@ sub UpdateNullPage {
 	              <td width="2%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
 	              <td width="63%" id="name" align="left" nowrap="nowrap" class="custom_line_height  report_list_no_border">Create Test Plan</td>
 	              <td width="4%"  id="name" nowrap="nowrap" class="custom_line_height  report_list_no_border">Packages &nbsp</td>
-	              <td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List();"/></td>
+	              <td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
 	              <td width="10%" class="custom_line_height" align="left" nowrap="nowrap">
 	                <input type="submit" id="view_package_info" name="view_package_info" class="large_button_disable" disabled="true" value="View" title="View detailed information of selected packages" />
 	              </td>
@@ -950,112 +964,125 @@ sub UpdateNullPage {
           </table></td>
         </tr>
         <tr>
-          <td id="list_advanced" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="below" rules="none">
-            <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height  report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td id="list_advanced" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        <tr class="custom_line_height">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height  report_list_no_border">&nbsp;Architecture</td><td>
-                    <select name="select_arc" align="20px" id="select_arc" style="width:70%" onchange="javascript:filter_case_item();">
-DATA
-	DrawArcSelect();
-	print <<DATA;
-                    </select>
-                  </td>
-                </tr>
-              </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_line_height  custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height  report_list_no_border">&nbsp;Version<td>
-                    <select name="select_ver" id="select_ver" style="width:70%" onchange="javascript:filter_case_item();">
-                    <option>Any Version</option>
+                  <td width="4%" align="left" class="report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Test Suite<td>
+                    <select name="select_testsuite" id="select_testsuite" style="width:70%" onchange="javascript:filter_case_item('suite');">
+                    <option>Any Test Suite</option>
                     </select>                    </td>
                 </tr>
               </table></td>
-            </tr>
-            
-            <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height  report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height  report_list_no_border">&nbsp;Category</td><td>
-                    <select name="select_category" align="20px" id="select_category" value="Any Category" style="width:70%" onchange="javascript:filter_case_item();">
-                    <option>Any Category</option>
-                    </select>                    </td>
-                </tr>
-              </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_line_height  custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height  report_list_no_border">&nbsp;Priority<td>
-                    <select name="select_pri" id="select_pri" value="And Priority" style="width:70%" onchange="javascript:filter_case_item();">
-                    <option>Any Priority</option>
-                    </select>                    </td>
-                </tr>
-              </table></td>
-            </tr>
-            <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height  report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height  report_list_no_border">&nbsp;Status<td>
-                    <select name="select_status" id="select_status" value="Any Status" style="width:70%" onchange="javascript:filter_case_item();">
-                    <option>Any Status</option>
-                    </select>                    </td>
-                </tr>
-              </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_line_height  custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height  report_list_no_border">&nbsp;Execution Type<td>
-                    <select name="select_exe" id="select_exe" value="Any Execution Type" style="width:70%" onchange="javascript:filter_case_item();">
+                  <td width="4%" align="left" class="report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Execution Type<td>
+                    <select name="select_exe" id="select_exe" style="width:70%" onchange="javascript:filter_case_item('exe_type');">
                     <option>Any Execution Type</option>
                     </select>                    </td>
                 </tr>
               </table></td>
             </tr>
-            <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Suite<td>
-                    <select name="select_testsuite" id="select_testsuite" value="Any Test Suite" style="width:70%" onchange="javascript:filter_case_item();">
-                    <option>Any Test Suite</option>
+        <tr class="custom_line_height">
+           <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                  <tr>
+                    <td width="4%" align="left" class="report_list_no_border">&nbsp;<td>
+                    <td width="30%" align="left" class="report_list_no_border">&nbsp;Test Set<td>
+                      <select name="select_testset" id="select_testset" style="width:70%" onchange="javascript:filter_case_item('set');">
+                      <option>Any Test Set</option>
                     </select>                    </td>
-                </tr>
+                  </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_line_height  custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
-                  <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Type<td>
-                    <select name="select_type" id="select_type" value="Any Type" style="width:70%" onchange="javascript:filter_case_item();">
-                    <option>Any Type</option>
+                  <td width="4%" align="left" class="report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Priority<td>
+                    <select name="select_pri" id="select_pri" style="width:70%" onchange="javascript:filter_case_item('priority');">
+                    <option>Any Priority</option>
                     </select>                    </td>
                 </tr>
               </table></td>
             </tr>
-            <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height  report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                  <tr>
-                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                    <td width="30%" align="left" class="custom_line_height  report_list_no_border">&nbsp;Test Set<td>
-                      <select name="select_testset" id="select_testset" value="Any Test Set" style="width:70%" onchange="javascript:filter_case_item();">
-                    <option>Any Test Set</option>
-                    </select>                    </td>
-                  </tr>
-              </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_line_height  custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        <tr class="custom_line_height">
+        <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
-                  <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height  report_list_no_border">&nbsp;Component<td>
-                    <select name="select_com" id="select_com" value="Any Component" style="width:70%" onchange="javascript:filter_case_item();">
+                  <td width="4%" align="left" class="report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Component<td>
+                    <select name="select_com" id="select_com" style="width:70%" onchange="javascript:filter_case_item('component');">
                     <option>Any Component</option>
                     </select>                    </td>
                 </tr>
               </table></td>
-            </tr>
+              
+          <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="4%" align="left" class="report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Type<td>
+                    <select name="select_type" id="select_type" style="width:70%" onchange="javascript:filter_case_item('type');">
+                    <option>Any Type</option>
+                    </select>                    </td>
+           </tr>
           </table></td>
+            </tr>
+            </table></td>
+        </tr>
+        
+        <tr id="button_adv_sec_td" style="display:none">
+	       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="custom_line_height custom_panel_background_color">
+	         <tr>
+	           <td width="45%" align="right" ><img id="pic_adv_sec" src="images/up_and_down_1.png" width="23" height="23"/></td>	
+	           <td width="55%" align="left" nowrap="nowrap"><input id="button_adv_sec" name="button_adv_sec" title="Show advanced list" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List('button_adv_sec');"/></td>
+	         </tr>
+          </table></td>
+        </tr>
+        
+        <tr>
+          <td id="list_advanced_sec" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none" class="custom_line_height">
+        <tr class="custom_line_height">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="4%" align="left" class="report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Category</td><td>
+                    <select name="select_category" align="20px" id="select_category" style="width:70%" onchange="javascript:filter_case_item('category');">
+                    <option>Any Category</option>
+                    </select>                    </td>
+                </tr>
+              </table></td>
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="4%" align="left" class="report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Status<td>
+                    <select name="select_status" id="select_status" style="width:70%" onchange="javascript:filter_case_item('status');">
+                    <option>Any Status</option>
+                    </select>                    </td>
+                </tr>
+              </table></td>
+            </tr>
+            <tr class="custom_line_height">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="4%" align="left" class="report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Architecture</td><td>
+                    <select name="select_arc" align="20px" id="select_arc" style="width:70%" onchange="javascript:filter_case_item();">
+                    <option>Any Architecture</option>
+                    </select>
+                  </td>
+                </tr>
+              </table></td>
+              
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                  <tr>
+                    <td width="4%" align="left" class="report_list_no_border">&nbsp;<td>
+                    <td width="30%" align="left" class="report_list_no_border">&nbsp;Version<td>
+                      <select name="select_ver" id="select_ver" style="width:70%" onchange="javascript:filter_case_item('version');">
+                      <option>Any Version</option>
+                    </select>                    </td>
+                  </tr>
+              </table></td>
+        </tr>
+        </table></td>
         </tr>
         <tr>
           <td></td>
@@ -2256,7 +2283,7 @@ DATA
         <tr>
         <td id="list_advanced" class="custom_panel_background_color" style="display:"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Suite<td>
@@ -2267,7 +2294,7 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Execution Type<td>
@@ -2280,7 +2307,7 @@ DATA
               </table></td>
             </tr>
         <tr>
-        <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                     <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Set<td>
@@ -2291,7 +2318,7 @@ DATA
                     </select>                    </td>
                   </tr>
               </table></td>
-          <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Priority<td>
@@ -2304,7 +2331,7 @@ DATA
               </table></td>
             </tr>
         <tr>
-        <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Component<td>
@@ -2315,7 +2342,7 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-          <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Type<td>
@@ -2326,9 +2353,22 @@ DATA
                     </select>                    </td>
            </tr>
           </table></td>
-            </tr>
-            <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          </tr>
+          </table></td>
+        </tr>
+        <tr id="button_adv_sec_td" style="display:">
+	       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="custom_line_height custom_panel_background_color">
+	         <tr>
+	           <td width="45%" align="right" ><img id="pic_adv_sec" src="images/up_and_down_1.png" width="23" height="23"/></td>	
+	           <td width="55%" align="left" nowrap="nowrap"><input id="button_adv_sec" name="button_adv_sec" title="Show advanced list" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List('button_adv_sec');"/></td>
+	         </tr>
+          </table></td>
+        </tr>
+        
+        <tr>
+          <td id="list_advanced_sec" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        <tr>
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Category</td><td>
@@ -2339,7 +2379,7 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Status<td>
@@ -2352,7 +2392,7 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Architecture</td><td>
@@ -2365,7 +2405,7 @@ DATA
                 </tr>
               </table></td>
               
-              <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                     <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Version<td>
@@ -2377,7 +2417,7 @@ DATA
                   </tr>
               </table></td>
         </tr>
-          </table></td>
+        </table></td>
         </tr>
 DATA
 }
@@ -2424,12 +2464,12 @@ DATA
 
 		if ( @package_name == 0 ) {
 			print <<DATA;
-			<td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button_disable" type="button" value="Filter" disabled="true" onclick="javascript:hidden_Advanced_List();"/></td>
+			<td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button_disable" type="button" value="Filter" disabled="true" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
 DATA
 		}
 		else {
 			print <<DATA;
-			<td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List();"/></td>
+			<td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
 DATA
 		}
 		if ( @checkbox_packages > 0 ) {
@@ -2461,7 +2501,7 @@ DATA
 	}
 	else {
 		print <<DATA;
-		<td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Hide advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List();"/></td>
+		<td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Hide advanced list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
 DATA
 		if ( @checkbox_packages > 0 ) {
 			print <<DATA;
@@ -2492,7 +2532,7 @@ DATA
 	}
 	print <<DATA;
          <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Suite<td>
@@ -2503,7 +2543,7 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Execution Type<td>
@@ -2516,7 +2556,7 @@ DATA
               </table></td>
             </tr>
         <tr>
-        <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                     <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Set<td>
@@ -2527,7 +2567,7 @@ DATA
                     </select>                    </td>
                   </tr>
               </table></td>
-          <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Priority<td>
@@ -2540,7 +2580,7 @@ DATA
               </table></td>
             </tr>
         <tr>
-        <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Component<td>
@@ -2551,7 +2591,7 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-          <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Type<td>
@@ -2562,9 +2602,22 @@ DATA
                     </select>                    </td>
            </tr>
           </table></td>
-            </tr>
-            <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          </tr>
+          </table></td>
+        </tr>
+        <tr id="button_adv_sec_td" style="display:none">
+	       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="custom_line_height custom_panel_background_color">
+	         <tr>
+	           <td width="45%" align="right" ><img id="pic_adv_sec" src="images/up_and_down_1.png" width="23" height="23"/></td>	
+	           <td width="55%" align="left" nowrap="nowrap"><input id="button_adv_sec" name="button_adv_sec" title="Show advanced list" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List('button_adv_sec');"/></td>
+	         </tr>
+          </table></td>
+        </tr>
+        
+        <tr>
+          <td id="list_advanced_sec" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+        <tr>
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Category</td><td>
@@ -2575,7 +2628,7 @@ DATA
                     </select>                    </td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Status<td>
@@ -2588,7 +2641,7 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Architecture</td><td>
@@ -2601,7 +2654,7 @@ DATA
                 </tr>
               </table></td>
               
-              <td width="50%" nowrap="nowrap" class="custom_line_height custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                     <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Version<td>
@@ -2613,7 +2666,7 @@ DATA
                   </tr>
               </table></td>
         </tr>
-          </table></td>
+        </table></td>
         </tr>
 DATA
 }
@@ -3586,20 +3639,36 @@ function rank()
 	}
 }
 
-function hidden_Advanced_List()
+function hidden_Advanced_List(type)
 {
-	var advanced_list;
-	var button_advanced;
-	advanced_list = document.getElementById('list_advanced');
-	button_advanced = document.getElementById('button_adv');
-	if(advanced_list.style.display == ""){
-		advanced_list.style.display = "none";
-		button_advanced.value = "Filter";
-		button_advanced.title = "Show advanced list";
-	}else{
-		advanced_list.style.display = "";
-		button_advanced.value = "Filter";
-		button_advanced.title = "Hide advanced list";
+	var type_adv = type;
+	var advanced_list = document.getElementById('list_advanced');
+	var button_advanced = document.getElementById('button_adv');
+	var advanced_list_sec = document.getElementById('list_advanced_sec');
+	var button_advanced_sec = document.getElementById('button_adv_sec');
+	var button_advanced_sec_td = document.getElementById('button_adv_sec_td');
+	if (type_adv == 'button_adv'){
+		if(advanced_list.style.display == ""){
+			advanced_list.style.display = "none";
+			advanced_list_sec.style.display = "none";
+			button_advanced.title = "Show advanced list";
+			button_advanced_sec_td.style.display = "none";
+		}else{
+			advanced_list.style.display = "";
+			button_advanced.title = "Hide advanced list";
+			button_advanced_sec_td.style.display = "";
+		}
+	}
+	else if (type_adv == 'button_adv_sec'){
+		if(advanced_list_sec.style.display == ""){
+			document.getElementById('pic_adv_sec').src = "images/up_and_down_1.png";
+			advanced_list_sec.style.display = "none";
+			button_advanced_sec.title = "Show advanced list";
+		}else{
+			document.getElementById('pic_adv_sec').src = "images/up_and_down_2.png";
+			advanced_list_sec.style.display = "";
+			button_advanced_sec.title = "Hide advanced list";
+		}
 	}
 }
 

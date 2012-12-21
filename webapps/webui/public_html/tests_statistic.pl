@@ -146,9 +146,9 @@ if ( $_GET{'case_view'} ) {
         </tr>
                
         <tr>
-          <td id="list_advanced" class="custom_panel_background_color"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
+          <td id="list_advanced" class="custom_panel_background_color"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
             <tr>
-              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap" ><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
 					<td width="30%" class="custom_line_height"align="left" class="custom_font report_list_no_border">&nbsp;Category</td><td>
@@ -158,10 +158,9 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                     <td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Type</td><td>
@@ -171,13 +170,12 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
             </tr>
             
             <tr>
-              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                    	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Status</td><td>
@@ -187,10 +185,9 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                    	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Priority</td><td>
@@ -200,13 +197,12 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
             </tr>
             
             <tr>
-              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                    	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Test Suite</td><td>
@@ -216,7 +212,6 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
               
@@ -226,7 +221,7 @@ DATA
                 </tr>
               </table></td>
               
-              <td id="select_package_td" width="50%" nowrap="nowrap" class="custom_bottom" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td id="select_package_td" width="50%" nowrap="nowrap" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                    	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Package</td><td>
@@ -236,7 +231,6 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
               
@@ -578,9 +572,9 @@ else {
         </tr>
                
         <tr>
-          <td id="list_advanced" class="custom_panel_background_color"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">
+          <td id="list_advanced" class="custom_panel_background_color"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
             <tr>
-              <td width="100%" nowrap="nowrap" colspan="2" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="100%" nowrap="nowrap" colspan="2"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="2%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                     <td width="15%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Test Time</td><td>
@@ -590,13 +584,13 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="10%">&nbsp;</td>
+                  <td width="2%">&nbsp;</td>
                 </tr>
               </table></td>
             </tr>
             
             <tr>
-              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                     <td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Category</td><td>
@@ -606,10 +600,9 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                     <td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Type</td><td>
@@ -619,13 +612,12 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
             </tr>
             
             <tr>
-              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                    	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Status</td><td>
@@ -635,10 +627,9 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
-              <td width="50%" nowrap="nowrap" class="custom_bottom"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                    	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Priority</td><td>
@@ -648,13 +639,12 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
             </tr>
             
             <tr>
-              <td width="50%" nowrap="nowrap" class="report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                    	<td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Test Suite</td><td>
@@ -664,7 +654,6 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
               
@@ -674,7 +663,7 @@ DATA
                 </tr>
               </table></td>
               
-              <td id="td_category_key" width="50%" nowrap="nowrap" class="custom_bottom" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td id="td_category_key" width="50%" nowrap="nowrap" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Spec</td><td>
@@ -684,7 +673,6 @@ DATA
 	print <<DATA;
                     </select>
                     </td>
-                  <td width="20%">&nbsp;</td>
                 </tr>
               </table></td>
              </tr>

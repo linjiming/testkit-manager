@@ -8,10 +8,10 @@
 
 <style type="text/css" media="screen,projection">/*<![CDATA[*/ @import "css/main.css"; /*]]>*/</style>
     <link rel="stylesheet" type="text/css" media="print" href="css/commonPrint.css" />
-    <link rel="stylesheet" type="text/css" href="css/tests.css" />
+    <link rel="stylesheet" type="text/css" href="css/xsd/tests.css" />
     <script type="text/javascript" src="css/dtk.js"></script>
-    <script type="text/javascript" src="css/jquery.min.js"></script>
-    <script type="text/javascript" src="css/application.js"></script>
+    <script type="text/javascript" src="css/xsd/jquery.min.js"></script>
+    <script type="text/javascript" src="css/xsd/application.js"></script>
     <script type="text/javascript" src="css/run_tests.js"></script>
     
     <!-- begin Script and CSS includes for YUI dependencies on this page -->

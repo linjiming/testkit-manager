@@ -332,9 +332,9 @@ our $DOWNLOAD_CMD        = "wget -r -l 1 -nd -A rpm --spider";
 
 my $CHECK_NETWORK = "wget --spider --timeout=5 --tries=2";
 my $result_xsl_dir =
-  "/opt/testkit/manager/webapps/webui/public_html/css/testresult.xsl";
+  "/opt/testkit/manager/webapps/webui/public_html/css/xsd/testresult.xsl";
 my $case_xsl_dir =
-  "/opt/testkit/manager/webapps/webui/public_html/css/testcase.xsl";
+  "/opt/testkit/manager/webapps/webui/public_html/css/xsd/testcase.xsl";
 
 sub updatePackageList {
 	my @package_list = ();
@@ -1820,7 +1820,7 @@ sub xml2xsl {
 	my $results = $stylesheet->transform($source);
 	my $result  = $stylesheet->output_as_bytes($results);
 	$result =~ s/.*(<div id="testcasepage".*<\/script>).*/$1/s;
-	$result =~ s/src=".\/back_top.png"/src="..\/images\/back_top.png"/s;
+	$result =~ s/src=".\/back_top.png"/src="..\/css\/xsd\/back_top.png"/s;
 
 	return $result;
 }
@@ -1843,7 +1843,7 @@ sub xml2xsl_case {
 	my $results = $stylesheet->transform($source);
 	my $result  = $stylesheet->output_as_bytes($results);
 	$result =~ s/.*(<div id="testcasepage".*<\/script>).*/$1/s;
-	$result =~ s/src=".\/back_top.png"/src="..\/images\/back_top.png"/s;
+	$result =~ s/src=".\/back_top.png"/src="..\/css\/xsd\/back_top.png"/s;
 
 	return $result;
 }

@@ -143,22 +143,22 @@ sub writeResultInfo_wanted {
 "sed -i 's/Empty test_plan_name/$test_plan_name/' $result_dir_manager$time/tests.result.xml"
 		);
 		system(
-"cp /opt/testkit/manager/webapps/webui/public_html/css/testcase.xsl $result_dir_manager$time"
+"cp /opt/testkit/manager/webapps/webui/public_html/css/xsd/testcase.xsl $result_dir_manager$time"
 		);
 		system(
-"cp /opt/testkit/manager/webapps/webui/public_html/css/testresult.xsl $result_dir_manager$time"
+"cp /opt/testkit/manager/webapps/webui/public_html/css/xsd/testresult.xsl $result_dir_manager$time"
 		);
 		system(
-"cp /opt/testkit/manager/webapps/webui/public_html/css/tests.css $result_dir_manager$time"
+"cp /opt/testkit/manager/webapps/webui/public_html/css/xsd/tests.css $result_dir_manager$time"
 		);
 		system(
-"cp /opt/testkit/manager/webapps/webui/public_html/css/jquery.min.js $result_dir_manager$time"
+"cp /opt/testkit/manager/webapps/webui/public_html/css/xsd/jquery.min.js $result_dir_manager$time"
 		);
 		system(
-"cp /opt/testkit/manager/webapps/webui/public_html/images/back_top.png $result_dir_manager$time"
+"cp /opt/testkit/manager/webapps/webui/public_html/css/xsd/back_top.png $result_dir_manager$time"
 		);
 		system(
-"cp /opt/testkit/manager/webapps/webui/public_html/css/application.js $result_dir_manager$time"
+"cp /opt/testkit/manager/webapps/webui/public_html/css/xsd/application.js $result_dir_manager$time"
 		);
 		my $package_name = $1;
 
