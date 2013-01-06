@@ -482,6 +482,7 @@ sub syncDefinition {
 			if ( $_ =~ /(\/usr\/share\/.*\/tests.xml)/ ) {
 				$definition = $1;
 			}
+			$definition =~ s/^\s//;
 			$definition =~ s/\s*$//;
 			if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
 				my $package_name = $1;

@@ -4,7 +4,7 @@ It manages the auto tests execution remotely, and provides unified webUI to help
 
 dependency:
 ===========
-perl-libxml-perl perl-App-cpanminus perl-XML-Simple perl-XML-LibXSLT wget
+perl-libxml-perl perl-App-cpanminus perl-XML-Simple wget
 
 
 Installation:
@@ -15,7 +15,6 @@ Step 1: install dependence packages on host
     sudo apt-get install libdigest-sha-perl
     sudo apt-get install libjson-perl
     sudo apt-get install libio-pty-easy-perl
-    sudo apt-get install libxml-libxslt-perl
     sudo apt-get install cpanminus
     sudo cpanm JSON
     sudo apt-get install rpm
@@ -26,7 +25,6 @@ Step 1: install dependence packages on host
     sudo yum install perl-App-cpanminus
     sudo yum install perl-Digest-SHA
     sudo yum install perl-XML-Simple
-    sudo yum install perl-XML-LibXSLT
 
 Step 2: install testkit-manger on host
   Host (ubuntu11.10)

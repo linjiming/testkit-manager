@@ -123,26 +123,49 @@ my $profiles_list = '';
 my $app           = $SERVER_PARAM{'APP_DATA'};
 if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 	my @files = sort grep !/^[\.~]/, readdir(DIR);
-	$found = scalar(@files);
 	my $have_selected = "FALSE";
 	foreach (@files) {
 		my $profile_name = $_;
 		if ( $profile_name !~ /pre_template/ ) {
+			$found = 1;
 			if ( $_GET{'profile'} and ( $_GET{'profile'} eq $profile_name ) ) {
 				$selected_profile = $profile_name;
 				$profiles_list .=
 "    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
 			}
 			else {
-				if ( ( $have_selected eq "FALSE" ) and !$_GET{'profile'} ) {
-					$profiles_list .=
+
+				# when a test plan is running, then display rerun plan
+				my $status = read_status();
+				if ( $status->{'IS_RUNNING'} ) {
+					if ( ( $have_selected eq "FALSE" ) and !$_GET{'profile'} ) {
+						$profiles_list .=
 "    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
-					$selected_profile = $profile_name;
-					$have_selected    = "TRUE";
-				}
-				else {
-					$profiles_list .=
+						$selected_profile = $profile_name;
+						$have_selected    = "TRUE";
+					}
+					else {
+						$profiles_list .=
 "    <option value=\"$profile_name\">$profile_name</option>\n";
+					}
+				}
+
+				# when no test plan is running, then don't display rerun plan
+				else {
+					if ( $profile_name !~ /^rerun_/ ) {
+						if ( ( $have_selected eq "FALSE" )
+							and !$_GET{'profile'} )
+						{
+							$profiles_list .=
+"    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
+							$selected_profile = $profile_name;
+							$have_selected    = "TRUE";
+						}
+						else {
+							$profiles_list .=
+"    <option value=\"$profile_name\">$profile_name</option>\n";
+						}
+					}
 				}
 			}
 			open FILE, $SERVER_PARAM{'APP_DATA'} . '/plans/' . $profile_name
@@ -251,18 +274,20 @@ print <<DATA;
       </table></td>
   </tr>
   <tr>
-    <td class="top_button_bg"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
+    <td class="execute_info_bar_bg"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
         <tbody>
-          <tr height="50%">
-            <td align="center"><span id="exec_info">Nothing started</span></td>
+          <tr>
+            <td width="38%" height="100%" rowspan="2" align="right" valign="middle"><span id="exec_icon"></span></td>
+            <td width="2%" height="100%" rowspan="2">&nbsp;</td>
+            <td width="60%" height="50%" align="left"><span id="exec_info">Nothing started</span></td>
           </tr>
-          <tr height="50%">
-            <td align="center"><span id="exec_status"></span></td>
+          <tr>
+            <td width="60%" height="50%" align="left"><span id="exec_status"></span></td>
           </tr>
         </tbody>
     </table></td>
   <tr>
-    <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="table_normal">
         <tr>
           <td width="50%" valign="top" class="report_list_outside_left_bold navigation_bar_bg">
 DATA
@@ -307,16 +332,18 @@ DATA
 
 	# print total case number
 	print <<DATA;
-            <table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="table_normal">
               <tr>
                 <td width="4%" class="report_list_one_row">&nbsp;</td>
-                <td width="65%" align="left" class="report_list_one_row"><span id="$text_id">Total&nbsp;</span><span id="$progress_id">($case_all)</span></td>
-                <td width="31%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
+                <td width="55%" align="left" class="report_list_one_row"><span id="$text_id">Total</span></td>
+                <td width="19%" align="left" class="report_list_one_row cut_long_string_one_line"><span id="$progress_id" title="($case_all)">($case_all)</span></td>
+                <td width="22%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
               <tr>
                 <td width="4%" class="report_list_one_row">&nbsp;</td>
-                <td width="65%" align="left" class="report_list_one_row">Auto Test</td>
-                <td width="31%" align="left" class="report_list_one_row"></td>
+                <td width="55%" align="left" class="report_list_one_row">Auto Test</td>
+                <td width="19%" align="left" class="report_list_one_row"></td>
+                <td width="22%" align="left" class="report_list_one_row"></td>
               </tr>
 DATA
 
@@ -336,16 +363,18 @@ DATA
 		print <<DATA;
               <tr>
                 <td width="4%" class="report_list_one_row">&nbsp;</td>
-                <td width="65%" align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$auto_text_id">$package_name&nbsp;</span><span id="$progress_id">($auto)</span></td>
-                <td width="31%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
+                <td width="55%" align="left" class="report_list_one_row cut_long_string_one_line" title="$package_name">&nbsp;&nbsp;<span id="$auto_text_id">$package_name</span></td>
+                <td width="19%" align="left" class="report_list_one_row cut_long_string_one_line"><span id="$progress_id" title="($auto)">($auto)</span></td>
+                <td width="22%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
 DATA
 	}
 	print <<DATA;
               <tr>
                 <td width="4%" class="report_list_one_row">&nbsp;</td>
-                <td width="65%" align="left" class="report_list_one_row">Manual Test</td>
-                <td width="31%" align="left" class="report_list_one_row"></td>
+                <td width="55%" align="left" class="report_list_one_row">Manual Test</td>
+                <td width="19%" align="left" class="report_list_one_row"></td>
+                <td width="22%" align="left" class="report_list_one_row"></td>
               </tr>
 DATA
 
@@ -368,8 +397,9 @@ DATA
 		print <<DATA;
               <tr>
                 <td width="4%" class="report_list_one_row">&nbsp;</td>
-                <td width="65%" align="left" class="report_list_one_row">&nbsp;&nbsp;<span id="$manual_text_id">$package_name&nbsp;</span><span id="$progress_id">($manual)</span></td>
-                <td width="31%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
+                <td width="55%" align="left" class="report_list_one_row cut_long_string_one_line" title="$package_name">&nbsp;&nbsp;<span id="$manual_text_id">$package_name</span></td>
+                <td width="19%" align="left" class="report_list_one_row cut_long_string_one_line"><span id="$progress_id" title="($manual)">($manual)</span></td>
+                <td width="22%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
 DATA
 	}
@@ -394,8 +424,9 @@ print <<DATA;
 var cmdlog = document.getElementById('cmdlog');
 var exec_status = document.getElementById('exec_status');
 var exec_info = document.getElementById('exec_info');
+var exec_icon = document.getElementById('exec_icon');
 
-if (!cmdlog || !exec_status || !exec_info) {
+if (!cmdlog || !exec_status || !exec_info || !exec_icon) {
 	alert('Internal error: Cannot find essential form fields! JavaScript will not work correctly.');
 }
 

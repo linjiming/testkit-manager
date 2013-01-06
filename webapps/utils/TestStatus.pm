@@ -158,6 +158,9 @@ sub read_status() {
 				push @status_warnings, "STOP_TIME should be present in section parameters only (line: $line_num).";
 			}
 		}
+		elsif ($line =~ m/^RUN_TIME\s*=\s*(\d+)$/) {
+			$res->{'RUN_TIME'} = $1;
+		}
 		elsif ($line =~ m/^TEST_PLAN\s*=\s*(.+)$/) {
 			$res->{'TEST_PLAN'} = $1;
 		}
@@ -169,6 +172,9 @@ sub read_status() {
 		}
 		elsif ($line =~ m/^COMPLETE_PACKAGE\s*=\s*(.+)$/) {
 			$res->{'COMPLETE_PACKAGE'} = $1;
+		}
+		elsif ($line =~ m/^STOP_REASON\s*=\s*(.+)$/) {
+			$res->{'STOP_REASON'} = $1;
 		}
 		elsif ($line =~ m/^STATUS\s*=\s*(.+)$/) {
 			if (defined($ts_idx)) {

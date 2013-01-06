@@ -295,13 +295,13 @@ function onAbort() {
 	} while (ajax_reqs.length > 0);
 	// Sanity check
 	if (ajax_reqs_num != 0)
-		alert('Internal errors:\nAJAX requests counter mismatching. Please write to linux@ispras.ru.');
+		alert('Internal errors:\nAJAX requests counter mismatching. Please write to weidongx.sun@intel.com.');
 }
 
 // Initiates the AJAX request (GET type).
 function ajax_call_get(get_params) {
 	if (ajax_error) {
-		alert('Internal errors:\n' + ajax_error + '\nAJAX will not work correctly. Please write to linux@ispras.ru.');
+		alert('Internal errors:\n' + ajax_error + '\nAJAX will not work correctly. Please write to weidongx.sun@intel.com.');
 		return;
 	}
 	setBusyOn();
@@ -312,7 +312,7 @@ function ajax_call_get(get_params) {
 // form_id is the form where to take parameters from.
 function ajax_call_post(get_params, form_id) {
 	if (ajax_error) {
-		alert('Internal errors:\n' + ajax_error + '\nAJAX will not work correctly. Please write to linux@ispras.ru.');
+		alert('Internal errors:\n' + ajax_error + '\nAJAX will not work correctly. Please write to weidongx.sun@intel.com.');
 		return;
 	}
 	setBusyOn();
@@ -378,7 +378,7 @@ function loadXMLDoc(url, method, post_params) {
 			break;
 	}
 	if (ajax_reqs[idx]) {
-		alert('Internal error: AJAX requests array overflow!\nPlease write to linux@ispras.ru.');
+		alert('Internal error: AJAX requests array overflow!\nPlease write to weidongx.sun@intel.com.');
 		return;
 	}
 	ajax_req['index'] = idx;

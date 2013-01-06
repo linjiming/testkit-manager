@@ -63,6 +63,8 @@ function stopTests() {
 		}
 		var page = document.getElementsByTagName("*");
 		exec_info.innerHTML = 'Tests are stopping&hellip;';
+		exec_status.innerHTML = 'Please wait&hellip;';
+		exec_icon.innerHTML = '';
 		ajax_call_get('action=stop_tests&tree=tests');
 	}
 }
@@ -106,8 +108,10 @@ function startTestsPrepareGUI(clean_progress_bar) {
 	if (test_profile) {
 		test_profile.disabled = true;
 	}
-	exec_info.innerHTML = 'Preparing to run the tests&hellip;&nbsp;&nbsp;&nbsp;<img src="images/ajax_progress.gif" width="16" height="16" alt="progress gif"/>';
-	exec_status.innerHTML = '';
+	exec_info.className = '';
+	exec_info.innerHTML = 'Preparing to run the tests&hellip;';
+	exec_status.innerHTML = 'Please wait&hellip;';
+	exec_icon.innerHTML = '<img src="images/ajax_progress_large.gif" width="40" height="40" alt="execution progress gif"/>';
 	cmdlog.innerHTML = '';
 	cmdlog.style.color = 'black';
 	log_contents = '';
@@ -144,8 +148,9 @@ function startRefresh(profile_name, have_alert) {
 	if (have_alert == "true") {
 		alert("A test is already running.\nYou cannot run another instance before it is finished.\nStart watching the current run...");
 	}
-	exec_info.innerHTML = 'Test cases are running &hellip;&nbsp;&nbsp;&nbsp;<img src="images/ajax_progress.gif" width="16" height="16" alt="progress gif"/>';
-	exec_status.innerHTML = '';
+	exec_info.innerHTML = 'Test cases are running&hellip;';
+	exec_status.innerHTML = 'Please wait&hellip;';
+	exec_icon.innerHTML = '<img src="images/ajax_progress_large.gif" width="40" height="40" alt="execution progress gif"/>';
 	cmdlog.innerHTML = '';
 	cmdlog.style.color = 'black';
 	log_contents = '';
@@ -259,12 +264,18 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('save_profile_panel_button').disabled = false;
 		document.getElementById('load_profile_panel_button').disabled = false;
 		document.getElementById('manage_profile_panel_button').disabled = false;
+		document.getElementById('button_adv').className = "medium_button";
+		document.getElementById('update_package_list').className = "medium_button";
+		document.getElementById('save_profile_panel_button').className = "medium_button";
+		document.getElementById('load_profile_panel_button').className = "medium_button";
+		document.getElementById('manage_profile_panel_button').className = "medium_button";
 	}
 
 	if (responseXML.getElementsByTagName('no_package_update_or_install').length > 0) {
-		alert("No package needs to be installed or updated.");
+		alert("No package needs to be installed or upgraded.");
 
 		document.getElementById('update_package_list').disabled = false;
+		document.getElementById('update_package_list').className = "medium_button";
 		document.getElementById('select_arc').disabled = false;
 		document.getElementById('select_ver').disabled = false;
 		document.getElementById('sort_packages').onclick = function() {
@@ -275,8 +286,12 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('save_profile_panel_button').disabled = false;
 		document.getElementById('load_profile_panel_button').disabled = false;
 		document.getElementById('manage_profile_panel_button').disabled = false;
+		document.getElementById('button_adv').className = "medium_button";
+		document.getElementById('save_profile_panel_button').className = "medium_button";
+		document.getElementById('load_profile_panel_button').className = "medium_button";
+		document.getElementById('manage_profile_panel_button').className = "medium_button";
 		document.getElementById('progress_waiting').style.display = "none";
-
+		update_state();
 	}
 
 	if (responseXML.getElementsByTagName('uninstall_package_name').length > 0) {
@@ -346,12 +361,6 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('save_profile_panel_button').className = "medium_button";
 		document.getElementById('load_profile_panel_button').className = "medium_button";
 		document.getElementById('manage_profile_panel_button').className = "medium_button";
-
-		document.getElementById('button_adv').style.cursor = "pointer";
-		document.getElementById('update_package_list').style.cursor = "pointer";
-		document.getElementById('save_profile_panel_button').style.cursor = "pointer";
-		document.getElementById('load_profile_panel_button').style.cursor = "pointer";
-		document.getElementById('manage_profile_panel_button').style.cursor = "pointer";
 
 		document.getElementById('update_package_list').onclick = function() {
 			document.getElementById('update_package_list').disabled = true;
@@ -423,7 +432,7 @@ function ajaxProcessResult(responseXML) {
 				if (responseXML.getElementsByTagName('return_value').length > 0) {
 					var return_value = responseXML
 							.getElementsByTagName('return_value')[0].childNodes[0].nodeValue;
-					loaddiv_string = "<span class=' report_list_no_border '>&nbsp;&nbsp;"
+					loaddiv_string = "<span class='report_list_no_border'>&nbsp;&nbsp;"
 							+ return_value + "</span></br>";
 					document.getElementById('loadProgressBarDiv').innerHTML += loaddiv_string;
 				}
@@ -458,7 +467,7 @@ function ajaxProcessResult(responseXML) {
 			if (responseXML.getElementsByTagName('return_value').length > 0) {
 				var return_value = responseXML
 						.getElementsByTagName('return_value')[0].childNodes[0].nodeValue;
-				loaddiv_string = "<span class=' report_list_no_border '>&nbsp;&nbsp;"
+				loaddiv_string = "<span class='report_list_no_border'>&nbsp;&nbsp;"
 						+ return_value + "</span></br>";
 			}
 			var loadtitle = document.getElementById('loadtitle').innerHTML;
@@ -466,13 +475,13 @@ function ajaxProcessResult(responseXML) {
 			var install_count = packages_need_count_total[1]
 					- packages_need_count + 1;
 			if (message_not_load_arr[0]) {
-				loaddiv_string += "<span class=' report_list_no_border '>&nbsp;&nbsp;&nbsp;&nbsp;Install package "
+				loaddiv_string += "<span class='report_list_no_border'>&nbsp;&nbsp;&nbsp;&nbsp;Install package "
 						+ install_count
 						+ ": "
 						+ message_not_load_arr[0]
 						+ "...</span>";
 			} else {
-				loaddiv_string += "<span class=' report_list_no_border '>&nbsp;&nbsp;&nbsp;&nbsp;Install package "
+				loaddiv_string += "<span class='report_list_no_border'>&nbsp;&nbsp;&nbsp;&nbsp;Install package "
 						+ install_count
 						+ ": "
 						+ message_not_load_arr[1]
@@ -525,7 +534,7 @@ function ajaxProcessResult(responseXML) {
 				"Priority", "Status", "Execution Type", "Test Suite", "Type",
 				"Test Set", "Component");
 
-		planDiv_string += '<tr><td height="30" width="100%" align="left" class="report_list view_test_plan_edge">&nbsp;</td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="93%" align="left" class="view_test_plan_edge">Test Plan: '
+		planDiv_string += '<tr><td height="30" width="100%" align="left" class="report_list view_test_plan_edge">&nbsp;</td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="93%" align="left" class="view_test_plan_edge">Test Plan: '
 				+ test_plan_name
 				+ '</td></tr></table></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" align="left" class="view_test_plan_title" width="90%">&nbsp;Package</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">';
 		planDiv_string += '<tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="60%" align="left" class="view_test_plan_popup ">&nbsp;Name</td><td height="30" width="15%" align="left" class="view_test_plan_popup ">&nbsp;Auto</td><td height="30" width="15%" align="left" class="view_test_plan_popup ">&nbsp;Manual</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr>';
@@ -545,7 +554,7 @@ function ajaxProcessResult(responseXML) {
 						+ '</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr>';
 			}
 		}
-		planDiv_string += '</table></tr></table></tr><tr><td height="30" width="100%" align="left" class="view_test_plan_edge">&nbsp;</td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" align="left" class="view_test_plan_title" width="90%">&nbsp;Filter</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">';
+		planDiv_string += '</table></tr></table></tr><tr><td height="30" width="100%" align="left" class="view_test_plan_edge">&nbsp;</td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" align="left" class="view_test_plan_title" width="90%">&nbsp;Filter</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all">';
 		var advanced_value = view_profile_advanced_value.split("!::!");
 		for ( var i = 0; i < advanced_value.length; i++) {
 			if (advanced_value[i].indexOf('Any') >= 0) {
@@ -675,12 +684,12 @@ function ajaxProcessResult(responseXML) {
 		if (tid.indexOf("SUCCESS_") == 0) {
 			var case_number = responseXML
 					.getElementsByTagName('case_number_temp')[0].childNodes[0].nodeValue;
-			document.getElementById(install_pkg_name_id).style.color = "#116795";
+			document.getElementById(install_pkg_name_id).style.color = "#238BD1";
 			document.getElementById(install_pkg_case_cn_id).innerHTML = "&nbsp"
 					+ case_number;
 			document.getElementById(install_pkg_id).src = "images/operation_install_disable.png";
-			document.getElementById(install_pkg_id).height = "23";
-			document.getElementById(install_pkg_id).width = "23";
+			document.getElementById(install_pkg_id).height = "16";
+			document.getElementById(install_pkg_id).width = "16";
 			document.getElementById(install_pkg_id).hspace = "0";
 			document.getElementById(install_pkg_id).vspace = "0";
 			document.getElementById(install_pkg_id).style.cursor = "default";
@@ -696,8 +705,8 @@ function ajaxProcessResult(responseXML) {
 			alert("Install package fail\n" + tid);
 			document.getElementById(install_pkg_id).src = "images/operation_install.png";
 			document.getElementById(install_pkg_id).style.cursor = "pointer";
-			document.getElementById(install_pkg_id).height = "23";
-			document.getElementById(install_pkg_id).width = "23";
+			document.getElementById(install_pkg_id).height = "16";
+			document.getElementById(install_pkg_id).width = "16";
 			document.getElementById(install_pkg_id).hspace = "0";
 			document.getElementById(install_pkg_id).vspace = "0";
 			document.getElementById(install_pkg_id).onclick = function(num) {
@@ -774,8 +783,8 @@ function ajaxProcessResult(responseXML) {
 			var version_id = "ver_" + flag;
 			update_pic_id = "update_" + flag;
 			document.getElementById(update_pic_id).src = "images/operation_update_disable.png";
-			document.getElementById(update_pic_id).height = "23";
-			document.getElementById(update_pic_id).width = "23";
+			document.getElementById(update_pic_id).height = "16";
+			document.getElementById(update_pic_id).width = "16";
 			document.getElementById(update_pic_id).hspace = "0";
 			document.getElementById(update_pic_id).vspace = "0";
 			document.getElementById(update_pic_id).style.cursor = "default";
@@ -794,8 +803,8 @@ function ajaxProcessResult(responseXML) {
 			update_pic_id = "update_" + flag;
 			document.getElementById(update_pic_id).src = "images/operation_update.png";
 			document.getElementById(update_pic_id).style.cursor = "pointer";
-			document.getElementById(update_pic_id).height = "23";
-			document.getElementById(update_pic_id).width = "23";
+			document.getElementById(update_pic_id).height = "16";
+			document.getElementById(update_pic_id).width = "16";
 			document.getElementById(update_pic_id).hspace = "0";
 			document.getElementById(update_pic_id).vspace = "0";
 			document.getElementById(version_id).innerHTML = version_latest;
@@ -867,6 +876,16 @@ function ajaxProcessResult(responseXML) {
 					+ responseXML.getElementsByTagName('save_manual_time')[0].childNodes[0].nodeValue;
 		}
 	}
+	if (responseXML.getElementsByTagName('rerun_test_plan').length > 0) {
+		var test_plan = responseXML.getElementsByTagName('rerun_test_plan')[0].childNodes[0].nodeValue;
+		document.location = 'tests_execute.pl?profile=' + test_plan;
+	}
+	if (responseXML.getElementsByTagName('rerun_test_plan_error').length > 0) {
+		var error_message = responseXML
+				.getElementsByTagName('rerun_test_plan_error')[0].childNodes[0].nodeValue;
+		document.getElementById('msg_area_error').style.display = "";
+		document.getElementById('msg_text_error').innerHTML = error_message;
+	}
 	if (responseXML.getElementsByTagName('started').length > 0) {
 		var profile_name = responseXML.getElementsByTagName('started')[0].childNodes[0].nodeValue;
 		setTimeout('startRefresh("' + profile_name + '", "false")', 100);
@@ -878,6 +897,13 @@ function ajaxProcessResult(responseXML) {
 					output += responseXML.getElementsByTagName('output')[i].childNodes[j].nodeValue;
 			}
 			updateCmdLog(output);
+			if (responseXML.getElementsByTagName('run_time').length > 0) {
+				var run_time = responseXML.getElementsByTagName('run_time')[0].childNodes[0].nodeValue;
+				var run_time_unit = responseXML
+						.getElementsByTagName('run_time_unit')[0].childNodes[0].nodeValue;
+				exec_info.innerHTML = "Test cases have been running <span class='timer_number'>"
+						+ run_time + "</span> " + run_time_unit;
+			}
 			if (need_update_progress_bar) {
 				// change color for progress bar
 				for ( var i = 0; i < package_list.length; i++) {
@@ -897,10 +923,10 @@ function ajaxProcessResult(responseXML) {
 							}
 						}
 						document.getElementById('text_' + global_profile_name
-								+ '_' + global_package_name).style.color = "#248BD1";
+								+ '_' + global_package_name).style.color = "#238BD1";
 						document.getElementById('text_progress_'
 								+ global_profile_name + '_'
-								+ global_package_name).style.color = "#248BD1";
+								+ global_package_name).style.color = "#238BD1";
 					}
 					// get maunal package name
 					re_manual = new RegExp("testing xml:.*" + package_list[i]
@@ -917,10 +943,10 @@ function ajaxProcessResult(responseXML) {
 							}
 						}
 						document.getElementById('text_' + global_profile_name
-								+ '_' + global_package_name).style.color = "#248BD1";
+								+ '_' + global_package_name).style.color = "#238BD1";
 						document.getElementById('text_progress_'
 								+ global_profile_name + '_'
-								+ global_package_name).style.color = "#248BD1";
+								+ global_package_name).style.color = "#238BD1";
 						// add progress bar for manual package, will remove
 						// later
 						var max_value = 0;
@@ -938,6 +964,10 @@ function ajaxProcessResult(responseXML) {
 									+ global_profile_name + '_'
 									+ global_package_name).innerHTML = max_value
 									+ "/" + max_value;
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_'
+									+ global_package_name).title = max_value
+									+ "/" + max_value;
 							document.getElementById('bar_'
 									+ global_profile_name + '_'
 									+ global_package_name).innerHTML = "";
@@ -946,7 +976,7 @@ function ajaxProcessResult(responseXML) {
 											+ global_package_name);
 							pb.set('minValue', 0);
 							pb.set('maxValue', max_value);
-							pb.set('width', 90);
+							pb.set('width', 80);
 							pb.set('height', 6);
 							pb.set('value', max_value);
 						}
@@ -979,6 +1009,9 @@ function ajaxProcessResult(responseXML) {
 							document.getElementById('text_progress_'
 									+ global_profile_name + '_all').innerHTML = global_case_number_all
 									+ "/" + max_value_all;
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_all').title = global_case_number_all
+									+ "/" + max_value_all;
 							document.getElementById('bar_'
 									+ global_profile_name + '_all').innerHTML = "";
 							var pb = new YAHOO.widget.ProgressBar()
@@ -986,7 +1019,7 @@ function ajaxProcessResult(responseXML) {
 											+ '_all');
 							pb.set('minValue', 0);
 							pb.set('maxValue', max_value_all);
-							pb.set('width', 90);
+							pb.set('width', 80);
 							pb.set('height', 6);
 							pb.set('value', case_number_before_all);
 							pb.set('anim', true);
@@ -1034,6 +1067,9 @@ function ajaxProcessResult(responseXML) {
 							document.getElementById('text_progress_'
 									+ global_profile_name + '_all').innerHTML = global_case_number_all
 									+ "/" + max_value_all;
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_all').title = global_case_number_all
+									+ "/" + max_value_all;
 							document.getElementById('bar_'
 									+ global_profile_name + '_all').innerHTML = "";
 							var pb = new YAHOO.widget.ProgressBar()
@@ -1041,7 +1077,7 @@ function ajaxProcessResult(responseXML) {
 											+ '_all');
 							pb.set('minValue', 0);
 							pb.set('maxValue', max_value_all);
-							pb.set('width', 90);
+							pb.set('width', 80);
 							pb.set('height', 6);
 							pb.set('value', case_number_before_all);
 							pb.set('anim', true);
@@ -1055,6 +1091,10 @@ function ajaxProcessResult(responseXML) {
 									+ global_profile_name + '_'
 									+ global_package_name).innerHTML = global_case_number
 									+ "/" + max_value;
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_'
+									+ global_package_name).title = global_case_number
+									+ "/" + max_value;
 							document.getElementById('bar_'
 									+ global_profile_name + '_'
 									+ global_package_name).innerHTML = "";
@@ -1063,7 +1103,7 @@ function ajaxProcessResult(responseXML) {
 											+ global_package_name);
 							pb.set('minValue', 0);
 							pb.set('maxValue', max_value);
-							pb.set('width', 90);
+							pb.set('width', 80);
 							pb.set('height', 6);
 							pb.set('value', case_number_before);
 							pb.set('anim', true);
@@ -1094,13 +1134,16 @@ function ajaxProcessResult(responseXML) {
 						document.getElementById('text_progress_'
 								+ global_profile_name + '_' + complete_package).innerHTML = max_value
 								+ "/" + max_value;
+						document.getElementById('text_progress_'
+								+ global_profile_name + '_' + complete_package).title = max_value
+								+ "/" + max_value;
 						document.getElementById('bar_' + global_profile_name
 								+ '_' + complete_package).innerHTML = "";
 						var pb = new YAHOO.widget.ProgressBar().render('bar_'
 								+ global_profile_name + '_' + complete_package);
 						pb.set('minValue', 0);
 						pb.set('maxValue', max_value);
-						pb.set('width', 90);
+						pb.set('width', 80);
 						pb.set('height', 6);
 						pb.set('value', max_value);
 					}
@@ -1137,13 +1180,16 @@ function ajaxProcessResult(responseXML) {
 					document.getElementById('text_progress_'
 							+ global_profile_name + '_all').innerHTML = global_case_number_all
 							+ "/" + max_value_all;
+					document.getElementById('text_progress_'
+							+ global_profile_name + '_all').title = global_case_number_all
+							+ "/" + max_value_all;
 					document.getElementById('bar_' + global_profile_name
 							+ '_all').innerHTML = "";
 					var pb = new YAHOO.widget.ProgressBar().render('bar_'
 							+ global_profile_name + '_all');
 					pb.set('minValue', 0);
 					pb.set('maxValue', max_value_all);
-					pb.set('width', 90);
+					pb.set('width', 80);
 					pb.set('height', 6);
 					pb.set('value', global_case_number_all);
 				}
@@ -1151,9 +1197,9 @@ function ajaxProcessResult(responseXML) {
 				if (global_package_name != 'none') {
 					// change color for current run package's progress bar
 					document.getElementById('text_' + global_profile_name + '_'
-							+ global_package_name).style.color = "#248BD1";
+							+ global_package_name).style.color = "#238BD1";
 					document.getElementById('text_progress_'
-							+ global_profile_name + '_' + global_package_name).style.color = "#248BD1";
+							+ global_profile_name + '_' + global_package_name).style.color = "#238BD1";
 					// update progress bar for current run package
 					var max_value = 0;
 					for ( var i = 0; i < progress_bar_max_value_list.length; i++) {
@@ -1176,10 +1222,18 @@ function ajaxProcessResult(responseXML) {
 									+ global_profile_name + '_'
 									+ global_package_name).innerHTML = global_case_number
 									+ "/" + max_value;
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_'
+									+ global_package_name).title = global_case_number
+									+ "/" + max_value;
 						} else {
 							document.getElementById('text_progress_'
 									+ global_profile_name + '_'
 									+ global_package_name).innerHTML = max_value
+									+ "/" + max_value;
+							document.getElementById('text_progress_'
+									+ global_profile_name + '_'
+									+ global_package_name).title = max_value
 									+ "/" + max_value;
 						}
 						document.getElementById('bar_' + global_profile_name
@@ -1189,7 +1243,7 @@ function ajaxProcessResult(responseXML) {
 								+ global_package_name);
 						pb.set('minValue', 0);
 						pb.set('maxValue', max_value);
-						pb.set('width', 90);
+						pb.set('width', 80);
 						pb.set('height', 6);
 						// set progress bar to the end for manual package, will
 						// remove later
@@ -1226,18 +1280,33 @@ function ajaxProcessResult(responseXML) {
 					"ajax_call_get('action=get_test_log&start=" + sz + "&tid="
 							+ tid + "')", refresh_delay);
 		} else {
-			if ((responseXML.getElementsByTagName('tr_status').length > 0)
-					|| (responseXML.getElementsByTagName('stopped').length > 0)) {
+			if ((responseXML.getElementsByTagName('tr_status').length > 0)) {
+				if ((responseXML.getElementsByTagName('missing_package').length > 0)) {
+					stopRefresh();
+					exec_info.className = 'result_fail';
+					exec_info.innerHTML = 'Not all packages in this test plan are installed';
+					exec_status.innerHTML = 'Try to load this test plan or install missing package(s) manually';
+					exec_icon.innerHTML = '';
+				} else {
+					stopRefresh();
+					exec_info.innerHTML = 'The test has been stopped';
+					exec_status.innerHTML = '';
+					exec_icon.innerHTML = '';
+				}
+			}
+			if ((responseXML.getElementsByTagName('stopped').length > 0)) {
+				stopRefresh();
 				exec_info.innerHTML = 'The test has been stopped';
 				exec_status.innerHTML = '';
-				stopRefresh();
+				exec_icon.innerHTML = '';
 			}
 			if (responseXML.getElementsByTagName('redirect').length > 0) {
 				if (responseXML.getElementsByTagName('lose_connection').length > 0) {
 					stopRefresh();
-					exec_info.style.color = 'red';
+					exec_info.className = 'result_fail';
 					exec_info.innerHTML = 'Lost connection to the device';
 					exec_status.innerHTML = 'Refresh this page to restart testing';
+					exec_icon.innerHTML = '';
 					if (start_button) {
 						start_button.disabled = true;
 						start_button.className = "medium_button_disable";
@@ -1249,6 +1318,8 @@ function ajaxProcessResult(responseXML) {
 					} else {
 						stopRefresh();
 						exec_info.innerHTML = 'Redirect to report page';
+						exec_status.innerHTML = 'Please wait&hellip;';
+						exec_icon.innerHTML = '';
 						document.location = 'tests_report.pl?time='
 								+ responseXML.getElementsByTagName('redirect')[0].childNodes[0].nodeValue
 								+ '&summary=1';
@@ -1289,8 +1360,10 @@ function onAjaxError() {
 	clearTimeout(test_timer_var);
 	test_timer_var = null;
 	stopTestsPrepareGUI();
+	exec_info.className = '';
 	exec_info.innerHTML = 'Nothing started';
 	exec_status.innerHTML = '';
+	exec_icon.innerHTML = '';
 }
 
 function installPackage(count) {
@@ -1306,10 +1379,10 @@ function installPackage(count) {
 		document.getElementById(install_pkg_pic).src = "images/ajax_progress.gif";
 		document.getElementById(install_pkg_pic).onclick = "";
 		document.getElementById(install_pkg_pic).style.cursor = "default";
-		document.getElementById(install_pkg_pic).height = "14";
-		document.getElementById(install_pkg_pic).width = "14";
-		document.getElementById(install_pkg_pic).hspace = "5";
-		document.getElementById(install_pkg_pic).vspace = "5";
+		document.getElementById(install_pkg_pic).height = "16";
+		document.getElementById(install_pkg_pic).width = "16";
+		document.getElementById(install_pkg_pic).hspace = "0";
+		document.getElementById(install_pkg_pic).vspace = "0";
 		for ( var i = 0; i < uninstall_package_count_max; i++) {
 			var install_pkg_id_tmp = "install_pkg_" + i;
 			var temp = count - i;
@@ -1347,6 +1420,10 @@ function installPackage(count) {
 function onUpdatePackages() {
 	document.getElementById('progress_waiting').style.display = "";
 	document.getElementById('list_advanced').style.display = "none";
+	document.getElementById('button_adv').title = "Show filter list";
+	document.getElementById('list_advanced_sec').style.display = "none";
+	document.getElementById('button_adv_sec_td').style.display = "none";
+	document.getElementById('pic_adv_sec').src = "images/advance-down.png";
 	document.getElementById('select_arc').disabled = true;
 	document.getElementById('select_ver').disabled = true;
 	document.getElementById('sort_packages').onclick = "";
@@ -1360,14 +1437,6 @@ function onUpdatePackages() {
 	document.getElementById('save_profile_panel_button').disabled = true;
 	document.getElementById('load_profile_panel_button').disabled = true;
 	document.getElementById('manage_profile_panel_button').disabled = true;
-
-	document.getElementById('update_package_list').style.cursor = "default";
-	document.getElementById('execute_profile').style.cursor = "default";
-	document.getElementById('clear_information').style.cursor = "default";
-	document.getElementById('view_package_info').style.cursor = "default";
-	document.getElementById('save_profile_panel_button').style.cursor = "default";
-	document.getElementById('load_profile_panel_button').style.cursor = "default";
-	document.getElementById('manage_profile_panel_button').style.cursor = "default";
 
 	document.getElementById('button_adv').className = "medium_button_disable";
 	document.getElementById('update_package_list').className = "medium_button_disable";
@@ -1399,10 +1468,10 @@ function updatePackage(count) {
 		document.getElementById(update_pkg_pic).src = "images/ajax_progress.gif";
 		document.getElementById(update_pkg_pic).style.cursor = "default";
 		document.getElementById(update_pkg_pic).onclick = "";
-		document.getElementById(update_pkg_pic).height = "14";
-		document.getElementById(update_pkg_pic).width = "14";
-		document.getElementById(update_pkg_pic).hspace = "5";
-		document.getElementById(update_pkg_pic).vspace = "5";
+		document.getElementById(update_pkg_pic).height = "16";
+		document.getElementById(update_pkg_pic).width = "16";
+		document.getElementById(update_pkg_pic).hspace = "0";
+		document.getElementById(update_pkg_pic).vspace = "0";
 		ajax_call_get('action=update_package&package_name=' + package_name
 				+ '&flag=' + pkg_name.value + '&package_count=' + count);
 		for ( var i = 0; i < package_name_number; i++) {
@@ -1511,6 +1580,18 @@ function save_profile(type) {
 		var result = reg.exec(str);
 		if (!result) {
 			alert('Test plan name should start with a letter and follow by letters, numbers or "_", and maximum length is 20 characters');
+			return false;
+		}
+		reg = /^pre_template/;
+		result = reg.exec(str);
+		if (result) {
+			alert("'pre_template' is a reserved test plan name, please change another one");
+			return false;
+		}
+		reg = /^rerun/;
+		result = reg.exec(str);
+		if (result) {
+			alert("'rerun' is a reserved test plan name, please change another one");
 			return false;
 		}
 	} else {
@@ -1668,8 +1749,14 @@ function updateTestPlanSelect() {
 		document.getElementById("view_profile_button_save").disabled = true;
 		document.getElementById("view_profile_button_load").disabled = true;
 		document.getElementById("view_profile_button_manage").disabled = true;
+		document.getElementById("save_profile_button_select").className = "medium_button_disable";
+		document.getElementById("view_profile_button_save").className = "medium_button_disable";
+		document.getElementById("view_profile_button_load").className = "medium_button_disable";
+		document.getElementById("view_profile_button_manage").className = "medium_button_disable";
 		document.getElementById("load_profile_button").disabled = true;
+		document.getElementById("load_profile_button").className = "medium_button_disable";
 		document.getElementById("delete_profile_button").disabled = true;
+		document.getElementById("delete_profile_button").className = "medium_button_disable";
 	} else {
 		for ( var i = 0; i < msg.length; i++) {
 			save_test_plan_select.add(new Option(msg[i], msg[i]));
@@ -1682,8 +1769,14 @@ function updateTestPlanSelect() {
 			document.getElementById("view_profile_button_save").disabled = false;
 			document.getElementById("view_profile_button_load").disabled = false;
 			document.getElementById("view_profile_button_manage").disabled = false;
+			document.getElementById("save_profile_button_select").className = "medium_button";
+			document.getElementById("view_profile_button_save").className = "medium_button";
+			document.getElementById("view_profile_button_load").className = "medium_button";
+			document.getElementById("view_profile_button_manage").className = "medium_button";
 			document.getElementById("load_profile_button").disabled = false;
+			document.getElementById("load_profile_button").className = "medium_button";
 			document.getElementById("delete_profile_button").disabled = false;
+			document.getElementById("delete_profile_button").className = "medium_button";
 		}
 	}
 }
@@ -1728,6 +1821,9 @@ function saveManual() {
 		}
 		transfer += arr.join("!::!");
 		ajax_call_get('action=save_manual&content=' + transfer);
+		document.getElementById("button_save").className = "small_button_disable";
+		document.getElementById("button_finish").className = "small_button_disable";
+		document.getElementById("manual_exec_icon").innerHTML = '<img src="images/ajax_progress.gif" width="16" height="16" alt="execution progress gif"/>';
 	}
 }
 
@@ -1800,14 +1896,32 @@ function notrunAll() {
 	}
 }
 
+function clearRadioAll() {
+	var page = document.getElementsByTagName("*");
+	for ( var i = 0; i < page.length; i++) {
+		var temp_id = page[i].id;
+		if (temp_id.indexOf("_all_button") >= 0) {
+			page[i].checked = false;
+		}
+	}
+}
+
 function setDevice() {
 	var sdb_serial = document.getElementById('device_list').value;
 	ajax_call_get('action=set_device&serial=' + sdb_serial);
 }
 
 function showAbout() {
-	about_div_string = '<table width="100%" border="0" cellspacing="0" cellpadding="0"><tr><td align="left">Testkit-manager is a GUI for testkit-lite. With this tool, we can filter cases with several properties\' value. The filtered cases can be run automatically and the report will be generated after finishing running. We can also submit report and view report with this tool.</td></tr><tr><td align="right"><label><input class="small_button" type="button" name="close_about_popup" id="close_about_popup" value="Close" onclick="javascript:onClosePopup();" /></label>&nbsp;&nbsp;</td></tr></table>';
+	about_div_string = '<table width="100%" border="0" cellspacing="0" cellpadding="0" class="about_div_table"><tr><td align="left">Testkit-manager is a GUI for testkit-lite. With this tool, we can filter cases with several properties\' value. The filtered cases can be run automatically and the report will be generated after finishing running. We can also submit report and view report with this tool.</td></tr><tr><td align="right"><label><input class="small_button" type="button" name="close_about_popup" id="close_about_popup" value="Close" onclick="javascript:onClosePopup();" /></label>&nbsp;&nbsp;</td></tr></table>';
 	document.getElementById('aboutDiv').innerHTML = about_div_string;
 	document.getElementById('aboutDiv').style.display = 'block';
 	document.getElementById('popIframe').style.display = 'block';
+}
+
+function rerunNotPassedCases(time, plan_name) {
+	if (plan_name == "none") {
+		alert("Invalid test plan name 'none', rerun is not available");
+	} else {
+		ajax_call_get('action=rerun_test_plan&time=' + time);
+	}
 }

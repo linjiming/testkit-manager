@@ -8,10 +8,7 @@
 
 <style type="text/css" media="screen,projection">/*<![CDATA[*/ @import "css/main.css"; /*]]>*/</style>
     <link rel="stylesheet" type="text/css" media="print" href="css/commonPrint.css" />
-    <link rel="stylesheet" type="text/css" href="css/xsd/tests.css" />
     <script type="text/javascript" src="css/dtk.js"></script>
-    <script type="text/javascript" src="css/xsd/jquery.min.js"></script>
-    <script type="text/javascript" src="css/xsd/application.js"></script>
     <script type="text/javascript" src="css/run_tests.js"></script>
     
     <!-- begin Script and CSS includes for YUI dependencies on this page -->
@@ -19,7 +16,7 @@
     <link rel="stylesheet" type="text/css" href="yui/build/progressbar/assets/skins/sam/progressbar.css">
     <style type="text/css">
       .yui-pb-bar {
-          background-color: #5CCBF6;
+          background-color: #238BD1;
       }
     </style>
     <!-- end YUI CSS infrastructure -->
@@ -57,13 +54,13 @@
 <div id="aboutDiv" class="report_list common_div about_div"></div>
 <table width="768" height="66" border="0" cellpadding="0" cellspacing="0" class="main_menu_bg">
   <tr>
-    <td width="20%" align="center" valign="middle"><a href="index.pl"><img title="$$$MTK_BRANCH$$$ Manager Homepage" src="images/$$$MTK_BRANCH_LC$$$-manager-logo.png" alt="$$$MTK_BRANCH$$$ Manager Homepage" width="125" height="46" /></a></td>
-    <td width="5%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0">
+    <td width="22%" align="right" valign="middle"><a href="index.pl"><img title="$$$MTK_BRANCH$$$ Manager Homepage" src="images/$$$MTK_BRANCH_LC$$$-manager-logo.png" alt="$$$MTK_BRANCH$$$ Manager Homepage" width="152" height="38" /></a></td>
+    <td width="6%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0">
       <tr>
         <td height="36">&nbsp;</td>
       </tr>
       <tr valign="top">
-        <td width="100%" height="30" align="center" class='testkit_version'>V$$$MTK_VERSION$$$</td>
+        <td width="100%" height="30" align="left" class='testkit_version'>V$$$MTK_VERSION$$$</td>
       </tr>
     </table></td>
     <td width="50%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0" style='$$$NAVIGATION_BAR_SHOW$$$'>
@@ -80,13 +77,13 @@
         <td width="19%" height="30" align="center" class='link-level1$$$STATISTIC_STYLE$$$-not-highlight'><a href='tests_statistic.pl' class='link-level1$$$STATISTIC_STYLE$$$'>STATISTIC</a></td>
       </tr>
     </table></td>
-    <td width="25%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0">
+    <td width="22%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0">
       <tr valign="center">
         <td width="10%"></td>
-        <td width="10%" height="36" align="center"><img src="images/splitter_header.png" width="2" height="12" /></td>
-        <td width="35%" height="36" align="left" class='link-level2$$$CUSTOM_STYLE$$$-not-highlight'><a href='tests_help.pl' class='link-level2$$$HELP_STYLE$$$'>HELP</a></td>
-        <td width="10%" height="36" align="center"><img src="images/splitter_header.png" width="2" height="12" /></td>
-        <td width="35%" height="36" align="left" class='link-level2-not-highlight'><a class='link-level2' onclick="javascript:showAbout()">ABOUT</a></td>
+        <td width="15%" height="36" align="center"><img src="images/help.png" width="17" height="17" /></td>
+        <td width="30%" height="36" align="left" class='link-level2$$$CUSTOM_STYLE$$$-not-highlight'><a href='tests_help.pl' class='link-level2$$$HELP_STYLE$$$'>HELP</a></td>
+        <td width="15%" height="36" align="center"><img src="images/about.png" width="17" height="17" /></td>
+        <td width="30%" height="36" align="left" class='link-level2-not-highlight'><a class='link-level2' onclick="javascript:showAbout()">ABOUT</a></td>
       </tr>
       <tr>
         <td height="30">&nbsp;</td>

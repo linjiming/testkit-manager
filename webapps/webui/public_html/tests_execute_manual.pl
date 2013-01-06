@@ -208,16 +208,16 @@ DATA
                                   <form>
                                   <tr>
                                     <td>&nbsp;
-                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS" checked>
+                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="PASS" checked>
                                       P</td>
                                     <td>&nbsp;
-                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
+                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="FAIL">
                                       F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="BLOCK">
                                       B</td>
                                     <td>&nbsp;
-                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="N/A">
                                       N</td>
                                   </tr>
                                   </form>
@@ -228,16 +228,16 @@ DATA
                                   <form>
                                   <tr>
                                     <td>&nbsp;
-                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
+                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="PASS">
                                       P</td>
                                     <td>&nbsp;
-                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL" checked>
+                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="FAIL" checked>
                                       F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="BLOCK">
                                       B</td>
                                     <td>&nbsp;
-                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="N/A">
                                       N</td>
                                   </tr>
                                   </form>
@@ -248,16 +248,16 @@ DATA
                                   <form>
                                   <tr>
                                     <td>&nbsp;
-                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
+                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="PASS">
                                       P</td>
                                     <td>&nbsp;
-                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
+                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="FAIL">
                                       F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK" checked>
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="BLOCK" checked>
                                       B</td>
                                     <td>&nbsp;
-                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="N/A">
                                       N</td>
                                   </tr>
                                   </form>
@@ -268,16 +268,16 @@ DATA
                                   <form>
                                   <tr>
                                     <td>&nbsp;
-                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
+                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="PASS">
                                       P</td>
                                     <td>&nbsp;
-                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
+                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="FAIL">
                                       F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="BLOCK">
                                       B</td>
                                     <td>&nbsp;
-                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A" checked>
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="N/A" checked>
                                       N</td>
                                   </tr>
                                   </form>
@@ -363,16 +363,16 @@ DATA
                                   <form>
                                   <tr>
                                     <td>&nbsp;
-                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS" checked>
+                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="PASS" checked>
                                       P</td>
                                     <td>&nbsp;
-                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
+                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="FAIL">
                                       F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="BLOCK">
                                       B</td>
                                     <td>&nbsp;
-                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="N/A">
                                       N</td>
                                   </tr>
                                   </form>
@@ -383,16 +383,16 @@ DATA
                                   <form>
                                   <tr>
                                     <td>&nbsp;
-                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
+                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="PASS">
                                       P</td>
                                     <td>&nbsp;
-                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL" checked>
+                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="FAIL" checked>
                                       F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="BLOCK">
                                       B</td>
                                     <td>&nbsp;
-                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="N/A">
                                       N</td>
                                   </tr>
                                   </form>
@@ -403,16 +403,16 @@ DATA
                                   <form>
                                   <tr>
                                     <td>&nbsp;
-                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
+                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="PASS">
                                       P</td>
                                     <td>&nbsp;
-                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
+                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="FAIL">
                                       F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK" checked>
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="BLOCK" checked>
                                       B</td>
                                     <td>&nbsp;
-                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A">
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="N/A">
                                       N</td>
                                   </tr>
                                   </form>
@@ -423,16 +423,16 @@ DATA
                                   <form>
                                   <tr>
                                     <td>&nbsp;
-                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" value="PASS">
+                                      <input id="pass__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="PASS">
                                       P</td>
                                     <td>&nbsp;
-                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" value="FAIL">
+                                      <input id="fail__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="FAIL">
                                       F</td>
                                     <td>&nbsp;
-                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" value="BLOCK">
+                                      <input id="block__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="BLOCK">
                                       B</td>
                                     <td>&nbsp;
-                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" value="N/A" checked>
+                                      <input id="not_run__radio__$id_radio" type="radio" name="radiobutton" onclick="javascript:clearRadioAll();" value="N/A" checked>
                                       N</td>
                                   </tr>
                                   </form>
@@ -466,11 +466,12 @@ DATA
               <tr>
                 <td height="30"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
                     <tr>
-                      <td width="75%">&nbsp;</td>
-                      <td width="25%"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
+                      <td width="69%">&nbsp;</td>
+                      <td width="5%" align="center" id="manual_exec_icon"></td>
+                      <td width="26%"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
                           <tr>
-                            <td align="center"><input type="submit" name="button_save" title="Save modification of case results" value="Save" class="small_button" onclick="javascript:saveManual();"></td>
-                            <td align="center"><input type="submit" name="button_finish" value="Finish" title="Finish editing result, and go to report page" class="small_button" onclick="javascript:finishManual();"></td>
+                            <td align="center"><input type="submit" id="button_save" name="button_save" title="Save modification of case results" value="Save" class="small_button" onclick="javascript:saveManual();"></td>
+                            <td align="center"><input type="submit" id="button_finish" name="button_finish" value="Finish" title="Finish editing result, and go to report page" class="small_button" onclick="javascript:finishManual();"></td>
                           </tr>
                         </table></td>
                     </tr>
@@ -507,7 +508,7 @@ function filter(reg) {
 			page[i].className = "";
 			var bg_reg = "background_" + reg;
 			if (temp_id == bg_reg) {
-				page[i].style.backgroundColor = "#BAE9FD";
+				page[i].style.backgroundColor = "#B9BAB5";
 			}
 		}
 		if (temp_id.indexOf("_all_button") >= 0) {

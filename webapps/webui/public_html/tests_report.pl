@@ -28,7 +28,8 @@ use Data::Dumper;
 use Digest::SHA qw(sha1_hex);
 
 # data which is going to be displayed
-my @report_display   = ();
+my %report_display;
+my $child_level      = 0;
 my @select_dir       = ();
 my @package_list     = ();
 my @test_type        = ();         #which test type are stored in the xml
@@ -47,7 +48,6 @@ my $max_package_number =
   0;    #extract the maximum package number from selected reports
 my %all_package_list;    #store package distribution
 my @reverse_time = ();   #store reversed order time list
-my @ordered_time = ();   #store normal order time list
 
 # clear text pipe
 autoflush_on();
@@ -87,7 +87,7 @@ DATA
 			$package_temp =~ s/_tests.xml//;
 			print <<DATA;
   <tr>
-    <td class="report_list_outside_left_compare" align="left" style="background-color:#89D6F2">&nbsp;Package Name: $package_temp</td>
+    <td class="report_list_outside_left_compare compare_package_bg" align="left">&nbsp;Package Name: $package_temp</td>
   </tr>
   <tr>
     <td><table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -275,7 +275,7 @@ DATA
 for ( var i = 0; i < $total_number; i++) {
 	var error_tr = document.getElementById("$_" + "_" + i);
 	if (error_tr) {
-		error_tr.style.backgroundColor = "#D5B584";
+		error_tr.className = "compare_error_bg";
 	}
 }
 // ]]>
@@ -516,8 +516,8 @@ elsif ( $_GET{'submit'} ) {
         <tr>
           <td><table width="100%" border="1" cellpadding="0" cellspacing="0" class="report_list" frame="below" rules="all">
             <tr>
-              <td width="4%" class="report_list_one_row">&nbsp;</td>
-              <td align="left" class="report_list_one_row">The following report will be submitted to the QA report server:</td>
+              <td width="4%" class="report_list_one_row navigation_bar_bg">&nbsp;</td>
+              <td align="left" class="report_list_one_row navigation_bar_bg">The following report will be submitted to the QA report server:</td>
             </tr>
 DATA
 	print <<DATA;
@@ -670,6 +670,7 @@ else {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 	print_header( "$MTK_BRANCH Manager Test Report", "report" );
+	print show_error_dlg("");
 
 	# show report list according to the result folder
 	showReport();
@@ -681,6 +682,8 @@ sub showReport {
 	getReportDisplayData();
 
 	print <<DATA;
+<div id="ajax_loading" style="display:none"></div>
+<div id="message"></div>
 <table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
   <tr>
     <td><form id="report_list" name="report_list" method="post" action="tests_report.pl">
@@ -699,80 +702,29 @@ sub showReport {
         </tr>
         <tr>
           <td><table width="768" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" class="table_normal">
-            <tr>
+            <tr class="table_first_row">
               <td width="4%" align="center" valign="middle" class="report_list_outside_left"><label>
                 <input type="checkbox" name="check_all" id="check_all" onclick="javascript:check_uncheck_all();" />
               </label></td>
-              <td align="left" width="26%" class="report_list_inside">&nbsp;Test Time</td>
-              <td align="left" width="12%" class="report_list_inside">&nbsp;Test Plan</td>
-              <td align="left" width="12%" class="report_list_inside">&nbsp;Device Name</td>
-              <td width="24%" class="report_list_inside"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td width="45%" align="left">&nbsp;Auto Status</td>
-                  <td width="1%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="12" /></td>
-                  <td width="54%" align="left">&nbsp;Manual Status</td>
-                </tr>
-              </table></td>
-              <td align="left" width="22%" class="report_list_outside_right">&nbsp;Operation</td>
+              <td align="center" width="26%" class="report_list_inside">Test Time</td>
+              <td align="left" width="15%" class="report_list_inside">&nbsp;Test Plan</td>
+              <td align="left" width="13%" class="report_list_inside">&nbsp;Device Name</td>
+              <td align="left" width="21%" class="report_list_inside">&nbsp;Status (Auto <img src="images/splitter_result.png" width="2" height="12" /> Manual)</td>
+              <td align="center" width="21%" class="report_list_outside_right">Operation</td>
             </tr>
 DATA
 
 	# print data from runconfig and info file
-	my $count = 0;
-	while ( $count < @report_display ) {
-		my $time           = $report_display[ $count++ ];
-		my $test_plan      = $report_display[ $count++ ];
-		my $device_name    = $report_display[ $count++ ];
-		my $not_run_auto   = $report_display[ $count++ ];
-		my $not_run_manual = $report_display[ $count++ ];
-		my $result_dir_tgz = $result_dir_manager . $time . "/" . $time . ".tgz";
-		print <<DATA;
-            <tr>
-              <td width="4%" align="center" valign="middle" class="report_list_outside_left"><label>
-                <input type="checkbox" id="$time" name="$time" onclick="javascript:update_state();" />
-              </label></td>
-              <td align="left" width="26%" class="report_list_inside"><a href="tests_report.pl?time=$time&detailed=1">&nbsp;$time</a></td>
-              <td align="left" width="12%" class="report_list_inside cut_long_string_one_line" title="$test_plan">&nbsp;$test_plan</td>
-              <td align="left" width="12%" class="report_list_inside cut_long_string_one_line" title="$device_name">&nbsp;$device_name</td>
-              <td width="24%" class="report_list_inside"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
-                <tr>
-DATA
-		if ( $not_run_auto == 0 ) {
-			print <<DATA;
-			      <td width="45%" align="left" class="result_pass">&nbsp;Complete</td>
-                  <td width="1%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="12" /></td>
-DATA
+	foreach my $name ( reverse sort keys %report_display ) {
+		my @report_display_root = @{ $report_display{$name} };
+		my $parent              = $report_display_root[0];
+
+		# always start print from the root record
+		if ( $parent eq "root" ) {
+			printReportRecord( $name, @report_display_root );
+			my $child_list = $report_display_root[2];
+			printChildRecord($child_list);
 		}
-		else {
-			print <<DATA;
-			      <td width="45%" align="left" class="result_not_run">&nbsp;Incomplete</td>
-                  <td width="1%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="12" /></td>
-DATA
-		}
-		if ( $not_run_manual == 0 ) {
-			print <<DATA;
-			      <td width="54%" align="left" class="result_pass">&nbsp;Complete</td>
-DATA
-		}
-		else {
-			print <<DATA;
-			      <td width="54%" align="left" class="result_not_run">&nbsp;Incomplete</td>
-DATA
-		}
-		print <<DATA;
-                </tr>
-              </table></td>
-              <td align="left" width="22%" class="report_list_outside_right"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td><a href="tests_report.pl?time=$time&summary=1"><img title="View report in list view" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="23" height="23" /></a></td>
-                  <td><a href="tests_execute_manual.pl?time=$time"><img title="Continue execution" src="images/operation_continue_execution_enable.png" alt="operation_continue_execution_enable" width="23" height="23" /></a></td>
-                  <td><a href="get.pl$result_dir_tgz"><img title="Download consolidated report" src="images/operation_download.png" alt="operation_download_consolidated_log" width="23" height="23" /></a></td>
-                  <td><a href="tests_report.pl?time=$time&submit=1"><img title="Submit report to QA report server" src="images/operation_submit.png" alt="operation_submit_to_QA_report_server" width="23" height="23" /></a></td>
-                  <td><a href="tests_report.pl?time=$time&mail=1"><img title="Send report through email" src="images/operation_mail.png" alt="operation_mail" width="23" height="23" /></a></td>
-                </tr>
-              </table></td>
-            </tr>
-DATA
 	}
 	print <<DATA;
           </table></td>
@@ -895,6 +847,94 @@ function confirm_remove() {
 DATA
 }
 
+sub printChildRecord {
+	my ($child_list) = @_;
+	if ( $child_list ne "none" ) {
+		my @children = split( "!:!", $child_list );
+		foreach ( reverse sort @children ) {
+			my $child          = $_;
+			my @report_display = @{ $report_display{$child} };
+
+			# add lable for rerun level
+			my $space = "";
+			for my $i ( 1 .. $report_display[1] ) {
+				$space .= "&#185;-";
+			}
+			$report_display[3] =
+			    "<span class='result_fail' title='This is a rerun report'>"
+			  . $space
+			  . "</span>"
+			  . $report_display[3];
+			printReportRecord( $child, @report_display );
+
+			# loop until child is none
+			printChildRecord( $report_display[2] );
+		}
+	}
+	else {
+		return;
+	}
+}
+
+sub printReportRecord {
+	my ( $time, @report_display ) = @_;
+	my $time_display   = $report_display[3];
+	my $test_plan      = $report_display[4];
+	my $device_name    = $report_display[5];
+	my $not_run_auto   = $report_display[6];
+	my $not_run_manual = $report_display[7];
+	my $result_dir_tgz = $result_dir_manager . $time . "/" . $time . ".tgz";
+	print <<DATA;
+            <tr>
+              <td width="4%" align="center" valign="middle" class="report_list_outside_left"><label>
+                <input type="checkbox" id="$time" name="$time" onclick="javascript:update_state();" />
+              </label></td>
+              <td align="left" width="26%" class="report_list_inside cut_long_string_one_line" title="$time"><a href="tests_report.pl?time=$time&detailed=1">&nbsp;$time_display</a></td>
+              <td align="left" width="15%" class="report_list_inside cut_long_string_one_line" title="$test_plan">&nbsp;$test_plan</td>
+              <td align="left" width="13%" class="report_list_inside cut_long_string_one_line" title="$device_name">&nbsp;$device_name</td>
+              <td width="21%" class="report_list_inside"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+DATA
+
+	if ( $not_run_auto == 0 ) {
+		print <<DATA;
+			      <td width="48%" align="left" class="result_pass">&nbsp;Complete</td>
+                  <td width="2%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="12" /></td>
+DATA
+	}
+	else {
+		print <<DATA;
+			      <td width="48%" align="left" class="result_fail">&nbsp;Incomplete</td>
+                  <td width="2%" align="center" valign="middle"><img src="images/splitter_result.png" width="2" height="12" /></td>
+DATA
+	}
+	if ( $not_run_manual == 0 ) {
+		print <<DATA;
+			      <td width="48%" align="left" class="result_pass">&nbsp;Complete</td>
+DATA
+	}
+	else {
+		print <<DATA;
+			      <td width="48%" align="left" class="result_fail">&nbsp;Incomplete</td>
+DATA
+	}
+	print <<DATA;
+                </tr>
+              </table></td>
+              <td width="21%" class="report_list_outside_right"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
+                <tr align="center">
+                  <td><a href="tests_report.pl?time=$time&summary=1"><img title="View report in list view" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="16" height="16" /></a></td>
+                  <td><a href="tests_execute_manual.pl?time=$time"><img title="Continue execution" src="images/operation_continue_execution.png" alt="operation_continue_execution_enable" width="16" height="16" /></a></td>
+                  <td><a href="get.pl$result_dir_tgz"><img title="Download consolidated report" src="images/operation_download.png" alt="operation_download_consolidated_log" width="16" height="16" /></a></td>
+                  <td><a href="tests_report.pl?time=$time&submit=1"><img title="Submit report to QA report server" src="images/operation_submit.png" alt="operation_submit_to_QA_report_server" width="16" height="16" /></a></td>
+                  <td><a href="tests_report.pl?time=$time&mail=1"><img title="Send report through email" src="images/operation_mail.png" alt="operation_mail" width="16" height="16" /></a></td>
+                  <td><a onclick="javascript:rerunNotPassedCases('$time', '$test_plan');"><img title="Rerun cases which are not passed" src="images/operation_rerun.png" alt="operation_rerun" width="16" height="16" /></a></td>
+                </tr>
+              </table></td>
+            </tr>
+DATA
+}
+
 sub showSummaryReport {
 	my ($time) = @_;
 	my $result_dir = $result_dir_manager . $time;
@@ -914,8 +954,11 @@ sub showSummaryReport {
   <tr>
     <td>
 DATA
-	print xml2xsl( $result_dir . "/tests.result.xml" );
+	xml2xsl();
+	my $tmp_xml_file =
+	  $SERVER_PARAM{'APP_DATA'} . "/results/$time/tests.result.xml";
 	print <<DATA;
+	  <iframe frameborder="0" scrolling="yes" width="768" height="700" src="/get.pl?file=$tmp_xml_file"></iframe>
     </td>
   </tr>
 </table>
@@ -2673,9 +2716,7 @@ sub updateResultList_wanted {
 
 sub getReportDisplayData {
 	find( \&getReportDisplayData_wanted, $result_dir_manager );
-
-	@ordered_time = reverse(@reverse_time);
-	foreach (@ordered_time) {
+	foreach (@reverse_time) {
 		my $time           = $_;
 		my $test_plan      = "none";
 		my $device_name    = "none";
@@ -2712,11 +2753,60 @@ sub getReportDisplayData {
 		if ( $time =~ /\/opt\/testkit\/manager\/results\/(.*)/ ) {
 			$time_only = $1;
 		}
+		my @reruns         = $test_plan =~ /rerun_/g;
+		my @report_display = ();
+		my @child_list     = ();
+		if ( @reruns >= 1 ) {
+			my $parent = "none";
+			if ( $test_plan =~ /rerun_([0-9:\.\-]+)$/ ) {
+				$parent = $1;
+			}
+			push( @report_display, $parent );   # parent name
+			push( @report_display, 1 )          # tree level, default is level 1
+		}
+		else {
+			push( @report_display, "root" );    # parent name
+			push( @report_display, 0 )   # tree level, default is the root level
+		}
+		push( @report_display, "none" );    # child list
+
 		push( @report_display, $time_only );
 		push( @report_display, $test_plan );
 		push( @report_display, $device_name );
 		push( @report_display, $not_run_auto );
 		push( @report_display, $not_run_manual );
+		$report_display{$time_only} = \@report_display;
+	}
+
+	# order all the report according to the time line and rerun
+	foreach my $name ( keys %report_display ) {
+		$child_level = -1;
+		my @report_display = @{ $report_display{$name} };
+		my $parent         = $report_display[0];
+		if ( defined $report_display{$parent} ) {
+			if ( @{ $report_display{$parent} }[2] eq "none" ) {
+				@{ $report_display{$parent} }[2] = $name;
+			}
+			else {
+				@{ $report_display{$parent} }[2] =
+				  @{ $report_display{$parent} }[2] . "!:!" . $name;
+			}
+			findRootParent($parent);
+			@{ $report_display{$name} }[1] = $child_level;
+		}
+	}
+}
+
+sub findRootParent {
+	my ($parent) = @_;
+	$child_level++;
+	if ( defined $report_display{$parent} ) {
+
+		# continue loop until parent is root
+		findRootParent( @{ $report_display{$parent} }[0] );
+	}
+	else {
+		return;
 	}
 }
 

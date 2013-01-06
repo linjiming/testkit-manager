@@ -589,6 +589,7 @@ sub getUpdateInfoFromNetwork {
 	if ( $repo_type =~ /local/ ) {
 		@rpm = `find $repo_url | grep $GREP_PATH.*tests.*rpm`;
 	}
+	@rpm = sort @rpm;
 	my @install_flag;
 	my $temp_package_count = 0;
 	push( @update_package_flag, "0" );
@@ -1071,6 +1072,28 @@ elsif ( $_GET{'action'} eq 'get_test_log' ) {
 						my $block = substr( $file_data, $b_pos, $b_len );
 						$b_pos += $b_len;
 						$data .= "<output><![CDATA[$block]]></output>\n";
+						my $run_time = ( $status->{'RUN_TIME'} or "0" );
+						my $run_time_unit = "second";
+						if ( $run_time < 60 ) {
+							if ( $run_time == 0 ) {
+								$run_time_unit = "second";
+							}
+							else {
+								$run_time_unit = "seconds";
+							}
+						}
+						else {
+							$run_time = int( $run_time / 60 );
+							if ( $run_time == 1 ) {
+								$run_time_unit = "minute";
+							}
+							else {
+								$run_time_unit = "minutes";
+							}
+						}
+						$data .= "<run_time>$run_time</run_time>\n";
+						$data .=
+						  "<run_time_unit>$run_time_unit</run_time_unit>\n";
 					}
 
    # If tests are still running, just send the current position in the log file.
@@ -1109,8 +1132,13 @@ elsif ( $_GET{'action'} eq 'get_test_log' ) {
 
 				  # Test run was forcibly stopped; show status, do not redirect.
 						elsif ( $status->{'STATUS'} eq 'Terminated' ) {
-							$data .=
-"<tr_status>&lt;span class=\"result_fail\"&gt;The test has been stopped.&lt;/span&gt;</tr_status>\n";
+							$data .= "<tr_status>1</tr_status>\n";
+							my $stop_reason =
+							  ( $status->{'STOP_REASON'} or "normal_stop" );
+							if ( $stop_reason =~ /missing_package/ ) {
+								$data .=
+								  "<missing_package>1</missing_package>\n";
+							}
 						}
 
 						# Test run has crashed; show status and do not redirect.
@@ -1789,6 +1817,131 @@ elsif ( $_GET{'action'} eq 'set_device' ) {
 				}
 			}
 		}
+	}
+}
+
+elsif ( $_GET{'action'} eq 'rerun_test_plan' ) {
+	my $time         = $_GET{'time'};
+	my $plan_name    = "rerun_" . $time;
+	my $plan_content = "";
+	my %package_xml_file;
+	my $has_not_passed_case = "FALSE";
+
+	# write package name and case number to a new test plan
+	opendir( DIR, $result_dir_manager . $time );
+	$plan_content .= "[Auto]\n";
+	foreach ( sort( grep( /_tests.xml$/, readdir(DIR) ) ) ) {
+		my $package_name  = "none";
+		my $auto_number   = 0;
+		my $manual_number = 0;
+		if ( $_ =~ /(.*)_tests.xml$/ ) {
+			$package_name = $1;
+
+			# separate test xml with cases which are not passed
+			my %pass_case;
+			my $case_name = "";
+			my $case_type = "";
+
+			# get a list with all passed cases
+			open FILE, $result_dir_manager . $time . '/' . $_;
+			while (<FILE>) {
+				if ( $_ =~ /testcase.*id="(.*?)".*/ ) {
+					$case_name = $1;
+					if ( $_ =~ /.*result="PASS".*/ ) {
+						$pass_case{$case_name} = 1;
+					}
+					else {
+						$pass_case{$case_name} = 0;
+						$has_not_passed_case = "TRUE";
+					}
+				}
+			}
+
+			# filter definition and write cases to a xml file
+			open FILE,
+			    $result_dir_manager 
+			  . $time . '/'
+			  . $package_name
+			  . '_definition.xml';
+			open $file,
+			    ">"
+			  . $result_dir_manager
+			  . $time . '/'
+			  . $package_name
+			  . '_rerun.xml';
+			$package_xml_file{$package_name} =
+			  $result_dir_manager . $time . '/' . $package_name . '_rerun.xml';
+			my $isCase       = "FALSE";
+			my $isPassedCase = "FALSE";
+			while (<FILE>) {
+				if ( $_ =~ /testcase.*id="(.*?)".*/ ) {
+					$isCase = "TRUE";
+					if (    ( defined $pass_case{$1} )
+						and ( $pass_case{$1} == 0 ) )
+					{
+						print {$file} $_;
+						$isPassedCase = "FALSE";
+						if ( $_ =~ /execution_type="auto"/ ) {
+							$auto_number += 1;
+						}
+						if ( $_ =~ /execution_type="manual"/ ) {
+							$manual_number += 1;
+						}
+					}
+					else {
+						$isPassedCase = "TRUE";
+					}
+					next;
+				}
+				if ( ( $_ =~ /.*<\/testcase>.*/ ) ) {
+					if ( $isPassedCase eq "FALSE" ) {
+						print {$file} $_;
+					}
+					$isCase = "FALSE";
+					next;
+				}
+				if ( ( $isCase eq "FALSE" ) or ( $isPassedCase eq "FALSE" ) ) {
+					print {$file} $_;
+				}
+			}
+			close $file;
+		}
+		if ( $package_name ne "none" ) {
+			$plan_content .= "$package_name($auto_number $manual_number)\n";
+		}
+	}
+	$plan_content .= "[/Auto]\n";
+	closedir(DIR);
+	my $error_message = check_testkit_sdb();
+	if ( $error_message eq "" ) {
+		if ( $has_not_passed_case eq "TRUE" ) {
+			write_string_as_file(
+				$SERVER_PARAM{'APP_DATA'} . '/plans/' . $plan_name,
+				$plan_content );
+			system( sdb_cmd("shell 'rm -rf /tmp/rerun'") );
+			system( sdb_cmd("shell 'mkdir /tmp/rerun'") );
+			foreach my $package_name ( keys %package_xml_file ) {
+				system(
+					sdb_cmd( "shell 'mkdir /tmp/rerun/" . $package_name . "'" )
+				);
+				system(
+					sdb_cmd(
+"push $package_xml_file{$package_name} /tmp/rerun/$package_name/tests.xml &>/dev/null"
+					)
+				);
+			}
+			$data .= "<rerun_test_plan>$plan_name</rerun_test_plan>\n";
+		}
+		else {
+			$error_message =
+			  "The results of all cases are PASS, rerun is not available";
+			$data .=
+			  "<rerun_test_plan_error>$error_message</rerun_test_plan_error>\n";
+		}
+	}
+	else {
+		$data .=
+		  "<rerun_test_plan_error>$error_message</rerun_test_plan_error>\n";
 	}
 }
 
@@ -2532,13 +2685,13 @@ sub updateManualState_wanted {
 				$hasManual = "True";
 				$not_run += 1;
 			}
-			if ( $_ =~ /:BLOCK/ ) {
+			if ( $_ =~ /!:!BLOCK/ ) {
 				$block += 1;
 			}
-			if ( $_ =~ /:PASS/ ) {
+			if ( $_ =~ /!:!PASS/ ) {
 				$pass += 1;
 			}
-			if ( $_ =~ /:FAIL/ ) {
+			if ( $_ =~ /!:!FAIL/ ) {
 				$fail += 1;
 			}
 		}

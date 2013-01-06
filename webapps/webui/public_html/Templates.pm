@@ -37,11 +37,11 @@ $Common::debug_inform_sub = sub { };
 	qw(
 	  CRLF
 	  %SERVER_PARAM %_GET %_POST %_COOKIE %CONFIG
-	  $result_dir_manager $result_dir_lite $test_definition_dir $opt_dir $profile_dir_manager $configuration_file $DOWNLOAD_CMD
+	  $result_dir_manager $result_dir_lite $test_definition_dir $test_definition_dir_repo $opt_dir $opt_dir_repo $profile_dir_manager $configuration_file $DOWNLOAD_CMD
 	  $cert_sys_host $cert_sys_base
 	  &print_header &print_footer
 	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg &get_category_key
-	  &updatePackageList &updateCaseInfo &printShortCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &remove_package &syncDefinition &compare_version &check_network &get_repo &xml2xsl &xml2xsl_case &check_testkit_sdb
+	  &updatePackageList &updateCaseInfo &printShortCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &remove_package &syncDefinition &syncDefinition_from_local_repo &compare_version &check_network &get_repo &xml2xsl &xml2xsl_case &check_testkit_sdb
 	  ),
 	@Common::EXPORT,
 	@Manifest::EXPORT
@@ -322,13 +322,15 @@ sub show_not_implemented {
 DATA
 }
 
-our $result_dir_manager  = "/opt/testkit/manager/results/";
-our $result_dir_lite     = "/opt/testkit/manager/lite/";
-our $test_definition_dir = "/opt/testkit/manager/definition/";
-our $opt_dir             = "/opt/testkit/manager/package/";
-our $profile_dir_manager = $FindBin::Bin . "/../../../plans/";
-our $configuration_file  = $FindBin::Bin . "/../../../CONF";
-our $DOWNLOAD_CMD        = "wget -r -l 1 -nd -A rpm --spider";
+our $result_dir_manager       = "/opt/testkit/manager/results/";
+our $result_dir_lite          = "/opt/testkit/manager/lite/";
+our $test_definition_dir      = "/opt/testkit/manager/definition/";
+our $opt_dir                  = "/opt/testkit/manager/package/";
+our $test_definition_dir_repo = "/opt/testkit/manager/definition_repo/";
+our $opt_dir_repo             = "/opt/testkit/manager/package_repo/";
+our $profile_dir_manager      = $FindBin::Bin . "/../../../plans/";
+our $configuration_file       = $FindBin::Bin . "/../../../CONF";
+our $DOWNLOAD_CMD             = "wget -r -l 1 -nd -A rpm --spider";
 
 my $CHECK_NETWORK = "wget --spider --timeout=5 --tries=2";
 my $result_xsl_dir =
@@ -1518,6 +1520,7 @@ sub syncDefinition {
 			if ( $_ =~ /(\/usr\/share\/.*\/tests.xml)/ ) {
 				$definition = $1;
 			}
+			$definition =~ s/^\s//;
 			$definition =~ s/\s*$//;
 			if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
 				my $package_name = $1;
@@ -1566,6 +1569,96 @@ sub syncDefinition {
 		}
 	}
 	sleep 3;
+}
+
+sub syncDefinition_from_local_repo {
+	my @rpm       = ();
+	my $repo      = get_repo();
+	my @repo_all  = split( "::", $repo );
+	my $repo_type = $repo_all[0];
+	my $repo_url  = $repo_all[1];
+	my $GREP_PATH = $repo_url;
+	$GREP_PATH =~ s/\:/\\:/g;
+	$GREP_PATH =~ s/\//\\\//g;
+	$GREP_PATH =~ s/\./\\\./g;
+	$GREP_PATH =~ s/\-/\\\-/g;
+
+	if ( $repo_type =~ /local/ ) {
+		@rpm = `find $repo_url | grep $GREP_PATH.*tests.*rpm`;
+		system( "rm -rf $test_definition_dir_repo" . "*" );
+		system( "rm -rf $opt_dir_repo" . "*" );
+		system("rm -rf /tmp/usr");
+		system("rm -rf /tmp/opt");
+		foreach (@rpm) {
+			my $package_name = $_;
+			$package_name =~ s/^\s//;
+			$package_name =~ s/\s*$//;
+			my $extract_command =
+			    "cd /tmp; rpm2cpio "
+			  . $package_name
+			  . " | cpio -idmv &>/dev/null";
+			system($extract_command);
+		}
+		sleep 3;
+
+		# sync xml definition files
+		my $cmd_definition = "ls /tmp/usr/share/*/tests.xml 2>&1";
+		my $definition     = `$cmd_definition`;
+		my @definitions = $definition =~ /(\/tmp\/usr\/share\/.*?\/tests.xml)/g;
+		if (   ( @definitions >= 1 )
+			&& ( $definition !~ /No such file or directory/ ) )
+		{
+			foreach (@definitions) {
+				my $definition = "";
+				if ( $_ =~ /(\/tmp\/usr\/share\/.*\/tests.xml)/ ) {
+					$definition = $1;
+				}
+				$definition =~ s/^\s//;
+				$definition =~ s/\s*$//;
+				if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
+					my $package_name = $1;
+					system("mkdir $test_definition_dir_repo$package_name");
+					system(
+						"cp $definition $test_definition_dir_repo$package_name"
+					);
+					system("mkdir $opt_dir_repo$package_name");
+					system(
+"echo 'No readme info' > $opt_dir_repo$package_name/README"
+					);
+					system(
+"echo 'No license info' > $opt_dir_repo$package_name/LICENSE"
+					);
+				}
+			}
+		}
+
+		# sync readme files and license files
+		my $cmd_readme = "ls /tmp/opt/*/README 2>&1";
+		my $readme     = `$cmd_readme`;
+		my @readmes    = $readme =~ /(\/tmp\/opt\/.*?\/README)/g;
+		if ( ( @readmes >= 1 ) && ( $readme !~ /No such file or directory/ ) ) {
+			foreach (@readmes) {
+				my $readme = "";
+				if ( $_ =~ /(\/tmp\/opt\/.*\/README)/ ) {
+					$readme = $1;
+				}
+				$readme =~ s/^\s//;
+				$readme =~ s/\s$//;
+				if ( $readme =~ /opt\/(.*)\/README/ ) {
+					my $package_name = $1;
+					system("cp $readme $opt_dir_repo$package_name");
+					my $license_cmd_tmp =
+					  "ls /tmp/opt/$package_name/LICENSE 2>&1";
+					my $license_cmd = `$license_cmd_tmp`;
+					if ( $license_cmd !~ /No such file or directory/ ) {
+						my $license = $readme;
+						$license =~ s/README/LICENSE/;
+						system("cp $license $opt_dir_repo$package_name");
+					}
+				}
+			}
+		}
+	}
 }
 
 sub remove_package {
@@ -1803,49 +1896,46 @@ sub check_testkit_sdb {
 }
 
 sub xml2xsl {
-	my ($result_xml_dir) = @_;
-
-	# import required modules
-	use XML::LibXSLT;
-	use XML::LibXML;
-
-	# create an instance of XSL::XSLT processor
-	my $xslt = XML::LibXSLT->new();
-	my $source = XML::LibXML->load_xml( location => $result_xml_dir );
-	my $style_doc =
-	  XML::LibXML->load_xml( location => $result_xsl_dir, no_cdata => 1 );
-	my $stylesheet = $xslt->parse_stylesheet($style_doc);
-
-	# transform XML file and print output
-	my $results = $stylesheet->transform($source);
-	my $result  = $stylesheet->output_as_bytes($results);
-	$result =~ s/.*(<div id="testcasepage".*<\/script>).*/$1/s;
-	$result =~ s/src=".\/back_top.png"/src="..\/css\/xsd\/back_top.png"/s;
-
-	return $result;
+	my $public_html_dir = $FindBin::Bin . "/../../../webapps/webui/public_html";
+	if ( !( -e "$public_html_dir/back_top.png" ) ) {
+		system("cd $public_html_dir; ln -s css/xsd/back_top.png back_top.png");
+	}
+	if ( !( -e "$public_html_dir/tests.css" ) ) {
+		system("cd $public_html_dir; ln -s css/xsd/tests.css tests.css");
+	}
+	if ( !( -e "$public_html_dir/testresult.xsl" ) ) {
+		system(
+			"cd $public_html_dir; ln -s css/xsd/testresult.xsl testresult.xsl");
+	}
+	if ( !( -e "$public_html_dir/jquery.min.js" ) ) {
+		system(
+			"cd $public_html_dir; ln -s css/xsd/jquery.min.js jquery.min.js");
+	}
+	if ( !( -e "$public_html_dir/application.js" ) ) {
+		system(
+			"cd $public_html_dir; ln -s css/xsd/application.js application.js");
+	}
 }
 
 sub xml2xsl_case {
-	my ($case_xml_dir) = @_;
-
-	# import required modules
-	use XML::LibXSLT;
-	use XML::LibXML;
-
-	# create an instance of XSL::XSLT processor
-	my $xslt = XML::LibXSLT->new();
-	my $source = XML::LibXML->load_xml( location => $case_xml_dir );
-	my $style_doc =
-	  XML::LibXML->load_xml( location => $case_xsl_dir, no_cdata => 1 );
-	my $stylesheet = $xslt->parse_stylesheet($style_doc);
-
-	# transform XML file and print output
-	my $results = $stylesheet->transform($source);
-	my $result  = $stylesheet->output_as_bytes($results);
-	$result =~ s/.*(<div id="testcasepage".*<\/script>).*/$1/s;
-	$result =~ s/src=".\/back_top.png"/src="..\/css\/xsd\/back_top.png"/s;
-
-	return $result;
+	my $public_html_dir = $FindBin::Bin . "/../../../webapps/webui/public_html";
+	if ( !( -e "$public_html_dir/back_top.png" ) ) {
+		system("cd $public_html_dir; ln -s css/xsd/back_top.png back_top.png");
+	}
+	if ( !( -e "$public_html_dir/tests.css" ) ) {
+		system("cd $public_html_dir; ln -s css/xsd/tests.css tests.css");
+	}
+	if ( !( -e "$public_html_dir/testcase.xsl" ) ) {
+		system("cd $public_html_dir; ln -s css/xsd/testcase.xsl testcase.xsl");
+	}
+	if ( !( -e "$public_html_dir/jquery.min.js" ) ) {
+		system(
+			"cd $public_html_dir; ln -s css/xsd/jquery.min.js jquery.min.js");
+	}
+	if ( !( -e "$public_html_dir/application.js" ) ) {
+		system(
+			"cd $public_html_dir; ln -s css/xsd/application.js application.js");
+	}
 }
 
 1;

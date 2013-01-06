@@ -601,6 +601,8 @@ sub write_status {
 		  if defined $globals->{'prepare_time'};
 		$content .= "STOP_TIME = " . $globals->{'finish_time'} . "\n"
 		  if defined $globals->{'finish_time'};
+		$content .= "RUN_TIME = " . $globals->{'run_time'} . "\n"
+		  if defined $globals->{'run_time'};
 		$content .= "TEST_PLAN = " . $globals->{'test_plan'} . "\n"
 		  if defined $globals->{'test_plan'};
 		$content .= "CURRENT_PACKAGE = " . $globals->{'current_package'} . "\n"
@@ -608,8 +610,11 @@ sub write_status {
 		$content .=
 		  "CURRENT_RUN_NUMBER = " . $globals->{'current_run_number'} . "\n"
 		  if defined $globals->{'current_run_number'};
-		$content .= "COMPLETE_PACKAGE = " . $globals->{'complete_package'}
+		$content .=
+		  "COMPLETE_PACKAGE = " . $globals->{'complete_package'} . "\n"
 		  if defined $globals->{'complete_package'};
+		$content .= "STOP_REASON = " . $globals->{'stop_reason'}
+		  if defined $globals->{'stop_reason'};
 	}
 
 	return write_string_as_file( '!' . $globals->{'status_file'}, $content );
@@ -900,7 +905,12 @@ sub readProfile {
 				$isWebApi = "True";
 				$wrtPackages .= " " . $thisTargetPackage;
 			}
-			$targetPackages .= "/usr/share/$thisTargetPackage/tests.xml ";
+			if ( $profile_name =~ /plans\/rerun_/ ) {
+				$targetPackages .= "/tmp/rerun/$thisTargetPackage/tests.xml ";
+			}
+			else {
+				$targetPackages .= "/usr/share/$thisTargetPackage/tests.xml ";
+			}
 		}
 		else {
 			push( @uninstalledPackages, $thisTargetPackage );
@@ -966,26 +976,32 @@ sub syncLiteResult {
 
 	# Run the test in ptyshell
 	$profile_content = &readProfile( $globals->{'testkit_dir'} . "/plans" );
-	if ( $profile_content !~ /usr\/share/ ) {
+	if (   ( $profile_content !~ /usr\/share/ )
+		&& ( $profile_content !~ /tmp\/rerun/ ) )
+	{
 		inform "[ERROR]:\nCan't find the following package(s),\n"
 		  . $profile_content
-		  . "\nTry to load this test plan or install package(s) manually to resolve this issue";
+		  . "\nTry to load this test plan or install missing package(s) manually to resolve this issue";
+		$globals->{'stop_reason'} = "missing_package";
+		write_status();
 	}
 	else {
 		if ( $isWebApi eq "False" ) {
 			inform "[CMD]:\n"
 			  . sdb_cmd("shell 'testkit-lite -f ")
 			  . $profile_content
-			  . " --non-active'\n";
+			  . " --non-active --enable-memory-collection'\n";
 		}
 		else {
 			inform "[CMD]:\n"
 			  . sdb_cmd("shell 'testkit-lite -f ")
 			  . $profile_content
-			  . " --non-active'\n";
+			  . " --non-active --enable-memory-collection'\n";
 		}
 	}
-	if ( $profile_content =~ /usr\/share/ ) {
+	if (   ( $profile_content =~ /usr\/share/ )
+		or ( $profile_content =~ /tmp\/rerun/ ) )
+	{
 
 		# kill all existing widgets before testing
 		my $cmd           = sdb_cmd("shell 'wrt-launcher -l'");
@@ -1007,9 +1023,8 @@ sub syncLiteResult {
 		}
 
 		# start testing
-		write_string_as_file(
-			"$globals->{'temp_dir'}/lite-command",
-			"testkit-lite -f $profile_content --non-active"
+		write_string_as_file( "$globals->{'temp_dir'}/lite-command",
+"testkit-lite -f $profile_content --non-active --enable-memory-collection"
 		);
 		system(
 			sdb_cmd(
@@ -1045,6 +1060,10 @@ sub syncLiteResult {
 		{
 			return 1;
 		}
+
+		my $run_time = time() - $globals->{'prepare_time'};
+		$globals->{'run_time'} = $run_time;
+		write_status();
 
 		# record auto package
 		if ( $line =~ /testing xml:.*[0-9:\.\-]+\/(.*?)\.auto\.xml/ ) {

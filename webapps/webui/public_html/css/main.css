@@ -22,7 +22,7 @@
 
 /* start header page */
 .main_menu_bg {
-	background-color: #000000;
+	background-image: url(../images/header_background.png);
 	background-repeat: no-repeat;
 	background-position: center;
 }
@@ -34,14 +34,25 @@
 	margin-bottom: 3px;
 	margin-left: 3px;
 	height: 350px;
-	width: 384px;
+	width: 356px;
 	overflow: auto;
 	text-wrap: none;
-	border: 1px solid #BCBCBC;
+	border: 1px solid #E2E3E3;
 	background-color: white;
 	color: black;
 	font-family: Arial;
 	font-size: 10px;
+}
+
+.execute_info_bar_bg {
+	height: 60px;
+	background-color: #E5E5E5;
+	color: #000000;
+}
+
+.timer_number {
+	color: #238BD1;
+	font-size: 16px;
 }
 
 .cmd_log_border {
@@ -51,7 +62,7 @@
 }
 
 .navigation_bar_bg {
-	background-color: #EAEBEE;
+	background-color: #F0F0F0;
 }
 
 .change_all_result {
@@ -63,7 +74,7 @@
 }
 
 .navigation_focus {
-	background-color: #BAE9FD;
+	background-color: #B9BAB5;
 }
 /* end execute page */
 
@@ -72,6 +83,10 @@
 	font-family: Arial;
 	font-size: 14px;
 	table-layout: fixed;
+}
+
+.table_first_row {
+	font-weight: bold;
 }
 /* end table general */
 
@@ -84,7 +99,7 @@
 
 .error_message_title {
 	border: dashed 1px darkred;
-	background: red;
+	background: #CC3300;
 	color: white;
 	font-family: Arial;
 	font-size: 12px;
@@ -92,7 +107,7 @@
 
 .normal_message_title {
 	border: dashed 1px darkred;
-	background: green;
+	background: #59315F;
 	color: white;
 	font-family: Arial;
 	font-size: 12px;
@@ -129,8 +144,8 @@
 /* start test report page */
 .top_button_bg {
 	height: 40px;
-	background-color: #D8D9D4;
-	color: #248BD1;
+	background-color: #E5E5E5;
+	color: #238BD1;
 }
 
 .tree_view_bg {
@@ -273,20 +288,29 @@ input::-moz-focus-inner {
 	overflow: hidden;
 }
 
+.compare_package_bg {
+	background-color: #5CCBF6;
+	height: 30px;
+}
+
+.compare_error_bg {
+	background-color: #CC3300;
+}
+
 .result_pass {
-	color: #137717;
+	color: #5CCBF6;
 }
 
 .result_fail {
-	color: #830300;
+	color: #CC3300;
 }
 
 .result_block {
-	color: #FF6347;
+	color: #000000;
 }
 
 .result_not_run {
-	color: #A65604;
+	color: #59315F;
 }
 
 .submit_server {
@@ -326,14 +350,14 @@ input::-moz-focus-inner {
 /* general styles */
 a,.active {
 	text-decoration: none;
-	color: #097DA4;
+	color: #238BD1;
 	background: none;
 	cursor: pointer;
 }
 
 a:hover,.active:hover {
 	text-decoration: none;
-	color: #097DA4;
+	color: #000000;
 }
 
 img {
@@ -447,7 +471,7 @@ form {
 }
 
 select {
-	height: 22px;
+	height: 20px;
 	font-family: Arial;
 	font-size: 14px;
 }
@@ -1147,7 +1171,7 @@ p.revision_saved {
 
 .testkit_version {
 	font-family: Arial;
-	font-size: 10px;
+	font-size: 12px;
 	color: #FFFFFF;
 }
 
@@ -1385,7 +1409,6 @@ table.bartable td {
 input[type=submit],input[type=reset],input[type=button] {
 	font-family: Arial;
 	font-size: 14px;
-	cursor: pointer;
 	border: hidden;
 }
 
@@ -1464,7 +1487,7 @@ tr.selectable:hover {
 
 /* start test custom page */
 .custom_panel_background_color {
-	background-color: #EAEBEE;
+	background-color: #F0F0F0;
 }
 
 .test_plan_name {
@@ -1484,11 +1507,15 @@ tr.selectable:hover {
 }
 
 .custom_bottomright_packagename {
-	color: #116795;
+	color: #238BD1;
+}
+
+.custom_bottomright_packagename:hover {
+	color: #000000;
 }
 
 .custom_bottomright_uninstall_packagename {
-	color: gray;
+	color: #596874;
 }
 
 .custom_list_type_right_packagename {
@@ -1507,83 +1534,92 @@ tr.selectable:hover {
 
 .small_button {
 	color: #FFFFFF;
-	line-height: 22px;
-	width: 57px;
-	height: 22px;
+	line-height: 20px;
+	width: 60px;
+	height: 20px;
 	font-size: 14px;
-	background-color: #248BD1;
+	background-color: #238BD1;
+	cursor: pointer;
 }
 
 .small_button:hover {
 	color: #FFFFFF;
-	line-height: 22px;
-	width: 57px;
-	height: 22px;
+	line-height: 20px;
+	width: 60px;
+	height: 20px;
 	font-size: 14px;
 	background-color: #000000;
+	cursor: pointer;
 }
 
 .small_button_disable {
 	color: #FFFFFF;
-	line-height: 22px;
-	width: 57px;
-	height: 22px;
+	line-height: 20px;
+	width: 60px;
+	height: 20px;
 	font-size: 14px;
 	background-color: #677784;
+	cursor: default;
 }
 
 .medium_button {
 	color: #FFFFFF;
-	line-height: 22px;
-	width: 71px;
-	height: 22px;
+	line-height: 20px;
+	width: 70px;
+	height: 20px;
 	font-size: 14px;
-	background-color: #248BD1;
+	background-color: #238BD1;
+	cursor: pointer;
 }
 
 .medium_button:hover {
 	color: #FFFFFF;
-	line-height: 22px;
-	width: 71px;
-	height: 22px;
+	line-height: 20px;
+	width: 70px;
+	height: 20px;
 	font-size: 14px;
 	background-color: #000000;
+	cursor: pointer;
 }
 
 .medium_button_disable {
 	color: #FFFFFF;
-	line-height: 22px;
-	width: 71px;
-	height: 22px;
+	line-height: 20px;
+	width: 70px;
+	height: 20px;
 	font-size: 14px;
 	background-color: #677784;
+	cursor: default;
 }
 
 .large_button {
 	color: #FFFFFF;
-	width: 71px;
-	height: 22px;
-	font-family: Arial;
+	width: 70px;
+	height: 20px;
+	line-height: 20px;
 	font-size: 14px;
-	background-color: #248BD1;
+	background-color: #238BD1;
+	cursor: pointer;
 }
 
 .large_button:hover {
 	color: #FFFFFF;
-	width: 71px;
-	height: 22px;
-	font-family: Arial;
+	width: 70px;
+	height: 20px;
+	line-height: 20px;
 	font-size: 14px;
 	background-color: #000000;
+	cursor: pointer;
 }
 
 .large_button_disable {
 	color: #FFFFFF;
-	width: 71px;
-	height: 22px;
-	font-family: Arial;
+	width: 70px;
+	height: 20px;
+	line-height: 20px;
 	font-size: 14px;
 	background-color: #677784;
+	cursor: default;
 }
 
 .common_div {
@@ -1609,7 +1645,7 @@ tr.selectable:hover {
 
 .plan_div {
 	width: 690px;
-	left: 37%;
+	left: 36%;
 	overflow-y: auto;
 	overflow-x: auto;
 	height: 460px;
@@ -1628,12 +1664,20 @@ tr.selectable:hover {
 }
 
 .about_div {
-	width: 300px;
-	left: 53%;
+	width: 390px;
+	left: 48%;
 	overflow-y: auto;
 	overflow-x: auto;
-	height: 300px;
+	height: 160px;
 	display: none;
+}
+
+.about_div_table {
+	border-top: 5px solid #E6E6E6;
+	border-bottom: 5px solid #E6E6E6;
+	border-left: 5px solid #E6E6E6;
+	border-right: 5px solid #E6E6E6;
+	font-size: 12px;
 }
 
 .popIframe {
@@ -1665,13 +1709,13 @@ tr.selectable:hover {
 
 .view_test_plan_edge {
 	border-top: 0px;
-	border-bottom: 1px solid #FAFAFA;
+	border-bottom: 1px solid #FFFFFF;
 	border-left: 0px;
 	border-right: 0px;
 }
 
 .view_test_plan_title {
-	background-color: #D8D9D4;
+	background-color: #E5E5E5;
 	background-repeat: no-repeat;
 	background-position: center;
 	border-top: 0px;
@@ -1720,8 +1764,8 @@ tr.selectable:hover {
 /* start test statistic page */
 .statistic_chart_pic_selected {
 	cursor: default;
-	width: 73px;
-	height: 30px;
+	width: 25px;
+	height: 25px;
 }
 
 .backgroud_color_transparent {
@@ -1730,13 +1774,25 @@ tr.selectable:hover {
 
 .statistic_chart_pic_unselected {
 	cursor: pointer;
-	width: 73px;
-	height: 30px;
+	width: 25px;
+	height: 25px;
+}
+
+.statistic_tree_pic_selected {
+	cursor: default;
+	width: 25px;
+	height: 25px;
+}
+
+.statistic_tree_pic_unselected {
+	cursor: default;
+	width: 25px;
+	height: 25px;
 }
 
 .static_list_scale_head {
 	border-top: 0px;
-	border-bottom: 1px solid #FAFAFA;
+	border-bottom: 1px solid #FFFFFF;
 	border-left: 0px;
 	border-right: 0px;
 }
@@ -1750,24 +1806,16 @@ tr.selectable:hover {
 
 .static_list_packagename {
 	color: black;
-	border-top: 1px solid #FAFAFA;
-	border-bottom: 1px solid #FAFAFA;
-	border-left: 0px;
-	border-right: 0px;
-}
-
-.static_list_packagename_first {
-	color: black;
-	border-top: 1px solid #FAFAFA;
-	border-bottom: 1px solid #FAFAFA;
+	border-top: 1px solid #FFFFFF;
+	border-bottom: 1px solid #FFFFFF;
 	border-left: 0px;
 	border-right: 0px;
 }
 
 .static_list_packagename_second {
-	color: #797373;
-	border-top: 1px solid #FAFAFA;
-	border-bottom: 1px solid #FAFAFA;
+	color: #666666;
+	border-top: 1px solid #FFFFFF;
+	border-bottom: 1px solid #FFFFFF;
 	border-left: 0px;
 	border-right: 0px;
 }
@@ -1775,9 +1823,9 @@ tr.selectable:hover {
 .static_list_packagename_third {
 	font-family: Arial;
 	font-size: 12px;
-	color: #A19E9E;
-	border-top: 1px solid #FAFAFA;
-	border-bottom: 1px solid #FAFAFA;
+	color: #B3B3B3;
+	border-top: 1px solid #FFFFFF;
+	border-bottom: 1px solid #FFFFFF;
 	border-left: 0px;
 	border-right: 0px;
 }
@@ -1802,5 +1850,15 @@ tr.selectable:hover {
 	font-family: Arial;
 	font-size: 16px;
 	color: #116795;
+}
+
+.static_bg_pic {
+	background-image: url(../images/statistic_tree_bg.png);
+	background-repeat: repeat-y;
+	background-position: center;
+}
+
+.static_tree_bg_color {
+	background-color: #EFF0F0;
 }
 /* end test statistic page */

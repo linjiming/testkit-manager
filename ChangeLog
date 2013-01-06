@@ -169,3 +169,9 @@ testkit-manager 2.2.9:
 ===================
 * Thu Dec 18 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.9-1
   - apply new theme and layout
+* Thu Dec 25 2012 Wendong,Sui <weidongx.sun@intel.com> 2.2.9-2
+  - implement new resource files
+  - use frame to display xsl files
+  - add device and package check in the main page
+  - add rerun feature
+  - sort report page's item list by time

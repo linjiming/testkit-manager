@@ -118,9 +118,12 @@ sub get_serial {
 		$sdb_serial =~ s/^\s*//;
 		$sdb_serial =~ s/\s*$//;
 		my @serial = split( "=", $sdb_serial );
-		my $serial_number = $serial[1];
-		$serial_number =~ s/^\s*//;
-		$serial_number =~ s/\s*$//;
+		my $serial_number = "";
+		if ( defined $serial[1] ) {
+			$serial_number = $serial[1];
+			$serial_number =~ s/^\s*//;
+			$serial_number =~ s/\s*$//;
+		}
 		if ( $serial_number eq "" ) {
 			$serial_number = "none";
 		}
