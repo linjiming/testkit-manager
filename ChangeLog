@@ -175,3 +175,4 @@ testkit-manager 2.2.9:
   - add device and package check in the main page
   - add rerun feature
   - sort report page's item list by time
+  - remove entry for case statistic

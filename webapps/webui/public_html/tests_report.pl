@@ -29,13 +29,14 @@ use Digest::SHA qw(sha1_hex);
 
 # data which is going to be displayed
 my %report_display;
-my $child_level      = 0;
-my @select_dir       = ();
-my @package_list     = ();
-my @test_type        = ();         #which test type are stored in the xml
-my $hasTestTypeError = "FALSE";    #have error when list all cases by test type
-my %caseInfo;                      #parse all info items from xml
-my %manual_case_result;            #parse manual case result from txt file
+my $child_level        = 0;
+my @delete_report_list = ();
+my @select_dir         = ();
+my @package_list       = ();
+my @test_type          = ();        #which test type are stored in the xml
+my $hasTestTypeError   = "FALSE";   #have error when list all cases by test type
+my %caseInfo;                       #parse all info items from xml
+my %manual_case_result;             #parse manual case result from txt file
 my %component_list
   ;               #extract component and give it format like 1->a::root__b::root
 my %spec_list;    #extract spec and give it format like 1->a::root__b::root
@@ -315,10 +316,14 @@ DATA
 # press delete button
 elsif ( $_POST{'delete'} ) {
 	updateSelectDir(%_POST);
+	getReportDisplayData();
+	@delete_report_list = ();
 	foreach (@select_dir) {
+		getDeleteReport($_);
+	}
+	foreach (@delete_report_list) {
 		system("rm -rf $result_dir_manager$_");
 	}
-
 	my $report_ori   = $result_dir_manager . '*s';
 	my $histtory_ori = $result_dir_manager . 'HISTORY';
 	my $latest_ori   = $result_dir_manager . 'latest';
@@ -329,7 +334,6 @@ elsif ( $_POST{'delete'} ) {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 	print_header( "$MTK_BRANCH Manager Test Report", "report" );
-
 	showReport();
 }
 
@@ -840,7 +844,7 @@ function confirm_remove() {
 		return false;
 	}
 	else
-		return confirm('Are you sure to delete the ' + num + ' selected report(s)?');
+		return confirm("Are you sure to delete the " + num + " selected report(s)?\\nPlease note that all of their child report(s) will also be deleted");
 }
 // ]]>
 </script>
@@ -858,13 +862,14 @@ sub printChildRecord {
 			# add lable for rerun level
 			my $space = "";
 			for my $i ( 1 .. $report_display[1] ) {
-				$space .= "&#185;-";
+				if ( $i != 1 ) {
+					$space .= "&nbsp;&nbsp;";
+				}
 			}
-			$report_display[3] =
-			    "<span class='result_fail' title='This is a rerun report'>"
-			  . $space
-			  . "</span>"
-			  . $report_display[3];
+			for my $i ( 1 .. $report_display[1] ) {
+				$space .= "&bull;&nbsp;";
+			}
+			$report_display[3] = $space . $report_display[3];
 			printReportRecord( $child, @report_display );
 
 			# loop until child is none
@@ -2715,6 +2720,8 @@ sub updateResultList_wanted {
 }
 
 sub getReportDisplayData {
+	%report_display = ();
+	@reverse_time   = ();
 	find( \&getReportDisplayData_wanted, $result_dir_manager );
 	foreach (@reverse_time) {
 		my $time           = $_;
@@ -2814,6 +2821,29 @@ sub getReportDisplayData_wanted {
 	my $dir = $File::Find::name;
 	if ( $dir =~ /.*\/([0-9:\.\-]+)$/ ) {
 		push( @reverse_time, $dir );
+	}
+}
+
+sub getDeleteReport {
+	my ($report) = @_;
+	my $has_one = "FALSE";
+	foreach (@delete_report_list) {
+		if ( $_ eq $report ) {
+			$has_one = "TRUE";
+		}
+	}
+	if ( $has_one eq "FALSE" ) {
+		push( @delete_report_list, $report );
+	}
+	my $child_list = @{ $report_display{$report} }[2];
+	if ( $child_list eq "none" ) {
+		return;
+	}
+	else {
+		my @children = split( "!:!", $child_list );
+		foreach (@children) {
+			getDeleteReport($_);
+		}
 	}
 }
 

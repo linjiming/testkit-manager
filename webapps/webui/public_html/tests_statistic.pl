@@ -88,8 +88,7 @@ my @one_package_case_count_total    = ();
 my @one_webapi_package_item_count   = ();
 my %spec_list;
 my %caseInfo;
-my $testkit_lite_error_message = check_testkit_sdb();
-my @category_key               = get_category_key;
+my @category_key = get_category_key;
 
 syncDefinition();
 if ( $_GET{'case_view'} ) {
@@ -114,8 +113,6 @@ if ( $_GET{'case_view'} ) {
 	print "Content-type: text/html" . CRLF . CRLF;
 
 	print_header( "$MTK_BRANCH Manager Main Page", "statistic" );
-
-	print show_error_dlg($testkit_lite_error_message);
 	print <<DATA;
 <div id="ajax_loading" style="display:none"></div>
 <div id="message"></div>
@@ -531,9 +528,6 @@ else {
 	print "Content-type: text/html" . CRLF . CRLF;
 
 	print_header( "$MTK_BRANCH Manager Main Page", "statistic" );
-
-	print show_error_dlg($testkit_lite_error_message);
-
 	print <<DATA;
 <div id="ajax_loading" style="display:none"></div>
 <div id="message"></div>
@@ -546,13 +540,13 @@ else {
           <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
             <tr>
                <td width="2%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
-               <td width="12%" align="left" nowrap="nowrap" class="custom_line_height">View Statistic</td>
-               <td width="6%" align="left" class="custom_line_height" nowrap="nowrap"><img id="package_bar_chart" src="images/package_bar_chart_selected.png" title="Package Chart" class="statistic_chart_pic_selected"  onclick=""/></td>
-               <td width="6%" align="left" class="custom_line_height" nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" class="statistic_chart_pic_unselected"  onclick="javascript:onDrawResultComponent();"/></td>
-               <td width="53%" align="left" class="custom_line_height" nowrap="nowrap"><img id="spec_bar_chart" src="images/package_tree_diagram.png" title="Spec Chart" class="statistic_tree_pic_unselected"  onclick="javascript:onDrawResultSpec();"/></td>
-               <td width="10%" align="left" class="custom_line_height" nowrap="nowrap"><input id="view_test_result" name="view_test_result" type="button" class="medium_button" title="View statistic from result xml" value="Results" onclick=javascript:select_result_file("init");></td>
-               <td width="10%" align="left" class="custom_line_height" nowrap="nowrap"><input id="view_test_case" name="view_test_case" type="button" class="medium_button" title="View statistic from case xml" value="Cases" onclick="javascript:onCaseView();"></td>
-               <td width="1%" align="left" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
+               <td width="83%" align="left" class="custom_line_height" nowrap="nowrap">View Statistic</td>
+               <td width="5%" align="left" class="custom_line_height" nowrap="nowrap"><img id="package_bar_chart" src="images/package_bar_chart_selected.png" title="Package Chart" class="statistic_chart_pic_selected" onclick=""/></td>
+               <td width="5%" align="left" class="custom_line_height" nowrap="nowrap"><img id="component_bar_chart" src="images/component_bar_chart.png" title="Component Chart" class="statistic_chart_pic_unselected" onclick="javascript:onDrawResultComponent();"/></td>
+               <td width="5%" align="left" class="custom_line_height" nowrap="nowrap"><img id="spec_bar_chart" src="images/package_tree_diagram.png" title="Spec Chart" class="statistic_tree_pic_unselected" onclick="javascript:onDrawResultSpec();"/></td>
+               <td width="0%" align="left" class="custom_line_height" nowrap="nowrap" style="display:none"><input id="view_test_result" name="view_test_result" type="button" class="medium_button" title="View statistic from result xml" value="Results" onclick=javascript:select_result_file("init");></td>
+               <td width="0%" align="left" class="custom_line_height" nowrap="nowrap" style="display:none"><input id="view_test_case" name="view_test_case" type="button" class="medium_button" title="View statistic from case xml" value="Cases" onclick="javascript:onCaseView();"></td>
+               <td width="0%" align="left" class="custom_line_height" nowrap="nowrap" style="display:none">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
