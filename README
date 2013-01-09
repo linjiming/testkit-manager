@@ -39,7 +39,8 @@ Step 3: install 'sdb' on host
 
 Step 4: connect device
   power on device
-  connect USB
+  turn on USB debugging mode from Settings -> Developer options -> USB debugging
+  connect USB cable
   type command 'sudo sdb devices' from the host to check if the device is really connected
 
 

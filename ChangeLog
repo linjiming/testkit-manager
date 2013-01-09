@@ -176,3 +176,8 @@ testkit-manager 2.2.9:
   - add rerun feature
   - sort report page's item list by time
   - remove entry for case statistic
+
+testkit-manager 2.3.0:
+===================
+* Thu Jan 9 2013 Wendong,Sui <weidongx.sun@intel.com> 2.3.0-1
+  - update README and pdf doc

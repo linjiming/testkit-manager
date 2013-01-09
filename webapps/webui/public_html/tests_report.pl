@@ -346,8 +346,9 @@ elsif ( $_GET{'mail'} ) {
 	my $time = $_GET{'time'};
 	updateResultList($time);
 
-	my $hasEvolution = `which evolution 2>&1`;
-	if ( $hasEvolution =~ /which: no/ ) {
+	my $hasEvolution = "";
+	$hasEvolution = `which evolution 2>&1`;
+	if ( ( $hasEvolution =~ /which: no/ ) or ( $hasEvolution eq "" ) ) {
 		my $attach = "";
 		for ( my $i = 1 ; $i <= @result_list_xml ; $i++ ) {
 			$attach .= '<p>' . $result_list_xml[ $i - 1 ] . '</p>';
