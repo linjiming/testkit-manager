@@ -2960,6 +2960,7 @@ sub ScanPackages {
 sub ScanResultFile {
 	$testSuitesPath = $result_dir_manager;
 	find( \&GetResultFileName, $testSuitesPath );
+	@result_file_name = reverse sort @result_file_name;
 }
 
 sub CountPackages {
@@ -3467,7 +3468,7 @@ sub FilterCaseValue {
 }
 
 sub DrawResultSelect {
-	foreach ( reverse sort @result_file_name ) {
+	foreach (@result_file_name) {
 		my $result_file = $_;
 		print <<DATA;
 		<option>$result_file</option>

@@ -32,7 +32,7 @@ my $testkit_lite_error_message = check_testkit_sdb();
 if ( $testkit_lite_error_message eq "" ) {
 	my $check_network = check_network();
 	if ( $check_network =~ /OK/ ) {
-		my $pre_plan = "$SERVER_PARAM{'APP_DATA'}/plans/pre_CTS";
+		my $pre_plan = "$SERVER_PARAM{'APP_DATA'}/plans/pre_Tizen_CTS";
 		if ( -e $pre_plan ) {
 			my @rpm       = ();
 			my $repo      = get_repo();
