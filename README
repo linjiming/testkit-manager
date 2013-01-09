@@ -59,7 +59,7 @@ Startup:
 
 Suggestion:
 ===========
-1. firefox is the preferred web browser to open testkit-manger
+1. firefox and chrome are the preferred web browsers to open testkit-manger
 
 
 Limitation:
@@ -71,4 +71,4 @@ Limitation:
 
 Known Issues:
 ===========
-N/A
+1. IE web browser is not supported

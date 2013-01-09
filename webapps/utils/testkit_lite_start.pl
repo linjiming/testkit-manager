@@ -1026,13 +1026,7 @@ sub syncLiteResult {
 		write_string_as_file( "$globals->{'temp_dir'}/lite-command",
 "testkit-lite -f $profile_content --non-active --enable-memory-collection"
 		);
-		system(
-			sdb_cmd(
-				"push $globals->{'temp_dir'}/lite-command /tmp &>/dev/null")
-		);
-
-		# wait command file ready
-		sleep(2);
+		system( sdb_cmd("push $globals->{'temp_dir'}/lite-command /tmp") );
 		system( sdb_cmd("shell 'chmod 755 /tmp/lite-command'") );
 		$subshell->Spawn( sdb_cmd("shell './tmp/lite-command'") );
 	}

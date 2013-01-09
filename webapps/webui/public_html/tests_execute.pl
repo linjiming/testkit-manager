@@ -599,7 +599,7 @@ sub install_testkit_lite {
 					);
 					system(
 						sdb_cmd(
-"push /tmp/testkit-lite-$main_version-$sub_version.$arch_info.rpm /tmp &>/dev/null"
+"push /tmp/testkit-lite-$main_version-$sub_version.$arch_info.rpm /tmp"
 						)
 					);
 				}
@@ -607,11 +607,10 @@ sub install_testkit_lite {
 					system(
 						sdb_cmd(
 							    "push $repo_url"
-							  . "testkit-lite-$main_version-$sub_version.$arch_info.rpm /tmp &>/dev/null"
+							  . "testkit-lite-$main_version-$sub_version.$arch_info.rpm /tmp"
 						)
 					);
 				}
-				sleep 3;
 				system(
 					sdb_cmd(
 						    "shell 'rpm -ivh /tmp/"

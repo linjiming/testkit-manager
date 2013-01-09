@@ -1926,7 +1926,7 @@ elsif ( $_GET{'action'} eq 'rerun_test_plan' ) {
 				);
 				system(
 					sdb_cmd(
-"push $package_xml_file{$package_name} /tmp/rerun/$package_name/tests.xml &>/dev/null"
+"push $package_xml_file{$package_name} /tmp/rerun/$package_name/tests.xml"
 					)
 				);
 			}

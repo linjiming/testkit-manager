@@ -1424,13 +1424,10 @@ sub install_package {
 		if ( $network_result =~ /$GREP_PATH.*$package_rpm_name/ ) {
 			if ( $repo_type =~ /remote/ ) {
 				system("wget -c $repo_url$package_rpm_name -P /tmp -q -N");
-				system(
-					sdb_cmd("push /tmp/$package_rpm_name /tmp &>/dev/null") );
+				system( sdb_cmd("push /tmp/$package_rpm_name /tmp") );
 			}
 			if ( $repo_type =~ /local/ ) {
-				system(
-					sdb_cmd("push $repo_url$package_rpm_name /tmp &>/dev/null")
-				);
+				system( sdb_cmd("push $repo_url$package_rpm_name /tmp") );
 			}
 
 			my $cmd = sdb_cmd( "shell 'rpm -qa | grep " . $package_name . "'" );
@@ -1504,7 +1501,14 @@ sub install_package {
 	}
 }
 
+sub sdbPullFile {
+	my ( $copy_from, $copy_to ) = @_;
+	system( sdb_cmd("pull $copy_from $copy_to") );
+}
+
 sub syncDefinition {
+	use threads;
+	my @pull_thread_list = ();
 
 	# sync xml definition files
 	system( "rm -rf $test_definition_dir" . "*" );
@@ -1525,15 +1529,14 @@ sub syncDefinition {
 			if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
 				my $package_name = $1;
 				system("mkdir $test_definition_dir$package_name");
-				system(
-					sdb_cmd(
-"pull $definition $test_definition_dir$package_name &>/dev/null"
-					)
-				);
 				system("mkdir $opt_dir$package_name");
 				system("echo 'No readme info' > $opt_dir$package_name/README");
 				system(
 					"echo 'No license info' > $opt_dir$package_name/LICENSE");
+				my $copy_to = $test_definition_dir . $package_name;
+				my $pull_thread =
+				  threads->create( \&sdbPullFile, $definition, $copy_to );
+				push( @pull_thread_list, $pull_thread );
 			}
 		}
 	}
@@ -1552,23 +1555,27 @@ sub syncDefinition {
 			$readme =~ s/\s$//;
 			if ( $readme =~ /opt\/(.*)\/README/ ) {
 				my $package_name = $1;
-				system(
-					sdb_cmd("pull $readme $opt_dir$package_name &>/dev/null") );
+				my $copy_to      = $opt_dir . $package_name;
+				my $pull_thread =
+				  threads->create( \&sdbPullFile, $readme, $copy_to );
+				push( @pull_thread_list, $pull_thread );
 				my $license_cmd_tmp =
 				  sdb_cmd("shell 'ls /opt/$package_name/LICENSE'");
 				my $license_cmd = `$license_cmd_tmp`;
 				if ( $license_cmd !~ /No such file or directory/ ) {
 					my $license = $readme;
 					$license =~ s/README/LICENSE/;
-					system(
-						sdb_cmd(
-							"pull $license $opt_dir$package_name &>/dev/null")
-					);
+					my $copy_to = $opt_dir . $package_name;
+					my $pull_thread =
+					  threads->create( \&sdbPullFile, $license, $copy_to );
+					push( @pull_thread_list, $pull_thread );
 				}
 			}
 		}
 	}
-	sleep 3;
+	foreach (@pull_thread_list) {
+		$_->join();
+	}
 }
 
 sub syncDefinition_from_local_repo {

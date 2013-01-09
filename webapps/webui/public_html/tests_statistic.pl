@@ -3467,9 +3467,10 @@ sub FilterCaseValue {
 }
 
 sub DrawResultSelect {
-	for ( my $count = 0 ; $count < @result_file_name ; $count++ ) {
+	foreach ( reverse sort @result_file_name ) {
+		my $result_file = $_;
 		print <<DATA;
-		<option>$result_file_name[$count]</option>
+		<option>$result_file</option>
 DATA
 	}
 }
