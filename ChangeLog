@@ -181,3 +181,5 @@ testkit-manager 2.3.0:
 ===================
 * Thu Jan 9 2013 Wendong,Sui <weidongx.sun@intel.com> 2.3.0-1
   - update README and pdf doc
+* Thu Jan 23 2013 Wendong,Sui <weidongx.sun@intel.com> 2.3.0-2
+  - update version number to support more than one digit

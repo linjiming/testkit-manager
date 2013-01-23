@@ -1363,7 +1363,7 @@ sub install_package {
 		$GREP_PATH =~ s/\-/\\\-/g;
 
 		# install package
-		if ( $parameter =~ /(.*)-\d\.\d\.\d-\d/ ) {
+		if ( $parameter =~ /(.*)-\d+\.\d+\.\d+-\d+/ ) {
 			$package_rpm_name = $parameter;
 			$package_name     = $1;
 		}
@@ -1383,7 +1383,7 @@ sub install_package {
 			my $cmd = sdb_cmd( "shell 'rpm -qa | grep " . $package_name . "'" );
 			my $package_version_installed = `$cmd`;
 			my $version_installed         = "none";
-			if ( $package_version_installed =~ /-(\d\.\d\.\d-\d)/ ) {
+			if ( $package_version_installed =~ /-(\d+\.\d+\.\d+-\d+)/ ) {
 				$version_installed = $1;
 			}
 			foreach (@rpm) {
@@ -1391,7 +1391,7 @@ sub install_package {
 				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
 				if ( $remote_pacakge_name =~ /$package_name/ ) {
 					my $version_latest = "none";
-					if ( $remote_pacakge_name =~ /-(\d\.\d\.\d-\d)/ ) {
+					if ( $remote_pacakge_name =~ /-(\d+\.\d+\.\d+-\d+)/ ) {
 						$version_latest = $1;
 					}
 					my $result_latest_version =
@@ -1698,13 +1698,13 @@ sub compare_version {
 	my $new_2 = 0;
 	my $new_3 = 0;
 	my $new_4 = 0;
-	if ( $old =~ /(\d)\.(\d)\.(\d)-(\d)/ ) {
+	if ( $old =~ /(\d+)\.(\d+)\.(\d+)-(\d+)/ ) {
 		$old_1 = int($1);
 		$old_2 = int($2);
 		$old_3 = int($3);
 		$old_4 = int($4);
 	}
-	if ( $new =~ /(\d)\.(\d)\.(\d)-(\d)/ ) {
+	if ( $new =~ /(\d+)\.(\d+)\.(\d+)-(\d+)/ ) {
 		$new_1 = int($1);
 		$new_2 = int($2);
 		$new_3 = int($3);

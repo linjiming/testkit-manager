@@ -604,7 +604,7 @@ sub getUpdateInfoFromNetwork {
 			  sdb_cmd( "shell 'rpm -qa | grep " . $package_name_tmp . "'" );
 			my $package_version_installed = `$cmd`;
 			my $version_installed         = "none";
-			if ( $package_version_installed =~ /-(\d\.\d\.\d-\d)/ ) {
+			if ( $package_version_installed =~ /-(\d+\.\d+\.\d+-\d+)/ ) {
 				$version_installed = $1;
 			}
 			push( @package_version_installed, $version_installed );
@@ -615,7 +615,7 @@ sub getUpdateInfoFromNetwork {
 				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
 				if ( $remote_pacakge_name =~ /$package_name_tmp/ ) {
 					my $version_latest = "none";
-					if ( $remote_pacakge_name =~ /-(\d\.\d\.\d-\d)/ ) {
+					if ( $remote_pacakge_name =~ /-(\d+\.\d+\.\d+-\d+)/ ) {
 						$version_latest = $1;
 					}
 					my $result_latest_version = compare_version(
@@ -660,7 +660,7 @@ sub getUpdateInfoFromNetwork {
 				my $package_name        = "none";
 				my $version             = "none";
 				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
-				if ( $remote_pacakge_name =~ /\s*(.*)-(\d\.\d\.\d-\d)/ ) {
+				if ( $remote_pacakge_name =~ /\s*(.*)-(\d+\.\d+\.\d+-\d+)/ ) {
 					$package_name = $1;
 					$version      = $2;
 					push( @uninstall_package_name_with_version,
@@ -691,12 +691,12 @@ sub getUpdateInfoFromNetwork {
 				push( @uninstall_package_name_with_version,
 					$remote_pacakge_name );
 				my $package_name = "";
-				if ( $remote_pacakge_name =~ /\s*(.*)-(\d\.\d\.\d-\d)/ ) {
+				if ( $remote_pacakge_name =~ /\s*(.*)-(\d+\.\d+\.\d+-\d+)/ ) {
 					$package_name = $1;
 				}
 				push( @uninstall_package_name, $package_name );
 				my $version = "none";
-				if ( $remote_pacakge_name =~ /\s*(.*)-(\d\.\d\.\d-\d)/ ) {
+				if ( $remote_pacakge_name =~ /\s*(.*)-(\d+\.\d+\.\d+-\d+)/ ) {
 					$version = $2;
 				}
 				push( @uninstall_package_version, $version );
@@ -1211,7 +1211,7 @@ elsif ( $_GET{'action'} eq 'install_package' ) {
 	my $check_install    = install_package($package_rpm_name);
 	if ( $check_install =~ /OK/ ) {
 		my $package_name = "";
-		if ( $package_rpm_name =~ /(.*)-\d\.\d\.\d-\d/ ) {
+		if ( $package_rpm_name =~ /(.*)-\d+\.\d+\.\d+-\d+/ ) {
 			$package_name = $1;
 		}
 		my $file_name = $test_definition_dir . $package_name . "/tests.xml";
@@ -1249,12 +1249,12 @@ elsif ( $_GET{'action'} eq 'update_package' ) {
 	my $version     = $version_old;
 	my $flag        = $_GET{'flag'};
 	my $check_install = install_package($package_name);
-	if ( $version =~ /-(\d\.\d\.\d-\d)/ ) {
+	if ( $version =~ /-(\d+\.\d+\.\d+-\d+)/ ) {
 		$version = $1;
 	}
 	if ( $check_install =~ /OK/ ) {
 		my $version_new = `$cmd`;
-		if ( $version_new =~ /-(\d\.\d\.\d-\d)/ ) {
+		if ( $version_new =~ /-(\d+\.\d+\.\d+-\d+)/ ) {
 			$version = $1;
 		}
 		if ( $version_old ne $version_new ) {
@@ -1593,7 +1593,7 @@ elsif ( $_GET{'action'} eq "view_test_plan" ) {
 				}
 				if ( $theEnd eq "False" ) {
 					if ( $line !~ /Auto/ ) {
-						if ( $line =~ /(.*)\((\d*) (\d*)\)/ ) {
+						if ( $line =~ /(.*)\((\d+) (\d+)\)/ ) {
 							$package_name  = $1;
 							$auto_number   = $2;
 							$manual_number = $3;
@@ -1656,7 +1656,7 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 		  'grep id=\\"' . $name . '\\" ' . $auto_case_result_xml . ' -n';
 		my $grepResult = `$cmd_getLine`;
 
-		if ( $grepResult =~ /\s*(\d*)\s*:(.*>)/ ) {
+		if ( $grepResult =~ /\s*(\d+)\s*:(.*>)/ ) {
 			my $line_number  = $1;
 			my $line_content = $2;
 			$line_content =~ s/'/ /g;
@@ -1680,7 +1680,7 @@ elsif ( $_GET{'action'} eq 'save_manual' ) {
 		  'grep id=\\"' . $name . '\\" ' . $tests_result_xml . ' -n';
 		$grepResult = `$cmd_getLine`;
 
-		if ( $grepResult =~ /\s*(\d*)\s*:(.*>)/ ) {
+		if ( $grepResult =~ /\s*(\d+)\s*:(.*>)/ ) {
 			my $line_number  = $1;
 			my $line_content = $2;
 			$line_content =~ s/'/ /g;
@@ -1989,7 +1989,7 @@ elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests
 "shell 'ps aux | grep $package_id | sed -n '1,1p''"
 								);
 								my $pid = `$cmd`;
-								if ( $pid =~ /app\s*(\d*)\s*/ ) {
+								if ( $pid =~ /app\s*(\d+)\s*/ ) {
 									system( sdb_cmd("shell 'kill -9 $1'") );
 								}
 							}
@@ -2472,7 +2472,7 @@ sub updateAutoState {
 				}
 			}
 		}
-		if ( $_ =~ /Pass\(M\):(\d*)/ ) {
+		if ( $_ =~ /Pass\(M\):(\d+)/ ) {
 			if ( $inside eq "True" ) {
 				my @result_all  = split( ":", $autoResult{$package_name} );
 				my $pass_all    = int($1) + int( $result_all[0] );
@@ -2494,7 +2494,7 @@ sub updateAutoState {
 					  . '/info' );
 			}
 		}
-		if ( $_ =~ /Fail\(M\):(\d*)/ ) {
+		if ( $_ =~ /Fail\(M\):(\d+)/ ) {
 			if ( $inside eq "True" ) {
 				my @result_all  = split( ":", $autoResult{$package_name} );
 				my $fail_all    = int($1) + int( $result_all[1] );
@@ -2516,7 +2516,7 @@ sub updateAutoState {
 					  . '/info' );
 			}
 		}
-		if ( $_ =~ /Block\(M\):(\d*)/ ) {
+		if ( $_ =~ /Block\(M\):(\d+)/ ) {
 			if ( $inside eq "True" ) {
 				my @result_all  = split( ":", $autoResult{$package_name} );
 				my $fail_all    = int($1) + int( $result_all[2] );
@@ -2599,7 +2599,7 @@ sub updateManualState {
 				}
 			}
 		}
-		if ( $_ =~ /Pass\(A\):(\d*)/ ) {
+		if ( $_ =~ /Pass\(A\):(\d+)/ ) {
 			if ( $inside eq "True" ) {
 				my @result_all  = split( ":", $manualResult{$package_name} );
 				my $pass_all    = int($1) + int( $result_all[0] );
@@ -2621,7 +2621,7 @@ sub updateManualState {
 					  . '/info' );
 			}
 		}
-		if ( $_ =~ /Fail\(A\):(\d*)/ ) {
+		if ( $_ =~ /Fail\(A\):(\d+)/ ) {
 			if ( $inside eq "True" ) {
 				my @result_all  = split( ":", $manualResult{$package_name} );
 				my $fail_all    = int($1) + int( $result_all[1] );
@@ -2643,7 +2643,7 @@ sub updateManualState {
 					  . '/info' );
 			}
 		}
-		if ( $_ =~ /Block\(A\):(\d*)/ ) {
+		if ( $_ =~ /Block\(A\):(\d+)/ ) {
 			if ( $inside eq "True" ) {
 				my @result_all  = split( ":", $manualResult{$package_name} );
 				my $fail_all    = int($1) + int( $result_all[2] );

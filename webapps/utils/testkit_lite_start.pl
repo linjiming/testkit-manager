@@ -818,7 +818,7 @@ sub initProfileInfo {
 			}
 			if ( $theEnd eq "False" ) {
 				if ( $line !~ /Auto/ ) {
-					$line =~ s/\(\d* \d*\)//;
+					$line =~ s/\(\d+ \d+\)//;
 					push( @thisTargetPackages, $line );
 				}
 			}
@@ -1016,7 +1016,7 @@ sub syncLiteResult {
 				my $cmd =
 				  sdb_cmd("shell 'ps aux | grep $package_id | sed -n '1,1p''");
 				my $pid = `$cmd`;
-				if ( $pid =~ /app\s*(\d*)\s*/ ) {
+				if ( $pid =~ /app\s*(\d+)\s*/ ) {
 					system( sdb_cmd("shell 'kill -9 $1'") );
 				}
 			}
