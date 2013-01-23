@@ -66,7 +66,7 @@ if ( $testkit_lite_error_message eq "" ) {
 				}
 				if ( $theEnd eq "False" ) {
 					if ( $line !~ /Auto/ ) {
-						$line =~ s/\(\d* \d*\)//;
+						$line =~ s/\(\d+ \d+\)//;
 						push( @planPackages, $line );
 					}
 				}

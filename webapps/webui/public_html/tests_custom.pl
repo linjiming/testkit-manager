@@ -4865,7 +4865,7 @@ sub AnalysisVersion {
 		while ( $temp_count < $package_name_number ) {
 			for ( my $i = 0 ; $i < @temp ; $i++ ) {
 				if (   ( $temp[$i] =~ /$package_name[$temp_count]/ )
-					&& ( $temp[$i] =~ /-(\d\.\d\.\d-\d)(.*)/ ) )
+					&& ( $temp[$i] =~ /-(\d+\.\d+\.\d+-\d+)(.*)/ ) )
 				{
 					$temp_version = $1;
 					$temp_arc     = $2;

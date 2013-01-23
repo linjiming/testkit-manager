@@ -182,7 +182,7 @@ if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 				}
 				if ( $theEnd eq "False" ) {
 					if ( $line !~ /Auto/ ) {
-						if ( $line =~ /(.*)\((\d*) (\d*)\)/ ) {
+						if ( $line =~ /(.*)\((\d+) (\d+)\)/ ) {
 							$package_name  = $1;
 							$auto_number   = $2;
 							$manual_number = $3;
@@ -507,7 +507,7 @@ print_footer("");
 sub check_testkit_lite {
 	my $cmd          = sdb_cmd("shell 'rpm -qa | grep testkit-lite'");
 	my $testkit_lite = `$cmd`;
-	if ( $testkit_lite =~ /testkit-lite-(\d\.\d\.\d)-(\d)\.(.*)/ ) {
+	if ( $testkit_lite =~ /testkit-lite-(\d+\.\d+\.\d+)-(\d+)\.(.*)/ ) {
 		$have_testkit_lite = "TRUE";
 		my $version = $1;
 		if ( $version eq $MTK_VERSION ) {
@@ -561,7 +561,7 @@ sub install_testkit_lite {
 		foreach (@testkit_lites) {
 			my $testkit_lite = $_;
 			if ( $testkit_lite =~
-				/$GREP_PATH.*testkit-lite-(\d\.\d\.\d)-(\d)\.(.*)\.rpm/ )
+				/$GREP_PATH.*testkit-lite-(\d+\.\d+\.\d+)-(\d+)\.(.*)\.rpm/ )
 			{
 				my $version_main   = $1;
 				my $version_sub    = $2;
@@ -577,7 +577,7 @@ sub install_testkit_lite {
 			}
 		}
 		if ( $network_result =~
-			/$GREP_PATH.*testkit-lite-(\d\.\d\.\d)-(\d)\.(.*)\.rpm/ )
+			/$GREP_PATH.*testkit-lite-(\d+\.\d+\.\d+)-(\d+)\.(.*)\.rpm/ )
 		{
 			my $main_version = $1;
 			my $sub_version  = $2;
@@ -621,7 +621,7 @@ sub install_testkit_lite {
 				sleep 3;
 				my $cmd = sdb_cmd("shell 'rpm -qa | grep testkit-lite'");
 				my $testkit_lite = `$cmd`;
-				if ( $testkit_lite =~ /testkit-lite-(\d\.\d\.\d)-(\d)\.(.*)/ ) {
+				if ( $testkit_lite =~ /testkit-lite-(\d+\.\d+\.\d+)-(\d+)\.(.*)/ ) {
 					$have_testkit_lite = "TRUE";
 					my $version = $1;
 					if ( $version eq $MTK_VERSION ) {
