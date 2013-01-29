@@ -166,7 +166,7 @@ sub print_header($$) {
 
 	# Replace static patterns
 	$header =~ s/\$\$\$PAGE_TITLE\$\$\$/$title/g;
-	$header =~ s/\$\$\$MTK_VERSION\$\$\$/$MTK_VERSION/g;
+	$header =~ s/\$\$\$PUBLIC_VERSION\$\$\$/$PUBLIC_VERSION/g;
 	$header =~ s/\$\$\$MTK_BRANCH\$\$\$/$MTK_BRANCH/g;
 	$header =~ s/\$\$\$MTK_BRANCH_LC\$\$\$/lc($MTK_BRANCH)/eg;
 

@@ -29,7 +29,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(
 	DEBUG
-	$MTK_BRANCH $MTK_VERSION
+	$MTK_BRANCH $MTK_VERSION $PUBLIC_VERSION
 	$RESULTS_DIR
 	$STATUS_FILE  $DEFAULT_TEMP_DIR
 	$DEFAULT_STANDARD_VER
@@ -157,6 +157,7 @@ sub set_serial {
 # ---------------------------------------------------------------------
 
 our $MTK_VERSION;
+our $PUBLIC_VERSION = "none";
 our $MTK_BRANCH; # "MeeGo"
 {
 	# Look for $MTK_VERSION and $MTK_BRANCH in the utils/VERSION file
@@ -165,6 +166,11 @@ our $MTK_BRANCH; # "MeeGo"
 		if ( defined( local $_ = <$FILE> ) ) { # read first line
 			chomp;
 			($MTK_VERSION, $MTK_BRANCH) = split /:/;
+		}
+		if ( defined( local $_ = <$FILE> ) ) { # Read second line
+			chomp;
+			my @temp = split /:/;
+			$PUBLIC_VERSION = $temp[1];
 		}
 		close $FILE;
 	}

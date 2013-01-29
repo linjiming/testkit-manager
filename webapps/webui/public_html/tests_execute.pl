@@ -507,18 +507,23 @@ print_footer("");
 sub check_testkit_lite {
 	my $cmd          = sdb_cmd("shell 'rpm -qa | grep testkit-lite'");
 	my $testkit_lite = `$cmd`;
-	if ( $testkit_lite =~ /testkit-lite-(\d+\.\d+\.\d+)-(\d+)\.(.*)/ ) {
+	if ( $testkit_lite =~ /testkit-lite/ ) {
 		$have_testkit_lite = "TRUE";
-		my $version = $1;
-		if ( $version eq $MTK_VERSION ) {
 
-			# everthing is fine here
-			$have_correct_testkit_lite = "TRUE";
+		# check existing testkit-lite's version
+		my $version_cmd = sdb_cmd("shell 'testkit-lite --internal-version'");
+		my $testkit_lite_version = `$version_cmd`;
+		if ( $testkit_lite_version =~ /(\d+\.\d+\.\d+)-(\d+)/ ) {
+			my $version = $1;
+			if ( $version eq $MTK_VERSION ) {
+
+				# everthing is fine here
+				$have_correct_testkit_lite = "TRUE";
+			}
 		}
 		else {
 
 			# have testkit-lite but version is not correct
-			$have_correct_testkit_lite = "FALSE";
 			install_testkit_lite();
 		}
 	}
@@ -582,58 +587,60 @@ sub install_testkit_lite {
 			my $main_version = $1;
 			my $sub_version  = $2;
 			my $arch_info    = $3;
-			if (    ( $have_testkit_lite eq "TRUE" )
-				and ( $have_correct_testkit_lite eq "FALSE" ) )
-			{
+
+			# remove old one if there is
+			if ( $have_testkit_lite eq "TRUE" ) {
 				system(
 					sdb_cmd(
 						"shell 'rpm -e testkit-lite &>/dev/null' &>/dev/null")
 				);
 			}
-			if (   ( $have_testkit_lite eq "FALSE" )
-				or ( $have_correct_testkit_lite eq "FALSE" ) )
-			{
-				if ( $repo_type =~ /remote/ ) {
-					system( "wget -c $repo_url"
-						  . "testkit-lite-$main_version-$sub_version.$arch_info.rpm -P /tmp -q -N"
-					);
-					system(
-						sdb_cmd(
-"push /tmp/testkit-lite-$main_version-$sub_version.$arch_info.rpm /tmp"
-						)
-					);
-				}
-				if ( $repo_type =~ /local/ ) {
-					system(
-						sdb_cmd(
-							    "push $repo_url"
-							  . "testkit-lite-$main_version-$sub_version.$arch_info.rpm /tmp"
-						)
-					);
-				}
+
+			# copy new one from repo to /tmp
+			if ( $repo_type =~ /remote/ ) {
+				system( "wget -c $repo_url"
+					  . "testkit-lite-$main_version-$sub_version.$arch_info.rpm -P /tmp -q -N"
+				);
 				system(
 					sdb_cmd(
-						    "shell 'rpm -ivh /tmp/"
-						  . "testkit-lite-$main_version-$sub_version.$arch_info.rpm --nodeps"
-						  . " &>/dev/null' &>/dev/null"
+"push /tmp/testkit-lite-$main_version-$sub_version.$arch_info.rpm /tmp"
 					)
 				);
-				sleep 3;
-				my $cmd = sdb_cmd("shell 'rpm -qa | grep testkit-lite'");
-				my $testkit_lite = `$cmd`;
-				if ( $testkit_lite =~ /testkit-lite-(\d+\.\d+\.\d+)-(\d+)\.(.*)/ ) {
-					$have_testkit_lite = "TRUE";
-					my $version = $1;
-					if ( $version eq $MTK_VERSION ) {
-						$have_correct_testkit_lite = "TRUE";
-					}
-					else {
-						$have_correct_testkit_lite = "FALSE";
-					}
+			}
+			if ( $repo_type =~ /local/ ) {
+				system(
+					sdb_cmd(
+						    "push $repo_url"
+						  . "testkit-lite-$main_version-$sub_version.$arch_info.rpm /tmp"
+					)
+				);
+			}
+
+			# install new one
+			system(
+				sdb_cmd(
+					    "shell 'rpm -ivh /tmp/"
+					  . "testkit-lite-$main_version-$sub_version.$arch_info.rpm --nodeps"
+					  . " &>/dev/null' &>/dev/null"
+				)
+			);
+			sleep 5;
+
+			# check if new one is correct
+			my $cmd = sdb_cmd("shell 'testkit-lite --internal-version'");
+			my $testkit_lite = `$cmd`;
+			if ( $testkit_lite =~ /(\d+\.\d+\.\d+)-(\d+)/ ) {
+				$have_testkit_lite = "TRUE";
+				my $version = $1;
+				if ( $version eq $MTK_VERSION ) {
+					$have_correct_testkit_lite = "TRUE";
 				}
 				else {
-					$have_testkit_lite = "FALSE";
+					$have_correct_testkit_lite = "FALSE";
 				}
+			}
+			else {
+				$have_testkit_lite = "FALSE";
 			}
 			if (   ( $have_testkit_lite eq "FALSE" )
 				or ( $have_correct_testkit_lite eq "FALSE" ) )

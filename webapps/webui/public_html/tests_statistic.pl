@@ -568,8 +568,23 @@ DATA
                 </tr>
               </table></td>
             </tr>
-            
             <tr>
+              <td id="td_category_key" width="100%" nowrap="nowrap" colspan="2" style="display:none"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                    <td width="4%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                    <td width="15%" align="left" class="custom_line_height custom_font report_list_no_border">&nbsp;Spec</td><td>
+                    <select name="select_category_key" align="20px" id="select_category_key" class="custom_select" style="width:96%" onchange="javascript:filter_result_item();">
+DATA
+	DrawCategoryKeySelect();
+	print <<DATA;
+                    </select>
+                    </td>
+                  <td width="2%">&nbsp;</td>
+                </tr>
+              </table></td>
+            </tr>
+            
+            <tr style="display:none">
               <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
@@ -596,7 +611,7 @@ DATA
               </table></td>
             </tr>
             
-            <tr>
+            <tr style="display:none">
               <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
@@ -623,7 +638,7 @@ DATA
               </table></td>
             </tr>
             
-            <tr>
+            <tr style="display:none">
               <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                     <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
@@ -3040,6 +3055,7 @@ sub AnalysisTestsXML {
 			}
 			if ( $_ =~ /<suite.*name="(.*?)"/ ) {
 				$temp = $1;
+				$temp =~ s/ /-/g;
 				if ( $test_suite_number_temp == 0 ) {
 					push( @test_suite, $temp );
 					$test_suite_number_temp++;
@@ -3321,6 +3337,7 @@ sub FilterCaseValue {
 			}
 			if ( $_ =~ /suite.*name="(.*?)".*/ ) {
 				$suite_value = $1;
+				$suite_value =~ s/ /-/g;
 			}
 			if ( $_ =~ /.*<testcase.*/ ) {
 				$startCase = "TRUE";

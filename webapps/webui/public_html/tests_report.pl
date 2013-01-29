@@ -1080,6 +1080,7 @@ DATA
 			}
 			if ( $_ =~ /suite.*name="(.*?)".*/ ) {
 				$suite = $1;
+				$suite =~ s/ /-/g;
 			}
 			if ( $_ =~ /set.*name="(.*?)".*/ ) {
 				$set = $1;
@@ -1151,6 +1152,7 @@ DATA
 			}
 			if ( $_ =~ /suite.*name="(.*?)".*/ ) {
 				$suite = $1;
+				$suite =~ s/ /-/g;
 			}
 			if ( $_ =~ /set.*name="(.*?)".*/ ) {
 				$set = $1;
@@ -1440,6 +1442,7 @@ DATA
 			}
 			if ( $_ =~ /suite.*name="(.*?)".*/ ) {
 				$suite = $1;
+				$suite =~ s/ /-/g;
 			}
 			if ( $_ =~ /set.*name="(.*?)".*/ ) {
 				$set = $1;
@@ -1564,6 +1567,7 @@ DATA
 			}
 			if ( $_ =~ /suite.*name="(.*?)".*/ ) {
 				$suite = $1;
+				$suite =~ s/ /-/g;
 			}
 			if ( $_ =~ /set.*name="(.*?)".*/ ) {
 				$set = $1;
@@ -1772,6 +1776,7 @@ DATA
 			while (<FILE>) {
 				if ( $_ =~ /suite.*name="(.*?)"/ ) {
 					$suite_name = $1;
+					$suite_name =~ s/ /-/g;
 					$suite_number++;
 					print "+ \"<item id='SU:"
 					  . $suite_name
@@ -2009,6 +2014,7 @@ DATA
 					while (<FILE>) {
 						if ( $_ =~ /suite.*name="(.*?)"/ ) {
 							$suite_name = $1;
+							$suite_name =~ s/ /-/g;
 							$suite_number++;
 							print "+ \"<item id='TT:"
 							  . $test_type . "__SU:"

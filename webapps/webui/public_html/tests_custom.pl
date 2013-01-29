@@ -630,13 +630,13 @@ sub UpdatePage {
 		<tr>
           <td id="list_advanced" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
         <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Suite<td>
-                    <select name="select_testsuite" id="select_testsuite" style="width:87%" onchange="javascript:filter_case_item('suite');">
+        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                  <tr>
+                    <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                    <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Set<td>
+                      <select name="select_testset" id="select_testset" style="width:87%" onchange="javascript:filter_case_item('set');">
 DATA
-	DrawTestsuiteSelect();
+	DrawTestsetSelect();
 	print <<DATA;
                     </select>                    </td>
                 </tr>
@@ -654,31 +654,6 @@ DATA
               </table></td>
             </tr>
         <tr>
-        
-        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                  <tr>
-                    <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                    <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Set<td>
-                      <select name="select_testset" id="select_testset" style="width:87%" onchange="javascript:filter_case_item('set');">
-DATA
-	DrawTestsetSelect();
-	print <<DATA;
-                    </select>                    </td>
-                  </tr>
-              </table></td>
-          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="2%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Priority<td>
-                    <select name="select_pri" id="select_pri" style="width:87%" onchange="javascript:filter_case_item('priority');">
-DATA
-	DrawPrioritySelect();
-	print <<DATA;
-                    </select>                    </td>
-                </tr>
-              </table></td>
-            </tr>
-        <tr>
         <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
                   <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
@@ -686,6 +661,30 @@ DATA
                     <select name="select_com" id="select_com" style="width:87%" onchange="javascript:filter_case_item('component');">
 DATA
 	DrawComponentSelect();
+	print <<DATA;
+                    </select>                    </td>
+                  </tr>
+              </table></td>
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="2%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Architecture</td><td>
+                    <select name="select_arc" align="20px" id="select_arc" style="width:87%" onchange="javascript:filter_case_item();">
+DATA
+	DrawArcSelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+            </tr>
+        <tr style="display:none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Suite<td>
+                    <select name="select_testsuite" id="select_testsuite" style="width:87%" onchange="javascript:filter_case_item('suite');">
+DATA
+	DrawTestsuiteSelect();
 	print <<DATA;
                     </select>                    </td>
                 </tr>
@@ -742,13 +741,13 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Architecture</td><td>
-                    <select name="select_arc" align="20px" id="select_arc" style="width:87%" onchange="javascript:filter_case_item();">
+                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Priority<td>
+                    <select name="select_pri" id="select_pri" style="width:87%" onchange="javascript:filter_case_item('priority');">
 DATA
-	DrawArcSelect();
+	DrawPrioritySelect();
 	print <<DATA;
                     </select>
                   </td>
@@ -977,26 +976,6 @@ sub UpdateNullPage {
         <tr>
           <td id="list_advanced" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
         <tr class="custom_line_height">
-              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="8%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Test Suite<td>
-                    <select name="select_testsuite" id="select_testsuite" style="width:87%" onchange="javascript:filter_case_item('suite');">
-                    <option>Any Test Suite</option>
-                    </select>                    </td>
-                </tr>
-              </table></td>
-              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="2%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Execution Type<td>
-                    <select name="select_exe" id="select_exe" style="width:87%" onchange="javascript:filter_case_item('exe_type');">
-                    <option>Any Execution Type</option>
-                    </select>                    </td>
-                </tr>
-              </table></td>
-            </tr>
-        <tr class="custom_line_height">
            <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
                     <td width="8%" align="left" class="report_list_no_border">&nbsp;<td>
@@ -1006,12 +985,12 @@ sub UpdateNullPage {
                     </select>                    </td>
                   </tr>
               </table></td>
-          <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="2%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Priority<td>
-                    <select name="select_pri" id="select_pri" style="width:87%" onchange="javascript:filter_case_item('priority');">
-                    <option>Any Priority</option>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Execution Type<td>
+                    <select name="select_exe" id="select_exe" style="width:87%" onchange="javascript:filter_case_item('exe_type');">
+                    <option>Any Execution Type</option>
                     </select>                    </td>
                 </tr>
               </table></td>
@@ -1026,7 +1005,27 @@ sub UpdateNullPage {
                     </select>                    </td>
                 </tr>
               </table></td>
-              
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="2%" align="left" class="report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Architecture</td><td>
+                    <select name="select_arc" align="20px" id="select_arc" style="width:87%" onchange="javascript:filter_case_item();">
+                    <option>Any Architecture</option>
+                    </select>
+                  </td>
+                </tr>
+              </table></td>
+            </tr>
+        <tr class="custom_line_height" style="display:none">
+              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="8%" align="left" class="report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Test Suite<td>
+                    <select name="select_testsuite" id="select_testsuite" style="width:87%" onchange="javascript:filter_case_item('suite');">
+                    <option>Any Test Suite</option>
+                    </select>                    </td>
+                </tr>
+              </table></td>
           <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="2%" align="left" class="report_list_no_border">&nbsp;<td>
@@ -1072,17 +1071,15 @@ sub UpdateNullPage {
               </table></td>
             </tr>
             <tr class="custom_line_height">
-              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="8%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Architecture</td><td>
-                    <select name="select_arc" align="20px" id="select_arc" style="width:87%" onchange="javascript:filter_case_item();">
-                    <option>Any Architecture</option>
-                    </select>
-                  </td>
+                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Priority<td>
+                    <select name="select_pri" id="select_pri" style="width:87%" onchange="javascript:filter_case_item('priority');">
+                    <option>Any Priority</option>
+                    </select>                    </td>
                 </tr>
               </table></td>
-              
               <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
                     <td width="2%" align="left" class="report_list_no_border">&nbsp;<td>
@@ -1357,7 +1354,8 @@ DATA
 			while (<FILE>) {
 				if ( $_ =~ /suite.*name="(.*?)"/ ) {
 					$suite_value = $1;
-					$flag_suite  = "s";
+					$suite_value =~ s/ /-/g;
+					$flag_suite = "s";
 					if (
 						(
 							$advanced_value_test_suite_tmp =~
@@ -1814,7 +1812,8 @@ sub ListViewDetailedInfo {
 						$suite_terminator = 0;
 					}
 					$suite_value = $1;
-					$flag_suite  = "s";
+					$suite_value =~ s/ /-/g;
+					$flag_suite = "s";
 					if (
 						(
 							$advanced_value_test_suite_tmp =~
@@ -2298,13 +2297,13 @@ DATA
         <tr>
         <td id="list_advanced" class="custom_panel_background_color" style="display:"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Suite<td>
-                    <select name="select_testsuite" id="select_testsuite" style="width:87%" onchange="javascript:filter_case_item('suite');">
+        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                  <tr>
+                    <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                    <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Set<td>
+                      <select name="select_testset" id="select_testset" style="width:87%" onchange="javascript:filter_case_item('set');">
 DATA
-	LoadDrawTestsuiteSelect();
+	LoadDrawTestsetSelect();
 	print <<DATA;
                     </select>                    </td>
                 </tr>
@@ -2323,36 +2322,36 @@ DATA
             </tr>
         <tr>
         <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                  <tr>
-                    <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                    <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Set<td>
-                      <select name="select_testset" id="select_testset" style="width:87%" onchange="javascript:filter_case_item('set');">
-DATA
-	LoadDrawTestsetSelect();
-	print <<DATA;
-                    </select>                    </td>
-                  </tr>
-              </table></td>
-          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="2%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Priority<td>
-                    <select name="select_pri" id="select_pri" style="width:87%" onchange="javascript:filter_case_item('priority');">
-DATA
-	LoadDrawPrioritySelect();
-	print <<DATA;
-                    </select>                    </td>
-                </tr>
-              </table></td>
-            </tr>
-        <tr>
-        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
                   <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Component<td>
                     <select name="select_com" id="select_com" style="width:87%" onchange="javascript:filter_case_item('component');">
 DATA
 	LoadDrawComponentSelect();
+	print <<DATA;
+                    </select>                    </td>
+                  </tr>
+              </table></td>
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="2%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Architecture</td><td>
+                    <select name="select_arc" align="20px" id="select_arc" style="width:87%" onchange="javascript:filter_case_item();">
+DATA
+	LoadDrawArcSelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+            </tr>
+        <tr style="display:none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Suite<td>
+                    <select name="select_testsuite" id="select_testsuite" style="width:87%" onchange="javascript:filter_case_item('suite');">
+DATA
+	LoadDrawTestsuiteSelect();
 	print <<DATA;
                     </select>                    </td>
                 </tr>
@@ -2371,7 +2370,8 @@ DATA
           </tr>
           </table></td>
         </tr>
-        <tr id="button_adv_sec_td" style="display:">
+        <!--<tr id="button_adv_sec_td" style="display:">-->
+        <tr id="button_adv_sec_td" style="display:none">
 	       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="custom_line_height custom_panel_background_color">
 	         <tr>
 	           <td width="45%" align="right" ><img id="pic_adv_sec" src="images/advance-down.png" width="16" height="16"/></td>	
@@ -2407,13 +2407,13 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Architecture</td><td>
-                    <select name="select_arc" align="20px" id="select_arc" style="width:87%" onchange="javascript:filter_case_item();">
+                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Priority<td>
+                    <select name="select_pri" id="select_pri" style="width:87%" onchange="javascript:filter_case_item('priority');">
 DATA
-	LoadDrawArcSelect();
+	LoadDrawPrioritySelect();
 	print <<DATA;
                     </select>
                   </td>
@@ -2547,13 +2547,13 @@ DATA
 	}
 	print <<DATA;
          <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Suite<td>
-                    <select name="select_testsuite" id="select_testsuite" style="width:87%" onchange="javascript:filter_case_item('suite');">
+        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                  <tr>
+                    <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                    <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Set<td>
+                      <select name="select_testset" id="select_testset" style="width:87%" onchange="javascript:filter_case_item('set');">
 DATA
-	LoadDrawTestsuiteSelect();
+	LoadDrawTestsetSelect();
 	print <<DATA;
                     </select>                    </td>
                 </tr>
@@ -2572,36 +2572,36 @@ DATA
             </tr>
         <tr>
         <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                  <tr>
-                    <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                    <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Set<td>
-                      <select name="select_testset" id="select_testset" style="width:87%" onchange="javascript:filter_case_item('set');">
-DATA
-	LoadDrawTestsetSelect();
-	print <<DATA;
-                    </select>                    </td>
-                  </tr>
-              </table></td>
-          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="2%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Priority<td>
-                    <select name="select_pri" id="select_pri" style="width:87%" onchange="javascript:filter_case_item('priority');">
-DATA
-	LoadDrawPrioritySelect();
-	print <<DATA;
-                    </select>                    </td>
-                </tr>
-              </table></td>
-            </tr>
-        <tr>
-        <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                  <tr>
                   <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
                   <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Component<td>
                     <select name="select_com" id="select_com" style="width:87%" onchange="javascript:filter_case_item('component');">
 DATA
 	LoadDrawComponentSelect();
+	print <<DATA;
+                    </select>                    </td>
+                  </tr>
+              </table></td>
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="2%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Architecture</td><td>
+                    <select name="select_arc" align="20px" id="select_arc" style="width:87%" onchange="javascript:filter_case_item();">
+DATA
+	LoadDrawArcSelect();
+	print <<DATA;
+                    </select>                    </td>
+                </tr>
+              </table></td>
+            </tr>
+        <tr style="display:none">
+              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+                <tr>
+                  <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
+                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Test Suite<td>
+                    <select name="select_testsuite" id="select_testsuite" style="width:87%" onchange="javascript:filter_case_item('suite');">
+DATA
+	LoadDrawTestsuiteSelect();
 	print <<DATA;
                     </select>                    </td>
                 </tr>
@@ -2656,13 +2656,13 @@ DATA
               </table></td>
             </tr>
             <tr>
-              <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
                   <td width="8%" align="left" class="custom_line_height report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Architecture</td><td>
-                    <select name="select_arc" align="20px" id="select_arc" style="width:87%" onchange="javascript:filter_case_item();">
+                  <td width="30%" align="left" class="custom_line_height report_list_no_border">&nbsp;Priority<td>
+                    <select name="select_pri" id="select_pri" style="width:87%" onchange="javascript:filter_case_item('priority');">
 DATA
-	LoadDrawArcSelect();
+	LoadDrawPrioritySelect();
 	print <<DATA;
                     </select>
                   </td>
@@ -3675,7 +3675,8 @@ function hidden_Advanced_List(type)
 			advanced_list.style.display = "";
 			button_advanced_sec.title = "Show advanced list";
 			button_advanced.title = "Hide filter list";
-			button_advanced_sec_td.style.display = "";
+			//button_advanced_sec_td.style.display = "";
+			button_advanced_sec_td.style.display = "none";
 		}
 	}
 	else if (type_adv == 'button_adv_sec'){
@@ -3913,6 +3914,7 @@ function onClearinfo(){
 	}
 	update_state();
 	filter_case_item();
+	filter_case_item('suite');
 }
 DATA
 
@@ -4958,6 +4960,7 @@ sub AnalysisTestsXML {
 			}
 			if ( $_ =~ /<suite.*name="(.*?)"/ ) {
 				$temp = $1;
+				$temp =~ s/ /-/g;
 				if ( $test_suite_number_temp == 0 ) {
 					push( @test_suite, $temp );
 					$test_suite_number_temp++;
@@ -6181,6 +6184,7 @@ sub FilterCaseValue {
 		while (<FILE>) {
 			if ( $_ =~ /suite.*name="(.*?)"/ ) {
 				$suite_value = $1;
+				$suite_value =~ s/ /-/g;
 			}
 			if ( $_ =~ /set.*name="(.*?)"/ ) {
 				$set_value = $1;
