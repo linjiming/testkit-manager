@@ -164,13 +164,18 @@ sub writeResultInfo_wanted {
 
 		my $test_definition_xml =
 		  $test_definition_dir . $package_name . "/tests.xml";
-		system( 'cp '
-			  . $test_definition_xml . ' '
-			  . $result_dir_manager
-			  . $time . '/'
-			  . $package_name
-			  . '_definition.xml' );
-
+		if ( -e $test_definition_xml ) {
+			system( 'cp '
+				  . $test_definition_xml . ' '
+				  . $result_dir_manager
+				  . $time . '/'
+				  . $package_name
+				  . '_definition.xml' );
+		}
+		else {
+			warning "definition xml: $test_definition_xml is missing";
+			sleep 3;
+		}
 		if ( -e $dir . "/tests.result.xml" ) {
 			system( 'mv ' . $dir . "/tests.result.xml " . $dir . "/tests.xml" );
 			my $testkit_lite_result_xml = $dir . "/tests.xml";
@@ -396,7 +401,8 @@ sub rewriteXmlFile {
 	while (<FILE>) {
 		if ( $_ =~ /<suite.*name="(.*?)">/ ) {
 			$package_name = $1;
-			$content      = $_;
+			$package_name =~ s/ /-/g;
+			$content = $_;
 		}
 
 		# write to file for every end of a suite

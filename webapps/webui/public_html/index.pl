@@ -107,7 +107,7 @@ print show_error_dlg($testkit_lite_error_message);
 
 print <<DATA;
 <map name="home_menu" id="home_menu">
-  <area href="tests_report.pl" alt="Report" title="Vie Test Report" shape="rect" coords="201,209,330,372" />
+  <area href="tests_report.pl" alt="Report" title="View Test Report" shape="rect" coords="201,209,330,372" />
   <area href="tests_custom.pl" alt="Plan" title="Create Test Plan" shape="rect" coords="195,32,331,197" />
   <area href="tests_execute.pl" alt="Execute" title="Execute Test Plan" shape="rect" coords="397,43,535,196" />
   <area href="tests_statistic.pl" alt="Statistic" title="View Test Statistics" shape="rect" coords="391,214,541,370" />

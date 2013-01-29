@@ -165,6 +165,7 @@ DATA
 			}
 			if ( $_ =~ /suite.*name="(.*?)".*/ ) {
 				$suite = $1;
+				$suite =~ s/ /-/g;
 			}
 			if ( $_ =~ /set.*name="(.*?)".*/ ) {
 				$set = $1;
@@ -311,6 +312,7 @@ DATA
 			}
 			if ( $_ =~ /suite.*name="(.*?)".*/ ) {
 				$suite = $1;
+				$suite =~ s/ /-/g;
 			}
 			if ( $_ =~ /set.*name="(.*?)".*/ ) {
 				$set = $1;
