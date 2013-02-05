@@ -499,15 +499,19 @@ sub syncDefinition {
 			$definition =~ s/\s*$//;
 			if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
 				my $package_name = $1;
-				system("mkdir $test_definition_dir$package_name");
-				system("mkdir $opt_dir$package_name");
-				system("echo 'No readme info' > $opt_dir$package_name/README");
-				system(
-					"echo 'No license info' > $opt_dir$package_name/LICENSE");
-				my $copy_to = $test_definition_dir . $package_name;
-				my $pull_thread =
-				  threads->create( \&sdbPullFile, $definition, $copy_to );
-				push( @pull_thread_list, $pull_thread );
+				if ( $package_name =~ /-tests$/ ) {
+					system("mkdir $test_definition_dir$package_name");
+					system("mkdir $opt_dir$package_name");
+					system(
+						"echo 'No readme info' > $opt_dir$package_name/README");
+					system(
+						"echo 'No license info' > $opt_dir$package_name/LICENSE"
+					);
+					my $copy_to = $test_definition_dir . $package_name;
+					my $pull_thread =
+					  threads->create( \&sdbPullFile, $definition, $copy_to );
+					push( @pull_thread_list, $pull_thread );
+				}
 			}
 		}
 	}
@@ -526,20 +530,22 @@ sub syncDefinition {
 			$readme =~ s/\s$//;
 			if ( $readme =~ /opt\/(.*)\/README/ ) {
 				my $package_name = $1;
-				my $copy_to      = $opt_dir . $package_name;
-				my $pull_thread =
-				  threads->create( \&sdbPullFile, $readme, $copy_to );
-				push( @pull_thread_list, $pull_thread );
-				my $license_cmd_tmp =
-				  sdb_cmd("shell 'ls /opt/$package_name/LICENSE'");
-				my $license_cmd = `$license_cmd_tmp`;
-				if ( $license_cmd !~ /No such file or directory/ ) {
-					my $license = $readme;
-					$license =~ s/README/LICENSE/;
+				if ( $package_name =~ /-tests$/ ) {
 					my $copy_to = $opt_dir . $package_name;
 					my $pull_thread =
-					  threads->create( \&sdbPullFile, $license, $copy_to );
+					  threads->create( \&sdbPullFile, $readme, $copy_to );
 					push( @pull_thread_list, $pull_thread );
+					my $license_cmd_tmp =
+					  sdb_cmd("shell 'ls /opt/$package_name/LICENSE'");
+					my $license_cmd = `$license_cmd_tmp`;
+					if ( $license_cmd !~ /No such file or directory/ ) {
+						my $license = $readme;
+						$license =~ s/README/LICENSE/;
+						my $copy_to = $opt_dir . $package_name;
+						my $pull_thread =
+						  threads->create( \&sdbPullFile, $license, $copy_to );
+						push( @pull_thread_list, $pull_thread );
+					}
 				}
 			}
 		}

@@ -604,6 +604,7 @@ sub UpdatePage {
 	<div id="ajax_loading" style="display:none"></div>
 	<iframe id='popIframe' class='popIframe' frameborder='0'></iframe>
 	<div id="planDiv" class="report_list common_div plan_div"></div>
+	<div id="preConfigDiv" class="report_list common_div pre_config_div"></div>
 	<div id="loadProgressBarDiv" class="report_list common_div load_progress_bar_Div"></div>
 	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="report_list table_normal">
 	  <tr>
@@ -820,15 +821,16 @@ DATA
           <td ><table width="100%"border="0" cellpadding="0" cellspacing="0">
             <tr height="40">
               <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button_disable" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
+              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="large_button_disable" disabled="true" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
               <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button_disable" disabled="true" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
-              <td width="40%">&nbsp;</td>
+              <td width="30%">&nbsp;</td>
               <td width="10%" align="center">Test Plan</td>
               <td width="10%" align="center"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:show_save_panel();" /></td>
               <td width="10%" align="center"><input name="load_profile_panel_button" id="load_profile_panel_button" title="Open load test plan panel" type="button" class="medium_button" value="Load" onclick="javascript:show_load_panel();" /></td>
               <td width="10%" align="center"><input name="manage_profile_panel_button" id="manage_profile_panel_button" title="Open manage test plan panel" type="button" class="medium_button" value="Delete" onclick="javascript:show_manage_panel();" /></td>
             </tr>
             <tr id="save_profile_panel" style="display:none;">  
-              <td height="120" colspan="7" class="custom_panel_background_color"><table width="100%" height="120">
+              <td height="120" colspan="8" class="custom_panel_background_color"><table width="100%" height="120">
                 <tr height="45" valign="bottom">
                   <td width="5%">&nbsp;</td>
                   <td width="30%" align="left">Save as a new test plan</td>
@@ -869,7 +871,7 @@ DATA
               </table></td>
             </tr>
             <tr id="load_profile_panel" style="display:none;">
-              <td height="80" colspan="7" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
+              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
                 <tr>
 DATA
 	if ( $profiles_list ne "" ) {
@@ -899,7 +901,7 @@ DATA
               </table></td>
             </tr>
             <tr id="manage_profile_panel" style="display:none;">
-              <td height="80" colspan="7" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
+              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
                 <tr>
 DATA
 	if ( $profiles_list ne "" ) {
@@ -950,6 +952,7 @@ sub UpdateNullPage {
 	<div id="ajax_loading" style="display:none"></div>
 	<iframe id='popIframe' class='popIframe' frameborder='0'></iframe>
 	<div id="planDiv" class="report_list common_div plan_div"></div>
+	<div id="preConfigDiv" class="report_list common_div pre_config_div"></div>
 	<div id="loadProgressBarDiv" class="report_list common_div load_progress_bar_Div"></div>
 	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
@@ -1152,15 +1155,16 @@ DATA
           <td><table width="768" border="0" cellpadding="0" cellspacing="0" class="report_list">
             <tr height="40">
               <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button_disable" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
+              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="large_button_disable" disabled="true" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
               <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button_disable" disabled="true" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
-              <td width="40%">&nbsp;</td>
+              <td width="30%">&nbsp;</td>
               <td width="10%" align="center">Test Plan</td>
               <td width="10%" align="center"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:show_save_panel();" /></td>
               <td width="10%" align="center"><input name="load_profile_panel_button" id="load_profile_panel_button" title="Open load test plan panel" type="button" class="medium_button" value="Load" onclick="javascript:show_load_panel();" /></td>
               <td width="10%" align="center"><input name="manage_profile_panel_button" id="manage_profile_panel_button" title="Open manage test plan panel" type="button" class="medium_button" value="Delete" onclick="javascript:show_manage_panel();" /></td>
             </tr>
             <tr id="save_profile_panel" style="display:none;">
-              <td height="120" colspan="7" class="custom_panel_background_color"><table width="100%" height="120">
+              <td height="120" colspan="8" class="custom_panel_background_color"><table width="100%" height="120">
                 <tr height="45" height="45"valign="bottom">
                   <td width="5%">&nbsp;</td>
                   <td width="30%" align="left">Save as a new test plan</td>
@@ -1201,7 +1205,7 @@ DATA
               </table></td>
             </tr>
             <tr id="load_profile_panel" style="display:none;">
-              <td height="80" colspan="7" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
+              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
                 <tr>
 DATA
 	if ( $profiles_list ne "" ) {
@@ -1231,7 +1235,7 @@ DATA
               </table></td>
             </tr>
             <tr id="manage_profile_panel" style="display:none;">
-              <td height="80" colspan="7" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
+              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
                 <tr>
 DATA
 	if ( $profiles_list ne "" ) {
@@ -2454,6 +2458,7 @@ sub UpdateLoadPageSelectItem {
 	<div id="ajax_loading" style="display:none"></div>
 	<iframe id='popIframe' class='popIframe' frameborder='0'></iframe>
 	<div id="planDiv" class="report_list common_div plan_div"></div>
+	<div id="preConfigDiv" class="report_list common_div pre_config_div"></div>
 	<div id="loadProgressBarDiv" class="report_list common_div load_progress_bar_Div"></div>
 	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
@@ -2765,24 +2770,26 @@ DATA
 	if ( @checkbox_packages > 0 ) {
 		print <<DATA;
               <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" value="Execute" onclick="javascript:onExecute();" /></td>
+              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="large_button" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
               <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
 DATA
 	}
 	else {
 		print <<DATA;
               <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button_disable" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
+              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="large_button_disable" disabled="true" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
               <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button_disable" disabled="true" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
 DATA
 	}
 	print <<DATA;
-              <td width="40%">&nbsp;</td>
+              <td width="30%">&nbsp;</td>
               <td width="10%" align="center">Test Plan</td>
               <td width="10%" align="center"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" onclick="javascript:show_save_panel();" /></td>
               <td width="10%" align="center"><input name="load_profile_panel_button" id="load_profile_panel_button" title="Open load test plan panel" type="button" class="medium_button" value="Load" onclick="javascript:show_load_panel();" /></td>
               <td width="10%" align="center"><input name="manage_profile_panel_button" id="manage_profile_panel_button" title="Open manage test plan panel" type="button" class="medium_button" value="Delete" onclick="javascript:show_manage_panel();" /></td>
             </tr>
             <tr id="save_profile_panel" style="display:none;">
-              <td height="120" colspan="7" class="custom_panel_background_color"><table width="100%" height="120">
+              <td height="120" colspan="8" class="custom_panel_background_color"><table width="100%" height="120">
                 <tr height="45" valign="bottom">
                   <td width="5%">&nbsp;</td>
                   <td width="30%" align="left">Save as a new test plan</td>
@@ -2823,7 +2830,7 @@ DATA
               </table></td>
             </tr>
             <tr id="load_profile_panel" style="display:none;">
-              <td height="80" colspan="7" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
+              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
                 <tr>
 DATA
 	if ( $profiles_list ne "" ) {
@@ -2853,7 +2860,7 @@ DATA
               </table></td>
             </tr>
             <tr id="manage_profile_panel" style="display:none;">
-              <td height="80" colspan="7" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
+              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
                 <tr>
 DATA
 	if ( $profiles_list ne "" ) {
@@ -3758,6 +3765,16 @@ function update_state() {
 			button.className = "medium_button";
 		}
 	}
+	button = document.getElementById('pre_config');
+	if (button) {
+		button.disabled = (num_checked == 0);
+		if(button.disabled){
+			button.className = "medium_button_disable";
+		}
+		else{
+			button.className = "medium_button";
+		}
+	}
 	button = document.getElementById('view_package_info');
 	if (button) {
 		button.disabled = (num_checked == 0);
@@ -3915,6 +3932,136 @@ function onClearinfo(){
 	update_state();
 	filter_case_item();
 	filter_case_item('suite');
+}
+DATA
+my $pre_config_content = <<DATA;
+<table width="660" border="1" cellspacing="0" cellpadding="0" class="table_normal_small" rules="all" frame="void">
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="4" align="left" class="report_list_no_border">&nbsp;Pre Configuration</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="4" align="left" class="top_button_bg report_list_inside">&nbsp;Desc XML:</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="4" align="left" class="report_list_inside">&nbsp;
+      <textarea name="pre_config_desc_xml_text" id="pre_config_desc_xml_text" cols="75" rows="2"></textarea></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_right">&nbsp;Apache Server Name:</td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
+      <label>
+        <input type="text" name="pre_config_apache_name_text" id="pre_config_apache_name_text" class="pre_config_text" />
+      </label></td>
+    <td width="23%" align="left" class="top_button_bg report_list_one_row">&nbsp;Port:</td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
+      <input type="text" name="pre_config_apache_port_text" id="pre_config_apache_port_text" class="pre_config_text" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="2" align="left" class="report_list_inside">&nbsp;the name of Apache server which some components(ServerSentEvent, WebMessaging, XMLHttpRequest...) needed</td>
+    <td colspan="2" align="left" class="report_list_outside_left">&nbsp;the protocal port of the Apache server</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_right">&nbsp;Tomcat Server Name:</td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
+      <input type="text" name="pre_config_tomcat_name_text" id="pre_config_tomcat_name_text" class="pre_config_text" /></td>
+    <td width="23%" align="left" class="top_button_bg report_list_one_row">&nbsp;Port:</td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
+      <input type="text" name="pre_config_tomcat_port_text" id="pre_config_tomcat_port_text" class="pre_config_text" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="2" align="left" class="report_list_inside">&nbsp;the name of Tomcat server which some components(SessionHistory) needed</td>
+    <td colspan="2" align="left" class="report_list_outside_left">&nbsp;the protocal port of the Tomcat server</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_right">&nbsp;Web Socket Server Name:</td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
+      <input type="text" name="pre_config_socket_name_text" id="pre_config_socket_name_text" class="pre_config_text" /></td>
+    <td width="23%" align="left" class="top_button_bg report_list_one_row">&nbsp;Port:</td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
+      <input type="text" name="pre_config_socket_port_text" id="pre_config_socket_port_text" class="pre_config_text" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="2" align="left" class="report_list_inside">&nbsp;the name of WebSocket server which some components(WebSocket) needed</td>
+    <td colspan="2" align="left" class="report_list_outside_left">&nbsp;the protocal port of the WebSocket server</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="top_button_bg report_list_one_row">&nbsp;Bluetooth Device Name:</td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
+      <input type="text" name="pre_config_bluetooth_name_text" id="pre_config_bluetooth_name_text" class="pre_config_text" /></td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_right">&nbsp;Bluetooth Device Address:</td>
+    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
+      <input type="text" name="pre_config_bluetooth_address_text" id="pre_config_bluetooth_address_text" class="pre_config_text" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="2" align="right" class="report_list_no_border"><input type="submit" name="save_config_info" id="save_config_info" value="Save" class="small_button" onclick="javascript:onSaveConfig();" />
+      &nbsp;
+      <input type="submit" name="close_config_div" id="close_config_div" value="Close" class="small_button" onclick="javascript:onClosePopup();" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+</table>
+DATA
+$pre_config_content =~ s/\n//g;
+print <<DATA;
+function onPreConfig() {
+	document.getElementById('preConfigDiv').innerHTML = '$pre_config_content';
+	document.getElementById('preConfigDiv').style.display = 'block';
+	document.getElementById('popIframe').style.display = 'block';
+DATA
+if ( open my $FILE, $DEFAULT_TEMP_DIR . "/pre_config" ) {
+	my %config = ();
+	while (<$FILE>) {
+		chomp;
+		if (/.*=.*/) {
+			my ( $config_key, $config_value ) = split /=/;
+			$config{$config_key} = $config_value;
+		}
+	}
+	print
+"	document.getElementById('pre_config_apache_name_text').value = '$config{'server1_name'}';\n";
+	print
+"	document.getElementById('pre_config_apache_port_text').value = '$config{'server1_port'}';\n";
+	print
+"	document.getElementById('pre_config_tomcat_name_text').value = '$config{'server2_name'}';\n";
+	print
+"	document.getElementById('pre_config_tomcat_port_text').value = '$config{'server2_port'}';\n";
+	print
+"	document.getElementById('pre_config_socket_name_text').value = '$config{'server3_name'}';\n";
+	print
+"	document.getElementById('pre_config_socket_port_text').value = '$config{'server3_port'}';\n";
+	print
+"	document.getElementById('pre_config_bluetooth_name_text').value = '$config{'bluetooth_name'}';\n";
+	print
+"	document.getElementById('pre_config_bluetooth_address_text').value = '$config{'bluetooth_address'}';\n";
+}
+print <<DATA;
 }
 DATA
 
