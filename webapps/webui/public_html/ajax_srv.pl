@@ -613,7 +613,7 @@ sub getUpdateInfoFromNetwork {
 			foreach (@rpm) {
 				my $remote_pacakge_name = $_;
 				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
-				if ( $remote_pacakge_name =~ /$package_name_tmp/ ) {
+				if ( $remote_pacakge_name =~ /^$package_name_tmp$/ ) {
 					my $version_latest = "none";
 					if ( $remote_pacakge_name =~ /-(\d+\.\d+\.\d+-\d+)/ ) {
 						$version_latest = $1;
@@ -1956,6 +1956,48 @@ elsif ( $_GET{'action'} eq 'read_result_xml' ) {
 	$isWholeXML = 1;
 	$wholeXML .= $file_data;
 	no FileHandle;
+}
+
+elsif ( $_GET{'action'} eq 'pre_config_device' ) {
+	my $parameter           = $_GET{'parameter'};
+	my @parameters          = split( '!::!', $parameter );
+	my $config_file_content = <<DATA;
+server1_name=$parameters[0]
+server1_port=$parameters[1]
+server2_name=$parameters[2]
+server2_port=$parameters[3]
+server3_name=$parameters[4]
+server3_port=$parameters[5]
+bluetooth_name=$parameters[6]
+bluetooth_address=$parameters[7]
+DATA
+	write_string_as_file( $DEFAULT_TEMP_DIR . "/pre_config",
+		$config_file_content );
+	system( sdb_cmd("push $DEFAULT_TEMP_DIR/pre_config /tmp") );
+
+	# config device
+	use IPC::Open3;
+	local ( *HIS_IN, *HIS_OUT, *HIS_ERR );
+	my $install_pid = open3(
+		*HIS_IN, *HIS_OUT, *HIS_ERR,
+		sdb_cmd(
+"shell '/usr/bin/webapi_testing_config.sh -f /tmp/pre_config; echo \$?'"
+		)
+	);
+	@config_log = <HIS_OUT>;
+	waitpid( $install_pid, 0 );
+
+	# check exit status
+	my $exit_status = pop(@config_log);
+	if ( int($exit_status) == 0 ) {
+		$data .= "<pre_config_success>1</pre_config_success>\n";
+	}
+	else {
+		my $error_log_message = join( '!::!', @config_log );
+		$error_log_message =~ s/[^a-zA-Z0-9!:=>"'_\.\/\*\- ]//g;
+		$error_log_message =~ s/[0m|31m|32m|34m]//g;
+		$data .= "<pre_config_error>$error_log_message</pre_config_error>\n";
+	}
 }
 
 elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests

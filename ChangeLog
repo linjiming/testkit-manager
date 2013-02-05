@@ -186,3 +186,9 @@ testkit-manager 2.3.0:
 * Thu Jan 23 2013 Wendong,Sui <weidongx.sun@intel.com> 2.3.0-3
   - add public_version attribute in the VERSION file
   - keep only 4 filters for PLAN and STATISTIC page
+
+testkit-manager 2.3.1:
+===================
+* Thu Feb 5 2013 Wendong,Sui <weidongx.sun@intel.com> 2.3.1-1
+  - add pre configuration feature before execution
+  - update regular expression when check package update status

@@ -886,6 +886,24 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('msg_area_error').style.display = "";
 		document.getElementById('msg_text_error').innerHTML = error_message;
 	}
+	if (responseXML.getElementsByTagName('pre_config_success').length > 0) {
+		document.getElementById('preConfigDiv').innerHTML = '<table width="660" border="1" cellspacing="0" cellpadding="0" class="table_normal" rules="all" frame="void"><tr><td height="200" class="report_list_no_border">&nbsp;</td></tr><tr><td align="center" class="report_list_no_border">Configuration is successful !</td></tr><tr><td align="center" class="report_list_no_border"><input type="submit" name="close_config_div" id="close_config_div" value="Close" class="small_button" onclick="javascript:onClosePopup();" /></td></tr></table>';
+	}
+	if (responseXML.getElementsByTagName('pre_config_error').length > 0) {
+		var error_message = responseXML
+				.getElementsByTagName('pre_config_error')[0].childNodes[0].nodeValue;
+		var error_messages = new Array();
+		error_messages = error_message.split("!::!");
+		var display_message = "";
+		for (i = 0; i < error_messages.length; i++) {
+			if (error_messages[i] != "") {
+				display_message += "&nbsp;" + error_messages[i] + "<br/>";
+			}
+		}
+		document.getElementById('preConfigDiv').innerHTML = '<table width="660" border="1" cellspacing="0" cellpadding="0" class="table_normal" rules="all" frame="void"><tr align="left"><td width="10%" class="report_list_no_border">&nbsp;</td><td width="80%" height="65" class="report_list_no_border">&nbsp;</td><td width="10%" class="report_list_no_border">&nbsp;</td></tr><tr align="left"><td width="10%" class="report_list_no_border">&nbsp;</td><td width="80%" class="top_button_bg report_list_inside"><p>&nbsp;Configuration is failed !</p><p>&nbsp;Please finish the remanining configurations according to the document</p><p>&nbsp;</p><p>&nbsp;Error log:</p></td><td width="10%" class="report_list_no_border">&nbsp;</td></tr><tr align="left"><td width="10%" class="report_list_no_border">&nbsp;</td><td width="80%" class="report_list_inside">'
+				+ display_message
+				+ '</td><td width="10%" class="report_list_no_border">&nbsp;</td></tr><tr><td width="10%" align="left" class="report_list_no_border">&nbsp;</td><td width="80%" align="right" class="report_list_no_border"><input type="submit" name="close_config_div" id="close_config_div" value="Close" class="small_button" onclick="javascript:onClosePopup();" /></td><td width="10%" align="left" class="report_list_no_border">&nbsp;</td></tr></table>';
+	}
 	if (responseXML.getElementsByTagName('started').length > 0) {
 		var profile_name = responseXML.getElementsByTagName('started')[0].childNodes[0].nodeValue;
 		setTimeout('startRefresh("' + profile_name + '", "false")', 100);
@@ -1432,6 +1450,7 @@ function onUpdatePackages() {
 	document.getElementById('button_adv').disabled = true;
 	document.getElementById('update_package_list').disabled = true;
 	document.getElementById('execute_profile').disabled = true;
+	document.getElementById('pre_config').disabled = true;
 	document.getElementById('clear_information').disabled = true;
 	document.getElementById('view_package_info').disabled = true;
 	document.getElementById('save_profile_panel_button').disabled = true;
@@ -1441,6 +1460,7 @@ function onUpdatePackages() {
 	document.getElementById('button_adv').className = "medium_button_disable";
 	document.getElementById('update_package_list').className = "medium_button_disable";
 	document.getElementById('execute_profile').className = "medium_button_disable";
+	document.getElementById('pre_config').className = "medium_button_disable";
 	document.getElementById('clear_information').className = "medium_button_disable";
 	document.getElementById('view_package_info').className = "medium_button_disable";
 	document.getElementById('save_profile_panel_button').className = "medium_button_disable";
@@ -1709,12 +1729,16 @@ function view_profile(type) {
 function onClosePopup() {
 	var pop_div = document.getElementById('planDiv');
 	var about_div = document.getElementById('aboutDiv');
+	var pre_config_div = document.getElementById('preConfigDiv');
 	var pop_iframe = document.getElementById('popIframe');
 	if (pop_div) {
 		pop_div.style.display = 'none';
 	}
 	if (about_div) {
 		about_div.style.display = 'none';
+	}
+	if (pre_config_div) {
+		pre_config_div.style.display = 'none';
 	}
 	if (pop_iframe) {
 		pop_iframe.style.display = 'none';
@@ -1923,5 +1947,74 @@ function rerunNotPassedCases(time, plan_name) {
 		alert("Invalid test plan name 'none', rerun is not available");
 	} else {
 		ajax_call_get('action=rerun_test_plan&time=' + time);
+	}
+}
+
+function onSaveConfig() {
+	var have_all_info = true;
+	var server1_name = document.getElementById('pre_config_apache_name_text').value;
+	if (server1_name == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_apache_name_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_apache_name_text').style.borderColor = "green";
+	}
+	var server1_port = document.getElementById('pre_config_apache_port_text').value;
+	if (server1_port == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_apache_port_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_apache_port_text').style.borderColor = "green";
+	}
+	var server2_name = document.getElementById('pre_config_tomcat_name_text').value;
+	if (server2_name == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_tomcat_name_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_tomcat_name_text').style.borderColor = "green";
+	}
+	var server2_port = document.getElementById('pre_config_tomcat_port_text').value;
+	if (server2_port == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_tomcat_port_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_tomcat_port_text').style.borderColor = "green";
+	}
+	var server3_name = document.getElementById('pre_config_socket_name_text').value;
+	if (server3_name == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_socket_name_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_socket_name_text').style.borderColor = "green";
+	}
+	var server3_port = document.getElementById('pre_config_socket_port_text').value;
+	if (server3_port == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_socket_port_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_socket_port_text').style.borderColor = "green";
+	}
+	var bluetooth_name = document
+			.getElementById('pre_config_bluetooth_name_text').value;
+	if (bluetooth_name == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_bluetooth_name_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_bluetooth_name_text').style.borderColor = "green";
+	}
+	var bluetooth_address = document
+			.getElementById('pre_config_bluetooth_address_text').value;
+	if (bluetooth_address == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_bluetooth_address_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_bluetooth_address_text').style.borderColor = "green";
+	}
+	if (have_all_info) {
+		document.getElementById('preConfigDiv').innerHTML = '<table width="660" border="1" cellspacing="0" cellpadding="0" class="table_normal" rules="all" frame="void"><tr><td height="200" class="report_list_no_border">&nbsp;</td></tr><tr><td align="center" class="report_list_no_border"><img src="images/ajax_progress_large.gif" width="40" height="40" alt="execution progress gif"/></td></tr><tr><td align="center" class="report_list_no_border">Configuring, please wait&hellip;</td></tr></table>';
+		ajax_call_get('action=pre_config_device&parameter=' + server1_name
+				+ '!::!' + server1_port + '!::!' + server2_name + '!::!'
+				+ server2_port + '!::!' + server3_name + '!::!' + server3_port
+				+ '!::!' + bluetooth_name + '!::!' + bluetooth_address);
 	}
 }
