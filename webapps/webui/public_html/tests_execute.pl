@@ -519,13 +519,12 @@ sub check_testkit_lite {
 
 				# everthing is fine here
 				$have_correct_testkit_lite = "TRUE";
+				return;
 			}
 		}
-		else {
 
-			# have testkit-lite but version is not correct
-			install_testkit_lite();
-		}
+		# have testkit-lite but version is not correct
+		install_testkit_lite();
 	}
 	else {
 
