@@ -1971,9 +1971,8 @@ server3_port=$parameters[5]
 bluetooth_name=$parameters[6]
 bluetooth_address=$parameters[7]
 DATA
-	write_string_as_file( $DEFAULT_TEMP_DIR . "/pre_config",
-		$config_file_content );
-	system( sdb_cmd("push $DEFAULT_TEMP_DIR/pre_config /tmp") );
+	write_string_as_file( "/tmp/pre_config", $config_file_content );
+	system( sdb_cmd("push /tmp/pre_config /tmp") );
 
 	# config device
 	use IPC::Open3;
