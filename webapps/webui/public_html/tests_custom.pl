@@ -3948,8 +3948,7 @@ my $pre_config_content = <<DATA;
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="report_list_inside">&nbsp;
-      <textarea name="pre_config_desc_xml_text" id="pre_config_desc_xml_text" cols="75" rows="2"></textarea></td>
+    <td colspan="4" align="left" class="report_list_inside" id="pre_config_desc_xml_text">&nbsp;</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
   <tr>
@@ -4035,7 +4034,7 @@ function onPreConfig() {
 	document.getElementById('preConfigDiv').style.display = 'block';
 	document.getElementById('popIframe').style.display = 'block';
 DATA
-if ( open my $FILE, $DEFAULT_TEMP_DIR . "/pre_config" ) {
+if ( open my $FILE, "/tmp/pre_config" ) {
 	my %config = ();
 	while (<$FILE>) {
 		chomp;
@@ -4060,6 +4059,22 @@ if ( open my $FILE, $DEFAULT_TEMP_DIR . "/pre_config" ) {
 "	document.getElementById('pre_config_bluetooth_name_text').value = '$config{'bluetooth_name'}';\n";
 	print
 "	document.getElementById('pre_config_bluetooth_address_text').value = '$config{'bluetooth_address'}';\n";
+}
+my $desc_xml_cmd =
+  sdb_cmd("shell 'cat /usr/share/webapi-testconfig/tests.xml'");
+my $desc_xml = `$desc_xml_cmd`;
+if ( $desc_xml !~ /No such file or directory/ ) {
+	$desc_xml =~ s/</&lt;/g;
+	$desc_xml =~ s/>/&gt;/g;
+	$desc_xml =~ s/\n$//;
+	$desc_xml =~ s/\n/<\/br>&nbsp;/g;
+	$desc_xml =~ s/\s/&nbsp;/g;
+	print
+"	document.getElementById('pre_config_desc_xml_text').innerHTML = '&nbsp;$desc_xml';\n";
+}
+else {
+	print
+"	document.getElementById('pre_config_desc_xml_text').innerHTML = '&nbsp;missing file: /usr/share/webapi-testconfig/tests.xml';\n";
 }
 print <<DATA;
 }
