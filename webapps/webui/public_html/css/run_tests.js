@@ -530,9 +530,9 @@ function ajaxProcessResult(responseXML) {
 		var manual_case_number = view_profile_manual_case_number.split("!__! ");
 		var planDiv_string = "";
 
-		var advanced_key = new Array("Architecture", "Version", "Category",
-				"Priority", "Status", "Execution Type", "Test Suite", "Type",
-				"Test Set", "Component");
+		var advanced_key = new Array("Test Set", "Execution Type", "Component",
+				"Architecture", "Version", "Category", "Priority", "Status",
+				"Test Suite", "Type");
 
 		planDiv_string += '<tr><td height="30" width="100%" align="left" class="report_list view_test_plan_edge">&nbsp;</td></tr><tr><table width="660" height="30" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="93%" align="left" class="view_test_plan_edge">Test Plan: '
 				+ test_plan_name
@@ -562,7 +562,7 @@ function ajaxProcessResult(responseXML) {
 			}
 		}
 		for ( var i = 0; i < advanced_value.length; i++) {
-			if (i % 2 == 0) {
+			if ((i % 2 == 0) && (i < 3)) {
 				var j = i;
 				var k = j + 1;
 				planDiv_string += '<tr><td height="30" width="7%" align="left" class="view_test_plan_edge"></td><td height="30" width="18%" align="left" class="view_test_plan_popup ">&nbsp;'
