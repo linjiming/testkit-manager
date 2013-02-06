@@ -447,6 +447,11 @@
 															BLOCK
 														</td>
 													</xsl:if>
+													<xsl:if test="@result != 'BLOCK' and @result != 'FAIL' and @result != 'PASS' ">
+														<td>
+															Not Run
+														</td>
+													</xsl:if>
 												</xsl:when>
 												<xsl:otherwise>
 													<td>
