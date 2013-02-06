@@ -1445,16 +1445,16 @@ elsif ( $_GET{'action'} eq 'save_profile' ) {
 	print OUT "[/Auto]\n";
 
 	print OUT "\n[Advanced-feature]\n";
+	print OUT "select_testset=" . $advanced_value_test_set . "\n";
+	print OUT "select_exe=" . $advanced_value_execution_type . "\n";
+	print OUT "select_com=" . $advanced_value_component . "\n";
 	print OUT "select_arc=" . $advanced_value_architecture . "\n";
 	print OUT "select_ver=" . $advanced_value_version . "\n";
 	print OUT "select_category=" . $advanced_value_category . "\n";
 	print OUT "select_pri=" . $advanced_value_priority . "\n";
 	print OUT "select_status=" . $advanced_value_status . "\n";
-	print OUT "select_exe=" . $advanced_value_execution_type . "\n";
 	print OUT "select_testsuite=" . $advanced_value_test_suite . "\n";
 	print OUT "select_type=" . $advanced_value_type . "\n";
-	print OUT "select_testset=" . $advanced_value_test_set . "\n";
-	print OUT "select_com=" . $advanced_value_component . "\n";
 
 	print OUT "\n";
 	foreach (@select_packages) {
