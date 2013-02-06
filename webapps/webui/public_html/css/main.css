@@ -85,6 +85,12 @@
 	table-layout: fixed;
 }
 
+.table_normal_small {
+	font-family: Arial;
+	font-size: 12px;
+	table-layout: fixed;
+}
+
 .table_first_row {
 	font-weight: bold;
 }
@@ -1495,6 +1501,11 @@ tr.selectable:hover {
 	height: 20px;
 }
 
+.pre_config_text {
+	width: 140px;
+	height: 20px;
+}
+
 .custom_line_height {
 	height: 30px;
 }
@@ -1644,6 +1655,15 @@ tr.selectable:hover {
 }
 
 .plan_div {
+	width: 690px;
+	left: 36%;
+	overflow-y: auto;
+	overflow-x: auto;
+	height: 460px;
+	display: none;
+}
+
+.pre_config_div {
 	width: 690px;
 	left: 36%;
 	overflow-y: auto;
