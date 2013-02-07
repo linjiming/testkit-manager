@@ -348,19 +348,24 @@ DATA
 DATA
 
 	# print auto packages
-	my @package_number_order = reverse(@package_number);
+	my @package_number_order = sort @package_number;
 	foreach (@package_number_order) {
 		my @temp         = split( ":", $_ );
 		my $package_name = $temp[0];
 		my $auto         = $temp[1];
-		push( @progress_bar_max_value,
-			'bar_' . $profile_name . '_' . $package_name . '_auto::' . $auto );
-		my $auto_text_id =
-		  'text_' . $profile_name . '_' . $package_name . '_auto';
-		my $bar_id = 'bar_' . $profile_name . '_' . $package_name . '_auto';
-		my $progress_id =
-		  'text_progress_' . $profile_name . '_' . $package_name . '_auto';
-		print <<DATA;
+		if ( int($auto) != 0 ) {
+			push( @progress_bar_max_value,
+				    'bar_'
+				  . $profile_name . '_'
+				  . $package_name
+				  . '_auto::'
+				  . $auto );
+			my $auto_text_id =
+			  'text_' . $profile_name . '_' . $package_name . '_auto';
+			my $bar_id = 'bar_' . $profile_name . '_' . $package_name . '_auto';
+			my $progress_id =
+			  'text_progress_' . $profile_name . '_' . $package_name . '_auto';
+			print <<DATA;
               <tr>
                 <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td width="55%" align="left" class="report_list_one_row cut_long_string_one_line" title="$package_name">&nbsp;&nbsp;<span id="$auto_text_id">$package_name</span></td>
@@ -368,6 +373,7 @@ DATA
                 <td width="22%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
 DATA
+		}
 	}
 	print <<DATA;
               <tr>
@@ -383,18 +389,23 @@ DATA
 		my @temp         = split( ":", $_ );
 		my $package_name = $temp[0];
 		my $manual       = $temp[2];
-		push( @progress_bar_max_value,
-			    'bar_'
+		if ( int($manual) != 0 ) {
+			push( @progress_bar_max_value,
+				    'bar_'
+				  . $profile_name . '_'
+				  . $package_name
+				  . '_manual::'
+				  . $manual );
+			my $manual_text_id =
+			  'text_' . $profile_name . '_' . $package_name . '_manual';
+			my $bar_id =
+			  'bar_' . $profile_name . '_' . $package_name . '_manual';
+			my $progress_id =
+			    'text_progress_'
 			  . $profile_name . '_'
 			  . $package_name
-			  . '_manual::'
-			  . $manual );
-		my $manual_text_id =
-		  'text_' . $profile_name . '_' . $package_name . '_manual';
-		my $bar_id = 'bar_' . $profile_name . '_' . $package_name . '_manual';
-		my $progress_id =
-		  'text_progress_' . $profile_name . '_' . $package_name . '_manual';
-		print <<DATA;
+			  . '_manual';
+			print <<DATA;
               <tr>
                 <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td width="55%" align="left" class="report_list_one_row cut_long_string_one_line" title="$package_name">&nbsp;&nbsp;<span id="$manual_text_id">$package_name</span></td>
@@ -402,6 +413,7 @@ DATA
                 <td width="22%" align="left" class="report_list_one_row"><div id="$bar_id"></div></td>
               </tr>
 DATA
+		}
 	}
 	print <<DATA;
             </table></div>

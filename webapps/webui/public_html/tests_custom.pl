@@ -4060,9 +4060,9 @@ if ( open my $FILE, "/tmp/pre_config" ) {
 	print
 "	document.getElementById('pre_config_bluetooth_address_text').value = '$config{'bluetooth_address'}';\n";
 }
-my $desc_xml_cmd =
-  sdb_cmd("shell 'cat /usr/share/webapi-testconfig/tests.xml'");
-my $desc_xml = `$desc_xml_cmd`;
+my $desc_xml_path = get_config_info("desc_xml");
+my $desc_xml_cmd  = sdb_cmd("shell 'cat $desc_xml_path'");
+my $desc_xml      = `$desc_xml_cmd`;
 if ( $desc_xml !~ /No such file or directory/ ) {
 	$desc_xml =~ s/</&lt;/g;
 	$desc_xml =~ s/>/&gt;/g;
@@ -4074,7 +4074,7 @@ if ( $desc_xml !~ /No such file or directory/ ) {
 }
 else {
 	print
-"	document.getElementById('pre_config_desc_xml_text').innerHTML = '&nbsp;missing file: /usr/share/webapi-testconfig/tests.xml';\n";
+"	document.getElementById('pre_config_desc_xml_text').innerHTML = '&nbsp;missing file: $desc_xml_path';\n";
 }
 print <<DATA;
 }
