@@ -45,7 +45,7 @@ our @EXPORT = qw(
 	@all_archs
 	$last_cmd_output &last_line
 	&complain &debug_inform &fail &inform &warning &capture &cmd
-	&sleep_ms &check_sdb_device &sdb_cmd &get_serial &set_serial
+	&sleep_ms &check_sdb_device &sdb_cmd &get_serial &set_serial &get_config_info
 );
 
 push @EXPORT, @Error::EXPORT;
@@ -151,6 +151,37 @@ sub set_serial {
 		system( "sed -i '$line_number"
 			  . "c sdb_serial = $serial' $configuration_file" );
 		return "OK";
+	}
+}
+
+sub get_config_info {
+	my ($key) = @_;
+	my $config_line = "none";
+	open FILE, $configuration_file or die $!;
+	while (<FILE>) {
+		if ( $_ =~ /^$key/ ) {
+			$config_line = $_;
+			last;
+		}
+	}
+	close(FILE);
+	if ( $config_line eq "none" ) {
+		return "Error";
+	}
+	else {
+		$config_line =~ s/^\s*//;
+		$config_line =~ s/\s*$//;
+		my @config_info = split( "=", $config_line );
+		my $config_value = "";
+		if ( defined $config_info[1] ) {
+			$config_value = $config_info[1];
+			$config_value =~ s/^\s*//;
+			$config_value =~ s/\s*$//;
+		}
+		if ( $config_value eq "" ) {
+			$config_value = "none";
+		}
+		return $config_value;
 	}
 }
 

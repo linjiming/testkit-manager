@@ -1977,12 +1977,10 @@ DATA
 	# config device
 	use IPC::Open3;
 	local ( *HIS_IN, *HIS_OUT, *HIS_ERR );
-	my $install_pid = open3(
-		*HIS_IN, *HIS_OUT, *HIS_ERR,
-		sdb_cmd(
-"shell '/usr/bin/webapi_testing_config.sh -f /tmp/pre_config; echo \$?'"
-		)
-	);
+	my $config_script_path = get_config_info("config_script");
+	my $install_pid =
+	  open3( *HIS_IN, *HIS_OUT, *HIS_ERR,
+		sdb_cmd("shell '$config_script_path -f /tmp/pre_config; echo \$?'") );
 	@config_log = <HIS_OUT>;
 	waitpid( $install_pid, 0 );
 
