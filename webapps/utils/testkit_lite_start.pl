@@ -900,6 +900,7 @@ sub readProfile {
 		if ( $isInstalled !~ /No such file or directory/ ) {
 			if (   ( $thisTargetPackage =~ /^webapi/ )
 				or ( $thisTargetPackage =~ /^cts-webapi/ )
+				or ( $thisTargetPackage =~ /^tct-webapi/ )
 				or ( $thisTargetPackage =~ /^wrt/ ) )
 			{
 				$isWebApi = "True";
