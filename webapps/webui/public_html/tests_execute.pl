@@ -39,13 +39,19 @@ my @package_list              = ();      #save all the packages
 my @complete_package_list     = ();      #save all complete packages
 my $have_testkit_lite         = "FALSE";
 my $have_correct_testkit_lite = "FALSE";
-my $testkit_lite_status       = "FALSE";
 my $have_correct_sdb_serial   = "FALSE";
 my $testkit_lite_error_message = check_testkit_sdb();
 
 if ( $testkit_lite_error_message eq "" ) {
 	$have_correct_sdb_serial = "TRUE";
-	check_testkit_lite();
+	my $status = read_status();
+	if ( $status->{'IS_RUNNING'} ) {
+		$have_testkit_lite         = "TRUE";
+		$have_correct_testkit_lite = "TRUE";
+	}
+	else {
+		check_testkit_lite();
+	}
 }
 
 if ( $_GET{'profile'} ) {
