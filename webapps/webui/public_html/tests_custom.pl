@@ -4060,6 +4060,14 @@ if ( open my $FILE, "/tmp/pre_config" ) {
 	print
 "	document.getElementById('pre_config_bluetooth_address_text').value = '$config{'bluetooth_address'}';\n";
 }
+else {
+	print
+	  "	document.getElementById('pre_config_apache_port_text').value = '80';\n";
+	print
+"	document.getElementById('pre_config_tomcat_port_text').value = '8080';\n";
+	print
+"	document.getElementById('pre_config_socket_port_text').value = '8081';\n";
+}
 my $desc_xml_path = get_config_info("desc_xml");
 my $desc_xml_cmd  = sdb_cmd("shell 'cat $desc_xml_path'");
 my $desc_xml      = `$desc_xml_cmd`;
