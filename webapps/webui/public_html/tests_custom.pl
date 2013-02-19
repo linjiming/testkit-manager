@@ -4069,16 +4069,27 @@ else {
 "	document.getElementById('pre_config_socket_port_text').value = '8081';\n";
 }
 my $desc_xml_path = get_config_info("desc_xml");
-my $desc_xml_cmd  = sdb_cmd("shell 'cat $desc_xml_path'");
+my $desc_xml_cmd  = sdb_cmd("shell 'ls $desc_xml_path'");
 my $desc_xml      = `$desc_xml_cmd`;
 if ( $desc_xml !~ /No such file or directory/ ) {
-	$desc_xml =~ s/</&lt;/g;
-	$desc_xml =~ s/>/&gt;/g;
-	$desc_xml =~ s/\n$//;
-	$desc_xml =~ s/\n/<\/br>&nbsp;/g;
-	$desc_xml =~ s/\s/&nbsp;/g;
+	system( sdb_cmd("pull $desc_xml_path /tmp/desc_xml") );
+	my $step_number  = 1;
+	my $step_content = "";
+	open( FILE, "/tmp/desc_xml" );
+	while (<FILE>) {
+		my $line = $_;
+		if ( $line =~ /<step_desc>(.+?)<\/step_desc>/ ) {
+			my $step = $1;
+			$step =~ s/</&lt;/g;
+			$step =~ s/>/&gt;/g;
+			$step_content .= "&nbsp;$step_number. $step<\/br>";
+			$step_number++;
+		}
+	}
+	close(FILE);
+	system("rm -rf /tmp/desc_xml");
 	print
-"	document.getElementById('pre_config_desc_xml_text').innerHTML = '&nbsp;$desc_xml';\n";
+"	document.getElementById('pre_config_desc_xml_text').innerHTML = '$step_content';\n";
 }
 else {
 	print
