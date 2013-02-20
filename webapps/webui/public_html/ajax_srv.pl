@@ -613,7 +613,11 @@ sub getUpdateInfoFromNetwork {
 			foreach (@rpm) {
 				my $remote_pacakge_name = $_;
 				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
-				if ( $remote_pacakge_name =~ /^$package_name_tmp$/ ) {
+				my $remote_package_dry_name = "none";
+				if ( $remote_pacakge_name =~ /\s*(.*)-\d+\.\d+\.\d+-\d+/ ) {
+					$remote_package_dry_name = $1;
+				}
+				if ( $remote_package_dry_name =~ /^$package_name_tmp$/ ) {
 					my $version_latest = "none";
 					if ( $remote_pacakge_name =~ /-(\d+\.\d+\.\d+-\d+)/ ) {
 						$version_latest = $1;

@@ -297,12 +297,27 @@ function ajaxProcessResult(responseXML) {
 	if (responseXML.getElementsByTagName('uninstall_package_name').length > 0) {
 		var package_name_number = document
 				.getElementById("package_name_number").value;
-		uninstall_pkg_name = responseXML
-				.getElementsByTagName('uninstall_package_name')[0].childNodes[0].nodeValue;
-		uninstall_pkg_name_with_ver = responseXML
-				.getElementsByTagName('uninstall_package_name_with_version')[0].childNodes[0].nodeValue;
-		uninstall_pkg_version = responseXML
-				.getElementsByTagName('uninstall_package_version')[0].childNodes[0].nodeValue;
+		uninstall_pkg_name = "";
+		try {
+			uninstall_pkg_name = responseXML
+					.getElementsByTagName('uninstall_package_name')[0].childNodes[0].nodeValue;
+		} catch (e) {
+			// handle for only got update packages in the repo
+		}
+		uninstall_pkg_name_with_ver = "";
+		try {
+			uninstall_pkg_name_with_ver = responseXML
+					.getElementsByTagName('uninstall_package_name_with_version')[0].childNodes[0].nodeValue;
+		} catch (e) {
+			// handle for only got update packages in the repo
+		}
+		uninstall_pkg_version = "";
+		try {
+			uninstall_pkg_version = responseXML
+					.getElementsByTagName('uninstall_package_version')[0].childNodes[0].nodeValue;
+		} catch (e) {
+			// handle for only got update packages in the repo
+		}
 		install_pkg_update_flag = responseXML
 				.getElementsByTagName('update_package_flag')[0].childNodes[0].nodeValue;
 
