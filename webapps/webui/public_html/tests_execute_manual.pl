@@ -90,12 +90,34 @@ DATA
                 <td align="left" class="report_list_one_row"><a onclick="javascript:filter('P:$package');" class="navigation_normal_text">$package</a></td>
                 <td class="report_list_one_row"></td>
               </tr>
+DATA
+		if ( $auto_result =~ /(.*0.*0.*0.*0.*0.*)/ ) {
+			print <<DATA;
+              <tr id="background_T:auto_P:$package" style="display:none">
+DATA
+		}
+		else {
+			print <<DATA;
               <tr id="background_T:auto_P:$package">
+DATA
+		}
+		print <<DATA;
                 <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:auto_P:$package');" title="(Total Pass Fail Block N/A)">&nbsp;&nbsp;$auto_result</a></td>
                 <td class="report_list_one_row"><div id="progress_bar_auto_$package"></div></td>
               </tr>
+DATA
+		if ( $manual_result =~ /(.*0.*0.*0.*0.*0.*)/ ) {
+			print <<DATA;
+              <tr id="background_T:manual_P:$package" style="display:none">
+DATA
+		}
+		else {
+			print <<DATA;
               <tr id="background_T:manual_P:$package">
+DATA
+		}
+		print <<DATA;
                 <td width="4%" class="report_list_one_row">&nbsp;</td>
                 <td align="left" class="report_list_one_row"><a onclick="javascript:filter('T:manual_P:$package');" title="(Total Pass Fail Block N/A)">&nbsp;&nbsp;$manual_result</a></td>
                 <td class="report_list_one_row"><div id="progress_bar_$package"></div></td>
