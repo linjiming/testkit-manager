@@ -1019,7 +1019,7 @@ sub showDetailedReport {
                     <option selected="selected">FAIL</option>
                     <option>PASS</option>
                     <option>BLOCK</option>
-                    <option>N/A</option>
+                    <option>NOT RUN</option>
                     <option>All</option>
                   </select>
                 </td>
@@ -1127,7 +1127,18 @@ DATA
 				print <<DATA;
                             <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
                             <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+DATA
+				if ( $result =~ /N\/A/ ) {
+					print <<DATA;
+                            <td width="20%" class="report_list_outside_right" align="center">NOT RUN</td>
+DATA
+				}
+				else {
+					print <<DATA;
                             <td width="20%" class="report_list_outside_right" align="center">$result</td>
+DATA
+				}
+				print <<DATA;
                           </tr>
                           <tr id="detailed_case_package_$name" style="display:none">
                             <td height="30" colspan="3">
@@ -1209,7 +1220,18 @@ DATA
 					print <<DATA;
                             <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_package_$name');">&nbsp;$name</a></td>
                             <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+DATA
+					if ( $result =~ /N\/A/ ) {
+						print <<DATA;
+                            <td width="20%" class="report_list_outside_right" align="center">NOT RUN</td>
+DATA
+					}
+					else {
+						print <<DATA;
                             <td width="20%" class="report_list_outside_right" align="center">$result</td>
+DATA
+					}
+					print <<DATA;
                           </tr>
                           <tr id="detailed_case_package_$name" style="display:none">
                             <td height="30" colspan="3">
@@ -1306,7 +1328,18 @@ DATA
 				print <<DATA;
                             <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
                             <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+DATA
+				if ( $result =~ /N\/A/ ) {
+					print <<DATA;
+                            <td width="20%" class="report_list_outside_right" align="center">NOT RUN</td>
+DATA
+				}
+				else {
+					print <<DATA;
                             <td width="20%" class="report_list_outside_right" align="center">$result</td>
+DATA
+				}
+				print <<DATA;
                           </tr>
                           <tr id="detailed_case_component_$name" style="display:none">
                             <td height="30" colspan="3">
@@ -1383,7 +1416,18 @@ DATA
 					print <<DATA;
                             <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_component_$name');">&nbsp;$name</a></td>
                             <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+DATA
+					if ( $result =~ /N\/A/ ) {
+						print <<DATA;
+                            <td width="20%" class="report_list_outside_right" align="center">NOT RUN</td>
+DATA
+					}
+					else {
+						print <<DATA;
                             <td width="20%" class="report_list_outside_right" align="center">$result</td>
+DATA
+					}
+					print <<DATA;
                           </tr>
                           <tr id="detailed_case_component_$name" style="display:none">
                             <td height="30" colspan="3">
@@ -1542,7 +1586,18 @@ DATA
 				print <<DATA;
                             <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
                             <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+DATA
+				if ( $result =~ /N\/A/ ) {
+					print <<DATA;
+                            <td width="20%" class="report_list_outside_right" align="center">NOT RUN</td>
+DATA
+				}
+				else {
+					print <<DATA;
                             <td width="20%" class="report_list_outside_right" align="center">$result</td>
+DATA
+				}
+				print <<DATA;
                           </tr>
                           <tr id="detailed_case_test_type_$name" style="display:none">
                             <td height="30" colspan="3">
@@ -1679,7 +1734,18 @@ DATA
 					print <<DATA;
                             <td align="left" width="40%" class="report_list_outside_left cut_long_string_one_line" title="$name"><a onclick="javascript:show_case_detail('detailed_case_test_type_$name');">&nbsp;$name</a></td>
                             <td align="left" width="40%" class="report_list_one_row cut_long_string_one_line" title="$description">&nbsp;$description</td>
+DATA
+					if ( $result =~ /N\/A/ ) {
+						print <<DATA;
+                            <td width="20%" class="report_list_outside_right" align="center">NOT RUN</td>
+DATA
+					}
+					else {
+						print <<DATA;
                             <td width="20%" class="report_list_outside_right" align="center">$result</td>
+DATA
+					}
+					print <<DATA;
                           </tr>
                           <tr id="detailed_case_test_type_$name" style="display:none">
                             <td height="30" colspan="3">
@@ -2123,6 +2189,9 @@ DATA
 function filter() {
 	var view = document.getElementById('select_view').value;
 	var result = document.getElementById('select_result').value;
+	if (result == "NOT RUN") {
+		result = "N/A";
+	}
 	var type = document.getElementById('select_type').value;
 	var reg_result = "R:" + result;
 	var reg_type = "T:" + type;
