@@ -272,7 +272,7 @@ function ajaxProcessResult(responseXML) {
 	}
 
 	if (responseXML.getElementsByTagName('no_package_update_or_install').length > 0) {
-		alert("No package needs to be installed or upgraded.");
+		// alert("No package needs to be installed or upgraded.");
 
 		document.getElementById('update_package_list').disabled = false;
 		document.getElementById('update_package_list').className = "medium_button";
