@@ -1341,7 +1341,8 @@ elsif ( $_GET{'action'} eq 'check_profile_isExist' ) {
 
 # execute profile
 elsif ( $_GET{'action'} eq 'execute_profile' ) {
-	my $status = read_status();
+	my $status    = read_status();
+	my $plan_name = "temp_plan";
 
 	# only write test plan when there is no running test
 	if ( !$status->{'IS_RUNNING'} ) {
@@ -1402,8 +1403,12 @@ elsif ( $_GET{'action'} eq 'execute_profile' ) {
 			print OUT "[select-packages]: " . $_ . "\n";
 		}
 		close OUT;
+		$plan_name = check_existing_test_plan(
+			join( "!::!", @advanced_value ),
+			join( "!::!", @select_packages )
+		);
 	}
-	$data .= "<execute_profile_name>temp_plan</execute_profile_name>\n";
+	$data .= "<execute_profile_name>$plan_name</execute_profile_name>\n";
 }
 
 # save profile
