@@ -40,7 +40,7 @@ $Common::debug_inform_sub = sub { };
 	  $result_dir_manager $result_dir_lite $test_definition_dir $test_definition_dir_repo $opt_dir $opt_dir_repo $profile_dir_manager $configuration_file $DOWNLOAD_CMD
 	  $cert_sys_host $cert_sys_base
 	  &print_header &print_footer
-	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg &get_category_key
+	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg &get_category_key &check_existing_test_plan
 	  &updatePackageList &updateCaseInfo &printShortCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &remove_package &syncDefinition &syncDefinition_from_local_repo &compare_version &check_network &get_repo &xml2xsl &xml2xsl_case &check_testkit_sdb
 	  ),
 	@Common::EXPORT,
@@ -1949,6 +1949,85 @@ sub xml2xsl_case {
 		system(
 			"cd $public_html_dir; ln -s css/xsd/application.js application.js");
 	}
+}
+
+sub check_existing_test_plan {
+	my ( $advanced_value, $select_packages ) = @_;
+	my @advanced_value  = split( "!::!", $advanced_value );
+	my @select_packages = split( "!::!", $select_packages );
+	my $plan_name       = "temp_plan";
+	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
+		my @files = sort grep !/^[\.~]/, readdir(DIR);
+		foreach (@files) {
+			my $test_plan_name = $_;
+			if (    ( $test_plan_name !~ /pre_template/ )
+				and ( $test_plan_name !~ /^rerun_/ )
+				and ( $test_plan_name !~ /^temp_plan/ ) )
+			{
+				open FILE,
+				  $SERVER_PARAM{'APP_DATA'} . '/plans/' . $test_plan_name;
+				my @advanced_value_tmp  = ();
+				my @select_packages_tmp = ();
+
+				# read advanced filter and select package from plans
+				while (<FILE>) {
+					if ( $_ =~ /select_[a-z]*=(.*)/ ) {
+						push( @advanced_value_tmp, $1 );
+					}
+					if ( $_ =~ /\[select-packages\]: (.*)/ ) {
+						push( @select_packages_tmp, $1 );
+					}
+				}
+
+				# compare with temp plan
+				my $has_same_advanced = "TRUE";
+				my $has_same_select   = "TRUE";
+				for ( my $i = 0 ; $i < @advanced_value ; $i++ ) {
+					my $has_one = "FALSE";
+					foreach (@advanced_value_tmp) {
+						if ( $_ eq $advanced_value[$i] ) {
+							$has_one = "TRUE";
+							last;
+						}
+					}
+					if ( $has_one eq "FALSE" ) {
+
+						# has different advanced filter
+						$has_same_advanced = "FALSE";
+						last;
+					}
+				}
+				if ( @select_packages != @select_packages_tmp ) {
+
+					# has different number of selected packages
+					$has_same_select = "FALSE";
+				}
+				else {
+					for ( my $j = 0 ; $j < @select_packages ; $j++ ) {
+						my $has_one = "FALSE";
+						foreach (@select_packages_tmp) {
+							if ( $_ eq $select_packages[$j] ) {
+								$has_one = "TRUE";
+								last;
+							}
+						}
+						if ( $has_one eq "FALSE" ) {
+
+							# has different selected package name
+							$has_same_select = "FALSE";
+							last;
+						}
+					}
+				}
+				if (    ( $has_same_advanced eq "TRUE" )
+					and ( $has_same_select eq "TRUE" ) )
+				{
+					return $test_plan_name;
+				}
+			}
+		}
+	}
+	return $plan_name;
 }
 
 1;
