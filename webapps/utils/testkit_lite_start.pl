@@ -977,6 +977,7 @@ sub syncLiteResult {
 
 	# Run the test in ptyshell
 	$profile_content = &readProfile( $globals->{'testkit_dir'} . "/plans" );
+	$profile_content =~ s/\s*$//;
 	if (   ( $profile_content !~ /usr\/share/ )
 		&& ( $profile_content !~ /tmp\/rerun/ ) )
 	{
@@ -1029,7 +1030,7 @@ sub syncLiteResult {
 		);
 		system( sdb_cmd("push $globals->{'temp_dir'}/lite-command /tmp") );
 		system( sdb_cmd("shell 'chmod 755 /tmp/lite-command'") );
-		$subshell->Spawn( sdb_cmd("shell './tmp/lite-command'") );
+		$subshell->Spawn( sdb_cmd("shell 'sh /tmp/lite-command'") );
 	}
 	else {
 		$subshell->Spawn("echo 'Missing package(s) found, exit...'; sleep 10");
