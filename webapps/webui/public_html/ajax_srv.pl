@@ -2000,8 +2000,8 @@ DATA
 	}
 	else {
 		my $error_log_message = join( '!::!', @config_log );
-		$error_log_message =~ s/[^a-zA-Z0-9!:=>"'_\.\/\*\- ]//g;
-		$error_log_message =~ s/[0m|31m|32m|34m]//g;
+		$error_log_message =~ s/[^a-zA-Z0-9!:=>"'_;\.\/\*\-\\ ]//g;
+		$error_log_message =~ s/0m|31m|32m|34m//g;
 		$data .= "<pre_config_error>$error_log_message</pre_config_error>\n";
 	}
 }
