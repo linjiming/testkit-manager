@@ -200,6 +200,9 @@ testkit-manager 2.3.2:
   - skip checking testkit-lite when a plan is running
 * Thu Feb 19 2013 Wendong,Sui <weidongx.sun@intel.com> 2.3.2-2
   - just filter steps from webapi-testconfig xml
-* Thu Mar 6 2013 Wendong,Sui <weidongx.sun@intel.com> 2.3.2-3
+
+testkit-manager 2.3.3:
+===================
+* Thu Mar 6 2013 Wendong,Sui <weidongx.sun@intel.com> 2.3.3-1
   - hide 0 case pacakge during manual execution
   - using existing plan name when execute
