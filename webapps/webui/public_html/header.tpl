@@ -68,7 +68,7 @@
         <td height="36">&nbsp;</td>
       </tr>
       <tr valign="center">
-        <td width="19%" height="30" align="center" class='link-level1$$$CUSTOM_STYLE$$$-not-highlight'><a href='tests_custom.pl' class='link-level1$$$CUSTOM_STYLE$$$'>PLAN</a></td>
+        <td width="19%" height="30" align="center" class='link-level1$$$CUSTOM_STYLE$$$-not-highlight'><a href='tests_plan.pl' class='link-level1$$$CUSTOM_STYLE$$$'>PLAN</a></td>
         <td width="8%"></td>
         <td width="19%" height="30" align="center" class='link-level1$$$EXECUTE_STYLE$$$-not-highlight'><a href='tests_execute.pl' class='link-level1$$$EXECUTE_STYLE$$$'>EXECUTE</a></td>
         <td width="8%"></td>

@@ -115,7 +115,7 @@ else {
 print "HTTP/1.0 200 OK" . CRLF;
 print "Content-type: text/html" . CRLF . CRLF;
 
-print_header( "$MTK_BRANCH Manager Main Page", "execute" );
+print_header( "$MTK_BRANCH Manager Execution Page", "execute" );
 
 if (   ( $have_testkit_lite eq "FALSE" )
 	or ( $have_correct_testkit_lite eq "FALSE" )

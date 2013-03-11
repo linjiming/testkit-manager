@@ -589,7 +589,7 @@ sub UpdatePage {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 
-	print_header( "$MTK_BRANCH Manager Main Page", "custom" );
+	print_header( "$MTK_BRANCH Manager Plan Page", "custom" );
 	print show_error_dlg($testkit_lite_error_message);
 
 	CreateFilePath();
@@ -945,7 +945,7 @@ sub UpdateNullPage {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 
-	print_header( "$MTK_BRANCH Manager Main Page", "custom" );
+	print_header( "$MTK_BRANCH Manager Plan Page", "custom" );
 	print show_error_dlg($testkit_lite_error_message);
 
 	print <<DATA;
@@ -2259,7 +2259,7 @@ sub UpdateViewPageSelectItem {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 
-	print_header( "$MTK_BRANCH Manager Main Page", "custom" );
+	print_header( "$MTK_BRANCH Manager Plan Page", "custom" );
 	print show_error_dlg($testkit_lite_error_message);
 
 	AnalysisReadMe();
@@ -2269,7 +2269,7 @@ sub UpdateViewPageSelectItem {
     <div id="ajax_loading" style="display:none"></div>
     <table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
       <tr>
-        <td><form id="tests_custom" name="tests_custom" method="post" action="tests_custom.pl">
+        <td><form id="tests_custom" name="tests_custom" method="post" action="tests_plan.pl">
           <table width="100%" class="report_list custom_line_height" border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
@@ -2447,7 +2447,7 @@ sub UpdateLoadPageSelectItem {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 
-	print_header( "$MTK_BRANCH Manager Main Page", "custom" );
+	print_header( "$MTK_BRANCH Manager Plan Page", "custom" );
 	print show_error_dlg($testkit_lite_error_message);
 
 	AnalysisReadMe();
@@ -2462,7 +2462,7 @@ sub UpdateLoadPageSelectItem {
 	<div id="loadProgressBarDiv" class="report_list common_div load_progress_bar_Div"></div>
 	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 	  <tr>
-	    <td><form id="tests_custom" name="tests_custom" method="post" action="tests_custom.pl">
+	    <td><form id="tests_custom" name="tests_custom" method="post" action="tests_plan.pl">
 	      <table width="100%" class="report_list custom_line_height" border="0" cellspacing="0" cellpadding="0">  
 	        <tr>
 	          <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
@@ -3656,10 +3656,10 @@ function rank()
 	}else{
 		image.src = "images/up_and_down_2.png";
 	}
-	if(value.href == "tests_custom.pl?down = 1"){
-		value.href="tests_custom.pl?down = 0";
+	if(value.href == "tests_plan.pl?down = 1"){
+		value.href="tests_plan.pl?down = 0";
 	}else{
-		value.href="tests_custom.pl?down = 1";
+		value.href="tests_plan.pl?down = 1";
 	}
 }
 
@@ -4883,7 +4883,7 @@ DATA
 
 print <<DATA;
 function refreshPage() {
-	document.location="tests_custom.pl";
+	document.location="tests_plan.pl";
 }
 DATA
 
@@ -4939,7 +4939,7 @@ function onViewPackage(count){
 		document.getElementById(view_pkg_pic_tmp).style.cursor = "default";
 	}
 	
-	document.location="tests_custom.pl?view_single_package=1&view_"+pkg+"=1&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
+	document.location="tests_plan.pl?view_single_package=1&view_"+pkg+"=1&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
 }
 DATA
 
@@ -5005,7 +5005,7 @@ function onDeletePackage(count) {
 			document.getElementById(view_pkg_pic_tmp).onclick = "";
 			document.getElementById(view_pkg_pic_tmp).style.cursor = "default";
 		}
-		document.location="tests_custom.pl?delete_package=1&delete_"+pkg+"=1&sort_flag="+sort_flag+"&checkbox="+checkbox_value+"&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
+		document.location="tests_plan.pl?delete_package=1&delete_"+pkg+"=1&sort_flag="+sort_flag+"&checkbox="+checkbox_value+"&advanced="+arc+"*"+ver+"*"+category+"*"+pri+"*"+status+"*"+exe+"*"+testsuite+"*"+type+"*"+testset+"*"+com;
 	}
 }
 

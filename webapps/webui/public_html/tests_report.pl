@@ -60,7 +60,7 @@ if ( $_POST{'compare'} ) {
 
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
-	print_header( "$MTK_BRANCH Manager Test Report", "report" );
+	print_header( "$MTK_BRANCH Manager Report Page", "report" );
 
 	if ( @same_package_list > 0 ) {
 		print <<DATA;
@@ -333,7 +333,7 @@ elsif ( $_POST{'delete'} ) {
 
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
-	print_header( "$MTK_BRANCH Manager Test Report", "report" );
+	print_header( "$MTK_BRANCH Manager Report Page", "report" );
 	showReport();
 }
 
@@ -341,7 +341,7 @@ elsif ( $_POST{'delete'} ) {
 elsif ( $_GET{'mail'} ) {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
-	print_header( "$MTK_BRANCH Manager Test Report", "report" );
+	print_header( "$MTK_BRANCH Manager Report Page", "report" );
 
 	my $time = $_GET{'time'};
 	updateResultList($time);
@@ -393,7 +393,7 @@ elsif ( $_POST{'submit_server'} ) {
 
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
-	print_header( "$MTK_BRANCH Manager Test Report", "report" );
+	print_header( "$MTK_BRANCH Manager Report Page", "report" );
 
 	if (   ( $server_name ne "" )
 		&& ( $token      ne "" )
@@ -453,7 +453,7 @@ elsif ( $_POST{'submit_server'} ) {
 elsif ( $_GET{'submit'} ) {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
-	print_header( "$MTK_BRANCH Manager Test Report", "report" );
+	print_header( "$MTK_BRANCH Manager Report Page", "report" );
 
 	my $time = $_GET{'time'};
 	print <<DATA;
@@ -639,14 +639,14 @@ elsif ( $_GET{'time'} ) {
 	if ( $_GET{'summary'} ) {
 		print "HTTP/1.0 200 OK" . CRLF;
 		print "Content-type: text/html" . CRLF . CRLF;
-		print_header( "$MTK_BRANCH Manager Test Report", "report" );
+		print_header( "$MTK_BRANCH Manager Report Page", "report" );
 
 		showSummaryReport( $_GET{'time'} );
 	}
 	if ( $_GET{'detailed'} ) {
 		print "HTTP/1.0 200 OK" . CRLF;
 		print "Content-type: text/html" . CRLF . CRLF;
-		print_header( "$MTK_BRANCH Manager Test Report", "report" );
+		print_header( "$MTK_BRANCH Manager Report Page", "report" );
 
 		showDetailedReport( $_GET{'time'} );
 	}
@@ -656,7 +656,7 @@ elsif ( $_GET{'time'} ) {
 elsif ( $_POST{'summary_report'} ) {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
-	print_header( "$MTK_BRANCH Manager Test Report", "report" );
+	print_header( "$MTK_BRANCH Manager Report Page", "report" );
 
 	showSummaryReport( $_POST{'time_flag'} );
 }
@@ -665,7 +665,7 @@ elsif ( $_POST{'summary_report'} ) {
 elsif ( $_POST{'detailed_report'} ) {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
-	print_header( "$MTK_BRANCH Manager Test Report", "report" );
+	print_header( "$MTK_BRANCH Manager Report Page", "report" );
 
 	showDetailedReport( $_POST{'time_flag'} );
 }
@@ -674,7 +674,7 @@ elsif ( $_POST{'detailed_report'} ) {
 else {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
-	print_header( "$MTK_BRANCH Manager Test Report", "report" );
+	print_header( "$MTK_BRANCH Manager Report Page", "report" );
 	print show_error_dlg("");
 
 	# show report list according to the result folder
