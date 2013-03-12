@@ -26,7 +26,7 @@ use Templates;
 print "HTTP/1.0 200 OK" . CRLF;
 print "Content-type: text/html" . CRLF . CRLF;
 
-print_header( "$MTK_BRANCH Manager Main Page", "help" );
+print_header( "$MTK_BRANCH Manager Help Page", "help" );
 
 my $user_guide =
   $SERVER_PARAM{'APP_DATA'} . "/doc/Testkit-Manager_User_Guide.pdf";

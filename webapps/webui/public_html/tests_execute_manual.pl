@@ -37,7 +37,7 @@ if ( $_GET{'time'} ) {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 
-	print_header( "$MTK_BRANCH Manager Main Page", "execute" );
+	print_header( "$MTK_BRANCH Manager Manual Execution Page", "execute" );
 
 	my $time = $_GET{'time'};
 	updateProgressBarResult($time);
@@ -601,7 +601,7 @@ else {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 
-	print_header( "$MTK_BRANCH Manager Main Page", "execute" );
+	print_header( "$MTK_BRANCH Manager Manual Execution Page", "execute" );
 	print show_error_dlg("Can't get attribute time");
 }
 

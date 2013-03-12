@@ -112,7 +112,7 @@ if ( $_GET{'case_view'} ) {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 
-	print_header( "$MTK_BRANCH Manager Main Page", "statistic" );
+	print_header( "$MTK_BRANCH Manager Statistic Page", "statistic" );
 	print <<DATA;
 <div id="ajax_loading" style="display:none"></div>
 <div id="message"></div>
@@ -527,7 +527,7 @@ else {
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
 
-	print_header( "$MTK_BRANCH Manager Main Page", "statistic" );
+	print_header( "$MTK_BRANCH Manager Statistic Page", "statistic" );
 	print <<DATA;
 <div id="ajax_loading" style="display:none"></div>
 <div id="message"></div>

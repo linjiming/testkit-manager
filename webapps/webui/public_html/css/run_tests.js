@@ -379,7 +379,6 @@ function ajaxProcessResult(responseXML) {
 
 		document.getElementById('update_package_list').onclick = function() {
 			document.getElementById('update_package_list').disabled = true;
-			// document.location = "tests_custom.pl";
 			return onUpdatePackages();
 		};
 		for ( var i = 0; i < uninstall_pkg_name_arr.length; i++) {
@@ -506,14 +505,14 @@ function ajaxProcessResult(responseXML) {
 			ajax_call_get('action=install_plan_package&packages_need='
 					+ message_not_load);
 		} else if (load_flag == 1) {
-			document.location = "tests_custom.pl?load_profile_button="
+			document.location = "tests_plan.pl?load_profile_button="
 					+ load_test_plan_select.value;
 		} else {
 			var text = document.getElementById('loadProgressBarDiv').innerHTML;
 			if (text.indexOf("[FAIL]") > 0) {
 				document.getElementById('loadProgressBarDiv').innerHTML += '</br>&nbsp;&nbsp;&nbsp;&nbsp;Fail to install one or more package(s), please try manually.</br>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="javascript:refresh_custom_page()">Click here to refresh the page.</a>';
 			} else {
-				document.location = "tests_custom.pl?load_profile_button="
+				document.location = "tests_plan.pl?load_profile_button="
 						+ load_test_plan_select.value;
 			}
 		}
@@ -709,7 +708,7 @@ function ajaxProcessResult(responseXML) {
 			document.getElementById(install_pkg_id).vspace = "0";
 			document.getElementById(install_pkg_id).style.cursor = "default";
 			document.getElementById(install_pkg_id).onclick = "";
-			document.location = "tests_custom.pl";
+			document.location = "tests_plan.pl";
 			// Install package successfully!
 		} else {
 			var package_name_number = document
@@ -805,7 +804,7 @@ function ajaxProcessResult(responseXML) {
 			document.getElementById(update_pic_id).style.cursor = "default";
 			document.getElementById(update_pic_id).onclick = "";
 			document.getElementById(version_id).innerHTML = version_latest;
-			document.location = "tests_custom.pl";
+			document.location = "tests_plan.pl";
 			// Upgrade package successfully!
 		} else {
 			var version_id = "ver_" + flag;
@@ -1710,7 +1709,7 @@ function show_manage_panel() {
 }
 
 function refresh_custom_page() {
-	document.location = "tests_custom.pl";
+	document.location = "tests_plan.pl";
 }
 
 function close_all_test_plan_panel() {
