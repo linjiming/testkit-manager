@@ -895,7 +895,7 @@ sub printReportRecord {
               <td width="4%" align="center" valign="middle" class="report_list_outside_left"><label>
                 <input type="checkbox" id="$time" name="$time" onclick="javascript:update_state();" />
               </label></td>
-              <td align="left" width="26%" class="report_list_inside cut_long_string_one_line" title="$time"><a href="tests_report.pl?time=$time&detailed=1">&nbsp;$time_display</a></td>
+              <td align="left" width="26%" class="report_list_inside cut_long_string_one_line" title="$time"><a href="tests_report.pl?time=$time&summary=1">&nbsp;$time_display</a></td>
               <td align="left" width="15%" class="report_list_inside cut_long_string_one_line" title="$test_plan">&nbsp;$test_plan</td>
               <td align="left" width="13%" class="report_list_inside cut_long_string_one_line" title="$device_name">&nbsp;$device_name</td>
               <td width="21%" class="report_list_inside"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
@@ -929,9 +929,8 @@ DATA
               </table></td>
               <td width="21%" class="report_list_outside_right"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
                 <tr align="center">
-                  <td><a href="tests_report.pl?time=$time&summary=1"><img title="View report in list view" src="images/operation_view_summary_report.png" alt="operation_view_summary_report" width="16" height="16" /></a></td>
                   <td><a href="tests_execute_manual.pl?time=$time"><img title="Continue execution" src="images/operation_continue_execution.png" alt="operation_continue_execution_enable" width="16" height="16" /></a></td>
-                  <td><a href="get.pl$result_dir_tgz"><img title="Download consolidated report" src="images/operation_download.png" alt="operation_download_consolidated_log" width="16" height="16" /></a></td>
+                  <td><a href="get.pl$result_dir_tgz"><img title="Export consolidated report" src="images/operation_download.png" alt="operation_download_consolidated_log" width="16" height="16" /></a></td>
                   <td><a href="tests_report.pl?time=$time&submit=1"><img title="Submit report to QA report server" src="images/operation_submit.png" alt="operation_submit_to_QA_report_server" width="16" height="16" /></a></td>
                   <td><a href="tests_report.pl?time=$time&mail=1"><img title="Send report through email" src="images/operation_mail.png" alt="operation_mail" width="16" height="16" /></a></td>
                   <td><a onclick="javascript:rerunNotPassedCases('$time', '$test_plan');"><img title="Rerun cases which are not passed" src="images/operation_rerun.png" alt="operation_rerun" width="16" height="16" /></a></td>
@@ -952,8 +951,8 @@ sub showSummaryReport {
       <tr>
         <td width="2%">&nbsp;</td>
         <td width="78%">Test report for $time in list view<input type="text" name="time_flag" value="$time" style="display:none" /></td>
-        <td width="10%" align="center"><input type="submit" name="summary_report" id="summary_report_button" title="View test report in list view" value="List View" disabled="disabled" class="medium_button_disable" /></td>
-        <td width="10%" align="center"><input type="submit" name="detailed_report" id="detailed_report_button" title="View test report in tree view" value="Tree View" class="medium_button" /></td>
+        <td width="10%" align="center" style="display:none"><input type="submit" name="summary_report" id="summary_report_button" title="View test report in list view" value="List View" disabled="disabled" class="medium_button_disable" /></td>
+        <td width="10%" align="center" style="display:none"><input type="submit" name="detailed_report" id="detailed_report_button" title="View test report in tree view" value="Tree View" class="medium_button" /></td>
       </tr>
     </table></form></td>
   </tr>
