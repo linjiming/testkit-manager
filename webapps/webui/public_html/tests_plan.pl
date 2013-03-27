@@ -226,10 +226,10 @@ if ( $_GET{"delete_package"} ) {
 		$flag_i++;
 	}
 	if ( @package_name > 0 ) {
-		UpdatePage();
+		UpdatePage("has_package");
 	}
 	else {
-		UpdateNullPage();
+		UpdatePage("no_package");
 	}
 }
 
@@ -469,9 +469,10 @@ elsif ( $_GET{'load_profile_button'} ) {
 	$refresh_flag = 1;
 	syncDefinition();
 	my $file;
-	my $flag_i            = 0;
-	my $load_profile_name = $_GET{"load_profile_button"};
-	my $dir_profile_name  = $profile_dir_manager;
+	my $flag_i              = 0;
+	my $load_profile_name   = $_GET{"load_profile_button"};
+	my $need_check_hardware = $_GET{"need_check_hardware"};
+	my $dir_profile_name    = $profile_dir_manager;
 
 	opendir LOADPROFILE, $dir_profile_name
 	  or die "can not open $dir_profile_name";
@@ -558,7 +559,7 @@ elsif ( $_GET{'load_profile_button'} ) {
 
 	FilterCaseValue();
 	FilterCase();
-	UpdateLoadPage($load_profile_name);
+	UpdateLoadPage( $load_profile_name, $need_check_hardware );
 
 	closedir LOADPROFILE;
 }
@@ -573,17 +574,18 @@ else {
 
 	if ( $i eq "0" ) {
 		FilterCaseValue();
-		UpdateNullPage();
+		UpdatePage("no_package");
 
 	}
 	else {
 		FilterCaseValue();
-		UpdatePage();
+		UpdatePage("has_package");
 	}
 }
 
 #update custom page
 sub UpdatePage {
+	my ($package_status) = @_;
 	CountPackages();
 
 	print "HTTP/1.0 200 OK" . CRLF;
@@ -602,7 +604,6 @@ sub UpdatePage {
 
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
-	<iframe id='popIframe' class='popIframe' frameborder='0'></iframe>
 	<div id="planDiv" class="report_list common_div plan_div"></div>
 	<div id="preConfigDiv" class="report_list common_div pre_config_div"></div>
 	<div id="loadProgressBarDiv" class="report_list common_div load_progress_bar_Div"></div>
@@ -614,18 +615,131 @@ sub UpdatePage {
 	          <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
 	            <tr>
 	              <td width="2%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
-	              <td width="60%" id="name" align="left" nowrap="nowrap" class="custom_line_height report_list_no_border">Create Test Plan</td>
-	              <td width="4%" id="name" nowrap="nowrap" class="custom_line_height  report_list_no_border">Packages &nbsp</td>
-	              <td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show filter list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
-	              <td width="10%" class="custom_line_height" align="left" nowrap="nowrap">
-	                <input type="submit" id="view_package_info" name="view_package_info" class="large_button_disable" disabled="true" value="View" title="View detailed information of selected packages" />
+	              <td width="54%" id="name" align="left" nowrap="nowrap" class="custom_line_height report_list_no_border">Manage Test Plan</td>
+	              <td width="10%" align="center"><input name="manage_profile_panel_button" id="manage_profile_panel_button" title="Manage test plan panel" type="button" class="medium_button" value="Plan" onclick="javascript:show_manage_panel();" /></td>
+	              <td width="10%" align="center" style="display:none"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" onclick="javascript:show_save_panel();" /></td>
+                  <td width="10%" align="center" style="display:none"><input name="load_profile_panel_button" id="load_profile_panel_button" title="Open load test plan panel" type="button" class="medium_button" value="Load" onclick="javascript:show_load_panel();" /></td>
+                  <td width="10%" align="center" style="display:none"><input name="delete_profile_panel_button" id="delete_profile_panel_button" title="Open delete test plan panel" type="button" class="medium_button" value="Delete" onclick="javascript:show_delete_panel();" /></td>
+	              <td width="10%" align="center"><input id="button_adv" name="button_adv" title="Show filter list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
+	              <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="medium_button_disable" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
+                  <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="medium_button_disable" disabled="true" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
+	              <td width="10%" class="custom_line_height" align="left" nowrap="nowrap" style="display:none">
+	                <input type="submit" id="view_package_info" name="view_package_info" class="medium_button_disable" disabled="true" value="View" title="View detailed information of selected packages" />
 	              </td>
-	              <td width="10%" class="custom_line_height" align="left" nowrap="nowrap">
+	              <td width="10%" class="custom_line_height" align="left" nowrap="nowrap" style="display:none">
 					<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
 				  </td>
 				  <td width="3%" class="custom_line_height" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" width="14" height="14"/></a></td>
 	              <td width="1%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
            		</tr>
+          </table></td>
+        </tr>
+        <tr id="save_profile_panel" style="display:none;">
+              <td height="90" colspan="8" class="custom_panel_background_color"><table width="100%" height="90">
+                <tr height="45" valign="bottom">
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Save as a new test plan</td>
+                  <td width="30%" align="left"><input name="save_test_plan_text" type="text" class="test_plan_name" id="save_test_plan_text" /></td>
+                  <td width="15%" align="center"><input name="save_profile_button_text" id="save_profile_button_text" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('text');" /></td>
+                  <td width="15%">&nbsp;</td>
+                  <td width="5%">&nbsp;</td>
+                </tr>
+                <tr height="10">&nbsp;
+                </tr>
+                <tr height="35" valign="top">
+DATA
+
+	my $profiles_list = "";
+	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
+		my @files = sort grep !/^[\.~]/, readdir(DIR);
+		foreach (@files) {
+			my $profile_name = $_;
+			if (    ( $profile_name !~ /pre_template/ )
+				and ( $profile_name !~ /^rerun_/ ) )
+			{
+				$profiles_list .=
+"    <option value=\"$profile_name\">$profile_name</option>\n";
+			}
+		}
+	}
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Overwrite an existing test plan</td>
+                  <td width="30%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 18em;">$profiles_list</select></td>
+                  <td width="15%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('select');" /></td>
+                  <td width="15%" align="left"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('save');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Overwrite an existing test plan</td>
+                  <td width="30%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="15%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button_disable" value="Save" disabled="disabled" onclick="javascript:save_profile('select');" /></td>
+                  <td width="15%" align="left"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('save');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
+                </tr>
+              </table></td>
+            </tr>
+            <tr id="load_profile_panel" style="display:none;">
+              <td height="50" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
+                <tr>
+DATA
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Choose from existing test plans</td>
+                  <td width="30%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 18em;">$profiles_list</select></td>
+                  <td width="15%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:load_profile();" /></td>
+                  <td width="15%" align="left"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('load');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Choose from existing test plans</td>
+                  <td width="30%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="15%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button_disable" value="Load" disabled="disabled" onclick="javascript:load_profile();" /></td>
+                  <td width="15%" align="left"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('load');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
+                </tr>
+              </table></td>
+            </tr>
+            <tr id="delete_profile_panel" style="display:none;">
+              <td height="50" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
+                <tr>
+DATA
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Existing test plans</td>
+                  <td width="30%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 18em;">$profiles_list</select></td>
+                  <td width="15%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('manage');" /></td>
+                  <td width="15%" align="left"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:delete_profile();" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Existing test plans</td>
+                  <td width="30%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="15%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('manage');" /></td>
+                  <td width="15%" align="left"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button_disable" value="Delete" disabled="disabled" onclick="javascript:delete_profile();" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
+            </tr>
           </table></td>
         </tr>
 		<tr>
@@ -678,6 +792,21 @@ DATA
                 </tr>
               </table></td>
             </tr>
+        <tr>
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <tr>
+                <td width="100%" align="left" class="custom_line_height report_list_no_border">&nbsp;</td>
+              </tr>
+            </table>
+          </td>
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <tr>
+                <td width="73%" align="left" class="custom_line_height report_list_no_border">&nbsp;</td>
+                <td width="27%" align="left" class="custom_line_height report_list_no_border"><input type="button" id="clear_information" name="clear_information" class="medium_button_disable" disabled="true" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
         <tr style="display:none">
               <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
@@ -794,475 +923,16 @@ DATA
               </table></td>
             </tr>
 DATA
-	DrawPackageList();
+
+	if ( $package_status eq "no_package" ) {
+		DrawEmptyPackageList();
+	}
+	else {
+		DrawPackageList();
+	}
 	DrawUninstallPackageList();
 
-	my $profiles_list = "";
-	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
-		my @files = sort grep !/^[\.~]/, readdir(DIR);
-		foreach (@files) {
-			my $profile_name = $_;
-			if (    ( $profile_name !~ /pre_template/ )
-				and ( $profile_name !~ /^rerun_/ ) )
-			{
-				$profiles_list .=
-"    <option value=\"$profile_name\">$profile_name</option>\n";
-			}
-		}
-	}
 	print <<DATA;
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-        <td height="4" width="100%" class=""></td>
-        </tr>
-        <tr>
-          <td ><table width="100%"border="0" cellpadding="0" cellspacing="0">
-            <tr height="40">
-              <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button_disable" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
-              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="large_button_disable" disabled="true" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
-              <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button_disable" disabled="true" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
-              <td width="30%">&nbsp;</td>
-              <td width="10%" align="center">Test Plan</td>
-              <td width="10%" align="center"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:show_save_panel();" /></td>
-              <td width="10%" align="center"><input name="load_profile_panel_button" id="load_profile_panel_button" title="Open load test plan panel" type="button" class="medium_button" value="Load" onclick="javascript:show_load_panel();" /></td>
-              <td width="10%" align="center"><input name="manage_profile_panel_button" id="manage_profile_panel_button" title="Open manage test plan panel" type="button" class="medium_button" value="Delete" onclick="javascript:show_manage_panel();" /></td>
-            </tr>
-            <tr id="save_profile_panel" style="display:none;">  
-              <td height="120" colspan="8" class="custom_panel_background_color"><table width="100%" height="120">
-                <tr height="45" valign="bottom">
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Save as a new test plan</td>
-                  <td width="30%" align="left"><input name="save_test_plan_text" type="text" class="test_plan_name" id="save_test_plan_text" /></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="save_profile_button_text" id="save_profile_button_text" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('text');" /></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="5%">&nbsp;</td>
-                </tr>
-                <tr height="10">&nbsp;
-                </tr>
-                <tr height="65" valign="top">
-DATA
-	if ( $profiles_list ne "" ) {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Overwrite an existing test plan</td>
-                  <td width="30%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 18em;">$profiles_list</select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('select');" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('save');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	else {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Overwrite an existing test plan</td>
-                  <td width="30%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button_disable" value="Save" disabled="disabled" onclick="javascript:save_profile('select');" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('save');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	print <<DATA;
-                </tr>
-              </table></td>
-            </tr>
-            <tr id="load_profile_panel" style="display:none;">
-              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
-                <tr>
-DATA
-	if ( $profiles_list ne "" ) {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Choose from existing test plans</td>
-                  <td width="30%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 18em;">$profiles_list</select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:load_profile();" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('load');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	else {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Choose from existing test plans</td>
-                  <td width="30%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button_disable" value="Load" disabled="disabled" onclick="javascript:load_profile();" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('load');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	print <<DATA;
-                </tr>
-              </table></td>
-            </tr>
-            <tr id="manage_profile_panel" style="display:none;">
-              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
-                <tr>
-DATA
-	if ( $profiles_list ne "" ) {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Existing test plans</td>
-                  <td width="30%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 18em;">$profiles_list</select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('manage');" /></td>
-                  <td width="10%" align="center"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:delete_profile();" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	else {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Existing test plans</td>
-                  <td width="30%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('manage');" /></td>
-                  <td width="10%" align="center"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button_disable" value="Delete" disabled="disabled" onclick="javascript:delete_profile();" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	print <<DATA;
-                </tr>
-              </table></td>
-            </tr>
-          </table></td>
-        </tr>
-      </table>
-DATA
-}
-
-#When no packages in device, update the page.
-sub UpdateNullPage {
-	@sort_package_name = sort @package_name;
-	@package_name      = @sort_package_name;
-	$image             = "images/up_and_down_1.png";
-
-	print "HTTP/1.0 200 OK" . CRLF;
-	print "Content-type: text/html" . CRLF . CRLF;
-
-	print_header( "$MTK_BRANCH Manager Plan Page", "custom" );
-	print show_error_dlg($testkit_lite_error_message);
-
-	print <<DATA;
-	<div id="ajax_loading" style="display:none"></div>
-	<iframe id='popIframe' class='popIframe' frameborder='0'></iframe>
-	<div id="planDiv" class="report_list common_div plan_div"></div>
-	<div id="preConfigDiv" class="report_list common_div pre_config_div"></div>
-	<div id="loadProgressBarDiv" class="report_list common_div load_progress_bar_Div"></div>
-	<table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-	  <tr>
-	    <td><form id="tests_custom" name="tests_custom" method="post" action="">
-	     <table width="100%" class="report_list custom_line_height" border="0" cellspacing="0" cellpadding="0">
-	     <tr>
-	          <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
-	            <tr>
-	              <td width="2%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
-	              <td width="60%" id="name" align="left" nowrap="nowrap" class="custom_line_height  report_list_no_border">Create Test Plan</td>
-	              <td width="4%"  id="name" nowrap="nowrap" class="custom_line_height  report_list_no_border">Packages &nbsp</td>
-	              <td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show filter list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
-	              <td width="10%" class="custom_line_height" align="left" nowrap="nowrap">
-	                <input type="submit" id="view_package_info" name="view_package_info" class="large_button_disable" disabled="true" value="View" title="View detailed information of selected packages" />
-	              </td>
-	              <td width="10%" class="custom_line_height" align="left" nowrap="nowrap">
-					<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
-				  </td>
-				  <td width="3%" class="custom_line_height" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" width="14" height="14"/></a></td>
-	              <td width="1%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
-           		</tr>
-          </table></td>
-        </tr>
-        <tr>
-          <td id="list_advanced" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-        <tr class="custom_line_height">
-           <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                  <tr>
-                    <td width="8%" align="left" class="report_list_no_border">&nbsp;<td>
-                    <td width="30%" align="left" class="report_list_no_border">&nbsp;Test Set<td>
-                      <select name="select_testset" id="select_testset" style="width:87%" onchange="javascript:filter_case_item('set');">
-                      <option>Any Test Set</option>
-                    </select>                    </td>
-                  </tr>
-              </table></td>
-              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="2%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Execution Type<td>
-                    <select name="select_exe" id="select_exe" style="width:87%" onchange="javascript:filter_case_item('exe_type');">
-                    <option>Any Execution Type</option>
-                    </select>                    </td>
-                </tr>
-              </table></td>
-            </tr>
-        <tr class="custom_line_height">
-        <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                 <tr>
-                  <td width="8%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Component<td>
-                    <select name="select_com" id="select_com" style="width:87%" onchange="javascript:filter_case_item('component');">
-                    <option>Any Component</option>
-                    </select>                    </td>
-                </tr>
-              </table></td>
-              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="2%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Architecture</td><td>
-                    <select name="select_arc" align="20px" id="select_arc" style="width:87%" onchange="javascript:filter_case_item();">
-                    <option>Any Architecture</option>
-                    </select>
-                  </td>
-                </tr>
-              </table></td>
-            </tr>
-        <tr class="custom_line_height" style="display:none">
-              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="8%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Test Suite<td>
-                    <select name="select_testsuite" id="select_testsuite" style="width:87%" onchange="javascript:filter_case_item('suite');">
-                    <option>Any Test Suite</option>
-                    </select>                    </td>
-                </tr>
-              </table></td>
-          <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="2%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Type<td>
-                    <select name="select_type" id="select_type" style="width:87%" onchange="javascript:filter_case_item('type');">
-                    <option>Any Type</option>
-                    </select>                    </td>
-           </tr>
-          </table></td>
-            </tr>
-            </table></td>
-        </tr>
-        
-        <tr id="button_adv_sec_td" style="display:none">
-	       <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="custom_line_height custom_panel_background_color">
-	         <tr>
-	           <td width="45%" align="right" ><img id="pic_adv_sec" src="images/advance-down.png" width="16" height="16"/></td>	
-	           <td width="55%" align="left" nowrap="nowrap"><input id="button_adv_sec" name="button_adv_sec" title="Show advanced list" class="medium_button" type="button" value="Advanced" onclick="javascript:hidden_Advanced_List('button_adv_sec');"/></td>
-	         </tr>
-          </table></td>
-        </tr>
-        
-        <tr>
-          <td id="list_advanced_sec" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none" class="custom_line_height">
-        <tr class="custom_line_height">
-              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="8%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Category</td><td>
-                    <select name="select_category" align="20px" id="select_category" style="width:87%" onchange="javascript:filter_case_item('category');">
-                    <option>Any Category</option>
-                    </select>                    </td>
-                </tr>
-              </table></td>
-              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="2%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Status<td>
-                    <select name="select_status" id="select_status" style="width:87%" onchange="javascript:filter_case_item('status');">
-                    <option>Any Status</option>
-                    </select>                    </td>
-                </tr>
-              </table></td>
-            </tr>
-            <tr class="custom_line_height">
-          <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                <tr>
-                  <td width="8%" align="left" class="report_list_no_border">&nbsp;<td>
-                  <td width="30%" align="left" class="report_list_no_border">&nbsp;Priority<td>
-                    <select name="select_pri" id="select_pri" style="width:87%" onchange="javascript:filter_case_item('priority');">
-                    <option>Any Priority</option>
-                    </select>                    </td>
-                </tr>
-              </table></td>
-              <td width="50%" nowrap="nowrap"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-                  <tr>
-                    <td width="2%" align="left" class="report_list_no_border">&nbsp;<td>
-                    <td width="30%" align="left" class="report_list_no_border">&nbsp;Version<td>
-                      <select name="select_ver" id="select_ver" style="width:87%" onchange="javascript:filter_case_item('version');">
-                      <option>Any Version</option>
-                    </select>                    </td>
-                  </tr>
-              </table></td>
-        </tr>
-        </table></td>
-        </tr>
-        <tr>
-          <td></td>
-        </tr>
-        <tr>
-          <td><table width="100%" class="custom_line_height" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
-            <tr>
-              <td><table width="100%" height="40" border="1" cellspacing="0" cellpadding="0" frame="below" rules="all" class="table_normal">
-                <tr class="table_first_row">
-              <td width="4%" align="center" valign="middle" class="report_list_outside_left_no_height"><input type="checkbox" id="checkbox_all"  name="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
-              <td width="0.5%" align="left" class="custom_line_height  custom_bottom"></td>
-              <td width="36.5%" class="custom_line_height report_list_outside_left_no_height"><table width="100%" border="0" cellspacing="0" cellpadding="0">
-                <tr>
-                  <td width="70%" align="center" valign="middle"><div align="left">Package Name</div></td>	
-                  <td width="30%" align="center" valign="middle"><div align="left"><img id="sort_packages" title="Sort packages" src="images/up_and_down_1.png" width="16" height="16"/></div></td>	
-                </tr>
-              </table></td>
-              <td width="10%" align="center" class="report_list_outside_left_no_height">Case Number</td>
-              <td width="10%" align="center" class="report_list_outside_left_no_height">Installed Version</td>
-              <td width="10%" align="center" class="report_list_outside_left_no_height">Upgraded Version</td>
-              <td width="29%" align="center" class="custom_bottom">Operation</td>
-                </tr>
-              </table></td>
-            </tr>
-            </tr>
-          </table></td>
-        </tr>
-        <input type="hidden" id="package_name_number" name="package_name_number" value="$package_name_number">
-        <tr><table width="100%" height="300" border="0" id="update_null_page_div" align="center" class="" cellpadding="0" cellspacing="0" style="display:">
-        	<tr>
-        		<td width="100%" align="center" class=" report_list_outside_left_no_height custom_bottomright_packagename" id="update_null_page" name="update_null_page">No packages, please click Update button , install packages, then click reload button to refresh page!</td>
-        	</tr>
-        </table>
-        </tr>
-DATA
-	DrawUninstallPackageList();
-
-	my $profiles_list = "";
-	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
-		my @files = sort grep !/^[\.~]/, readdir(DIR);
-		foreach (@files) {
-			my $profile_name = $_;
-			if (    ( $profile_name !~ /pre_template/ )
-				and ( $profile_name !~ /^rerun_/ ) )
-			{
-				$profiles_list .=
-"    <option value=\"$profile_name\">$profile_name</option>\n";
-			}
-		}
-	}
-	print <<DATA;
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-        <td height="4" width="100%" class=""></td>
-        </tr>
-        <tr>
-          <td><table width="768" border="0" cellpadding="0" cellspacing="0" class="report_list">
-            <tr height="40">
-              <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button_disable" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
-              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="large_button_disable" disabled="true" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
-              <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button_disable" disabled="true" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
-              <td width="30%">&nbsp;</td>
-              <td width="10%" align="center">Test Plan</td>
-              <td width="10%" align="center"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" disabled="true" onclick="javascript:show_save_panel();" /></td>
-              <td width="10%" align="center"><input name="load_profile_panel_button" id="load_profile_panel_button" title="Open load test plan panel" type="button" class="medium_button" value="Load" onclick="javascript:show_load_panel();" /></td>
-              <td width="10%" align="center"><input name="manage_profile_panel_button" id="manage_profile_panel_button" title="Open manage test plan panel" type="button" class="medium_button" value="Delete" onclick="javascript:show_manage_panel();" /></td>
-            </tr>
-            <tr id="save_profile_panel" style="display:none;">
-              <td height="120" colspan="8" class="custom_panel_background_color"><table width="100%" height="120">
-                <tr height="45" height="45"valign="bottom">
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Save as a new test plan</td>
-                  <td width="30%" align="left"><input name="save_test_plan_text" disabled="true" type="text" class="test_plan_name" id="save_test_plan_text" /></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="save_profile_button_text" id="save_profile_button_text" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('text');" /></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="5%">&nbsp;</td>
-                </tr>
-                <tr height="10">&nbsp;
-                </tr>
-                <tr height="65" valign="top">
-DATA
-	if ( $profiles_list ne "" ) {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Overwrite an existing test plan</td>
-                  <td width="30%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 18em;">$profiles_list</select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('select');" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('save');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	else {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Overwrite an existing test plan</td>
-                  <td width="30%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button_disable" value="Save" disabled="disabled" onclick="javascript:save_profile('select');" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('save');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	print <<DATA;
-                </tr>
-              </table></td>
-            </tr>
-            <tr id="load_profile_panel" style="display:none;">
-              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
-                <tr>
-DATA
-	if ( $profiles_list ne "" ) {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Choose from existing test plans</td>
-                  <td width="30%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 18em;">$profiles_list</select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:load_profile();" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('load');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	else {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Choose from existing test plans</td>
-                  <td width="30%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button_disable" value="Load" disabled="disabled" onclick="javascript:load_profile();" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('load');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	print <<DATA;
-                </tr>
-              </table></td>
-            </tr>
-            <tr id="manage_profile_panel" style="display:none;">
-              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
-                <tr>
-DATA
-	if ( $profiles_list ne "" ) {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Existing test plans</td>
-                  <td width="30%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 18em;">$profiles_list</select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('manage');" /></td>
-                  <td width="10%" align="center"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:delete_profile();" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	else {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Existing test plans</td>
-                  <td width="30%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('manage');" /></td>
-                  <td width="10%" align="center"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button_disable" value="Delete" disabled="disabled" onclick="javascript:delete_profile();" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	print <<DATA;
-                </tr>
-              </table></td>
             </tr>
           </table></td>
         </tr>
@@ -2443,6 +2113,7 @@ DATA
 
 #After press "Save", "Load", "Delete" button, refresh the page.
 sub UpdateLoadPageSelectItem {
+	my ($need_check_hardware) = @_;
 	$image = "images/up_and_down_1.png";
 	print "HTTP/1.0 200 OK" . CRLF;
 	print "Content-type: text/html" . CRLF . CRLF;
@@ -2453,10 +2124,136 @@ sub UpdateLoadPageSelectItem {
 	AnalysisReadMe();
 
 	GetSelectItem();
-
+	if ( $need_check_hardware eq "1" ) {
+		my %hardware_type              = read_hardware_capability_config();
+		my $hardware_dynamic_checklist = "";
+		foreach ( keys %hardware_type ) {
+			my $hardware_name = $_;
+			my $hardware_type = $hardware_type{$hardware_name};
+			if ( $hardware_type eq "boolean" ) {
+				$hardware_dynamic_checklist .= '<tr>'
+				  . '<td width="4%" align="left" class="report_list_no_border">&nbsp;</td>'
+				  . '<td width="4%" align="center" class="report_list_outside_left_no_height"><input type="checkbox" name="'
+				  . $hardware_name
+				  . "_checkbox"
+				  . '" id="'
+				  . $hardware_name
+				  . "_checkbox"
+				  . "\" onclick=\"javascript:check_hardware_checklist('"
+				  . $hardware_name . "_"
+				  . $hardware_type . "', '"
+				  . $hardware_name
+				  . "_checkbox"
+				  . "');\" /></td>"
+				  . '<td width="44%" align="left" class="report_list_outside_left_no_height">&nbsp;'
+				  . $hardware_name . '</td>'
+				  . '<td width="44%" align="center" class="custom_bottom" id="'
+				  . $hardware_name . "_"
+				  . $hardware_type
+				  . '">No</td>'
+				  . '<td width="0%" class="report_list_no_border"><input type="hidden" id="'
+				  . $hardware_name
+				  . "_message"
+				  . '" name="'
+				  . $hardware_name
+				  . "_message"
+				  . '" value="'
+				  . $hardware_name . "_"
+				  . $hardware_type
+				  . '"></td>'
+				  . '<td width="4%" align="left" class="report_list_no_border">&nbsp;</td>'
+				  . '</tr>';
+			}
+			else {
+				$hardware_dynamic_checklist .= '<tr>'
+				  . '<td width="4%" align="left" class="report_list_no_border">&nbsp;</td>'
+				  . '<td width="4%" align="center" class="report_list_outside_left_no_height"><input type="checkbox" name="'
+				  . $hardware_name
+				  . "_checkbox"
+				  . '" id="'
+				  . $hardware_name
+				  . "_checkbox"
+				  . "\" onclick=\"javascript:check_hardware_checklist('"
+				  . $hardware_name . "_"
+				  . $hardware_type . "', '"
+				  . $hardware_name
+				  . "_checkbox"
+				  . "');\" /></td>"
+				  . '<td width="44%" align="left" class="report_list_outside_left_no_height">&nbsp;'
+				  . $hardware_name . '</td>'
+				  . '<td width="44%" align="center" class="custom_bottom"><input type="text" name="'
+				  . $hardware_name . "_"
+				  . $hardware_type
+				  . '" id="'
+				  . $hardware_name . "_"
+				  . $hardware_type
+				  . '" class="test_plan_name" disabled="disabled" value="" /></td>'
+				  . '<td width="0%" class="report_list_no_border"><input type="hidden" id="'
+				  . $hardware_name
+				  . "_message"
+				  . '" name="'
+				  . $hardware_name
+				  . "_message"
+				  . '" value="'
+				  . $hardware_name . "_"
+				  . $hardware_type
+				  . '"></td>'
+				  . '<td width="4%" align="left" class="report_list_no_border">&nbsp;</td>'
+				  . '</tr>';
+			}
+		}
+		my $hardware_capability_content = <<DATA;
+<table width="660" border="1" cellspacing="0" cellpadding="0" class="report_list table_normal_small" rules="all" frame="void">
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="44%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="44%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="0%" class="report_list_no_border"></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="4" align="left" class="custom_bottom">&nbsp;Hardware Capability Checklist</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  $hardware_dynamic_checklist
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="44%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="44%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="0%" class="report_list_no_border"></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr style="display:none">
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="4" align="right" class="report_list_no_border">New test plan name:
+      <input type="text" name="hardware_capability_plan" id="hardware_capability_plan" class="test_plan_name" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="4" align="right" class="report_list_no_border"><input type="submit" name="save_hardware_capability_checklist" id="save_hardware_capability_checklist" value="Save" class="small_button" onclick="javascript:onSaveHardwareCapability();" />
+      &nbsp;
+      <input type="submit" name="close_config_div" id="close_config_div" value="Close" class="small_button" onclick="javascript:onClosePopup();" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+</table>
+DATA
+		$hardware_capability_content =~ s/\n//g;
+		print <<DATA;
+<iframe id="popIframePlan" class="popIframe" frameborder="0" style="display:block"></iframe>
+<div id="hardwareCapabilityDiv" class="report_list common_div hardware_capability_div" style="display:block">$hardware_capability_content</div>
+DATA
+	}
+	else {
+		print <<DATA;
+<iframe id='popIframe' class='popIframe' frameborder='0'></iframe>
+DATA
+	}
 	print <<DATA;
 	<div id="ajax_loading" style="display:none"></div>
-	<iframe id='popIframe' class='popIframe' frameborder='0'></iframe>
 	<div id="planDiv" class="report_list common_div plan_div"></div>
 	<div id="preConfigDiv" class="report_list common_div pre_config_div"></div>
 	<div id="loadProgressBarDiv" class="report_list common_div load_progress_bar_Div"></div>
@@ -2468,8 +2265,11 @@ sub UpdateLoadPageSelectItem {
 	          <td><table width="100%" border="0" cellspacing="0" cellpadding="0" class="top_button_bg">
 	            <tr>
 	              <td width="2%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
-	              <td width="60%" id="name" align="left" nowrap="nowrap" class="custom_line_height  report_list_no_border">Create Test Plan</td>
-	              <td width="4%" id="name" nowrap="nowrap" class="custom_line_height  report_list_no_border">Packages &nbsp</td>
+	              <td width="54%" id="name" align="left" nowrap="nowrap" class="custom_line_height report_list_no_border">Manage Test Plan</td>
+	              <td width="10%" align="center"><input name="manage_profile_panel_button" id="manage_profile_panel_button" title="Manage test plan panel" type="button" class="medium_button" value="Plan" onclick="javascript:show_manage_panel();" /></td>
+	              <td width="10%" align="center" style="display:none"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" onclick="javascript:show_save_panel();" /></td>
+                  <td width="10%" align="center" style="display:none"><input name="load_profile_panel_button" id="load_profile_panel_button" title="Open load test plan panel" type="button" class="medium_button" value="Load" onclick="javascript:show_load_panel();" /></td>
+                  <td width="10%" align="center" style="display:none"><input name="delete_profile_panel_button" id="delete_profile_panel_button" title="Open delete test plan panel" type="button" class="medium_button" value="Delete" onclick="javascript:show_delete_panel();" /></td>
 DATA
 	my $hidden_advanced_flag = 0;
 	if (   ( $advanced_value_category =~ /\bAny Category\b/ )
@@ -2481,76 +2281,182 @@ DATA
 		&& ( $advanced_value_test_set       =~ /\bAny Test Set\b/ )
 		&& ( $advanced_value_component      =~ /\bAny Component\b/ ) )
 	{
-
-		if ( @package_name == 0 ) {
-			print <<DATA;
-			<td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show filter list" class="medium_button_disable" type="button" value="Filter" disabled="true" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
+		print <<DATA;
+			  <td width="10%" align="center"><input id="button_adv" name="button_adv" title="Show filter list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
 DATA
-		}
-		else {
-			print <<DATA;
-			<td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Show filter list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
-DATA
-		}
 		if ( @checkbox_packages > 0 ) {
 			print <<DATA;
-			<td width="10%" class="custom_line_height" align="left" nowrap="nowrap">
-				<input type="submit" id="view_package_info" name="view_package_info" class="large_button" value="View" title="View detailed information of selected packages" />
-			</td>
+			  <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="medium_button" value="Execute" onclick="javascript:onExecute();" /></td>
+              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="medium_button" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
+	          <td width="10%" class="custom_line_height" align="left" nowrap="nowrap" style="display:none">
+	            <input type="submit" id="view_package_info" name="view_package_info" class="medium_button_disable" disabled="true" value="View" title="View detailed information of selected packages" />
+	          </td>
 DATA
 		}
 		else {
 			print <<DATA;
-			<td width="10%" class="custom_line_height" align="left" nowrap="nowrap">
-				<input type="submit" id="view_package_info" name="view_package_info" class="large_button_disable" disabled="true" value="View" title="View detailed information of selected packages" />
-			</td>
+			  <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="medium_button_disable" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
+              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="medium_button_disable" disabled="true" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
+	          <td width="10%" class="custom_line_height" align="left" nowrap="nowrap" style="display:none">
+	            <input type="submit" id="view_package_info" name="view_package_info" class="medium_button_disable" disabled="true" value="View" title="View detailed information of selected packages" />
+	          </td>
 DATA
 		}
 		print <<DATA;
-	        <td width="10%" align="left" class="custom_line_height" nowrap="nowrap">
-				<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
-			</td>
-			<td width="3%" class="custom_line_height" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" style="display:none" width="14" height="14"/></a></td>
-			<td width="1%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
+	          <td width="10%" class="custom_line_height" align="left" nowrap="nowrap" style="display:none">
+			    <input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
+			  </td>
+			  <td width="3%" class="custom_line_height" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" width="14" height="14"/></a></td>
+	          <td width="1%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
-        <tr>
-         <td id="list_advanced" class="custom_panel_background_color" style="display:none"><table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
 DATA
 	}
 	else {
 		print <<DATA;
-		<td width="10%" class="custom_line_height" nowrap="nowrap"><input id="button_adv" name="button_adv" title="Hide filter list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
+			  <td width="10%" align="center"><input id="button_adv" name="button_adv" title="Show filter list" class="medium_button" type="button" value="Filter" onclick="javascript:hidden_Advanced_List('button_adv');"/></td>
 DATA
 		if ( @checkbox_packages > 0 ) {
 			print <<DATA;
-			<td width="10%" class="custom_line_height" align="left" nowrap="nowrap">
-				<input type="submit" id="view_package_info" name="view_package_info" class="large_button" value="View" title="View detailed information of selected packages" />
-			</td>
+			  <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="medium_button" value="Execute" onclick="javascript:onExecute();" /></td>
+              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="medium_button" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
+	          <td width="10%" class="custom_line_height" align="left" nowrap="nowrap" style="display:none">
+	            <input type="submit" id="view_package_info" name="view_package_info" class="medium_button_disable" disabled="true" value="View" title="View detailed information of selected packages" />
+	          </td>
 DATA
 		}
 		else {
 			print <<DATA;
-			<td width="10%" class="custom_line_height" align="left" nowrap="nowrap">
-				<input type="submit" id="view_package_info" name="view_package_info" class="large_button_disable" disabled="true" value="View" title="View detailed information of selected packages" />
-			</td>
+			  <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="medium_button_disable" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
+              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="medium_button_disable" disabled="true" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
+	          <td width="10%" class="custom_line_height" align="left" nowrap="nowrap" style="display:none">
+	            <input type="submit" id="view_package_info" name="view_package_info" class="medium_button_disable" disabled="true" value="View" title="View detailed information of selected packages" />
+	          </td>
 DATA
 		}
 		print <<DATA;
-        <td width="10%" align="left" class="custom_line_height" nowrap="nowrap">
-			<input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
-		</td>
-		<td width="2%" class="custom_line_height" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" style="display:none" width="14" height="14"/></a></td>
-		<td width="1%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
+	          <td width="10%" class="custom_line_height" align="left" nowrap="nowrap" style="display:none">
+			    <input id="update_package_list" name="update_package_list" class="medium_button" type="button" value="Update" title="Scan repos, and list uninstalled or later-version packages." onclick="javascript:onUpdatePackages();"/>
+			  </td>
+			  <td width="3%" class="custom_line_height" nowrap="nowrap"><img id="progress_waiting" src="images/ajax_progress.gif" width="14" height="14"/></a></td>
+	          <td width="1%" class="custom_line_height" nowrap="nowrap">&nbsp;</td>
             </tr>
           </table></td>
         </tr>
-        <tr>
-		<td id="list_advanced" class="custom_panel_background_color" style="display:"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
 DATA
 	}
 	print <<DATA;
+        <tr id="save_profile_panel" style="display:none;">  
+              <td height="90" colspan="1" class="custom_panel_background_color"><table width="100%" height="90">
+                <tr height="45" valign="bottom">
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Save as a new test plan</td>
+                  <td width="30%" align="left"><input name="save_test_plan_text" type="text" class="test_plan_name" id="save_test_plan_text" /></td>
+                  <td width="15%" align="center"><input name="save_profile_button_text" id="save_profile_button_text" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('text');" /></td>
+                  <td width="15%">&nbsp;</td>
+                  <td width="5%">&nbsp;</td>
+                </tr>
+                <tr height="10">&nbsp;
+                </tr>
+                <tr height="35" valign="top">
+DATA
+
+	my $profiles_list = "";
+	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
+		my @files = sort grep !/^[\.~]/, readdir(DIR);
+		foreach (@files) {
+			my $profile_name = $_;
+			if (    ( $profile_name !~ /pre_template/ )
+				and ( $profile_name !~ /^rerun_/ ) )
+			{
+				$profiles_list .=
+"    <option value=\"$profile_name\">$profile_name</option>\n";
+			}
+		}
+	}
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Overwrite an existing test plan</td>
+                  <td width="30%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 18em;">$profiles_list</select></td>
+                  <td width="15%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('select');" /></td>
+                  <td width="15%" align="left"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('save');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Overwrite an existing test plan</td>
+                  <td width="30%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="15%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button_disable" value="Save" disabled="disabled" onclick="javascript:save_profile('select');" /></td>
+                  <td width="15%" align="left"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('save');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
+                </tr>
+              </table></td>
+            </tr>
+            <tr id="load_profile_panel" style="display:none;">
+              <td height="50" colspan="1" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
+                <tr>
+DATA
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Choose from existing test plans</td>
+                  <td width="30%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 18em;">$profiles_list</select></td>
+                  <td width="15%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:load_profile();" /></td>
+                  <td width="15%" align="left"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('load');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Choose from existing test plans</td>
+                  <td width="30%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="15%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button_disable" value="Load" disabled="disabled" onclick="javascript:load_profile();" /></td>
+                  <td width="15%" align="left"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('load');" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
+                </tr>
+              </table></td>
+            </tr>
+            <tr id="delete_profile_panel" style="display:none;">
+              <td height="50" colspan="1" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
+                <tr>
+DATA
+	if ( $profiles_list ne "" ) {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Existing test plans</td>
+                  <td width="30%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 18em;">$profiles_list</select></td>
+                  <td width="15%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('manage');" /></td>
+                  <td width="15%" align="left"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:delete_profile();" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	else {
+		print <<DATA;
+                  <td width="5%">&nbsp;</td>
+                  <td width="30%" align="left">Existing test plans</td>
+                  <td width="30%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
+                  <td width="15%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('manage');" /></td>
+                  <td width="15%" align="left"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button_disable" value="Delete" disabled="disabled" onclick="javascript:delete_profile();" /></td>
+                  <td width="5%">&nbsp;</td>
+DATA
+	}
+	print <<DATA;
+            </tr>
+          </table></td>
+        </tr>
+         <tr>
+           <td id="list_advanced" class="custom_panel_background_color" style="display:"><table width="768" border="1" cellspacing="0" cellpadding="0" frame="void" rules="none">
          <tr>
         <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                   <tr>
@@ -2599,6 +2505,21 @@ DATA
                 </tr>
               </table></td>
             </tr>
+        <tr>
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <tr>
+                <td width="100%" align="left" class="custom_line_height report_list_no_border">&nbsp;</td>
+              </tr>
+            </table>
+          </td>
+          <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
+              <tr>
+                <td width="73%" align="left" class="custom_line_height report_list_no_border">&nbsp;</td>
+                <td width="27%" align="left" class="custom_line_height report_list_no_border"><input type="button" id="clear_information" name="clear_information" class="medium_button_disable" disabled="true" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
         <tr style="display:none">
               <td width="50%" nowrap="nowrap" class="custom_line_height"><table width="100%" border="0" cellspacing="0" cellpadding="0" frame="void" rules="none">
                 <tr>
@@ -2692,8 +2613,8 @@ DATA
 }
 
 sub UpdateLoadPage {
-	UpdateLoadPageSelectItem();
-	my ($load_profile_name) = @_;
+	my ( $load_profile_name, $need_check_hardware ) = @_;
+	UpdateLoadPageSelectItem($need_check_hardware);
 	print <<DATA;
 	<tr>
           <td></td>
@@ -2743,151 +2664,7 @@ DATA
 	}
 	LoadDrawPackageList();
 	DrawUninstallPackageList();
-	my $profiles_list = "";
-	if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
-		my @files = sort grep !/^[\.~]/, readdir(DIR);
-		foreach (@files) {
-			my $profile_name = $_;
-			if (    ( $profile_name !~ /pre_template/ )
-				and ( $profile_name !~ /^rerun_/ ) )
-			{
-				$profiles_list .=
-"    <option value=\"$profile_name\">$profile_name</option>\n";
-			}
-		}
-	}
 	print <<DATA;
-            </tr>
-          </table></td>
-        </tr>
-        <tr>
-        <td height="4" width="100%" class=""></td>
-        </tr>
-        <tr>
-          <td><table width="100%" border="0" cellpadding="0" cellspacing="0">
-            <tr height="40">
-DATA
-	if ( @checkbox_packages > 0 ) {
-		print <<DATA;
-              <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button" value="Execute" onclick="javascript:onExecute();" /></td>
-              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="large_button" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
-              <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
-DATA
-	}
-	else {
-		print <<DATA;
-              <td width="10%" align="center"><input type="button" id="execute_profile" name="execute_profile" title="Execute selected packages" class="large_button_disable" disabled="true" value="Execute" onclick="javascript:onExecute();" /></td>
-              <td width="10%" align="center"><input type="button" id="pre_config" name="pre_config" class="large_button_disable" disabled="true" value="Config" title="Pre config some basic parameters for the device" onclick="javascript:onPreConfig();"/></td>
-              <td width="10%" align="center"><input type="button" id="clear_information" name="clear_information" class="large_button_disable" disabled="true" value="Clear" title="Clear all filters and package check box." onclick="javascript:onClearinfo();"/></td>
-DATA
-	}
-	print <<DATA;
-              <td width="30%">&nbsp;</td>
-              <td width="10%" align="center">Test Plan</td>
-              <td width="10%" align="center"><input name="save_profile_panel_button" id="save_profile_panel_button" title="Open save test plan panel" type="button" class="medium_button" value="Save" onclick="javascript:show_save_panel();" /></td>
-              <td width="10%" align="center"><input name="load_profile_panel_button" id="load_profile_panel_button" title="Open load test plan panel" type="button" class="medium_button" value="Load" onclick="javascript:show_load_panel();" /></td>
-              <td width="10%" align="center"><input name="manage_profile_panel_button" id="manage_profile_panel_button" title="Open manage test plan panel" type="button" class="medium_button" value="Delete" onclick="javascript:show_manage_panel();" /></td>
-            </tr>
-            <tr id="save_profile_panel" style="display:none;">
-              <td height="120" colspan="8" class="custom_panel_background_color"><table width="100%" height="120">
-                <tr height="45" valign="bottom">
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Save as a new test plan</td>
-                  <td width="30%" align="left"><input name="save_test_plan_text" type="text" class="test_plan_name" id="save_test_plan_text" /></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="save_profile_button_text" id="save_profile_button_text" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('text');" /></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="5%">&nbsp;</td>
-                </tr>
-                <tr height="10">&nbsp;
-                </tr>
-                <tr height="65" valign="top">
-DATA
-	if ( $profiles_list ne "" ) {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Overwrite an existing test plan</td>
-                  <td width="30%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 18em;">$profiles_list</select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button" value="Save" onclick="javascript:save_profile('select');" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('save');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	else {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Overwrite an existing test plan</td>
-                  <td width="30%" align="left"><select name="save_test_plan_select" id="save_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="save_profile_button_select" id="save_profile_button_select" title="Save test plan" type="button" class="medium_button_disable" value="Save" disabled="disabled" onclick="javascript:save_profile('select');" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_save" id="view_profile_button_save" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('save');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	print <<DATA;
-                </tr>
-              </table></td>
-            </tr>
-            <tr id="load_profile_panel" style="display:none;">
-              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
-                <tr>
-DATA
-	if ( $profiles_list ne "" ) {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Choose from existing test plans</td>
-                  <td width="30%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 18em;">$profiles_list</select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button" value="Load" onclick="javascript:load_profile();" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('load');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	else {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Choose from existing test plans</td>
-                  <td width="30%" align="left"><select name="load_test_plan_select" id="load_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="load_profile_button" id="load_profile_button" title="Load test plan" type="button" class="medium_button_disable" value="Load" disabled="disabled" onclick="javascript:load_profile();" /></td>
-                  <td width="10%" align="center"><input name="view_profile_button_load" id="view_profile_button_load" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('load');" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	print <<DATA;
-                </tr>
-              </table></td>
-            </tr>
-            <tr id="manage_profile_panel" style="display:none;">
-              <td height="80" colspan="8" class="custom_panel_background_color"><table width="100%" class="custom_line_height">
-                <tr>
-DATA
-	if ( $profiles_list ne "" ) {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Existing test plans</td>
-                  <td width="30%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 18em;">$profiles_list</select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button" value="View" onclick="javascript:view_profile('manage');" /></td>
-                  <td width="10%" align="center"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button" value="Delete" onclick="javascript:delete_profile();" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	else {
-		print <<DATA;
-                  <td width="5%">&nbsp;</td>
-                  <td width="30%" align="left">Existing test plans</td>
-                  <td width="30%" align="left"><select name="manage_test_plan_select" id="manage_test_plan_select" style="width: 18em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
-                  <td width="10%">&nbsp;</td>
-                  <td width="10%" align="center"><input name="view_profile_button_manage" id="view_profile_button_manage" title="View test plan" type="button" class="medium_button_disable" value="View" disabled="disabled" onclick="javascript:view_profile('manage');" /></td>
-                  <td width="10%" align="center"><input name="delete_profile_button" id="delete_profile_button" title="Delete test plan" type="button" class="medium_button_disable" value="Delete" disabled="disabled" onclick="javascript:delete_profile();" /></td>
-                  <td width="5%">&nbsp;</td>
-DATA
-	}
-	print <<DATA;
-                </tr>
-              </table></td>
             </tr>
           </table></td>
         </tr>
@@ -2902,6 +2679,7 @@ print <<DATA;
 
 <script language="javascript" type="text/javascript">
 // <![CDATA[
+var need_check_hardware = 0;
 var check_all_box = document.getElementById('checkbox_all');
 if (check_all_box) {
 	update_state(); // Remember state of the buttons
@@ -3343,12 +3121,14 @@ DATA
 print <<DATA;
 var test_set_item = new Array(
 DATA
-for ( $count_num = 0 ; $count_num < @test_set_item ; $count_num++ ) {
-	if ( $count_num == @test_set_item - 1 ) {
-		print '"' . $test_set_item[$count_num] . '"';
-	}
-	else {
-		print '"' . $test_set_item[$count_num] . '"' . ",";
+if ( @test_set_item > 1 ) {
+	for ( $count_num = 0 ; $count_num < @test_set_item ; $count_num++ ) {
+		if ( $count_num == @test_set_item - 1 ) {
+			print '"' . $test_set_item[$count_num] . '"';
+		}
+		else {
+			print '"' . $test_set_item[$count_num] . '"' . ",";
+		}
 	}
 }
 print <<DATA;
@@ -3358,12 +3138,14 @@ DATA
 print <<DATA;
 var component_item = new Array(
 DATA
-for ( $count_num = 0 ; $count_num < @component_item ; $count_num++ ) {
-	if ( $count_num == @component_item - 1 ) {
-		print '"' . $component_item[$count_num] . '"';
-	}
-	else {
-		print '"' . $component_item[$count_num] . '"' . ",";
+if ( @component_item > 1 ) {
+	for ( $count_num = 0 ; $count_num < @component_item ; $count_num++ ) {
+		if ( $count_num == @component_item - 1 ) {
+			print '"' . $component_item[$count_num] . '"';
+		}
+		else {
+			print '"' . $component_item[$count_num] . '"' . ",";
+		}
 	}
 }
 print <<DATA;
@@ -3373,12 +3155,14 @@ DATA
 print <<DATA;
 var test_suite_item = new Array(
 DATA
-for ( $count_num = 0 ; $count_num < @test_suite_item ; $count_num++ ) {
-	if ( $count_num == @test_suite_item - 1 ) {
-		print '"' . $test_suite_item[$count_num] . '"';
-	}
-	else {
-		print '"' . $test_suite_item[$count_num] . '"' . ",";
+if ( @test_suite_item > 1 ) {
+	for ( $count_num = 0 ; $count_num < @test_suite_item ; $count_num++ ) {
+		if ( $count_num == @test_suite_item - 1 ) {
+			print '"' . $test_suite_item[$count_num] . '"';
+		}
+		else {
+			print '"' . $test_suite_item[$count_num] . '"' . ",";
+		}
 	}
 }
 print <<DATA;
@@ -3665,6 +3449,7 @@ function rank()
 
 function hidden_Advanced_List(type)
 {
+	close_all_test_plan_panel();
 	var type_adv = type;
 	var advanced_list = document.getElementById('list_advanced');
 	var button_advanced = document.getElementById('button_adv');
@@ -3787,7 +3572,7 @@ function update_state() {
 	}
 	button = document.getElementById('clear_information');
 	if (button) {
-		button.disabled = (num_checked == 0 && clear_flag == 0);
+		button.disabled = (clear_flag == 0);
 		if(button.disabled){
 			button.className = "medium_button_disable";
 		}
@@ -3924,12 +3709,6 @@ function onClearinfo(){
 	advanced_value_test_set.selectedIndex = 0;
 	advanced_value_component.selectedIndex = 0;
 	
-	var form = document.tests_custom;
-	for (var i=0; i<form.length; ++i) {
-		if (form[i].type.toLowerCase() == 'checkbox')
-			check_uncheck(form[i], false);
-	}
-	update_state();
 	filter_case_item();
 	filter_case_item('suite');
 }
@@ -4027,6 +3806,64 @@ my $pre_config_content = <<DATA;
   </tr>
 </table>
 DATA
+
+my %hardware_type = read_hardware_capability_config();
+print <<DATA;
+function onSaveHardwareCapability() {
+DATA
+print <<DATA;
+	var hardware_list = new Array(
+DATA
+my @hardware_capability_array = ();
+foreach ( keys %hardware_type ) {
+	my $hardware_checkbox_id = $_;
+	push( @hardware_capability_array,
+		    '"'
+		  . $hardware_checkbox_id . "!:!"
+		  . $hardware_type{$hardware_checkbox_id}
+		  . '"' );
+}
+print join( ", ", @hardware_capability_array );
+print <<DATA;
+	);
+	var hardware_info = "";
+	var has_blank = false;
+	for ( var i = 0; i < hardware_list.length; i++) {
+		var hardware_type = hardware_list[i].split("!:!");
+		var hardware_name = hardware_type[0];
+		var hardware_type = hardware_type[1];
+		var hardware_id = document.getElementById(hardware_name + "_message").value;
+		var hardware = document.getElementById(hardware_id);
+		var hardware_content = "";
+		var hardware_support = "false";
+		if (document.getElementById(hardware_name + "_checkbox").checked) {
+			hardware_support = "true";
+		}
+		if (hardware_id.indexOf("boolean") >= 0) {
+			hardware_content = hardware.innerHTML;
+		} else {
+			hardware_content = hardware.value;
+			if ((hardware_support == "true") && (hardware_content == "")) {
+				has_blank = true;
+				hardware.style.borderColor = "red";
+			}
+		}
+		var this_hardware_info = hardware_name + "!:!" + hardware_type + "!:!" + hardware_content;
+		if (hardware_info == "") {
+			hardware_info = this_hardware_info;
+		} else {
+			hardware_info += "!::!" + this_hardware_info;
+		}
+	}
+	if (has_blank) {
+		
+	} else {
+		ajax_call_get('action=save_hardware_capability_xml&content=' + hardware_info);
+		onClosePopup();
+	}
+}
+DATA
+
 $pre_config_content =~ s/\n//g;
 print <<DATA;
 function onPreConfig() {
@@ -4075,18 +3912,19 @@ if ( $desc_xml !~ /No such file or directory/ ) {
 	system( sdb_cmd("pull $desc_xml_path /tmp/desc_xml") );
 	my $step_number  = 1;
 	my $step_content = "";
-	open( FILE, "/tmp/desc_xml" );
-	while (<FILE>) {
-		my $line = $_;
-		if ( $line =~ /<step_desc>(.+?)<\/step_desc>/ ) {
-			my $step = $1;
-			$step =~ s/</&lt;/g;
-			$step =~ s/>/&gt;/g;
-			$step_content .= "&nbsp;$step_number. $step<\/br>";
-			$step_number++;
+	if ( open( FILE, "/tmp/desc_xml" ) ) {
+		while (<FILE>) {
+			my $line = $_;
+			if ( $line =~ /<step_desc>(.+?)<\/step_desc>/ ) {
+				my $step = $1;
+				$step =~ s/</&lt;/g;
+				$step =~ s/>/&gt;/g;
+				$step_content .= "&nbsp;$step_number. $step<\/br>";
+				$step_number++;
+			}
 		}
+		close(FILE);
 	}
-	close(FILE);
 	system("rm -rf /tmp/desc_xml");
 	print
 "	document.getElementById('pre_config_desc_xml_text').innerHTML = '$step_content';\n";
@@ -5106,267 +4944,283 @@ sub AnalysisTestsXML {
 	my $temp;
 
 	while ( $count < $package_name_number ) {
-		open FILE, $testsxml[$count] or die $!;
-		while (<FILE>) {
-			if ( $_ =~ /<testcase(.*)/ ) {
-				$case_number_all_temp++;
-			}
-			if ( $_ =~ /<category>(.*?)</ ) {
-				$temp = $1;
-				if ( $category_number_temp == 0 ) {
-					push( @category, $temp );
-					$category_number_temp++;
+		if ( open FILE, $testsxml[$count] ) {
+			while (<FILE>) {
+				if ( $_ =~ /<testcase(.*)/ ) {
+					$case_number_all_temp++;
 				}
-				else {
-					for (
-						$i = $category_number ;
-						$i < ( $category_number + $category_number_temp ) ;
-						$i++
-					  )
-					{
-						if ( $category[$i] eq $temp ) {
-							last;
-						}
-						if (
-							$i == (
-								( $category_number + $category_number_temp ) - 1
-							)
+				if ( $_ =~ /<category>(.*?)</ ) {
+					$temp = $1;
+					if ( $category_number_temp == 0 ) {
+						push( @category, $temp );
+						$category_number_temp++;
+					}
+					else {
+						for (
+							$i = $category_number ;
+							$i < ( $category_number + $category_number_temp ) ;
+							$i++
 						  )
 						{
-							push( @category, $temp );
-							$category_number_temp++;
+							if ( $category[$i] eq $temp ) {
+								last;
+							}
+							if (
+								$i == (
+									(
+										$category_number + $category_number_temp
+									) - 1
+								)
+							  )
+							{
+								push( @category, $temp );
+								$category_number_temp++;
+							}
 						}
 					}
 				}
-			}
-			if ( $_ =~ /<suite.*name="(.*?)"/ ) {
-				$temp = $1;
-				$temp =~ s/ /-/g;
-				if ( $test_suite_number_temp == 0 ) {
-					push( @test_suite, $temp );
-					$test_suite_number_temp++;
-				}
-				else {
-					for (
-						$i = $test_suite_number ;
-						$i < ( $test_suite_number + $test_suite_number_temp ) ;
-						$i++
-					  )
-					{
-						if ( $test_suite[$i] eq $temp ) {
-							last;
-						}
-						if (
-							$i == (
-								(
-									$test_suite_number + $test_suite_number_temp
-								) - 1
-							)
+				if ( $_ =~ /<suite.*name="(.*?)"/ ) {
+					$temp = $1;
+					$temp =~ s/ /-/g;
+					if ( $test_suite_number_temp == 0 ) {
+						push( @test_suite, $temp );
+						$test_suite_number_temp++;
+					}
+					else {
+						for (
+							$i = $test_suite_number ;
+							$i <
+							( $test_suite_number + $test_suite_number_temp ) ;
+							$i++
 						  )
 						{
-							push( @test_suite, $temp );
-							$test_suite_number_temp++;
+							if ( $test_suite[$i] eq $temp ) {
+								last;
+							}
+							if (
+								$i == (
+									(
+										$test_suite_number +
+										  $test_suite_number_temp
+									) - 1
+								)
+							  )
+							{
+								push( @test_suite, $temp );
+								$test_suite_number_temp++;
+							}
 						}
 					}
 				}
-			}
-			if ( $_ =~ /<set name="(.*?)"/ ) {
-				$temp = $1;
-				if ( $test_set_number_temp == 0 ) {
-					push( @test_set, $temp );
-					$test_set_number_temp++;
-				}
-				else {
-					for (
-						$i = $test_set_number ;
-						$i < ( $test_set_number + $test_set_number_temp ) ;
-						$i++
-					  )
-					{
-						if ( $test_set[$i] eq $temp ) {
-							last;
-						}
-						if (
-							$i == (
-								( $test_set_number + $test_set_number_temp ) - 1
-							)
+				if ( $_ =~ /<set name="(.*?)"/ ) {
+					$temp = $1;
+					if ( $test_set_number_temp == 0 ) {
+						push( @test_set, $temp );
+						$test_set_number_temp++;
+					}
+					else {
+						for (
+							$i = $test_set_number ;
+							$i < ( $test_set_number + $test_set_number_temp ) ;
+							$i++
 						  )
 						{
-							push( @test_set, $temp );
-							$test_set_number_temp++;
+							if ( $test_set[$i] eq $temp ) {
+								last;
+							}
+							if (
+								$i == (
+									(
+										$test_set_number + $test_set_number_temp
+									) - 1
+								)
+							  )
+							{
+								push( @test_set, $temp );
+								$test_set_number_temp++;
+							}
 						}
 					}
 				}
-			}
-			if ( $_ =~ /status="(.*?)"/ ) {
-				$temp = $1;
-				if ( $status_number_temp == 0 ) {
-					push( @status, $temp );
-					$status_number_temp++;
-				}
-				else {
-					for (
-						$i = $status_number ;
-						$i < ( $status_number + $status_number_temp ) ;
-						$i++
-					  )
-					{
-						if ( $status[$i] eq $temp ) {
-							last;
-						}
-						if ( $i ==
-							( ( $status_number + $status_number_temp ) - 1 ) )
-						{
-							push( @status, $temp );
-							$status_number_temp++;
-						}
+				if ( $_ =~ /status="(.*?)"/ ) {
+					$temp = $1;
+					if ( $status_number_temp == 0 ) {
+						push( @status, $temp );
+						$status_number_temp++;
 					}
-				}
-			}
-			if ( $_ =~ /priority="(.*?)"/ ) {
-				$temp = $1;
-				if ( $priority_number_temp == 0 ) {
-					push( @priority, $temp );
-					$priority_number_temp++;
-				}
-				else {
-					for (
-						$i = $priority_number ;
-						$i < ( $priority_number + $priority_number_temp ) ;
-						$i++
-					  )
-					{
-						if ( $priority[$i] eq $temp ) {
-							last;
-						}
-						if (
-							$i == (
-								( $priority_number + $priority_number_temp ) - 1
-							)
+					else {
+						for (
+							$i = $status_number ;
+							$i < ( $status_number + $status_number_temp ) ;
+							$i++
 						  )
 						{
-							push( @priority, $temp );
-							$priority_number_temp++;
+							if ( $status[$i] eq $temp ) {
+								last;
+							}
+							if (
+								$i == (
+									( $status_number + $status_number_temp ) - 1
+								)
+							  )
+							{
+								push( @status, $temp );
+								$status_number_temp++;
+							}
 						}
 					}
 				}
-			}
-			if ( $_ =~ /component="(.*?)"/ ) {
-				$temp = $1;
-				if ( $component_number_temp == 0 ) {
-					push( @component, $temp );
-					$component_number_temp++;
-				}
-				else {
-					for (
-						$i = $component_number ;
-						$i < ( $component_number + $component_number_temp ) ;
-						$i++
-					  )
-					{
-						if ( $component[$i] eq $temp ) {
-							last;
-						}
-						if (
-							$i == (
-								( $component_number + $component_number_temp ) -
-								  1
-							)
+				if ( $_ =~ /priority="(.*?)"/ ) {
+					$temp = $1;
+					if ( $priority_number_temp == 0 ) {
+						push( @priority, $temp );
+						$priority_number_temp++;
+					}
+					else {
+						for (
+							$i = $priority_number ;
+							$i < ( $priority_number + $priority_number_temp ) ;
+							$i++
 						  )
 						{
-							push( @component, $temp );
-							$component_number_temp++;
+							if ( $priority[$i] eq $temp ) {
+								last;
+							}
+							if (
+								$i == (
+									(
+										$priority_number + $priority_number_temp
+									) - 1
+								)
+							  )
+							{
+								push( @priority, $temp );
+								$priority_number_temp++;
+							}
 						}
 					}
 				}
-			}
-			if ( $_ =~ /execution_type="(.*?)"/ ) {
-				$temp = $1;
-				if ( $temp eq "auto" ) {
-					$case_number_auto_temp++;
-				}
-				if ( $execution_type_number_temp == 0 ) {
-					push( @execution_type, $temp );
-					$execution_type_number_temp++;
-				}
-				else {
-					for (
-						$i = $execution_type_number ;
-						$i < (
-							$execution_type_number + $execution_type_number_temp
-						) ;
-						$i++
-					  )
-					{
-						if ( $execution_type[$i] eq $temp ) {
-							last;
-						}
-						if (
-							$i == (
-								(
-									$execution_type_number +
-									  $execution_type_number_temp
-								) - 1
-							)
+				if ( $_ =~ /component="(.*?)"/ ) {
+					$temp = $1;
+					if ( $component_number_temp == 0 ) {
+						push( @component, $temp );
+						$component_number_temp++;
+					}
+					else {
+						for (
+							$i = $component_number ;
+							$i <
+							( $component_number + $component_number_temp ) ;
+							$i++
 						  )
 						{
-							push( @execution_type, $temp );
-							$execution_type_number_temp++;
+							if ( $component[$i] eq $temp ) {
+								last;
+							}
+							if (
+								$i == (
+									(
+										$component_number +
+										  $component_number_temp
+									) - 1
+								)
+							  )
+							{
+								push( @component, $temp );
+								$component_number_temp++;
+							}
 						}
 					}
 				}
-			}
-			if (   ( $_ =~ / type="(.*?)"/ )
-				&& ( $_ !~ /xml\-stylesheet type=/ ) )
-			{
-				$temp = $1;
-				if ( $type_number_temp == 0 ) {
-					push( @type, $temp );
-					$type_number_temp++;
-				}
-				else {
-					for (
-						$i = $type_number ;
-						$i < ( $type_number + $type_number_temp ) ;
-						$i++
-					  )
-					{
-						if ( $type[$i] eq $temp ) {
-							last;
-						}
-						if (
-							$i == ( ( $type_number + $type_number_temp ) - 1 ) )
+				if ( $_ =~ /execution_type="(.*?)"/ ) {
+					$temp = $1;
+					if ( $temp eq "auto" ) {
+						$case_number_auto_temp++;
+					}
+					if ( $execution_type_number_temp == 0 ) {
+						push( @execution_type, $temp );
+						$execution_type_number_temp++;
+					}
+					else {
+						for (
+							$i = $execution_type_number ;
+							$i < (
+								$execution_type_number +
+								  $execution_type_number_temp
+							) ;
+							$i++
+						  )
 						{
-							push( @type, $temp );
-							$type_number_temp++;
+							if ( $execution_type[$i] eq $temp ) {
+								last;
+							}
+							if (
+								$i == (
+									(
+										$execution_type_number +
+										  $execution_type_number_temp
+									) - 1
+								)
+							  )
+							{
+								push( @execution_type, $temp );
+								$execution_type_number_temp++;
+							}
 						}
 					}
 				}
-			}
-			if (   ( $_ =~ /type="(.*?)"/ )
-				&& ( $_ !~ /\_type=/ )
-				&& ( $_ !~ /xml\-stylesheet type=/ ) )
-			{
-				$temp = $1;
-				if ( $type_number_temp == 0 ) {
-					push( @type, $temp );
-					$type_number_temp++;
-				}
-				else {
-					for (
-						$i = $type_number ;
-						$i < ( $type_number + $type_number_temp ) ;
-						$i++
-					  )
-					{
-						if ( $type[$i] eq $temp ) {
-							last;
-						}
-						if (
-							$i == ( ( $type_number + $type_number_temp ) - 1 ) )
+				if (   ( $_ =~ / type="(.*?)"/ )
+					&& ( $_ !~ /xml\-stylesheet type=/ ) )
+				{
+					$temp = $1;
+					if ( $type_number_temp == 0 ) {
+						push( @type, $temp );
+						$type_number_temp++;
+					}
+					else {
+						for (
+							$i = $type_number ;
+							$i < ( $type_number + $type_number_temp ) ;
+							$i++
+						  )
 						{
-							push( @type, $temp );
-							$type_number_temp++;
+							if ( $type[$i] eq $temp ) {
+								last;
+							}
+							if ( $i ==
+								( ( $type_number + $type_number_temp ) - 1 ) )
+							{
+								push( @type, $temp );
+								$type_number_temp++;
+							}
+						}
+					}
+				}
+				if (   ( $_ =~ /type="(.*?)"/ )
+					&& ( $_ !~ /\_type=/ )
+					&& ( $_ !~ /xml\-stylesheet type=/ ) )
+				{
+					$temp = $1;
+					if ( $type_number_temp == 0 ) {
+						push( @type, $temp );
+						$type_number_temp++;
+					}
+					else {
+						for (
+							$i = $type_number ;
+							$i < ( $type_number + $type_number_temp ) ;
+							$i++
+						  )
+						{
+							if ( $type[$i] eq $temp ) {
+								last;
+							}
+							if ( $i ==
+								( ( $type_number + $type_number_temp ) - 1 ) )
+							{
+								push( @type, $temp );
+								$type_number_temp++;
+							}
 						}
 					}
 				}
@@ -5416,9 +5270,10 @@ sub AnalysisReadMe {
 	my $content = "";
 	my $temp    = "";
 	while ( $count < $package_name_number ) {
-		open FILE, $read_me[$count] or die $!;
-		while (<FILE>) {
-			$content .= $_;
+		if ( open FILE, $read_me[$count] ) {
+			while (<FILE>) {
+				$content .= $_;
+			}
 		}
 		if ( $content =~ /Introduction.-{5,}(.*?)-{5,}/s ) {
 			$temp = $1;
@@ -5577,6 +5432,18 @@ DATA
 		$count++;
 	}
 
+}
+
+sub DrawEmptyPackageList {
+	print <<DATA;
+          <tr>
+            <table width="100%" height="90" border="0" align="center" cellpadding="0" cellspacing="0">
+              <tr>
+                <td width="100%" align="center" class="custom_bottom custom_bottomright_packagename" id="update_null_page" name="update_null_page">Found no installed package.</td>
+              </tr>
+            </table>
+          </tr>
+DATA
 }
 
 #Enter custom page, draw package list.
@@ -5775,10 +5642,13 @@ sub DrawArcSelect {
 	print <<DATA;
 		<option selected="selected">Any Architecture</option>
 DATA
-	for ( ; $count < @architecture_item ; $count++ ) {
-		print <<DATA;
+	my $number = @architecture_item;
+	if ( ( @architecture_item >= 1 ) && ( defined $architecture_item[0] ) ) {
+		for ( ; $count < @architecture_item ; $count++ ) {
+			print <<DATA;
 		<option>$architecture_item[$count]</option>
 DATA
+		}
 	}
 }
 
@@ -5818,10 +5688,12 @@ sub DrawVersionSelect {
 	print <<DATA;
 		<option selected="selected">Any Version</option>
 DATA
-	for ( ; $count < @version_item ; $count++ ) {
-		print <<DATA;
+	if ( ( @version_item >= 1 ) && ( defined $version_item[0] ) ) {
+		for ( ; $count < @version_item ; $count++ ) {
+			print <<DATA;
 		<option>$version_item[$count]</option>
 DATA
+		}
 	}
 }
 
@@ -5865,11 +5737,13 @@ sub DrawCategorySelect {
 	print <<DATA;
 		<option selected="selected">Any Category</option>
 DATA
-	for ( ; $count < @category_item ; $count++ ) {
-		if ( $category_item[$count] !~ /Any Category/ ) {
-			print <<DATA;
+	if ( ( @category_item >= 1 ) && ( defined $category_item[0] ) ) {
+		for ( ; $count < @category_item ; $count++ ) {
+			if ( $category_item[$count] !~ /Any Category/ ) {
+				print <<DATA;
 		<option>$category_item[$count]</option>
 DATA
+			}
 		}
 	}
 }
@@ -5911,10 +5785,12 @@ sub DrawTestsuiteSelect {
 	print <<DATA;
 		<option selected="selected">Any Test Suite</option>
 DATA
-	for ( ; $count < @test_suite_item ; $count++ ) {
-		print <<DATA;
+	if ( ( @test_suite_item >= 1 ) && ( defined $test_suite_item[0] ) ) {
+		for ( ; $count < @test_suite_item ; $count++ ) {
+			print <<DATA;
 		<option>$test_suite_item[$count]</option>
 DATA
+		}
 	}
 }
 
@@ -5954,10 +5830,12 @@ sub DrawTestsetSelect {
 	print <<DATA;
 		<option selected="selected">Any Test Set</option>
 DATA
-	for ( ; $count < @test_set_item ; $count++ ) {
-		print <<DATA;
+	if ( ( @test_set_item >= 1 ) && ( $test_set_item[0] ) ) {
+		for ( ; $count < @test_set_item ; $count++ ) {
+			print <<DATA;
 		<option>$test_set_item[$count]</option>
 DATA
+		}
 	}
 }
 
@@ -5997,10 +5875,12 @@ sub DrawStatusSelect {
 	print <<DATA;
 		<option selected="selected">Any Status</option>
 DATA
-	for ( ; $count < @status_item ; $count++ ) {
-		print <<DATA;
+	if ( ( @status_item >= 1 ) && ( defined $status_item[0] ) ) {
+		for ( ; $count < @status_item ; $count++ ) {
+			print <<DATA;
 		<option>$status_item[$count]</option>
 DATA
+		}
 	}
 }
 
@@ -6040,10 +5920,12 @@ sub DrawTypeSelect {
 	print <<DATA;
 		<option selected="selected">Any Type</option>
 DATA
-	for ( ; $count < @type_item ; $count++ ) {
-		print <<DATA;
+	if ( ( @type_item >= 1 ) && ( defined $type_item[0] ) ) {
+		for ( ; $count < @type_item ; $count++ ) {
+			print <<DATA;
 		<option>$type_item[$count]</option>
 DATA
+		}
 	}
 }
 
@@ -6083,10 +5965,12 @@ sub DrawPrioritySelect {
 	print <<DATA;
 		<option selected="selected">Any Priority</option>
 DATA
-	for ( ; $count < @priority_item ; $count++ ) {
-		print <<DATA;
+	if ( ( @priority_item >= 1 ) && ( defined $priority_item[0] ) ) {
+		for ( ; $count < @priority_item ; $count++ ) {
+			print <<DATA;
 		<option>$priority_item[$count]</option>
 DATA
+		}
 	}
 }
 
@@ -6126,10 +6010,12 @@ sub DrawComponentSelect {
 	print <<DATA;
 		<option selected="selected">Any Component</option>
 DATA
-	for ( ; $count < @component_item ; $count++ ) {
-		print <<DATA;
+	if ( ( @component_item >= 1 ) && ( defined $component_item[0] ) ) {
+		for ( ; $count < @component_item ; $count++ ) {
+			print <<DATA;
 		<option>$component_item[$count]</option>
 DATA
+		}
 	}
 }
 
@@ -6171,10 +6057,13 @@ sub DrawExecutiontypeSelect {
 	print <<DATA;
 		<option selected="selected">Any Execution Type</option>
 DATA
-	for ( ; $count < @execution_type_item ; $count++ ) {
-		print <<DATA;
+	if ( ( @execution_type_item >= 1 ) && ( defined $execution_type_item[0] ) )
+	{
+		for ( ; $count < @execution_type_item ; $count++ ) {
+			print <<DATA;
 		<option>$execution_type_item[$count]</option>
 DATA
+		}
 	}
 }
 
@@ -6184,7 +6073,6 @@ sub GetSelectItem {
 	my $k     = 0;
 	my $count = 0;
 	my @temp  = ();
-
 	push( @temp, $architecture[0] );
 	for ( $j = 1 ; $j < @architecture ; $j++ ) {
 		for ( $i = 0 ; $i < @temp ; $i++ ) {
@@ -6196,8 +6084,10 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@architecture_item = sort @temp;
-	@temp              = ();
+	if ( ( @temp >= 1 ) && ( defined $temp[0] ) ) {
+		@architecture_item = sort @temp;
+	}
+	@temp = ();
 
 	push( @temp, $version[0] );
 	for ( $j = 1 ; $j < @version ; $j++ ) {
@@ -6210,8 +6100,10 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@version_item = sort @temp;
-	@temp         = ();
+	if ( ( @temp >= 1 ) && ( defined $temp[0] ) ) {
+		@version_item = sort @temp;
+	}
+	@temp = ();
 
 	push( @temp, $category[0] );
 	for ( $j = 1 ; $j < @category ; $j++ ) {
@@ -6224,8 +6116,10 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@category_item = sort @temp;
-	@temp          = ();
+	if ( ( @temp >= 1 ) && ( defined $temp[0] ) ) {
+		@category_item = sort @temp;
+	}
+	@temp = ();
 
 	push( @temp, $test_suite[0] );
 	for ( $j = 1 ; $j < @test_suite ; $j++ ) {
@@ -6238,7 +6132,9 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@test_suite_item        = sort @temp;
+	if ( ( @temp >= 1 ) && ( defined $temp[0] ) ) {
+		@test_suite_item = sort @temp;
+	}
 	$test_suite_item_number = @test_suite_item;
 	@temp                   = ();
 
@@ -6253,7 +6149,9 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@test_set_item        = sort @temp;
+	if ( ( @temp >= 1 ) && ( defined $temp[0] ) ) {
+		@test_set_item = sort @temp;
+	}
 	$test_set_item_number = @test_set_item;
 	@temp                 = ();
 
@@ -6268,8 +6166,10 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@status_item = sort @temp;
-	@temp        = ();
+	if ( ( @temp >= 1 ) && ( defined $temp[0] ) ) {
+		@status_item = sort @temp;
+	}
+	@temp = ();
 
 	push( @temp, $type[0] );
 	for ( $j = 1 ; $j < @type ; $j++ ) {
@@ -6282,8 +6182,10 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@type_item = sort @temp;
-	@temp      = ();
+	if ( ( @temp >= 1 ) && ( defined $temp[0] ) ) {
+		@type_item = sort @temp;
+	}
+	@temp = ();
 
 	push( @temp, $priority[0] );
 	for ( $j = 1 ; $j < @priority ; $j++ ) {
@@ -6296,8 +6198,10 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@priority_item = sort @temp;
-	@temp          = ();
+	if ( ( @temp >= 1 ) && ( defined $temp[0] ) ) {
+		@priority_item = sort @temp;
+	}
+	@temp = ();
 
 	push( @temp, $component[0] );
 	for ( $j = 1 ; $j < @component ; $j++ ) {
@@ -6310,7 +6214,9 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@component_item             = sort @temp;
+	if ( ( @temp >= 1 ) && ( defined $temp[0] ) ) {
+		@component_item = sort @temp;
+	}
 	$test_component_item_number = @component_item;
 	@temp                       = ();
 
@@ -6325,8 +6231,10 @@ sub GetSelectItem {
 			}
 		}
 	}
-	@execution_type_item = sort @temp;
-	@temp                = ();
+	if ( ( @temp >= 1 ) && ( defined $temp[0] ) ) {
+		@execution_type_item = sort @temp;
+	}
+	@temp = ();
 }
 
 # Get all the packages' name installed in device.
@@ -6360,59 +6268,60 @@ sub FilterCaseValue {
 		my $priority_value;
 		my $category_value;
 
-		open FILE, $tests_xml_dir or die $! . " " . $tests_xml_dir;
-
-		while (<FILE>) {
-			if ( $_ =~ /suite.*name="(.*?)"/ ) {
-				$suite_value = $1;
-				$suite_value =~ s/ /-/g;
-			}
-			if ( $_ =~ /set.*name="(.*?)"/ ) {
-				$set_value = $1;
-			}
-			if ( $_ =~ /status="(.*?)"/ ) {
-				$status_value = $1;
-			}
-			if ( $_ =~ /component="(.*?)"/ ) {
-				$component_value = $1;
-			}
-			if ( $_ =~ /execution_type="(.*?)"/ ) {
-				$execution_value = $1;
-			}
-			if (   ( $_ =~ / type="(.*?)"/ )
-				&& ( $_ !~ /xml\-stylesheet type=/ ) )
-			{
-				$type_value = $1;
-			}
-			if (   ( $_ =~ /type="(.*?)"/ )
-				&& ( $_ !~ /\_type=/ )
-				&& ( $_ !~ /xml\-stylesheet type=/ ) )
-			{
-				$type_value = $1;
-			}
-			if ( $_ =~ /priority="(.*?)"/ ) {
-				$priority_value = $1;
-			}
-			if ( $_ =~ /<testcase/ ) {
-				$category_value = "null";
-			}
-			if ( $_ =~ /\<category\>(.*?)\<\/category\>/ ) {
-				my $category_value_tmp = "null";
-				$category_value_tmp = $1;
-				$category_value = $category_value . "&" . $category_value_tmp;
-			}
-			if ( $_ =~ /\<\/testcase\>/ ) {
-				push( @filter_architecture_value, $architecture_value );
-				push( @filter_version_value,      $version_value );
-				push( @filter_suite_value,        $suite_value );
-				push( @filter_set_value,          $set_value );
-				push( @filter_type_value,         $type_value );
-				push( @filter_status_value,       $status_value );
-				push( @filter_component_value,    $component_value );
-				push( @filter_execution_value,    $execution_value );
-				push( @filter_priority_value,     $priority_value );
-				push( @filter_category_value,     $category_value );
-				$one_package_case_count_total++;
+		if ( open FILE, $tests_xml_dir ) {
+			while (<FILE>) {
+				if ( $_ =~ /suite.*name="(.*?)"/ ) {
+					$suite_value = $1;
+					$suite_value =~ s/ /-/g;
+				}
+				if ( $_ =~ /set.*name="(.*?)"/ ) {
+					$set_value = $1;
+				}
+				if ( $_ =~ /status="(.*?)"/ ) {
+					$status_value = $1;
+				}
+				if ( $_ =~ /component="(.*?)"/ ) {
+					$component_value = $1;
+				}
+				if ( $_ =~ /execution_type="(.*?)"/ ) {
+					$execution_value = $1;
+				}
+				if (   ( $_ =~ / type="(.*?)"/ )
+					&& ( $_ !~ /xml\-stylesheet type=/ ) )
+				{
+					$type_value = $1;
+				}
+				if (   ( $_ =~ /type="(.*?)"/ )
+					&& ( $_ !~ /\_type=/ )
+					&& ( $_ !~ /xml\-stylesheet type=/ ) )
+				{
+					$type_value = $1;
+				}
+				if ( $_ =~ /priority="(.*?)"/ ) {
+					$priority_value = $1;
+				}
+				if ( $_ =~ /<testcase/ ) {
+					$category_value = "null";
+				}
+				if ( $_ =~ /\<category\>(.*?)\<\/category\>/ ) {
+					my $category_value_tmp = "null";
+					$category_value_tmp = $1;
+					$category_value =
+					  $category_value . "&" . $category_value_tmp;
+				}
+				if ( $_ =~ /\<\/testcase\>/ ) {
+					push( @filter_architecture_value, $architecture_value );
+					push( @filter_version_value,      $version_value );
+					push( @filter_suite_value,        $suite_value );
+					push( @filter_set_value,          $set_value );
+					push( @filter_type_value,         $type_value );
+					push( @filter_status_value,       $status_value );
+					push( @filter_component_value,    $component_value );
+					push( @filter_execution_value,    $execution_value );
+					push( @filter_priority_value,     $priority_value );
+					push( @filter_category_value,     $category_value );
+					$one_package_case_count_total++;
+				}
 			}
 		}
 		push( @one_package_case_count_total, $one_package_case_count_total );
@@ -6500,4 +6409,3 @@ sub FilterCase {
 }
 
 print_footer("");
-

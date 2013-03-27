@@ -1501,7 +1501,21 @@ elsif ( $_GET{'action'} eq "check_package_isExist" ) {
 			}
 		}
 	}
+	my $hardware_capability = get_config_info("hardware_capability_package");
+	my @hardware_capability_packages = split( ",", $hardware_capability );
+	my $need_check_hardware          = 0;
 	for ( my $i = 0 ; $i < @packages_need ; $i++ ) {
+		if ( $need_check_hardware == 0 ) {
+			foreach (@hardware_capability_packages) {
+				my $hardware_capability_package = $_;
+				$hardware_capability_package =~ s/^\s*//;
+				$hardware_capability_package =~ s/\s*$//;
+				if ( $packages_need[$i] =~ /$hardware_capability_package/ ) {
+					$need_check_hardware = 1;
+					last;
+				}
+			}
+		}
 		my $cmd  = sdb_cmd("shell ls /usr/share/$packages_need[$i]/tests.xml");
 		my $temp = `$cmd`;
 		if ( $temp !~ /No such file or directory/ ) {
@@ -1517,6 +1531,8 @@ elsif ( $_GET{'action'} eq "check_package_isExist" ) {
 	$data .= "<packages_need>@packages_need</packages_need>\n";
 	$data .=
 	  "<packages_isExist_flag>@packages_isExist_flag</packages_isExist_flag>\n";
+	$data .=
+	  "<need_check_hardware>$need_check_hardware</need_check_hardware>\n";
 	closedir LOADPROFILE;
 }
 
@@ -1927,16 +1943,12 @@ elsif ( $_GET{'action'} eq 'rerun_test_plan' ) {
 			write_string_as_file(
 				$SERVER_PARAM{'APP_DATA'} . '/plans/' . $plan_name,
 				$plan_content );
-			system( sdb_cmd("shell 'rm -rf /tmp/rerun'") );
-			system( sdb_cmd("shell 'mkdir /tmp/rerun'") );
+			system("rm -rf /tmp/rerun");
+			system("mkdir /tmp/rerun");
 			foreach my $package_name ( keys %package_xml_file ) {
+				system("mkdir /tmp/rerun/$package_name");
 				system(
-					sdb_cmd( "shell 'mkdir /tmp/rerun/" . $package_name . "'" )
-				);
-				system(
-					sdb_cmd(
-"push $package_xml_file{$package_name} /tmp/rerun/$package_name/tests.xml"
-					)
+"cp $package_xml_file{$package_name} /tmp/rerun/$package_name/tests.xml"
 				);
 			}
 			$data .= "<rerun_test_plan>$plan_name</rerun_test_plan>\n";
@@ -1965,6 +1977,76 @@ elsif ( $_GET{'action'} eq 'read_result_xml' ) {
 	$isWholeXML = 1;
 	$wholeXML .= $file_data;
 	no FileHandle;
+}
+
+elsif ( $_GET{'action'} eq 'save_hardware_capability_xml' ) {
+	my $content                      = $_GET{'content'};
+	my @hardware_capability_packages = split( "!::!", $content );
+	my $hardware_content_dynamic     = "";
+	foreach (@hardware_capability_packages) {
+		my $hardware_capability_package = $_;
+		my @hardware_info_all = split( "!:!", $hardware_capability_package );
+		my $number            = @hardware_info_all;
+		my $hardware_support  = "false";
+		my $hardware_content  = "";
+		my $hardware_value    = "";
+		if ( $hardware_info_all[1] eq "boolean" ) {
+			if ( $hardware_info_all[2] eq "Yes" ) {
+				$hardware_support = "true";
+			}
+			$hardware_content =
+			    '    <capability name="'
+			  . $hardware_info_all[0]
+			  . '" support="'
+			  . $hardware_support
+			  . '" type="boolean" />';
+		}
+		if ( $hardware_info_all[1] eq "String" ) {
+			if ( defined $hardware_info_all[2] ) {
+				$hardware_value   = $hardware_info_all[2];
+				$hardware_support = "true";
+			}
+			$hardware_content =
+			    '    <capability name="'
+			  . $hardware_info_all[0]
+			  . '" support="'
+			  . $hardware_support
+			  . '" type="String" />' . "\n"
+			  . '        <value>'
+			  . $hardware_value
+			  . '</value>' . "\n"
+			  . '    </capability>';
+		}
+		if ( $hardware_info_all[1] eq "Integer" ) {
+			if ( defined $hardware_info_all[2] ) {
+				$hardware_value   = $hardware_info_all[2];
+				$hardware_support = "true";
+			}
+			$hardware_content =
+			    '    <capability name="'
+			  . $hardware_info_all[0]
+			  . '" support="'
+			  . $hardware_support
+			  . '" type="Integer" />' . "\n"
+			  . '        <value>'
+			  . $hardware_value
+			  . '</value>' . "\n"
+			  . '    </capability>';
+		}
+		if ( $hardware_content_dynamic eq "" ) {
+			$hardware_content_dynamic .= $hardware_content;
+		}
+		else {
+			$hardware_content_dynamic .= "\n" . $hardware_content;
+		}
+	}
+	my $hardware_content = <<DATA;
+<?xml version="1.0" encoding="UTF-8"?>
+<capabilities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="capability.xsd">
+$hardware_content_dynamic
+</capabilities>
+DATA
+	write_string_as_file( $hardware_config_dir . "default", $hardware_content );
 }
 
 elsif ( $_GET{'action'} eq 'pre_config_device' ) {
@@ -2019,7 +2101,7 @@ elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests
 					if ( kill( 'TERM', $status->{'PID'} ) ) {
 						while (1) {
 							my $kill_result_tmp =
-							  sdb_cmd("shell killall testkit-lite");
+							  sdb_cmd("shell killall httpserver");
 							my $kill_result = `$kill_result_tmp`;
 							if ( $kill_result =~ /no process/ ) {
 								last;

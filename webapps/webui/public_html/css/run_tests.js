@@ -263,11 +263,13 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('update_package_list').disabled = false;
 		document.getElementById('save_profile_panel_button').disabled = false;
 		document.getElementById('load_profile_panel_button').disabled = false;
+		document.getElementById('delete_profile_panel_button').disabled = false;
 		document.getElementById('manage_profile_panel_button').disabled = false;
 		document.getElementById('button_adv').className = "medium_button";
 		document.getElementById('update_package_list').className = "medium_button";
 		document.getElementById('save_profile_panel_button').className = "medium_button";
 		document.getElementById('load_profile_panel_button').className = "medium_button";
+		document.getElementById('delete_profile_panel_button').className = "medium_button";
 		document.getElementById('manage_profile_panel_button').className = "medium_button";
 	}
 
@@ -285,10 +287,12 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('button_adv').disabled = false;
 		document.getElementById('save_profile_panel_button').disabled = false;
 		document.getElementById('load_profile_panel_button').disabled = false;
+		document.getElementById('delete_profile_panel_button').disabled = false;
 		document.getElementById('manage_profile_panel_button').disabled = false;
 		document.getElementById('button_adv').className = "medium_button";
 		document.getElementById('save_profile_panel_button').className = "medium_button";
 		document.getElementById('load_profile_panel_button').className = "medium_button";
+		document.getElementById('delete_profile_panel_button').className = "medium_button";
 		document.getElementById('manage_profile_panel_button').className = "medium_button";
 		document.getElementById('progress_waiting').style.display = "none";
 		update_state();
@@ -369,12 +373,14 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('update_package_list').disabled = false;
 		document.getElementById('save_profile_panel_button').disabled = false;
 		document.getElementById('load_profile_panel_button').disabled = false;
+		document.getElementById('delete_profile_panel_button').disabled = false;
 		document.getElementById('manage_profile_panel_button').disabled = false;
 
 		document.getElementById('button_adv').className = "medium_button";
 		document.getElementById('update_package_list').className = "medium_button";
 		document.getElementById('save_profile_panel_button').className = "medium_button";
 		document.getElementById('load_profile_panel_button').className = "medium_button";
+		document.getElementById('delete_profile_panel_button').className = "medium_button";
 		document.getElementById('manage_profile_panel_button').className = "medium_button";
 
 		document.getElementById('update_package_list').onclick = function() {
@@ -432,6 +438,10 @@ function ajaxProcessResult(responseXML) {
 		var load_test_plan_select = document
 				.getElementById('load_test_plan_select');
 		var load_flag = 1;
+		if (typeof (responseXML.getElementsByTagName('need_check_hardware')[0]) != 'undefined') {
+			need_check_hardware = responseXML
+					.getElementsByTagName('need_check_hardware')[0].childNodes[0].nodeValue;
+		}
 
 		packages_isExist_flag_arr = packages_isExist_flag.split(" ");
 		packages_need_arr = packages_need.split("tests");
@@ -506,14 +516,16 @@ function ajaxProcessResult(responseXML) {
 					+ message_not_load);
 		} else if (load_flag == 1) {
 			document.location = "tests_plan.pl?load_profile_button="
-					+ load_test_plan_select.value;
+					+ load_test_plan_select.value + "&need_check_hardware="
+					+ need_check_hardware;
 		} else {
 			var text = document.getElementById('loadProgressBarDiv').innerHTML;
 			if (text.indexOf("[FAIL]") > 0) {
-				document.getElementById('loadProgressBarDiv').innerHTML += '</br>&nbsp;&nbsp;&nbsp;&nbsp;Fail to install one or more package(s), please try manually.</br>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="javascript:refresh_custom_page()">Click here to refresh the page.</a>';
+				document.getElementById('loadProgressBarDiv').innerHTML += '</br>&nbsp;&nbsp;&nbsp;&nbsp;Fail to install one or more package(s), please try manually.</br>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="javascript:refresh_plan_page()">Click here to refresh the page.</a>';
 			} else {
 				document.location = "tests_plan.pl?load_profile_button="
-						+ load_test_plan_select.value;
+						+ load_test_plan_select.value + "&need_check_hardware="
+						+ need_check_hardware;
 			}
 		}
 	}
@@ -1469,6 +1481,7 @@ function onUpdatePackages() {
 	document.getElementById('view_package_info').disabled = true;
 	document.getElementById('save_profile_panel_button').disabled = true;
 	document.getElementById('load_profile_panel_button').disabled = true;
+	document.getElementById('delete_profile_panel_button').disabled = true;
 	document.getElementById('manage_profile_panel_button').disabled = true;
 
 	document.getElementById('button_adv').className = "medium_button_disable";
@@ -1479,6 +1492,7 @@ function onUpdatePackages() {
 	document.getElementById('view_package_info').className = "medium_button_disable";
 	document.getElementById('save_profile_panel_button').className = "medium_button_disable";
 	document.getElementById('load_profile_panel_button').className = "medium_button_disable";
+	document.getElementById('delete_profile_panel_button').className = "medium_button_disable";
 	document.getElementById('manage_profile_panel_button').className = "medium_button_disable";
 	close_all_test_plan_panel();
 	if (document.getElementById('update_null_page_div')) {
@@ -1656,15 +1670,15 @@ function delete_profile() {
 
 function show_save_panel() {
 	document.getElementById("load_profile_panel").style.display = "none";
-	document.getElementById("manage_profile_panel").style.display = "none";
+	document.getElementById("delete_profile_panel").style.display = "none";
 	document.getElementById("load_profile_panel_button").title = "Open load test plan panel";
-	document.getElementById("manage_profile_panel_button").title = "Open manage test plan panel";
+	document.getElementById("delete_profile_panel_button").title = "Open delete test plan panel";
 	if (document.getElementById("save_profile_panel").style.display == "none") {
 		document.getElementById("save_profile_panel").style.display = "";
 		document.getElementById("save_profile_panel_button").title = "Close save test plan panel";
 		document.getElementById("save_profile_panel_button").value = "Close";
 		document.getElementById("load_profile_panel_button").value = "Load";
-		document.getElementById("manage_profile_panel_button").value = "Delete";
+		document.getElementById("delete_profile_panel_button").value = "Delete";
 	} else {
 		document.getElementById("save_profile_panel").style.display = "none";
 		document.getElementById("save_profile_panel_button").title = "Open save test plan panel";
@@ -1674,15 +1688,15 @@ function show_save_panel() {
 
 function show_load_panel() {
 	document.getElementById("save_profile_panel").style.display = "none";
-	document.getElementById("manage_profile_panel").style.display = "none";
+	document.getElementById("delete_profile_panel").style.display = "none";
 	document.getElementById("save_profile_panel_button").title = "Open save test plan panel";
-	document.getElementById("manage_profile_panel_button").title = "Open manage test plan panel";
+	document.getElementById("delete_profile_panel_button").title = "Open delete test plan panel";
 	if (document.getElementById("load_profile_panel").style.display == "none") {
 		document.getElementById("load_profile_panel").style.display = "";
 		document.getElementById("load_profile_panel_button").title = "Close load test plan panel";
 		document.getElementById("save_profile_panel_button").value = "Save";
 		document.getElementById("load_profile_panel_button").value = "Close";
-		document.getElementById("manage_profile_panel_button").value = "Delete";
+		document.getElementById("delete_profile_panel_button").value = "Delete";
 	} else {
 		document.getElementById("load_profile_panel").style.display = "none";
 		document.getElementById("load_profile_panel_button").title = "Open load test plan panel";
@@ -1690,38 +1704,81 @@ function show_load_panel() {
 	}
 }
 
-function show_manage_panel() {
+function show_delete_panel() {
 	document.getElementById("save_profile_panel").style.display = "none";
 	document.getElementById("load_profile_panel").style.display = "none";
 	document.getElementById("save_profile_panel_button").title = "Open save test plan panel";
 	document.getElementById("load_profile_panel_button").title = "Open load test plan panel";
-	if (document.getElementById("manage_profile_panel").style.display == "none") {
-		document.getElementById("manage_profile_panel").style.display = "";
-		document.getElementById("manage_profile_panel_button").title = "Close manage test plan panel";
+	if (document.getElementById("delete_profile_panel").style.display == "none") {
+		document.getElementById("delete_profile_panel").style.display = "";
+		document.getElementById("delete_profile_panel_button").title = "Close delete test plan panel";
 		document.getElementById("save_profile_panel_button").value = "Save";
 		document.getElementById("load_profile_panel_button").value = "Load";
-		document.getElementById("manage_profile_panel_button").value = "Close";
+		document.getElementById("delete_profile_panel_button").value = "Close";
 	} else {
-		document.getElementById("manage_profile_panel").style.display = "none";
-		document.getElementById("manage_profile_panel_button").title = "Open manage test plan panel";
-		document.getElementById("manage_profile_panel_button").value = "Delete";
+		document.getElementById("delete_profile_panel").style.display = "none";
+		document.getElementById("delete_profile_panel_button").title = "Open delete test plan panel";
+		document.getElementById("delete_profile_panel_button").value = "Delete";
 	}
 }
 
-function refresh_custom_page() {
+function show_manage_panel() {
+	if (document.getElementById("save_profile_panel").style.display == "") {
+		document.getElementById("save_profile_panel").style.display = "none"
+	} else {
+		document.getElementById("save_profile_panel").style.display = ""
+	}
+	if (document.getElementById("load_profile_panel").style.display == "") {
+		document.getElementById("load_profile_panel").style.display = "none"
+	} else {
+		document.getElementById("load_profile_panel").style.display = ""
+	}
+	if (document.getElementById("delete_profile_panel").style.display == "") {
+		document.getElementById("delete_profile_panel").style.display = "none"
+	} else {
+		document.getElementById("delete_profile_panel").style.display = ""
+	}
+	if (document.getElementById("manage_profile_panel_button").value == "Close") {
+		document.getElementById("manage_profile_panel_button").value = "Plan";
+		document.getElementById("manage_profile_panel_button").title = "Open manage test plan panel";
+	} else {
+		document.getElementById("manage_profile_panel_button").value = "Close";
+		document.getElementById("manage_profile_panel_button").title = "Close manage test plan panel";
+	}
+	close_filter_panel();
+}
+
+function refresh_plan_page() {
 	document.location = "tests_plan.pl";
+}
+
+function close_filter_panel() {
+	var advanced_list = document.getElementById('list_advanced');
+	var button_advanced = document.getElementById('button_adv');
+	var advanced_list_sec = document.getElementById('list_advanced_sec');
+	var button_advanced_sec = document.getElementById('button_adv_sec');
+	var button_advanced_sec_td = document.getElementById('button_adv_sec_td');
+	advanced_list.style.display = "none";
+	advanced_list_sec.style.display = "none";
+	button_advanced.title = "Show filter list";
+	button_advanced_sec_td.style.display = "none";
+	document.getElementById('pic_adv_sec').src = "images/advance-down.png";
+	advanced_list_sec.style.display = "none";
+	button_advanced_sec.title = "Show advanced list";
 }
 
 function close_all_test_plan_panel() {
 	document.getElementById("save_profile_panel_button").value = "Save";
 	document.getElementById("load_profile_panel_button").value = "Load";
-	document.getElementById("manage_profile_panel_button").value = "Delete";
+	document.getElementById("delete_profile_panel_button").value = "Delete";
+	document.getElementById("manage_profile_panel_button").value = "Plan";
 	document.getElementById("save_profile_panel_button").title = "Open save test plan panel";
 	document.getElementById("load_profile_panel_button").title = "Open load test plan panel";
+	document.getElementById("delete_profile_panel_button").title = "Open delete test plan panel";
 	document.getElementById("manage_profile_panel_button").title = "Open manage test plan panel";
 	document.getElementById("save_profile_panel").style.display = "none";
 	document.getElementById("load_profile_panel").style.display = "none";
-	document.getElementById("manage_profile_panel").style.display = "none";
+	document.getElementById("delete_profile_panel").style.display = "none";
 }
 
 function view_profile(type) {
@@ -1744,7 +1801,10 @@ function onClosePopup() {
 	var pop_div = document.getElementById('planDiv');
 	var about_div = document.getElementById('aboutDiv');
 	var pre_config_div = document.getElementById('preConfigDiv');
+	var hardware_capability_div = document
+			.getElementById('hardwareCapabilityDiv');
 	var pop_iframe = document.getElementById('popIframe');
+	var pop_iframe_plan = document.getElementById('popIframePlan');
 	if (pop_div) {
 		pop_div.style.display = 'none';
 	}
@@ -1754,8 +1814,14 @@ function onClosePopup() {
 	if (pre_config_div) {
 		pre_config_div.style.display = 'none';
 	}
+	if (hardware_capability_div) {
+		hardware_capability_div.style.display = 'none';
+	}
 	if (pop_iframe) {
 		pop_iframe.style.display = 'none';
+	}
+	if (pop_iframe_plan) {
+		pop_iframe_plan.style.display = 'none';
 	}
 }
 
@@ -2030,5 +2096,23 @@ function onSaveConfig() {
 				+ '!::!' + server1_port + '!::!' + server2_name + '!::!'
 				+ server2_port + '!::!' + server3_name + '!::!' + server3_port
 				+ '!::!' + bluetooth_name + '!::!' + bluetooth_address);
+	}
+}
+
+function check_hardware_checklist(hardware_id, checkbox_id) {
+	var hardware = document.getElementById(hardware_id);
+	if (hardware_id.indexOf("boolean") >= 0) {
+		if (document.getElementById(checkbox_id).checked) {
+			hardware.innerHTML = "Yes";
+		} else {
+			hardware.innerHTML = "No";
+		}
+	} else {
+		if (document.getElementById(checkbox_id).checked) {
+			hardware.disabled = false;
+		} else {
+			hardware.disabled = true;
+			hardware.value = "";
+		}
 	}
 }

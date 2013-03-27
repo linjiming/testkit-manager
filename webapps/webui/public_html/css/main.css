@@ -1683,6 +1683,15 @@ tr.selectable:hover {
 	width: 500px;
 }
 
+.hardware_capability_div {
+	width: 690px;
+	left: 36%;
+	overflow-y: auto;
+	overflow-x: auto;
+	height: 500px;
+	display: none;
+}
+
 .about_div {
 	width: 390px;
 	left: 48%;

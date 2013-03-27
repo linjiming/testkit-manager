@@ -640,8 +640,8 @@ elsif ( $_GET{'time'} ) {
 		print "HTTP/1.0 200 OK" . CRLF;
 		print "Content-type: text/html" . CRLF . CRLF;
 		print_header( "$MTK_BRANCH Manager Report Page", "report" );
-
-		showSummaryReport( $_GET{'time'} );
+		print show_error_dlg("");
+		showSummaryReport( $_GET{'time'}, $_GET{'plan'} );
 	}
 	if ( $_GET{'detailed'} ) {
 		print "HTTP/1.0 200 OK" . CRLF;
@@ -895,7 +895,7 @@ sub printReportRecord {
               <td width="4%" align="center" valign="middle" class="report_list_outside_left"><label>
                 <input type="checkbox" id="$time" name="$time" onclick="javascript:update_state();" />
               </label></td>
-              <td align="left" width="26%" class="report_list_inside cut_long_string_one_line" title="$time"><a href="tests_report.pl?time=$time&summary=1">&nbsp;$time_display</a></td>
+              <td align="left" width="26%" class="report_list_inside cut_long_string_one_line" title="$time"><a href="tests_report.pl?time=$time&&plan=$test_plan&&summary=1">&nbsp;$time_display</a></td>
               <td align="left" width="15%" class="report_list_inside cut_long_string_one_line" title="$test_plan">&nbsp;$test_plan</td>
               <td align="left" width="13%" class="report_list_inside cut_long_string_one_line" title="$device_name">&nbsp;$device_name</td>
               <td width="21%" class="report_list_inside"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
@@ -941,18 +941,19 @@ DATA
 }
 
 sub showSummaryReport {
-	my ($time) = @_;
-	my $result_dir = $result_dir_manager . $time;
+	my ( $time, $test_plan ) = @_;
+	my $result_dir_tgz = $result_dir_manager . $time . "/" . $time . ".tgz";
 
 	print <<DATA;
+<div id="ajax_loading" style="display:none"></div>
 <table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
   <tr>
     <td align="left" class="top_button_bg"><form id="detailed_report" name="detailed_report" method="post" action="tests_report.pl"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
       <tr>
         <td width="2%">&nbsp;</td>
-        <td width="78%">Test report for $time in list view<input type="text" name="time_flag" value="$time" style="display:none" /></td>
-        <td width="10%" align="center" style="display:none"><input type="submit" name="summary_report" id="summary_report_button" title="View test report in list view" value="List View" disabled="disabled" class="medium_button_disable" /></td>
-        <td width="10%" align="center" style="display:none"><input type="submit" name="detailed_report" id="detailed_report_button" title="View test report in tree view" value="Tree View" class="medium_button" /></td>
+        <td width="88%">Test report for $time in list view<input type="text" name="time_flag" value="$time" style="display:none" /></td>
+        <td width="5%" align="center" style="display:none"><a href="get.pl$result_dir_tgz"><img title="Export consolidated report" src="images/operation_download.png" alt="operation_download_consolidated_log" width="16" height="16" /></a></td>
+        <td width="5%" align="center" style="display:none"><a onclick="javascript:rerunNotPassedCases('$time', '$test_plan');"><img title="Rerun failed cases" src="images/operation_rerun.png" alt="operation_rerun" width="16" height="16" /></a></td>
       </tr>
     </table></form></td>
   </tr>

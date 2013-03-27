@@ -110,7 +110,7 @@ print <<DATA;
   <area href="tests_report.pl" alt="Report" title="View Test Report" shape="rect" coords="201,209,330,372" />
   <area href="tests_plan.pl" alt="Plan" title="Create Test Plan" shape="rect" coords="195,32,331,197" />
   <area href="tests_execute.pl" alt="Execute" title="Execute Test Plan" shape="rect" coords="397,43,535,196" />
-  <area href="tests_statistic.pl" alt="Statistic" title="View Test Statistics" shape="rect" coords="391,214,541,370" />
+  <area href="tests_help.pl" alt="Help" title="View Help PDF" shape="rect" coords="391,214,541,370" />
 </map>
 <img src="images/home_menu.png" width="768" height="444" alt="home_menu" usemap="#home_menu" />
 DATA
