@@ -38,7 +38,8 @@ if ( ( $device_id ne "Error" ) && ( $device_id ne "none" ) ) {
 }
 
 # get --capability option
-my $hardware_capability_config = "/opt/testkit/manager/hardware_conf/default";
+my $hardware_capability_config =
+  "/opt/testkit/manager/hardware_conf/default_hardware_capability.xml";
 my $hardware_capability_option = "";
 if ( -e $hardware_capability_config ) {
 	$hardware_capability_option = " --capability $hardware_capability_config";
@@ -932,7 +933,12 @@ sub readProfile {
 		}
 	}
 	if ( $targetPackages ne "" ) {
-		$targetPackages = 'device:"' . $targetPackages;
+		if ( $profile_name =~ /plans\/rerun_/ ) {
+			$targetPackages = '"' . $targetPackages;
+		}
+		else {
+			$targetPackages = 'device:"' . $targetPackages;
+		}
 		$targetPackages =~ s/ $/" /;
 		if ( $isWebApi eq "True" ) {
 			$targetPackages .= $wrtPackages . '"';

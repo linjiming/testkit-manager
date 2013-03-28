@@ -2011,7 +2011,7 @@ elsif ( $_GET{'action'} eq 'save_hardware_capability_xml' ) {
 			  . $hardware_info_all[0]
 			  . '" support="'
 			  . $hardware_support
-			  . '" type="String" />' . "\n"
+			  . '" type="String">' . "\n"
 			  . '        <value>'
 			  . $hardware_value
 			  . '</value>' . "\n"
@@ -2027,7 +2027,7 @@ elsif ( $_GET{'action'} eq 'save_hardware_capability_xml' ) {
 			  . $hardware_info_all[0]
 			  . '" support="'
 			  . $hardware_support
-			  . '" type="Integer" />' . "\n"
+			  . '" type="Integer">' . "\n"
 			  . '        <value>'
 			  . $hardware_value
 			  . '</value>' . "\n"
@@ -2046,7 +2046,9 @@ elsif ( $_GET{'action'} eq 'save_hardware_capability_xml' ) {
 $hardware_content_dynamic
 </capabilities>
 DATA
-	write_string_as_file( $hardware_config_dir . "default", $hardware_content );
+	write_string_as_file(
+		$hardware_config_dir . "default_hardware_capability.xml",
+		$hardware_content );
 }
 
 elsif ( $_GET{'action'} eq 'pre_config_device' ) {
