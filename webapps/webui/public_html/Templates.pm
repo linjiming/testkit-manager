@@ -37,10 +37,10 @@ $Common::debug_inform_sub = sub { };
 	qw(
 	  CRLF
 	  %SERVER_PARAM %_GET %_POST %_COOKIE %CONFIG
-	  $result_dir_manager $result_dir_lite $test_definition_dir $test_definition_dir_repo $opt_dir $opt_dir_repo $profile_dir_manager $configuration_file $DOWNLOAD_CMD
+	  $result_dir_manager $result_dir_lite $test_definition_dir $test_definition_dir_repo $opt_dir $opt_dir_repo $profile_dir_manager $configuration_file $hardware_capability_list $DOWNLOAD_CMD $hardware_config_dir
 	  $cert_sys_host $cert_sys_base
 	  &print_header &print_footer
-	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg &get_category_key &check_existing_test_plan
+	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg &get_category_key &check_existing_test_plan &read_hardware_capability_config
 	  &updatePackageList &updateCaseInfo &printShortCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &remove_package &syncDefinition &syncDefinition_from_local_repo &compare_version &check_network &get_repo &xml2xsl &xml2xsl_case &check_testkit_sdb
 	  ),
 	@Common::EXPORT,
@@ -330,6 +330,8 @@ our $test_definition_dir_repo = "/opt/testkit/manager/definition_repo/";
 our $opt_dir_repo             = "/opt/testkit/manager/package_repo/";
 our $profile_dir_manager      = $FindBin::Bin . "/../../../plans/";
 our $configuration_file       = $FindBin::Bin . "/../../../CONF";
+our $hardware_config_dir      = $FindBin::Bin . "/../../../hardware_conf/";
+our $hardware_capability_list = $FindBin::Bin . "/../../../hardware_capability";
 our $DOWNLOAD_CMD             = "wget -r -l 1 -nd -A rpm --spider";
 
 my $CHECK_NETWORK = "wget --spider --timeout=5 --tries=2";
@@ -2028,6 +2030,32 @@ sub check_existing_test_plan {
 		}
 	}
 	return $plan_name;
+}
+
+sub read_hardware_capability_config {
+	my %hardware_type;
+	my %hardware_package;
+	if ( open FILE, $hardware_capability_list ) {
+		while (<FILE>) {
+			my $line = $_;
+			$line =~ s/^\s*//;
+			$line =~ s/\s*$//;
+			if ( $line =~ /(.*)!::!(.*)!::!(.*)/ ) {
+				my $hardware     = $1;
+				my $type         = $2;
+				my $package_list = $3;
+				$hardware     =~ s/^\s*//;
+				$hardware     =~ s/\s*$//;
+				$type         =~ s/^\s*//;
+				$type         =~ s/\s*$//;
+				$package_list =~ s/^\s*//;
+				$package_list =~ s/\s*$//;
+				$hardware_type{$hardware}    = $type;
+				$hardware_package{$hardware} = $package_list;
+			}
+		}
+	}
+	return %hardware_type;
 }
 
 1;

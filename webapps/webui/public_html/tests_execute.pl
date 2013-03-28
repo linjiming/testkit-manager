@@ -523,10 +523,14 @@ DATA
 print_footer("");
 
 sub check_testkit_lite {
-	my $cmd          = sdb_cmd("shell 'rpm -qa | grep testkit-lite'");
+	my $cmd          = "which testkit-lite";
 	my $testkit_lite = `$cmd`;
 	if ( $testkit_lite =~ /testkit-lite/ ) {
 		$have_testkit_lite = "TRUE";
+
+		# skip install testkit-lite
+		$have_correct_testkit_lite = "TRUE";
+		return;
 
 		# check existing testkit-lite's version
 		my $version_cmd = sdb_cmd("shell 'testkit-lite --internal-version'");
@@ -545,6 +549,11 @@ sub check_testkit_lite {
 		install_testkit_lite();
 	}
 	else {
+
+		# skip install testkit-lite
+		$testkit_lite_error_message =
+		  "Can't find command 'testkit-lite' in the host machine.";
+		return;
 
 		# don't have testkit-lite
 		install_testkit_lite();

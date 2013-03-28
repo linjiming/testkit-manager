@@ -50,7 +50,7 @@
     <div id="globalWrapper" align="center">
 
     <!-- START masthead -->
-<iframe id='popIframe' class='popIframe' frameborder='0'></iframe>
+<iframe id="popIframe" class="popIframe" frameborder="0"></iframe>
 <div id="aboutDiv" class="report_list common_div about_div"></div>
 <table width="768" height="66" border="0" cellpadding="0" cellspacing="0" class="main_menu_bg">
   <tr>
@@ -60,30 +60,30 @@
         <td height="36">&nbsp;</td>
       </tr>
       <tr valign="middle">
-        <td width="100%" height="30" align="left" class='testkit_version'>V$$$PUBLIC_VERSION$$$</td>
+        <td width="100%" height="30" align="left" class="testkit_version">V$$$PUBLIC_VERSION$$$</td>
       </tr>
     </table></td>
-    <td width="50%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0" style='$$$NAVIGATION_BAR_SHOW$$$'>
+    <td width="50%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0" style="$$$NAVIGATION_BAR_SHOW$$$">
       <tr>
         <td height="36">&nbsp;</td>
       </tr>
       <tr valign="center">
-        <td width="19%" height="30" align="center" class='link-level1$$$CUSTOM_STYLE$$$-not-highlight'><a href='tests_plan.pl' class='link-level1$$$CUSTOM_STYLE$$$'>PLAN</a></td>
-        <td width="8%"></td>
-        <td width="19%" height="30" align="center" class='link-level1$$$EXECUTE_STYLE$$$-not-highlight'><a href='tests_execute.pl' class='link-level1$$$EXECUTE_STYLE$$$'>EXECUTE</a></td>
-        <td width="8%"></td>
-        <td width="19%" height="30" align="center" class='link-level1$$$REPORT_STYLE$$$-not-highlight'><a href='tests_report.pl' class='link-level1$$$REPORT_STYLE$$$'>REPORT</a></td>
-        <td width="8%"></td>
-        <td width="19%" height="30" align="center" class='link-level1$$$STATISTIC_STYLE$$$-not-highlight'><a href='tests_statistic.pl' class='link-level1$$$STATISTIC_STYLE$$$'>STATISTIC</a></td>
+        <td width="10%"></td>
+        <td width="20%" height="30" align="center" class="link-level1$$$CUSTOM_STYLE$$$-not-highlight"><a href="tests_plan.pl" class="link-level1$$$CUSTOM_STYLE$$$">PLAN</a></td>
+        <td width="10%"></td>
+        <td width="20%" height="30" align="center" class="link-level1$$$EXECUTE_STYLE$$$-not-highlight"><a href="tests_execute.pl" class="link-level1$$$EXECUTE_STYLE$$$">EXECUTE</a></td>
+        <td width="10%"></td>
+        <td width="20%" height="30" align="center" class="link-level1$$$REPORT_STYLE$$$-not-highlight"><a href="tests_report.pl" class="link-level1$$$REPORT_STYLE$$$">REPORT</a></td>
+        <td width="10%"></td>
       </tr>
     </table></td>
     <td width="22%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0">
       <tr valign="center">
         <td width="10%"></td>
         <td width="15%" height="36" align="center"><img src="images/help.png" width="17" height="17" /></td>
-        <td width="30%" height="36" align="left" class='link-level2$$$CUSTOM_STYLE$$$-not-highlight'><a href='tests_help.pl' class='link-level2$$$HELP_STYLE$$$'>HELP</a></td>
+        <td width="30%" height="36" align="left" class="link-level2$$$HELP_STYLE$$$-not-highlight"><a href="tests_help.pl" class="link-level2$$$HELP_STYLE$$$">HELP</a></td>
         <td width="15%" height="36" align="center"><img src="images/about.png" width="17" height="17" /></td>
-        <td width="30%" height="36" align="left" class='link-level2-not-highlight'><a class='link-level2' onclick="javascript:showAbout()">ABOUT</a></td>
+        <td width="30%" height="36" align="left" class="link-level2-not-highlight"><a class="link-level2" onclick="javascript:showAbout()">ABOUT</a></td>
       </tr>
       <tr>
         <td height="30">&nbsp;</td>

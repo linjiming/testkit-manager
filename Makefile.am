@@ -21,4 +21,4 @@
 SUBDIRS = doc plans webapps
 
 rootdir = /opt/testkit/manager
-dist_root_DATA = ChangeLog CONF LICENSE README TODO
+dist_root_DATA = ChangeLog CONF hardware_capability LICENSE README TODO

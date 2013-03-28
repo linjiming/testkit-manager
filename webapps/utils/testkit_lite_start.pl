@@ -30,13 +30,27 @@ my $profile_content    = "";    # the actual name and filter of the profile
 my $current_package    = "";    # package name of current run
 my $current_run_number = 0;     # how many cases has run for the running pacakge
 
+# get --deviceid option
+my $device_id     = get_serial();
+my $device_option = "";
+if ( ( $device_id ne "Error" ) && ( $device_id ne "none" ) ) {
+	$device_option = " --deviceid $device_id";
+}
+
+# get --capability option
+my $hardware_capability_config = "/opt/testkit/manager/hardware_conf/default";
+my $hardware_capability_option = "";
+if ( -e $hardware_capability_config ) {
+	$hardware_capability_option = " --capability $hardware_capability_config";
+}
+
 sub BEGIN {
 
 	# Add current directory to the @INC to be able to include modules
 	# from the same directory where this script is located.
 	unshift @INC, $FindBin::Bin;
 
-	$| = 1;                     # Immediate flush of all output
+	$| = 1;    # Immediate flush of all output
 
 	# Certain utilities used for system administration (and other privileged
 	# commands) may be stored in /sbin, /usr/sbin, and /usr/local/sbin.
@@ -918,6 +932,8 @@ sub readProfile {
 		}
 	}
 	if ( $targetPackages ne "" ) {
+		$targetPackages = 'device:"' . $targetPackages;
+		$targetPackages =~ s/ $/" /;
 		if ( $isWebApi eq "True" ) {
 			$targetPackages .= $wrtPackages . '"';
 		}
@@ -951,10 +967,9 @@ sub getBackupResultXMLCMD {
 sub syncLiteResult {
 	my $result_dir_lite = $FindBin::Bin . "/../../lite";
 	system("rm -rf $result_dir_lite/*");
-	system(
-		sdb_cmd("shell 'cd /opt/testkit/lite; tar -czvf /tmp/lite.tar.gz .'") );
-	system( sdb_cmd("pull /tmp/lite.tar.gz $result_dir_lite") );
-	system( sdb_cmd("shell rm -rf /tmp/lite.tar.gz") );
+	system("cd /opt/testkit/lite; tar -czvf /tmp/lite.tar.gz .");
+	system("cp /tmp/lite.tar.gz $result_dir_lite");
+	system("rm -rf /tmp/lite.tar.gz");
 	system("cd $result_dir_lite;tar -xzvf lite.tar.gz");
 	system("rm -rf $result_dir_lite/lite.tar.gz");
 }
@@ -990,15 +1005,15 @@ sub syncLiteResult {
 	else {
 		if ( $isWebApi eq "False" ) {
 			inform "[CMD]:\n"
-			  . sdb_cmd("shell 'testkit-lite -f ")
+			  . "testkit-lite -f "
 			  . $profile_content
-			  . " --non-active --enable-memory-collection'\n";
+			  . " --non-active --enable-memory-collection$device_option$hardware_capability_option\n";
 		}
 		else {
 			inform "[CMD]:\n"
-			  . sdb_cmd("shell 'testkit-lite -f ")
+			  . "testkit-lite -f "
 			  . $profile_content
-			  . " --non-active --enable-memory-collection'\n";
+			  . " --non-active --enable-memory-collection$device_option$hardware_capability_option\n";
 		}
 	}
 	if (   ( $profile_content =~ /usr\/share/ )
@@ -1026,11 +1041,11 @@ sub syncLiteResult {
 
 		# start testing
 		write_string_as_file( "$globals->{'temp_dir'}/lite-command",
-"testkit-lite -f $profile_content --non-active --enable-memory-collection"
+"testkit-lite -f $profile_content --non-active --enable-memory-collection$device_option$hardware_capability_option"
 		);
-		system( sdb_cmd("push $globals->{'temp_dir'}/lite-command /tmp") );
-		system( sdb_cmd("shell 'chmod 755 /tmp/lite-command'") );
-		$subshell->Spawn( sdb_cmd("shell 'sh /tmp/lite-command'") );
+		system("cp $globals->{'temp_dir'}/lite-command /tmp");
+		system("chmod 755 /tmp/lite-command");
+		$subshell->Spawn("sh /tmp/lite-command");
 	}
 	else {
 		$subshell->Spawn("echo 'Missing package(s) found, exit...'; sleep 10");
