@@ -60,7 +60,7 @@
         <td height="36">&nbsp;</td>
       </tr>
       <tr valign="middle">
-        <td width="100%" height="30" align="left" class="testkit_version">V$$$PUBLIC_VERSION$$$</td>
+        <td width="100%" height="30" align="left" class="testkit_version">$$$PUBLIC_VERSION$$$</td>
       </tr>
     </table></td>
     <td width="50%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0" style="$$$NAVIGATION_BAR_SHOW$$$">
