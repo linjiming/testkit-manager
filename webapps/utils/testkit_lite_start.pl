@@ -906,6 +906,29 @@ sub readProfile {
 	if ( !@thisTargetPackages ) {
 		&initProfileInfo();
 	}
+
+	# check if need to send --capability option
+	my $hardware_capability = get_config_info("hardware_capability_package");
+	my @hardware_capability_packages = split( ",", $hardware_capability );
+	my $need_check_hardware          = 0;
+	for ( my $i = 0 ; $i < @thisTargetPackages ; $i++ ) {
+		if ( $need_check_hardware == 0 ) {
+			foreach (@hardware_capability_packages) {
+				my $hardware_capability_package = $_;
+				$hardware_capability_package =~ s/^\s*//;
+				$hardware_capability_package =~ s/\s*$//;
+				if ( $thisTargetPackages[$i] =~ /$hardware_capability_package/ )
+				{
+					$need_check_hardware = 1;
+					last;
+				}
+			}
+		}
+	}
+	if ( $need_check_hardware == 0 ) {
+		$hardware_capability_option = "";
+	}
+
 	foreach (@thisTargetPackages) {
 		my $thisTargetPackage = $_;
 

@@ -1372,9 +1372,9 @@ elsif ( $_GET{'action'} eq 'execute_profile' ) {
 		print OUT "[Auto]\n";
 		while ( $flag_i < @package_name_flag ) {
 			if ( $package_name_flag[$flag_i] eq "a" ) {
-				if ( $checkbox_value[$flag_i] =~ /select/ ) {
+				if ( $checkbox_value[$flag_i] =~ /^selectcheckbox_/ ) {
 					$_ = $checkbox_value[$flag_i];
-					s/selectcheckbox_//g;
+					s/^selectcheckbox_//g;
 					print OUT $_ . "("
 					  . $auto_count[$flag_i] . " "
 					  . $manual_count[$flag_i] . ")\n";
@@ -1399,7 +1399,7 @@ elsif ( $_GET{'action'} eq 'execute_profile' ) {
 
 		print OUT "\n";
 		foreach (@select_packages) {
-			s/selectcheckbox_//g;
+			s/^selectcheckbox_//g;
 			print OUT "[select-packages]: " . $_ . "\n";
 		}
 		close OUT;
@@ -1440,9 +1440,9 @@ elsif ( $_GET{'action'} eq 'save_profile' ) {
 	print OUT "[Auto]\n";
 	while ( $flag_i < @package_name_flag ) {
 		if ( $package_name_flag[$flag_i] eq "a" ) {
-			if ( $checkbox_value[$flag_i] =~ /select/ ) {
+			if ( $checkbox_value[$flag_i] =~ /^selectcheckbox_/ ) {
 				$_ = $checkbox_value[$flag_i];
-				s/selectcheckbox_//g;
+				s/^selectcheckbox_//g;
 				print OUT $_ . "("
 				  . $auto_count[$flag_i] . " "
 				  . $manual_count[$flag_i] . ")\n";
@@ -1467,7 +1467,7 @@ elsif ( $_GET{'action'} eq 'save_profile' ) {
 
 	print OUT "\n";
 	foreach (@select_packages) {
-		s/selectcheckbox_//g;
+		s/^selectcheckbox_//g;
 		print OUT "[select-packages]: " . $_ . "\n";
 	}
 	$data .=
