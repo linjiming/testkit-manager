@@ -2,7 +2,7 @@
 
 #packages that need to be associated with a hardware capability list before testing
 #the packages should be separated by ','
-hardware_capability_package = webapi-capablity-tests,webapi-behavior-tests
+hardware_capability_package = webapi-capability-tests,webapi-behavior-tests
 
 #xml path for package webapi-testconfig
 desc_xml = /usr/share/webapi-testconfig/tests.xml
