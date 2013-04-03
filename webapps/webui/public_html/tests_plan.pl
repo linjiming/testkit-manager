@@ -2236,7 +2236,7 @@ sub UpdateLoadPageSelectItem {
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
     <td colspan="4" align="right" class="report_list_no_border"><input type="submit" name="save_hardware_capability_checklist" id="save_hardware_capability_checklist" value="Save" class="small_button" onclick="javascript:onSaveHardwareCapability();" />
       &nbsp;
-      <input type="submit" name="close_config_div" id="close_config_div" value="Close" class="small_button" onclick="javascript:onClosePopup();" /></td>
+      <input type="submit" name="close_config_div" id="close_config_div" value="Skip" class="small_button" onclick="javascript:onClosePopup();" /></td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
 </table>
