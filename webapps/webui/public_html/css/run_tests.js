@@ -2046,56 +2046,25 @@ function onSaveConfig() {
 	} else {
 		document.getElementById('pre_config_apache_port_text').style.borderColor = "green";
 	}
-	var server2_name = document.getElementById('pre_config_tomcat_name_text').value;
+	var server2_name = document.getElementById('pre_config_socket_name_text').value;
 	if (server2_name == "") {
-		have_all_info = false;
-		document.getElementById('pre_config_tomcat_name_text').style.borderColor = "red";
-	} else {
-		document.getElementById('pre_config_tomcat_name_text').style.borderColor = "green";
-	}
-	var server2_port = document.getElementById('pre_config_tomcat_port_text').value;
-	if (server2_port == "") {
-		have_all_info = false;
-		document.getElementById('pre_config_tomcat_port_text').style.borderColor = "red";
-	} else {
-		document.getElementById('pre_config_tomcat_port_text').style.borderColor = "green";
-	}
-	var server3_name = document.getElementById('pre_config_socket_name_text').value;
-	if (server3_name == "") {
 		have_all_info = false;
 		document.getElementById('pre_config_socket_name_text').style.borderColor = "red";
 	} else {
 		document.getElementById('pre_config_socket_name_text').style.borderColor = "green";
 	}
-	var server3_port = document.getElementById('pre_config_socket_port_text').value;
-	if (server3_port == "") {
+	var server2_port = document.getElementById('pre_config_socket_port_text').value;
+	if (server2_port == "") {
 		have_all_info = false;
 		document.getElementById('pre_config_socket_port_text').style.borderColor = "red";
 	} else {
 		document.getElementById('pre_config_socket_port_text').style.borderColor = "green";
 	}
-	var bluetooth_name = document
-			.getElementById('pre_config_bluetooth_name_text').value;
-	if (bluetooth_name == "") {
-		have_all_info = false;
-		document.getElementById('pre_config_bluetooth_name_text').style.borderColor = "red";
-	} else {
-		document.getElementById('pre_config_bluetooth_name_text').style.borderColor = "green";
-	}
-	var bluetooth_address = document
-			.getElementById('pre_config_bluetooth_address_text').value;
-	if (bluetooth_address == "") {
-		have_all_info = false;
-		document.getElementById('pre_config_bluetooth_address_text').style.borderColor = "red";
-	} else {
-		document.getElementById('pre_config_bluetooth_address_text').style.borderColor = "green";
-	}
 	if (have_all_info) {
 		document.getElementById('preConfigDiv').innerHTML = '<table width="660" border="1" cellspacing="0" cellpadding="0" class="table_normal" rules="all" frame="void"><tr><td height="200" class="report_list_no_border">&nbsp;</td></tr><tr><td align="center" class="report_list_no_border"><img src="images/ajax_progress_large.gif" width="40" height="40" alt="execution progress gif"/></td></tr><tr><td align="center" class="report_list_no_border">Configuring, please wait&hellip;</td></tr></table>';
 		ajax_call_get('action=pre_config_device&parameter=' + server1_name
 				+ '!::!' + server1_port + '!::!' + server2_name + '!::!'
-				+ server2_port + '!::!' + server3_name + '!::!' + server3_port
-				+ '!::!' + bluetooth_name + '!::!' + bluetooth_address);
+				+ server2_port);
 	}
 }
 

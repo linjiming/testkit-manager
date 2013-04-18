@@ -215,3 +215,6 @@ testkit-manager 2.3.4:
   - redesign the layout of the buttons in the plan page
   - change command format to adapt new testkit-lite
   - add hardware capability selection feature
+* Thu Apr 18 2013 Wendong,Sui <weidongx.sun@intel.com> 2.3.4-2
+  - only leave apache and websocket server in the config page
+  - add kill testkit-lite when stop testing
