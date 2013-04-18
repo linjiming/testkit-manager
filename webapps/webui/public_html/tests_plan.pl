@@ -218,7 +218,7 @@ if ( $_GET{"delete_package"} ) {
 		if ( $package_name_flag[$flag_i] eq "a" ) {
 			foreach (@select_packages) {
 				if ( $_ =~ /$package_name[$flag_i]/ ) {
-					s/checkbox_//g;
+					s/^checkbox_//g;
 					push( @checkbox_packages, $_ );
 				}
 			}
@@ -3744,24 +3744,8 @@ my $pre_config_content = <<DATA;
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="left" class="report_list_inside">&nbsp;the name of Apache server which some components(ServerSentEvent, WebMessaging, XMLHttpRequest...) needed</td>
+    <td colspan="2" align="left" class="report_list_inside">&nbsp;the name of Apache server which some components(webapi-w3c-webmessaging-tests, webapi-w3c-sse-tests, webapi-w3c-xmlhttpreqest-tests, webapi-w3c-cors-tests...) needed</td>
     <td colspan="2" align="left" class="report_list_outside_left">&nbsp;the protocal port of the Apache server</td>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-  </tr>
-  <tr>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_right">&nbsp;Tomcat Server Name:</td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
-      <input type="text" name="pre_config_tomcat_name_text" id="pre_config_tomcat_name_text" class="pre_config_text" /></td>
-    <td width="23%" align="left" class="top_button_bg report_list_one_row">&nbsp;Port:</td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
-      <input type="text" name="pre_config_tomcat_port_text" id="pre_config_tomcat_port_text" class="pre_config_text" /></td>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-  </tr>
-  <tr>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="left" class="report_list_inside">&nbsp;the name of Tomcat server which some components(SessionHistory) needed</td>
-    <td colspan="2" align="left" class="report_list_outside_left">&nbsp;the protocal port of the Tomcat server</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
   <tr>
@@ -3778,16 +3762,6 @@ my $pre_config_content = <<DATA;
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
     <td colspan="2" align="left" class="report_list_inside">&nbsp;the name of WebSocket server which some components(WebSocket) needed</td>
     <td colspan="2" align="left" class="report_list_outside_left">&nbsp;the protocal port of the WebSocket server</td>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-  </tr>
-  <tr>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td width="23%" align="left" class="top_button_bg report_list_one_row">&nbsp;Bluetooth Device Name:</td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
-      <input type="text" name="pre_config_bluetooth_name_text" id="pre_config_bluetooth_name_text" class="pre_config_text" /></td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_right">&nbsp;Bluetooth Device Address:</td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
-      <input type="text" name="pre_config_bluetooth_address_text" id="pre_config_bluetooth_address_text" class="pre_config_text" /></td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
   <tr>
@@ -3885,23 +3859,13 @@ if ( open my $FILE, "/tmp/pre_config" ) {
 	print
 "	document.getElementById('pre_config_apache_port_text').value = '$config{'server1_port'}';\n";
 	print
-"	document.getElementById('pre_config_tomcat_name_text').value = '$config{'server2_name'}';\n";
+"	document.getElementById('pre_config_socket_name_text').value = '$config{'server2_name'}';\n";
 	print
-"	document.getElementById('pre_config_tomcat_port_text').value = '$config{'server2_port'}';\n";
-	print
-"	document.getElementById('pre_config_socket_name_text').value = '$config{'server3_name'}';\n";
-	print
-"	document.getElementById('pre_config_socket_port_text').value = '$config{'server3_port'}';\n";
-	print
-"	document.getElementById('pre_config_bluetooth_name_text').value = '$config{'bluetooth_name'}';\n";
-	print
-"	document.getElementById('pre_config_bluetooth_address_text').value = '$config{'bluetooth_address'}';\n";
+"	document.getElementById('pre_config_socket_port_text').value = '$config{'server2_port'}';\n";
 }
 else {
 	print
 	  "	document.getElementById('pre_config_apache_port_text').value = '80';\n";
-	print
-"	document.getElementById('pre_config_tomcat_port_text').value = '8080';\n";
 	print
 "	document.getElementById('pre_config_socket_port_text').value = '8081';\n";
 }

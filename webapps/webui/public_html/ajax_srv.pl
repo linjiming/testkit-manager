@@ -2059,10 +2059,6 @@ server1_name=$parameters[0]
 server1_port=$parameters[1]
 server2_name=$parameters[2]
 server2_port=$parameters[3]
-server3_name=$parameters[4]
-server3_port=$parameters[5]
-bluetooth_name=$parameters[6]
-bluetooth_address=$parameters[7]
 DATA
 	write_string_as_file( "/tmp/pre_config", $config_file_content );
 	system( sdb_cmd("push /tmp/pre_config /tmp") );
@@ -2101,6 +2097,13 @@ elsif ( $_GET{'action'} eq 'stop_tests' ) {    # Stop the tests
 				my $status = read_status();
 				if ( $status->{'IS_RUNNING'} ) {
 					if ( kill( 'TERM', $status->{'PID'} ) ) {
+						while (1) {
+							my $kill_result_tmp = "killall testkit-lite 2>&1";
+							my $kill_result     = `$kill_result_tmp`;
+							if ( $kill_result =~ /no process/ ) {
+								last;
+							}
+						}
 						while (1) {
 							my $kill_result_tmp =
 							  sdb_cmd("shell killall httpserver");
