@@ -96,8 +96,7 @@ sub sdb_cmd {
 		$whole_cmd = "sdb " . $cmd_content;
 	}
 	else {
-		#$whole_cmd = "sdb -s " . $sdb_serial . " " . $cmd_content;
-		$whole_cmd = "sdb root on; sdb " . $cmd_content;
+		$whole_cmd = "sdb root on; sdb -s " . $sdb_serial . " " . $cmd_content;
 	}
 	return $whole_cmd;
 }

@@ -1330,13 +1330,19 @@ elsif ( $_GET{'action'} eq 'check_profile_isExist' ) {
 		$data_isExist    = "delete";
 		$data_isNotExist = "delete" . $profile_name;
 	}
-	if ($check_profile_isExist) {
-		$data .= "<check_profile_name>$data_isExist</check_profile_name>\n";
+	closedir DELPROFILE;
+	if ( $profile_name eq "temp" ) {
+		$data .= "<check_profile_name>savetemp</check_profile_name>\n";
 	}
 	else {
-		$data .= "<check_profile_name>$data_isNotExist</check_profile_name>\n";
+		if ($check_profile_isExist) {
+			$data .= "<check_profile_name>$data_isExist</check_profile_name>\n";
+		}
+		else {
+			$data .=
+			  "<check_profile_name>$data_isNotExist</check_profile_name>\n";
+		}
 	}
-	closedir DELPROFILE;
 }
 
 # execute profile
@@ -1413,94 +1419,86 @@ elsif ( $_GET{'action'} eq 'execute_profile' ) {
 
 # save profile
 elsif ( $_GET{'action'} eq 'save_profile' ) {
-	my $file;
-	my $flag_i = 0;
-	my @select_packages;
+	my @package_selected  = ();
 	my $save_profile_name = $_GET{'save_profile_name'};
-	my @advanced_value    = split /\*/, $_GET{"advanced"};
-	my @checkbox_value    = split /\*/, $_GET{"checkbox"};
-	my @auto_count        = split /\:/, $_GET{'auto_count'};
-	my @manual_count      = split /\:/, $_GET{'manual_count'};
-	my @package_name_flag = split /\*/, $_GET{"pkg_flag"};
-
-	my $dir_profile_name = $profile_dir_manager;
-
-	$advanced_value_architecture   = $advanced_value[0];
-	$advanced_value_version        = $advanced_value[1];
-	$advanced_value_category       = $advanced_value[2];
-	$advanced_value_priority       = $advanced_value[3];
-	$advanced_value_status         = $advanced_value[4];
-	$advanced_value_execution_type = $advanced_value[5];
-	$advanced_value_test_suite     = $advanced_value[6];
-	$advanced_value_type           = $advanced_value[7];
-	$advanced_value_test_set       = $advanced_value[8];
-	$advanced_value_component      = $advanced_value[9];
-
+	my $execution_type    = $_GET{"advanced"};
+	my $status            = $_GET{"status"};
+	my @selected_info     = split( "!:!", $_GET{"checkbox"} );
+	my $dir_profile_name  = $profile_dir_manager;
 	open OUT, '>' . $dir_profile_name . $save_profile_name;
 	print OUT "[Auto]\n";
-	while ( $flag_i < @package_name_flag ) {
-		if ( $package_name_flag[$flag_i] eq "a" ) {
-			if ( $checkbox_value[$flag_i] =~ /^selectcheckbox_/ ) {
-				$_ = $checkbox_value[$flag_i];
-				s/^selectcheckbox_//g;
-				print OUT $_ . "("
-				  . $auto_count[$flag_i] . " "
-				  . $manual_count[$flag_i] . ")\n";
-				push( @select_packages, $checkbox_value[$flag_i] );
+
+	foreach (@selected_info) {
+		my $package_all_info = $_;
+		if ( $package_all_info =~
+			/checkbox_(.*?)_autonumber_(\d+)_manualnumber_(\d+)/ )
+		{
+			my $package_name = $1;
+			my $auto_number  = $2;
+			if ( $execution_type eq "manual" ) {
+				$auto_number = 0;
 			}
+			my $manual_number = $3;
+			if ( $execution_type eq "auto" ) {
+				$manual_number = 0;
+			}
+			print OUT "$package_name($auto_number $manual_number)\n";
+			push( @package_selected, $package_name );
 		}
-		$flag_i++;
 	}
-	print OUT "[/Auto]\n";
+	print OUT "[/Auto]\n\n";
+	print OUT "[Advanced-feature]\n";
+	print OUT "select_testset=Any Test Set\n";
+	print OUT "select_exe=$execution_type\n";
+	print OUT "select_com=Any Component\n";
+	print OUT "select_arc=Any Architecture\n";
+	print OUT "select_ver=Any Version\n";
+	print OUT "select_category=Any Category\n";
+	print OUT "select_pri=Any Priority\n";
+	print OUT "select_status=Any Status\n";
+	print OUT "select_testsuite=Any Test Suite\n";
+	print OUT "select_type=Any Type\n\n";
 
-	print OUT "\n[Advanced-feature]\n";
-	print OUT "select_testset=" . $advanced_value_test_set . "\n";
-	print OUT "select_exe=" . $advanced_value_execution_type . "\n";
-	print OUT "select_com=" . $advanced_value_component . "\n";
-	print OUT "select_arc=" . $advanced_value_architecture . "\n";
-	print OUT "select_ver=" . $advanced_value_version . "\n";
-	print OUT "select_category=" . $advanced_value_category . "\n";
-	print OUT "select_pri=" . $advanced_value_priority . "\n";
-	print OUT "select_status=" . $advanced_value_status . "\n";
-	print OUT "select_testsuite=" . $advanced_value_test_suite . "\n";
-	print OUT "select_type=" . $advanced_value_type . "\n";
-
-	print OUT "\n";
-	foreach (@select_packages) {
-		s/^selectcheckbox_//g;
-		print OUT "[select-packages]: " . $_ . "\n";
+	foreach (@package_selected) {
+		my $package_name = $_;
+		print OUT "[select-packages]: $package_name\n";
 	}
+	close OUT;
 	$data .=
 	  "<save_profile_success>$save_profile_name</save_profile_success>\n";
+	if ( $status =~ /new/ ) {
+		$data .=
+		  "<save_profile_success_status>yes</save_profile_success_status>\n";
+	}
+	else {
+		$data .=
+		  "<save_profile_success_status>no</save_profile_success_status>\n";
+	}
 }
 
-elsif ( $_GET{'action'} eq "check_package_isExist" ) {
-	my $file;
-	my $load_profile_name = $_GET{'load_profile_name'};
-	my $dir_profile_name  = $profile_dir_manager;
-	my @installed_packages;
-	my @packages_need;
-	my @packages_isExist_flag;
+elsif ( $_GET{'action'} eq "check_need_hardware_capability" ) {
+	my $test_plan_name = $_GET{'test_plan_name'};
+	my @packages_need  = ();
+	if ( $test_plan_name eq "temp" ) {
 
-	opendir LOADPROFILE, $dir_profile_name
-	  or die "can not open $dir_profile_name";
-	open IN, $profile_dir_manager . $load_profile_name or die $!;
-	foreach $file ( readdir LOADPROFILE ) {
-		if ( $file =~ /$load_profile_name/ ) {
-			my $temp;
-			my @temp;
-			while (<IN>) {
-				if ( $_ =~ /select-packages/ ) {
-					$temp = $_;
-					@temp = split /:/, $temp;
-					my $package_name = $temp[1];
-					$package_name =~ s/^\s*//;
-					$package_name =~ s/\s*$//;
-					push( @packages_need, $package_name );
-				}
+		# wait for saving the temp plan
+		sleep 2;
+	}
+	if ( open IN, $profile_dir_manager . $test_plan_name ) {
+		my $temp;
+		my @temp;
+		while (<IN>) {
+			if ( $_ =~ /select-packages/ ) {
+				$temp = $_;
+				@temp = split /:/, $temp;
+				my $package_name = $temp[1];
+				$package_name =~ s/^\s*//;
+				$package_name =~ s/\s*$//;
+				push( @packages_need, $package_name );
 			}
 		}
 	}
+
 	my $hardware_capability = get_config_info("hardware_capability_package");
 	my @hardware_capability_packages = split( ",", $hardware_capability );
 	my $need_check_hardware          = 0;
@@ -1516,24 +1514,86 @@ elsif ( $_GET{'action'} eq "check_package_isExist" ) {
 				}
 			}
 		}
-		my $cmd  = sdb_cmd("shell ls /usr/share/$packages_need[$i]/tests.xml");
-		my $temp = `$cmd`;
-		if ( $temp !~ /No such file or directory/ ) {
-			$packages_isExist_flag[$i] = "1";
+	}
+	$data .=
+	  "<need_check_hardware>$need_check_hardware</need_check_hardware>\n";
+}
+
+elsif ( $_GET{'action'} eq "check_package_isExist" ) {
+	my $test_plan_name        = $_GET{'test_plan_name'};
+	my $need_check_hardware   = $_GET{'need_check_hardware'};
+	my @installed_packages    = ();
+	my @packages_need         = ();
+	my @packages_isExist_flag = ();
+	if ( $need_check_hardware eq "false" ) {
+		my $hardware_capability_config =
+		  "/opt/testkit/manager/hardware_conf/default_hardware_capability.xml";
+		system("rm -f $hardware_capability_config");
+	}
+
+	if ( open IN, $profile_dir_manager . $test_plan_name ) {
+		my $temp;
+		my @temp;
+		while (<IN>) {
+			if ( $_ =~ /select-packages/ ) {
+				$temp = $_;
+				@temp = split /:/, $temp;
+				my $package_name = $temp[1];
+				$package_name =~ s/^\s*//;
+				$package_name =~ s/\s*$//;
+				push( @packages_need, $package_name );
+			}
 		}
-		else {
-			$packages_isExist_flag[$i] = "0";
-		}
+	}
+
+	for ( my $i = 0 ; $i < @packages_need ; $i++ ) {
+		$packages_isExist_flag[$i] = "0";
 	}
 	$data .= "<load_profile>1</load_profile>\n";
 	$data .= "<load_profile_title>1</load_profile_title>\n";
-	$data .= "<profile_name>$load_profile_name</profile_name>\n";
+	$data .= "<profile_name>$test_plan_name</profile_name>\n";
 	$data .= "<packages_need>@packages_need</packages_need>\n";
 	$data .=
 	  "<packages_isExist_flag>@packages_isExist_flag</packages_isExist_flag>\n";
-	$data .=
-	  "<need_check_hardware>$need_check_hardware</need_check_hardware>\n";
-	closedir LOADPROFILE;
+}
+
+elsif ( $_GET{'action'} eq "analyse_test_plan" ) {
+	my $load_test_plan_name = $_GET{'load_test_plan_name'};
+	my $execution_type      = "Any Execution Type";
+	if (
+		open( FILE, $SERVER_PARAM{'APP_DATA'} . '/plans/' . $load_test_plan_name
+		)
+	  )
+	{
+		my $theEnd       = "False";
+		my @package_list = ();
+		while (<FILE>) {
+			my $line = $_;
+			$line =~ s/\n//g;
+			if ( $line =~ /\[\/Auto\]/ ) {
+				$theEnd = "True";
+			}
+			if ( $theEnd eq "False" ) {
+				if ( $line !~ /Auto/ ) {
+					$line =~ s/\(\d+ \d+\)//;
+					push( @package_list, $line );
+				}
+			}
+			if ( $theEnd eq "True" ) {
+				if ( $line =~ /select_exe=(.*)/ ) {
+					$execution_type = $1;
+				}
+			}
+		}
+		my $test_plan_info = join( "!:!", @package_list );
+		$test_plan_info = "$execution_type!::!" . $test_plan_info;
+		$data .=
+"<analyse_test_plan_result>$test_plan_info</analyse_test_plan_result>\n";
+	}
+	else {
+		$data .=
+"<analyse_test_plan_result>Can't parse test plan $load_test_plan_name</analyse_test_plan_result>\n";
+	}
 }
 
 elsif ( $_GET{'action'} eq "install_plan_package" ) {

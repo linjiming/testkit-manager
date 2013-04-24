@@ -139,7 +139,6 @@ function startTests(profile_name) {
 	} else {
 		startTestsPrepareGUI(false);
 	}
-	// alert("RunTest.js: " + profile_name);
 	ajax_call_get('action=run_tests&profile='
 			+ encodeURIComponent(profile_name));
 }
@@ -415,18 +414,37 @@ function ajaxProcessResult(responseXML) {
 	}
 
 	if (responseXML.getElementsByTagName('save_profile_success').length > 0) {
-		tid = responseXML.getElementsByTagName('save_profile_success')[0].childNodes[0].nodeValue;
-		var count = 0;
-		for ( var i = 0; i < msg.length; i++) {
-			if (msg[i] == tid) {
-				count++;
-			}
+		var test_plan_name = responseXML
+				.getElementsByTagName('save_profile_success')[0].childNodes[0].nodeValue;
+		var if_it_is_new = responseXML
+				.getElementsByTagName('save_profile_success_status')[0].childNodes[0].nodeValue;
+		if (if_it_is_new == "yes") {
+			var select_test_plan = document.getElementById("test_profile");
+			select_test_plan.add(new Option(test_plan_name, test_plan_name));
 		}
-		if (count == "0") {
-			msg.push(tid);
+	}
+	// load test plan by select test plan name
+	if (responseXML.getElementsByTagName('analyse_test_plan_result').length > 0) {
+		var test_plan_info = responseXML
+				.getElementsByTagName('analyse_test_plan_result')[0].childNodes[0].nodeValue;
+		if (test_plan_info.indexOf("!::!") >= 0) {
+			update_page_by_load(test_plan_info);
+		} else {
+			document.getElementById('msg_area_error').style.display = "";
+			document.getElementById('msg_text_error').innerHTML = test_plan_info;
 		}
-		updateTestPlanSelect();
-		alert("Test plan is saved successfully.");
+	}
+	// check need hardware capability before run test plan
+	if (responseXML.getElementsByTagName('need_check_hardware').length > 0) {
+		if (responseXML.getElementsByTagName('need_check_hardware')[0].childNodes[0].nodeValue == 1) {
+			document.getElementById('hardwareCapabilityDiv').style.display = 'block';
+			document.getElementById('popIframe').style.display = 'block';
+		} else {
+			need_hardware_capability_option = false;
+			document.location = "tests_execute.pl?profile="
+					+ current_run_test_plan + "&need_check_hardware="
+					+ need_hardware_capability_option;
+		}
 	}
 	if (responseXML.getElementsByTagName('load_profile').length > 0) {
 		var packages_isExist_flag_arr = new Array();
@@ -438,10 +456,6 @@ function ajaxProcessResult(responseXML) {
 		var load_test_plan_select = document
 				.getElementById('load_test_plan_select');
 		var load_flag = 1;
-		if (typeof (responseXML.getElementsByTagName('need_check_hardware')[0]) != 'undefined') {
-			need_check_hardware = responseXML
-					.getElementsByTagName('need_check_hardware')[0].childNodes[0].nodeValue;
-		}
 
 		packages_isExist_flag_arr = packages_isExist_flag.split(" ");
 		packages_need_arr = packages_need.split("tests");
@@ -475,15 +489,15 @@ function ajaxProcessResult(responseXML) {
 			if (responseXML.getElementsByTagName('load_profile_title').length > 0) {
 
 				if (packages_need_count == 1) {
-					var packages = "package that needs";
+					var packages = "package";
 				} else {
-					var packages = "packages that need";
+					var packages = "packages";
 				}
-				document.getElementById('loadProgressBarDiv').innerHTML = '<tr><table width="450" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="10" width="3%" align="left" class="report_list view_test_plan_edge"></td><td height="10" align="left" class="view_test_plan_edge" width="94%">&nbsp;</td><td height="10" width="3%" class="view_test_plan_edge" align="left"></td></tr><tr><td height="30" width="3%" align="left" class="view_test_plan_edge"></td><td id="loadtitle" height="30" align="left" class="view_test_plan_title" width="94%">&nbsp;Find '
+				document.getElementById('loadProgressBarDiv').innerHTML = '<tr><table width="450" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="10" width="3%" align="left" class="report_list view_test_plan_edge"></td><td height="10" align="left" class="view_test_plan_edge" width="94%">&nbsp;</td><td height="10" width="3%" class="view_test_plan_edge" align="left"></td></tr><tr><td height="30" width="3%" align="left" class="view_test_plan_edge"></td><td id="loadtitle" height="30" align="left" class="view_test_plan_title" width="94%">&nbsp;Check/Install '
 						+ packages_need_count
-						+ ' missing '
+						+ ' '
 						+ packages
-						+ ' to be installed</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr></table></tr>';
+						+ ' from the test plan</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr></table></tr>';
 				document.getElementById('loadProgressBarDiv').style.display = 'block';
 				document.getElementById('popIframe').style.display = 'block';
 			}
@@ -515,17 +529,16 @@ function ajaxProcessResult(responseXML) {
 			ajax_call_get('action=install_plan_package&packages_need='
 					+ message_not_load);
 		} else if (load_flag == 1) {
-			document.location = "tests_plan.pl?load_profile_button="
-					+ load_test_plan_select.value + "&need_check_hardware="
-					+ need_check_hardware;
+			document.location = "tests_execute.pl?profile="
+					+ responseXML.getElementsByTagName('profile_name')[0].childNodes[0].nodeValue;
+			;
 		} else {
 			var text = document.getElementById('loadProgressBarDiv').innerHTML;
 			if (text.indexOf("[FAIL]") > 0) {
-				document.getElementById('loadProgressBarDiv').innerHTML += '</br>&nbsp;&nbsp;&nbsp;&nbsp;Fail to install one or more package(s), please try manually.</br>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="javascript:refresh_plan_page()">Click here to refresh the page.</a>';
+				document.getElementById('loadProgressBarDiv').innerHTML += '</br>&nbsp;&nbsp;&nbsp;&nbsp;Fail to install one or more package(s), please try manually.</br>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="javascript:refresh_plan_page()">Click here to go back to the plan page.</a>';
 			} else {
-				document.location = "tests_plan.pl?load_profile_button="
-						+ load_test_plan_select.value + "&need_check_hardware="
-						+ need_check_hardware;
+				document.location = "tests_execute.pl?profile="
+						+ global_profile_name;
 			}
 		}
 	}
@@ -610,59 +623,19 @@ function ajaxProcessResult(responseXML) {
 
 	if (responseXML.getElementsByTagName('check_profile_name').length > 0) {
 		tid = responseXML.getElementsByTagName('check_profile_name')[0].childNodes[0].nodeValue;
-		var sel_arc = document.getElementById("select_arc");
-		var sel_ver = document.getElementById("select_ver");
-		var sel_category = document.getElementById("select_category");
-		var sel_pri = document.getElementById("select_pri");
-		var sel_status = document.getElementById("select_status");
-		var sel_exe = document.getElementById("select_exe");
-		var sel_testsuite = document.getElementById("select_testsuite");
-		var sel_type = document.getElementById("select_type");
-		var sel_testset = document.getElementById("select_testset");
-		var sel_com = document.getElementById("select_com");
-		var package_name_number = document
-				.getElementById("package_name_number");
-
-		var checkbox_value = new Array();
-		var arc = sel_arc.value;
-		var ver = sel_ver.value;
-		var category = sel_category.value;
-		var pri = sel_pri.value;
-		var status = sel_status.value;
-		var exe = sel_exe.value;
-		var testsuite = sel_testsuite.value;
-		var type = sel_type.value;
-		var testset = sel_testset.value;
-		var com = sel_com.value;
-		var pkg_num = package_name_number.value;
-		var advanced = arc + '*' + ver + '*' + category + '*' + pri + '*'
-				+ status + '*' + exe + '*' + testsuite + '*' + type + '*'
-				+ testset + '*' + com;
-		var webapi_flag = "0";
-		for ( var count = 0; count < pkg_num; count++) {
-			var checkbox_package_name_tmp = "checkbox_package_name" + count;
-			var checkbox_package_name = document
-					.getElementById(checkbox_package_name_tmp);
-			var temp = checkbox_package_name.name;
-			if (checkbox_package_name.checked) {
-				if (webapi_flag == "0") {
-					if (temp.indexOf('webapi') > 0) {
-						webapi_flag = "1";
-					} else {
-						webapi_flag = "2";
-					}
-				} else if (webapi_flag == "1") {
-					if (temp.indexOf('webapi') < 0) {
-						webapi_flag = "yes";
-					}
-				} else if (webapi_flag == "2") {
-					if (temp.indexOf('webapi') > 0) {
-						webapi_flag = "yes";
-					}
+		var select_execution_type = document
+				.getElementById("select_execution_type").value;
+		var page = document.getElementsByTagName("*");
+		var package_number = 0;
+		var package_selected = new Array();
+		for ( var i = 0; i < page.length; i++) {
+			var temp_id = page[i].id;
+			if ((temp_id.indexOf("checkbox_") >= 0)
+					&& !((temp_id.indexOf("checkbox_all") >= 0))) {
+				if (document.getElementById(temp_id).checked) {
+					package_selected[package_number] = temp_id;
+					++package_number;
 				}
-				checkbox_value[count] = "select" + checkbox_package_name.name;
-			} else {
-				checkbox_value[count] = checkbox_package_name.name;
 			}
 		}
 		if (tid == "save") {
@@ -671,22 +644,23 @@ function ajaxProcessResult(responseXML) {
 						.getElementById("save_test_plan_text");
 				ajax_call_get('action=save_profile&save_profile_name='
 						+ save_test_plan_text.value + '&checkbox='
-						+ checkbox_value.join("*") + '&advanced=' + advanced
-						+ "&auto_count=" + filter_auto_count_string
-						+ "&manual_count=" + filter_manual_count_string
-						+ "&pkg_flag=" + package_name_flag.join("*"));
+						+ package_selected.join("!:!") + '&advanced='
+						+ select_execution_type + '&status=new');
 			}
+		} else if (tid == "savetemp") {
+			ajax_call_get('action=save_profile&save_profile_name=temp&checkbox='
+					+ package_selected.join("!:!")
+					+ '&advanced='
+					+ select_execution_type + '&status=overwrite');
 		} else if ((tid != "save") && (tid.indexOf("save") == 0)) {
 			if (confirm("Test plan " + tid.slice(4)
-					+ " exists.\nAre you sure to overwirte it?")) {
-				var save_test_plan_select = document
-						.getElementById("save_test_plan_select");
+					+ " exists.\nAre you sure to overwrite it?")) {
+				var save_test_plan_text = document
+						.getElementById("save_test_plan_text");
 				ajax_call_get('action=save_profile&save_profile_name='
-						+ save_test_plan_select.value + '&checkbox='
-						+ checkbox_value.join("*") + '&advanced=' + advanced
-						+ "&auto_count=" + filter_auto_count_string
-						+ "&manual_count=" + filter_manual_count_string
-						+ "&pkg_flag=" + package_name_flag.join("*"));
+						+ save_test_plan_text.value + '&checkbox='
+						+ package_selected.join("!:!") + '&advanced='
+						+ select_execution_type + '&status=overwrite');
 			}
 		} else if (tid == "delete") {
 			var manage_test_plan_select = document
@@ -1642,6 +1616,12 @@ function save_profile(type) {
 			alert("'rerun' is a reserved test plan name, please change another one");
 			return false;
 		}
+		reg = /^temp/;
+		result = reg.exec(str);
+		if (result) {
+			alert("'temp' is a reserved test plan name, please change another one");
+			return false;
+		}
 	} else {
 		save_test_plan = document.getElementById("save_test_plan_select");
 	}
@@ -1649,14 +1629,15 @@ function save_profile(type) {
 			+ save_test_plan.value + '&option=save');
 }
 
-function load_profile() {
-	if (confirm("Are you sure to load this test plan?")) {
-		var load_test_plan_select = document
-				.getElementById('load_test_plan_select');
-		document.getElementById('load_profile_button').disabled = true;
-		ajax_call_get('action=check_package_isExist&load_profile_name='
-				+ load_test_plan_select.value);
-	}
+function load_profile(test_plan_name, need_check_hardware) {
+	ajax_call_get('action=check_package_isExist&test_plan_name='
+			+ test_plan_name + '&need_check_hardware=' + need_check_hardware);
+}
+
+function save_hardware_capability_info(test_plan_name, hardware_info) {
+	ajax_call_get('action=save_hardware_capability_xml&content='
+			+ hardware_info);
+	load_profile(test_plan_name, true);
 }
 
 function delete_profile() {

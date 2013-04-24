@@ -218,3 +218,12 @@ testkit-manager 2.3.4:
 * Thu Apr 18 2013 Wendong,Sui <weidongx.sun@intel.com> 2.3.4-2
   - only leave apache and websocket server in the config page
   - add kill testkit-lite when stop testing
+
+testkit-manager 2.3.5:
+===================
+* Thu Apr 23 2013 Wendong,Sui <weidongx.sun@intel.com> 2.3.5-1
+  - redesign plan page
+  - redesign execute page
+  - add rerun and export for detailed report page
+  - remove home page
+

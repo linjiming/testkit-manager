@@ -80,7 +80,24 @@ if ( $_GET{'profile'} ) {
 			$js_init                  = "startRefresh('$TEST_PLAN', 'true');\n";
 		}
 		else {
-			$js_init = "startTests('$_GET{'profile'}');\n";
+			if ( defined $_GET{'need_check_hardware'} ) {
+				my $test_plan_name      = $_GET{'profile'};
+				my $need_check_hardware = $_GET{'need_check_hardware'};
+				$global_profile_init =
+				  'var global_profile_name = "' . $test_plan_name . '";';
+				if ( defined $_GET{'content'} ) {
+					my $hardware_info = $_GET{'content'};
+					$js_init =
+"save_hardware_capability_info('$test_plan_name', '$hardware_info');\n";
+				}
+				else {
+					$js_init =
+"load_profile('$test_plan_name', '$need_check_hardware');\n";
+				}
+			}
+			else {
+				$js_init = "startTests('$_GET{'profile'}');\n";
+			}
 		}
 	}
 }
@@ -164,8 +181,10 @@ if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 						{
 							$profiles_list .=
 "    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
-							$selected_profile = $profile_name;
-							$have_selected    = "TRUE";
+
+							# hide all plans when normal in
+							#$selected_profile = $profile_name;
+							$have_selected = "TRUE";
 						}
 						else {
 							$profiles_list .=
@@ -238,14 +257,15 @@ if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 print <<DATA;
 <div id="ajax_loading" style="display:none"></div>
 <div id="message"></div>
+<div id="loadProgressBarDiv" class="report_list common_div load_progress_bar_Div"></div>
 <table width="768" border="0" cellspacing="0" cellpadding="0" class="report_list">
   <tr>
     <td class="top_button_bg"><table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
         <tbody>
           <tr>
             <td width="2%">&nbsp;</td>
-            <td width="48%">Execute Tests</td>
-            <td width="30%">Test Plan
+            <td width="78%">Execute Tests</td>
+            <td width="30%" style="display:none">Test Plan
 DATA
 if ($found) {
 	print <<DATA;
@@ -256,13 +276,13 @@ DATA
 		and ( $have_correct_sdb_serial   eq "TRUE" ) )
 	{
 		print <<DATA;
-            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" class="medium_button" onclick="javascript:startTests('');"></td>
+            <td width="10%" align="center" style="display:none"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" class="medium_button" onclick="javascript:startTests('');"></td>
             <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="medium_button_disable" onclick="javascript:stopTests();"></td>
 DATA
 	}
 	else {
 		print <<DATA;
-            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" disabled="disabled" class="medium_button_disable" onclick="javascript:startTests('');"></td>
+            <td width="10%" align="center" style="display:none"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" disabled="disabled" class="medium_button_disable" onclick="javascript:startTests('');"></td>
             <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="medium_button_disable" onclick="javascript:stopTests();"></td>
 DATA
 	}
@@ -270,7 +290,7 @@ DATA
 else {
 	print <<DATA;
             <select name="test_profile_no" id="test_profile_no" style="width: 11em;" disabled="disabled"><option>&lt;no plans present&gt;</option></select></td>
-            <td width="10%" align="center"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" disabled="disabled" class="medium_button_disable" onclick="javascript:startTests('');"></td>
+            <td width="10%" align="center" style="display:none"><input type="submit" name="START" id="start_button" title="Start testing" value="Start Test" disabled="disabled" class="medium_button_disable" onclick="javascript:startTests('');"></td>
             <td width="10%" align="center"><input type="submit" name="STOP" id="stop_button" title="Stop testing" value="Stop Test" disabled="disabled" class="medium_button_disable" onclick="javascript:stopTests();"></td>
 DATA
 }
@@ -299,6 +319,7 @@ print <<DATA;
 DATA
 foreach ( keys %profile_list ) {
 	my $profile_name = $_;
+
 	if ( $selected_profile ne "none" ) {
 		if ( $_ eq $selected_profile ) {
 			print <<DATA;

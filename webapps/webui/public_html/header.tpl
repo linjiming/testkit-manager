@@ -54,7 +54,7 @@
 <div id="aboutDiv" class="report_list common_div about_div"></div>
 <table width="768" height="66" border="0" cellpadding="0" cellspacing="0" class="main_menu_bg">
   <tr>
-    <td width="22%" align="right" valign="middle"><a href="index.pl"><img title="$$$MTK_BRANCH$$$ Manager Homepage" src="images/$$$MTK_BRANCH_LC$$$-manager-logo.png" alt="$$$MTK_BRANCH$$$ Manager Homepage" width="152" height="38" /></a></td>
+    <td width="22%" align="right" valign="middle"><a href="tests_plan.pl"><img title="$$$MTK_BRANCH$$$ Manager Plan Page" src="images/$$$MTK_BRANCH_LC$$$-manager-logo.png" alt="$$$MTK_BRANCH$$$ Manager Homepage" width="152" height="38" /></a></td>
     <td width="6%"><table width="100%" height="66" border="0" cellpadding="0" cellspacing="0">
       <tr>
         <td height="36">&nbsp;</td>

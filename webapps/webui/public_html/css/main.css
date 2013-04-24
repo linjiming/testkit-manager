@@ -50,6 +50,12 @@
 	color: #000000;
 }
 
+.plan_info_bar_bg {
+	height: 120px;
+	background-color: #E5E5E5;
+	color: #000000;
+}
+
 .timer_number {
 	color: #238BD1;
 	font-size: 16px;

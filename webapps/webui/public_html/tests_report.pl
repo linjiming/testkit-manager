@@ -952,8 +952,8 @@ sub showSummaryReport {
       <tr>
         <td width="2%">&nbsp;</td>
         <td width="88%">Test report for $time in list view<input type="text" name="time_flag" value="$time" style="display:none" /></td>
-        <td width="5%" align="center" style="display:none"><a href="get.pl$result_dir_tgz"><img title="Export consolidated report" src="images/operation_download.png" alt="operation_download_consolidated_log" width="16" height="16" /></a></td>
-        <td width="5%" align="center" style="display:none"><a onclick="javascript:rerunNotPassedCases('$time', '$test_plan');"><img title="Rerun failed cases" src="images/operation_rerun.png" alt="operation_rerun" width="16" height="16" /></a></td>
+        <td width="5%" align="center"><a href="get.pl$result_dir_tgz"><img title="Export consolidated report" src="images/operation_download.png" alt="operation_download_consolidated_log" width="16" height="16" /></a></td>
+        <td width="5%" align="center"><a onclick="javascript:rerunNotPassedCases('$time', '$test_plan');"><img title="Rerun cases which are not passed" src="images/operation_rerun.png" alt="operation_rerun" width="16" height="16" /></a></td>
       </tr>
     </table></form></td>
   </tr>

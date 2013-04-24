@@ -153,7 +153,7 @@ our %CONFIG = (
 );
 
 my %styles = (
-	'custom'    => '$$$CUSTOM_STYLE$$$',
+	'plan'      => '$$$CUSTOM_STYLE$$$',
 	'execute'   => '$$$EXECUTE_STYLE$$$',
 	'report'    => '$$$REPORT_STYLE$$$',
 	'statistic' => '$$$STATISTIC_STYLE$$$',
@@ -1364,46 +1364,19 @@ sub install_package {
 		$GREP_PATH =~ s/\./\\\./g;
 		$GREP_PATH =~ s/\-/\\\-/g;
 
-		# install package
-		if ( $parameter =~ /(.*)-\d+\.\d+\.\d+-\d+/ ) {
-			$package_rpm_name = $parameter;
-			$package_name     = $1;
+		$package_name = $parameter;
+		my @rpm = ();
+		if ( $repo_type =~ /remote/ ) {
+			@rpm = `$DOWNLOAD_CMD $repo_url 2>&1 | grep $GREP_PATH.*tests.*rpm`;
 		}
-
-		# update package
-		else {
-			$package_name = $parameter;
-			my @rpm            = ();
-			my $temp_rpm_count = 0;
-			if ( $repo_type =~ /remote/ ) {
-				@rpm =
-				  `$DOWNLOAD_CMD $repo_url 2>&1 | grep $GREP_PATH.*tests.*rpm`;
-			}
-			if ( $repo_type =~ /local/ ) {
-				@rpm = `find $repo_url | grep $GREP_PATH.*tests.*rpm`;
-			}
-			my $cmd = sdb_cmd( "shell 'rpm -qa | grep " . $package_name . "'" );
-			my $package_version_installed = `$cmd`;
-			my $version_installed         = "none";
-			if ( $package_version_installed =~ /-(\d+\.\d+\.\d+-\d+)/ ) {
-				$version_installed = $1;
-			}
-			foreach (@rpm) {
-				my $remote_pacakge_name = $_;
-				$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
-				if ( $remote_pacakge_name =~ /$package_name/ ) {
-					my $version_latest = "none";
-					if ( $remote_pacakge_name =~ /-(\d+\.\d+\.\d+-\d+)/ ) {
-						$version_latest = $1;
-					}
-					my $result_latest_version =
-					  compare_version( $version_installed, $version_latest );
-					if ( $result_latest_version eq "update" ) {
-						$version_installed = $version_latest;
-						$package_rpm_name  = $remote_pacakge_name;
-					}
-				}
-				$temp_rpm_count++;
+		if ( $repo_type =~ /local/ ) {
+			@rpm = `find $repo_url | grep $GREP_PATH.*tests.*rpm`;
+		}
+		foreach (@rpm) {
+			my $remote_pacakge_name = $_;
+			$remote_pacakge_name =~ s/(.*)$GREP_PATH//g;
+			if ( $remote_pacakge_name =~ /$package_name/ ) {
+				$package_rpm_name = $remote_pacakge_name;
 			}
 		}
 
@@ -1421,36 +1394,71 @@ sub install_package {
 		if ( $repo_type =~ /local/ ) {
 			$cmd = "find " . $repo_url . " | grep $GREP_PATH$package_rpm_name";
 		}
-		my @install_log    = ();
-		my $network_result = `$cmd`;
+		my @install_log     = ();
+		my $network_result  = `$cmd`;
+		my $package_version = "";
+		if ( $network_result =~ /(\d+\.\d+\.\d+-\d+)/ ) {
+			$package_version = $1;
+		}
 		if ( $network_result =~ /$GREP_PATH.*$package_rpm_name/ ) {
-			if ( $repo_type =~ /remote/ ) {
-				system("wget -c $repo_url$package_rpm_name -P /tmp -q -N");
-				system( sdb_cmd("push /tmp/$package_rpm_name /tmp") );
-			}
-			if ( $repo_type =~ /local/ ) {
-				system( sdb_cmd("push $repo_url$package_rpm_name /tmp") );
-			}
 
+			# checke if the package has been installed before
 			my $cmd = sdb_cmd( "shell 'rpm -qa | grep " . $package_name . "'" );
 			my $have_package = `$cmd`;
 
-			# remove installed package
-			if ( $have_package =~ /$package_name/ ) {
-				remove_package($package_name);
-			}
+# only install new pacakge, if package version is the same then don't install it
+			if (   ( $have_package =~ /$package_name/ )
+				&& ( $have_package =~ /$package_version/ ) )
+			{
 
-			# install package
-			use IPC::Open3;
-			local ( *HIS_IN, *HIS_OUT, *HIS_ERR );
-			my $install_pid =
-			  open3( *HIS_IN, *HIS_OUT, *HIS_ERR,
-				sdb_cmd("shell 'rpm -ivh /tmp/$package_rpm_name --nodeps'") );
-			@install_log = <HIS_OUT>;
-			waitpid( $install_pid, 0 );
+			}
+			elsif (( $have_package =~ /$package_name/ )
+				&& ( $have_package !~ /$package_version/ ) )
+			{
+
+				# download package
+				if ( $repo_type =~ /remote/ ) {
+					system("wget -c $repo_url$package_rpm_name -P /tmp -q -N");
+					system( sdb_cmd("push /tmp/$package_rpm_name /tmp") );
+				}
+				if ( $repo_type =~ /local/ ) {
+					system( sdb_cmd("push $repo_url$package_rpm_name /tmp") );
+				}
+
+				# remove installed package
+				remove_package($package_name);
+				sleep 3;
+
+				# install package
+				use IPC::Open3;
+				local ( *HIS_IN, *HIS_OUT, *HIS_ERR );
+				my $install_pid = open3( *HIS_IN, *HIS_OUT, *HIS_ERR,
+					sdb_cmd("shell 'rpm -ivh /tmp/$package_rpm_name --nodeps'")
+				);
+				@install_log = <HIS_OUT>;
+				waitpid( $install_pid, 0 );
+			}
+			else {
+
+				# download package
+				if ( $repo_type =~ /remote/ ) {
+					system("wget -c $repo_url$package_rpm_name -P /tmp -q -N");
+					system( sdb_cmd("push /tmp/$package_rpm_name /tmp") );
+				}
+				if ( $repo_type =~ /local/ ) {
+					system( sdb_cmd("push $repo_url$package_rpm_name /tmp") );
+				}
+
+				# install package
+				use IPC::Open3;
+				local ( *HIS_IN, *HIS_OUT, *HIS_ERR );
+				my $install_pid = open3( *HIS_IN, *HIS_OUT, *HIS_ERR,
+					sdb_cmd("shell 'rpm -ivh /tmp/$package_rpm_name --nodeps'")
+				);
+				@install_log = <HIS_OUT>;
+				waitpid( $install_pid, 0 );
+			}
 		}
-		sleep 3;
-		syncDefinition();
 		my $check_cmd =
 		  sdb_cmd( "shell 'rpm -qa | grep " . $package_name . "'" );
 		my $check_install = `$check_cmd`;
@@ -1587,12 +1595,13 @@ sub syncDefinition {
 }
 
 sub syncDefinition_from_local_repo {
-	my @rpm       = ();
-	my $repo      = get_repo();
-	my @repo_all  = split( "::", $repo );
-	my $repo_type = $repo_all[0];
-	my $repo_url  = $repo_all[1];
-	my $GREP_PATH = $repo_url;
+	my @rpm                     = ();
+	my @local_repo_package_name = ();
+	my $repo                    = get_repo();
+	my @repo_all                = split( "::", $repo );
+	my $repo_type               = $repo_all[0];
+	my $repo_url                = $repo_all[1];
+	my $GREP_PATH               = $repo_url;
 	$GREP_PATH =~ s/\:/\\:/g;
 	$GREP_PATH =~ s/\//\\\//g;
 	$GREP_PATH =~ s/\./\\\./g;
@@ -1632,6 +1641,7 @@ sub syncDefinition_from_local_repo {
 				$definition =~ s/\s*$//;
 				if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
 					my $package_name = $1;
+					push( @local_repo_package_name, $package_name );
 					system("mkdir $test_definition_dir_repo$package_name");
 					system(
 						"cp $definition $test_definition_dir_repo$package_name"
@@ -1673,6 +1683,48 @@ sub syncDefinition_from_local_repo {
 				}
 			}
 		}
+
+		# extract name number and version
+		my @name_number_version_content = ();
+		foreach (@rpm) {
+			my $package_name_full = $_;
+			foreach (@local_repo_package_name) {
+				my $package_name = $_;
+				if (
+					( defined $package_name )
+					&& ( $package_name_full =~
+						/$package_name.*-(\d+\.\d+\.\d+-\d+).*/ )
+				  )
+				{
+					my $version       = $1;
+					my $auto_number   = 0;
+					my $manual_number = 0;
+					if (
+						open FILE,
+						$test_definition_dir_repo . $package_name . "/tests.xml"
+					  )
+					{
+						while (<FILE>) {
+							if ( $_ =~ /execution_type="manual"/ ) {
+								$manual_number += 1;
+							}
+							if ( $_ =~ /execution_type="auto"/ ) {
+								$auto_number += 1;
+							}
+						}
+					}
+					push( @name_number_version_content,
+						    $package_name . "!::!"
+						  . $auto_number . "!:!"
+						  . $manual_number . "!:!"
+						  . $version );
+				}
+			}
+		}
+		write_string_as_file(
+			$repo_url . "name_number_version",
+			join( "\n", @name_number_version_content )
+		);
 	}
 }
 
