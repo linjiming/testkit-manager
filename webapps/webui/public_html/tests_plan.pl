@@ -246,7 +246,7 @@ print <<DATA;
     <td width="19%" class="custom_line_height report_list_outside_left_no_height">&nbsp;Version</td>
   </tr>
 DATA
-foreach ( keys %name_number_version ) {
+foreach ( sort keys %name_number_version ) {
 	my $packageName    = $_;
 	my @package_info   = split( "!:!", $name_number_version{$packageName} );
 	my $autoNumber     = $package_info[0];
@@ -402,7 +402,13 @@ function update_package_select() {
 }
 
 // update button status when load page
-update_page_status();
+clean_page_status();
+function clean_page_status() {
+	var select_test_plan = document.getElementById('test_profile');
+	select_test_plan.options[0].selected = true;
+	load_test_plan();
+}
+
 function count_checked_checkbox_number() {
 	var num = 0;
 	var page = document.getElementsByTagName("*");
