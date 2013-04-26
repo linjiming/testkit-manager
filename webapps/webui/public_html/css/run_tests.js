@@ -657,6 +657,10 @@ function ajaxProcessResult(responseXML) {
 					+ " exists.\nAre you sure to overwrite it?")) {
 				var save_test_plan_text = document
 						.getElementById("save_test_plan_text");
+				var select_test_plan = document.getElementById('test_profile');
+				if (select_test_plan.value == save_test_plan_text.value) {
+					change_after_load = false;
+				}
 				ajax_call_get('action=save_profile&save_profile_name='
 						+ save_test_plan_text.value + '&checkbox='
 						+ package_selected.join("!:!") + '&advanced='
