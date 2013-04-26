@@ -38,12 +38,12 @@ if ( !( -e $profile_dir_manager ) ) {
 my $repo     = get_repo();
 my @repo_all = split( "::", $repo );
 my $repo_url = $repo_all[1];
-if ( !( -e $repo_url . "name_number_version" ) ) {
+if ( !( -e $repo_url . "package_list" ) ) {
 	syncDefinition_from_local_repo();
 }
 
 # load name number version information
-if ( open FILE, $repo_url . "name_number_version" ) {
+if ( open FILE, $repo_url . "package_list" ) {
 	while (<FILE>) {
 		my @name_info = split( "!::!", $_ );
 		$name_number_version{ $name_info[0] } = $name_info[1];
