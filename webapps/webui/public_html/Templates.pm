@@ -1434,7 +1434,7 @@ sub install_package {
 				use IPC::Open3;
 				local ( *HIS_IN, *HIS_OUT, *HIS_ERR );
 				my $install_pid = open3( *HIS_IN, *HIS_OUT, *HIS_ERR,
-					sdb_cmd("shell 'rpm -ivh /tmp/$package_rpm_name --nodeps'")
+					sdb_cmd("shell 'rpm -ivh /tmp/$package_rpm_name --force'")
 				);
 				@install_log = <HIS_OUT>;
 				waitpid( $install_pid, 0 );
@@ -1456,7 +1456,7 @@ sub install_package {
 				use IPC::Open3;
 				local ( *HIS_IN, *HIS_OUT, *HIS_ERR );
 				my $install_pid = open3( *HIS_IN, *HIS_OUT, *HIS_ERR,
-					sdb_cmd("shell 'rpm -ivh /tmp/$package_rpm_name --nodeps'")
+					sdb_cmd("shell 'rpm -ivh /tmp/$package_rpm_name --force'")
 				);
 				@install_log = <HIS_OUT>;
 				waitpid( $install_pid, 0 );
