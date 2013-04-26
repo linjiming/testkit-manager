@@ -1416,6 +1416,10 @@ sub install_package {
 				&& ( $have_package !~ /$package_version/ ) )
 			{
 
+				# remove installed package
+				remove_package($package_name);
+				sleep 2;
+
 				# download package
 				if ( $repo_type =~ /remote/ ) {
 					system("wget -c $repo_url$package_rpm_name -P /tmp -q -N");
@@ -1424,10 +1428,7 @@ sub install_package {
 				if ( $repo_type =~ /local/ ) {
 					system( sdb_cmd("push $repo_url$package_rpm_name /tmp") );
 				}
-
-				# remove installed package
-				remove_package($package_name);
-				sleep 3;
+				sleep 2;
 
 				# install package
 				use IPC::Open3;
@@ -1437,6 +1438,7 @@ sub install_package {
 				);
 				@install_log = <HIS_OUT>;
 				waitpid( $install_pid, 0 );
+				sleep 2;
 			}
 			else {
 
@@ -1448,6 +1450,7 @@ sub install_package {
 				if ( $repo_type =~ /local/ ) {
 					system( sdb_cmd("push $repo_url$package_rpm_name /tmp") );
 				}
+				sleep 2;
 
 				# install package
 				use IPC::Open3;
@@ -1457,6 +1460,7 @@ sub install_package {
 				);
 				@install_log = <HIS_OUT>;
 				waitpid( $install_pid, 0 );
+				sleep 2;
 			}
 		}
 		my $check_cmd =
@@ -1721,10 +1725,8 @@ sub syncDefinition_from_local_repo {
 				}
 			}
 		}
-		write_string_as_file(
-			$repo_url . "name_number_version",
-			join( "\n", @name_number_version_content )
-		);
+		write_string_as_file( $repo_url . "package_list",
+			join( "\n", @name_number_version_content ) );
 	}
 }
 
