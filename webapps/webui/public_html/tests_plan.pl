@@ -210,7 +210,7 @@ $test_plan_list
       </select></td>
     <td width="4%">&nbsp;</td>
     <td width="15%" align="left"><input type="button" name="execute_profile" id="execute_profile" class="medium_button" title="Execute selected packages" value="Run" onclick="javascript:run_test_plan();" /></td>
-    <td width="15%" align="left"><input type="button" name="pre_config" id="pre_config" class="medium_button" title="Pre config some basic parameters for the device" value="Config" onclick="javascript:onPreConfig();" /></td>
+    <td width="15%">&nbsp;</td>
     <td width="4%">&nbsp;</td>
   </tr>
   <tr>
@@ -281,6 +281,7 @@ print <<DATA;
 var need_hardware_capability_option = false;
 var change_after_load = false;
 var current_run_test_plan = "temp";
+var is_config_popup = false
 function run_test_plan() {
 	var test_plan_name = document.getElementById('test_profile').value;
 	if (change_after_load) {
@@ -402,11 +403,19 @@ function update_package_select() {
 }
 
 // update button status when load page
-clean_page_status();
-function clean_page_status() {
-	var select_test_plan = document.getElementById('test_profile');
-	select_test_plan.options[0].selected = true;
+restore_plan_page_init_state();
+function restore_plan_page_init_state() {
+	load_pre_test_plan();
 	load_test_plan();
+}
+
+function load_pre_test_plan() {
+	var select_test_plan = document.getElementById('test_profile');
+	for ( var i = 0; i < select_test_plan.options.length; i++) {
+		if (select_test_plan.options[i].value == "pre_Tizen_TCT") {
+			select_test_plan.options[i].selected = true;
+		}
+	}
 }
 
 function count_checked_checkbox_number() {
@@ -436,12 +445,29 @@ function count_checkbox_number() {
 	return num;
 }
 
+function check_bluetooth_package() {
+	var page = document.getElementsByTagName("*");
+	for ( var i = 0; i < page.length; i++) {
+		var temp_id = page[i].id;
+		if ((temp_id.indexOf("checkbox_") >= 0)
+				&& (temp_id.indexOf("webapi-tizen-bluetooth-tests") >= 0)
+				&& !(is_config_popup)) {
+			if (document.getElementById(temp_id).checked) {
+				onPreConfig();
+				is_config_popup = true;
+			}
+		}
+	}
+}
+
 function update_page_status() {
 	var button;
 	var checked_checkbox_number = count_checked_checkbox_number();
 	var checkbox_number = count_checkbox_number();
 	var select_test_plan = document.getElementById('test_profile');
 	var elem = document.getElementById('checkbox_all');
+	// check bluetooth package
+	check_bluetooth_package();
 	// update run button status
 	button = document.getElementById('execute_profile');
 	if (button) {
@@ -534,12 +560,12 @@ my $pre_config_content = <<DATA;
 <table width="660" border="1" cellspacing="0" cellpadding="0" class="table_normal_small" rules="all" frame="void">
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="report_list_no_border">&nbsp;Pre Configuration</td>
+    <td colspan="4" align="left" class="report_list_no_border">&nbsp;</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="top_button_bg report_list_inside">&nbsp;Desc XML:</td>
+    <td colspan="4" align="left" class="top_button_bg report_list_inside">&nbsp;Pre Configuration for Bluetooth</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
   <tr>
