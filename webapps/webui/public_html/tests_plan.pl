@@ -549,40 +549,6 @@ my $pre_config_content = <<DATA;
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_right">&nbsp;Apache Server Name:</td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
-      <label>
-        <input type="text" name="pre_config_apache_name_text" id="pre_config_apache_name_text" class="pre_config_text" />
-      </label></td>
-    <td width="23%" align="left" class="top_button_bg report_list_one_row">&nbsp;Port:</td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
-      <input type="text" name="pre_config_apache_port_text" id="pre_config_apache_port_text" class="pre_config_text" /></td>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-  </tr>
-  <tr>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="left" class="report_list_inside">&nbsp;the name of Apache server which some components(webapi-w3c-webmessaging-tests, webapi-w3c-sse-tests, webapi-w3c-xmlhttpreqest-tests, webapi-w3c-cors-tests...) needed</td>
-    <td colspan="2" align="left" class="report_list_outside_left">&nbsp;the protocal port of the Apache server</td>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-  </tr>
-  <tr>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_right">&nbsp;Web Socket Server Name:</td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
-      <input type="text" name="pre_config_socket_name_text" id="pre_config_socket_name_text" class="pre_config_text" /></td>
-    <td width="23%" align="left" class="top_button_bg report_list_one_row">&nbsp;Port:</td>
-    <td width="23%" align="left" class="top_button_bg report_list_outside_left">&nbsp;
-      <input type="text" name="pre_config_socket_port_text" id="pre_config_socket_port_text" class="pre_config_text" /></td>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-  </tr>
-  <tr>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="left" class="report_list_inside">&nbsp;the name of WebSocket server which some components(WebSocket) needed</td>
-    <td colspan="2" align="left" class="report_list_outside_left">&nbsp;the protocal port of the WebSocket server</td>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-  </tr>
-  <tr>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
     <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
     <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
@@ -590,9 +556,7 @@ my $pre_config_content = <<DATA;
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
     <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="right" class="report_list_no_border"><input type="submit" name="save_config_info" id="save_config_info" value="Save" class="small_button" onclick="javascript:onSaveConfig();" />
-      &nbsp;
-      <input type="submit" name="close_config_div" id="close_config_div" value="Skip" class="small_button" onclick="javascript:onClosePopup();" /></td>
+    <td colspan="2" align="right" class="report_list_no_border"><input type="submit" name="close_config_div" id="close_config_div" value="Close" class="small_button" onclick="javascript:onClosePopup();" /></td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
 </table>
@@ -605,30 +569,6 @@ function onPreConfig() {
 	document.getElementById('preConfigDiv').style.display = 'block';
 	document.getElementById('popIframe').style.display = 'block';
 DATA
-if ( open my $FILE, "/tmp/pre_config" ) {
-	my %config = ();
-	while (<$FILE>) {
-		chomp;
-		if (/.*=.*/) {
-			my ( $config_key, $config_value ) = split /=/;
-			$config{$config_key} = $config_value;
-		}
-	}
-	print
-"	document.getElementById('pre_config_apache_name_text').value = '$config{'server1_name'}';\n";
-	print
-"	document.getElementById('pre_config_apache_port_text').value = '$config{'server1_port'}';\n";
-	print
-"	document.getElementById('pre_config_socket_name_text').value = '$config{'server2_name'}';\n";
-	print
-"	document.getElementById('pre_config_socket_port_text').value = '$config{'server2_port'}';\n";
-}
-else {
-	print
-	  "	document.getElementById('pre_config_apache_port_text').value = '80';\n";
-	print
-"	document.getElementById('pre_config_socket_port_text').value = '8081';\n";
-}
 my $desc_xml_path = get_config_info("desc_xml");
 my $desc_xml_cmd  = sdb_cmd("shell 'ls $desc_xml_path'");
 my $desc_xml      = `$desc_xml_cmd`;
