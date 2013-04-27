@@ -402,11 +402,19 @@ function update_package_select() {
 }
 
 // update button status when load page
-clean_page_status();
-function clean_page_status() {
-	var select_test_plan = document.getElementById('test_profile');
-	select_test_plan.options[0].selected = true;
+restore_plan_page_init_state();
+function restore_plan_page_init_state() {
+	load_pre_test_plan();
 	load_test_plan();
+}
+
+function load_pre_test_plan() {
+	var select_test_plan = document.getElementById('test_profile');
+	for ( var i = 0; i < select_test_plan.options.length; i++) {
+		if (select_test_plan.options[i].value == "pre_Tizen_TCT") {
+			select_test_plan.options[i].selected = true;
+		}
+	}
 }
 
 function count_checked_checkbox_number() {
@@ -534,12 +542,12 @@ my $pre_config_content = <<DATA;
 <table width="660" border="1" cellspacing="0" cellpadding="0" class="table_normal_small" rules="all" frame="void">
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="report_list_no_border">&nbsp;Pre Configuration</td>
+    <td colspan="4" align="left" class="report_list_no_border">&nbsp;</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="top_button_bg report_list_inside">&nbsp;Desc XML:</td>
+    <td colspan="4" align="left" class="top_button_bg report_list_inside">&nbsp;Pre Configuration for Bluetooth</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
   <tr>
