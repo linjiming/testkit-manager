@@ -1605,7 +1605,7 @@ elsif ( $_GET{'action'} eq "install_plan_package" ) {
 	my $cmd          = sdb_cmd("shell ls /usr/share/$package/tests.xml");
 	my $temp         = `$cmd`;
 	my $return_value = "none";
-	if ( $temp !~ /No such file or directory/ ) {
+	if ($temp =~ /\/usr\/share/) {
 		$return_value = "[PASS]";
 	}
 	else {

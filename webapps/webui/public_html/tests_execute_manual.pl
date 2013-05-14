@@ -133,7 +133,7 @@ DATA
                       <tr>
                         <td><table width="100%" border="1" cellpadding="0" cellspacing="0" class="table_normal" frame="below" rules="all">
                             <tr>
-                              <td align="left" class="report_list_one_row">&nbsp;Manual execution for&nbsp;&nbsp;$time</td>
+                              <td align="left" class="report_list_one_row">&nbsp;Please input the manual test result for&nbsp;&nbsp;$time</td>
                             </tr>
                           </table></td>
                       </tr>

@@ -421,7 +421,18 @@ function ajaxProcessResult(responseXML) {
 		if (if_it_is_new == "yes") {
 			var select_test_plan = document.getElementById("test_profile");
 			select_test_plan.add(new Option(test_plan_name, test_plan_name));
+                         
 		}
+         var option_handle = document.getElementsByTagName('option');
+         var str = "";   
+         for(var i=0;i<option_handle.length;i++){        
+               	if(option_handle[i].value == test_plan_name) {
+                     	 option_handle[i].selected=true;
+                     }
+         }
+
+         load_test_plan();
+
 	}
 	// load test plan by select test plan name
 	if (responseXML.getElementsByTagName('analyse_test_plan_result').length > 0) {
@@ -437,8 +448,7 @@ function ajaxProcessResult(responseXML) {
 	// check need hardware capability before run test plan
 	if (responseXML.getElementsByTagName('need_check_hardware').length > 0) {
 		if (responseXML.getElementsByTagName('need_check_hardware')[0].childNodes[0].nodeValue == 1) {
-			document.getElementById('hardwareCapabilityDiv').style.display = 'block';
-			document.getElementById('popIframe').style.display = 'block';
+                        open_the_hardwarecapabilityDiv();
 		} else {
 			need_hardware_capability_option = false;
 			document.location = "tests_execute.pl?profile="
@@ -625,6 +635,16 @@ function ajaxProcessResult(responseXML) {
 		tid = responseXML.getElementsByTagName('check_profile_name')[0].childNodes[0].nodeValue;
 		var select_execution_type = document
 				.getElementById("select_execution_type").value;
+                    
+                if  (select_execution_type == "Automated")
+                   	{
+                       		select_execution_type = "auto";
+                         	}
+                else if(select_execution_type == "Manual")
+               		{
+				select_execution_type = "manual";
+                                }
+                
 		var page = document.getElementsByTagName("*");
 		var package_number = 0;
 		var package_selected = new Array();
@@ -1597,10 +1617,44 @@ function onExecute() {
 	}
 }
 
+function check_new_plan_name(new_name)
+{
+                var reg = /^[a-zA-Z]{1}\w{0,19}$/;
+		var str = new_name;
+		var result = reg.exec(str);
+		if (!result) {
+			alert('Test plan name should start with a letter and follow by letters, numbers or "_", and maximum length is 20 characters');
+			return false;
+		}
+		reg = /^pre_template/;
+		result = reg.exec(str);
+		if (result) {
+			alert("'pre_template' is a reserved test plan name, please change another one");
+			return false;
+		}
+		reg = /^rerun/;
+		result = reg.exec(str);
+		if (result) {
+			alert("'rerun' is a reserved test plan name, please change another one");
+			return false;
+		}
+		reg = /^temp/;
+		result = reg.exec(str);
+		if (result) {
+			alert("'temp' is a reserved test plan name, please change another one");
+			return false;
+		}
+
+                return true;
+
+}
+
+
 function save_profile(type) {
 	var save_test_plan;
 	if (type == 'text') {
 		save_test_plan = document.getElementById("save_test_plan_text");
+                
 		var reg = /^[a-zA-Z]{1}\w{0,19}$/;
 		var str = save_test_plan.value;
 		var result = reg.exec(str);
@@ -2001,7 +2055,7 @@ function setDevice() {
 }
 
 function showAbout() {
-	about_div_string = '<table width="100%" border="0" cellspacing="0" cellpadding="0" class="about_div_table"><tr><td align="left">Testkit-manager is a GUI for testkit-lite. With this tool, we can filter cases with several properties\' value. The filtered cases can be run automatically and the report will be generated after finishing running. We can also submit report and view report with this tool.</td></tr><tr><td align="right"><label><input class="small_button" type="button" name="close_about_popup" id="close_about_popup" value="Close" onclick="javascript:onClosePopup();" /></label>&nbsp;&nbsp;</td></tr></table>';
+	about_div_string = '<table width="100%" border="0" cellspacing="0" cellpadding="0" class="about_div_table"><tr><td align="left">tct-manager is a Web GUI tool to run Tizen Compliance Test for mobile devices.</td></tr><tr><td align="right"><label><input class="small_button" type="button" name="close_about_popup" id="close_about_popup" value="Close" onclick="javascript:onClosePopup();" /></label>&nbsp;&nbsp;</td></tr></table>';
 	document.getElementById('aboutDiv').innerHTML = about_div_string;
 	document.getElementById('aboutDiv').style.display = 'block';
 	document.getElementById('popIframe').style.display = 'block';
