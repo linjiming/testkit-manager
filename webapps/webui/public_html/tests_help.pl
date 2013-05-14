@@ -29,7 +29,7 @@ print "Content-type: text/html" . CRLF . CRLF;
 print_header( "$MTK_BRANCH Manager Help Page", "help" );
 
 my $user_guide =
-  $SERVER_PARAM{'APP_DATA'} . "/doc/Testkit-Manager_User_Guide.pdf";
+  $SERVER_PARAM{'APP_DATA'} . "/doc/Tct-Manager_User_Guide.pdf";
 
 print <<DATA;
 <iframe id="help_frame" frameborder="0" scrolling="no" width="768" height="700" src="/get.pl?file=$user_guide"></iframe>

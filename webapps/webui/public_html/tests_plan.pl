@@ -52,8 +52,8 @@ if ( open FILE, $repo_url . "package_list" ) {
 
 # load filter information
 my $execution_type_filter = "        <option>Any Execution Type</option>";
-$execution_type_filter .= "        <option>auto</option>";
-$execution_type_filter .= "        <option>manual</option>";
+$execution_type_filter .= "        <option>Automated</option>";
+$execution_type_filter .= "        <option>Manual</option>";
 
 # load existing test plans
 my $test_plan_list = "        <option>Choose A Test Plan</option>";
@@ -79,7 +79,17 @@ print show_error_dlg($testkit_lite_error_message);
 # print hardware capability table
 my %hardware_type              = read_hardware_capability_config();
 my $hardware_dynamic_checklist = "";
-foreach ( keys %hardware_type ) {
+my @keys_hardware_type=qw/usbHost usbAccessory inputKeyboard/;
+foreach ( sort keys %hardware_type )
+{
+    if($_ ne "usbHost" && $_ ne "usbAccessory" && $_ ne "inputKeyboard" )
+     {
+       push(@keys_hardware_type,$_);
+      }
+
+}
+
+foreach (@keys_hardware_type) {
 	my $hardware_name = $_;
 	my $hardware_type = $hardware_type{$hardware_name};
 	if ( $hardware_type eq "boolean" ) {
@@ -166,8 +176,10 @@ my $hardware_capability_content = <<DATA;
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="custom_bottom">&nbsp;Hardware Capability Checklist</td>
+    <td colspan="4" align="left" class="custom_bottom"><input type="checkbox" id="change_all" onclick="javascript:change_all_status()">&nbsp;Hardware Capability Checklist</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+
   </tr>
   $hardware_dynamic_checklist
   <tr>
@@ -186,9 +198,9 @@ my $hardware_capability_content = <<DATA;
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="right" class="report_list_no_border"><input type="submit" name="save_hardware_capability_checklist" id="save_hardware_capability_checklist" value="Save" class="small_button" onclick="javascript:onSaveHardwareCapability();" />
+    <td colspan="4" align="right" class="report_list_no_border"><input type="submit" name="save_hardware_capability_checklist" id="save_hardware_capability_checklist" value="Confirm" class="small_button" onclick="javascript:onSaveHardwareCapability();" />
       &nbsp;
-      <input type="submit" name="close_config_div" id="close_config_div" value="Skip" class="small_button" onclick="javascript:onSkipHardwareCapability();" /></td>
+      <input type="submit" style="display:none" name="close_config_div" id="close_config_div"  value="Skip" class="small_button" onclick="javascript:onSkipHardwareCapability();" /></td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
 </table>
@@ -204,13 +216,13 @@ print <<DATA;
 <table width="768" border="0" cellspacing="0" cellpadding="0" class="plan_info_bar_bg table_normal">
   <tr>
     <td width="4%">&nbsp;</td>
-    <td width="20%" align="left">&nbsp;Existed Plan</td>
+    <td width="20%" align="left">&nbsp;Test Plan</td>
     <td width="38%" align="left"><select name="test_profile" id="test_profile" class="test_plan_name" onchange="javascript:load_test_plan();">
 $test_plan_list
       </select></td>
     <td width="4%">&nbsp;</td>
     <td width="15%" align="left"><input type="button" name="execute_profile" id="execute_profile" class="medium_button" title="Execute selected packages" value="Run" onclick="javascript:run_test_plan();" /></td>
-    <td width="15%" align="left"><input type="button" name="pre_config" id="pre_config" class="medium_button" title="Pre config some basic parameters for the device" value="Config" onclick="javascript:onPreConfig();" /></td>
+    <td width="15%" align="left"><input type="button" name="pre_config" id="pre_config" style="display:none" class="medium_button" title="Pre config some basic parameters for the device" value="Config" onclick="javascript:onPreConfig();" /></td>
     <td width="4%">&nbsp;</td>
   </tr>
   <tr>
@@ -224,7 +236,7 @@ $execution_type_filter
     <td width="15%">&nbsp;</td>
     <td width="4%">&nbsp;</td>
   </tr>
-  <tr>
+  <tr style="display:none">
     <td width="4%">&nbsp;</td>
     <td width="20%" align="left">&nbsp;New Plan</td>
     <td width="38%" align="left"><input type="text" name="save_test_plan_text" id="save_test_plan_text" class="test_plan_name" /></td>
@@ -281,13 +293,83 @@ print <<DATA;
 var need_hardware_capability_option = false;
 var change_after_load = false;
 var current_run_test_plan = "temp";
+var str_hardware_info="";
+
+function old_save_plan_name()
+{  
+  
+    var new_name = prompt("Please input the new plan name");
+    document.getElementById('save_test_plan_text').value = new_name;
+   
+    if( new_name == null || !check_new_plan_name(new_name) )
+    {  
+	       return ;
+    }
+    else
+       {
+
+	       save_profile('text');
+	       return;
+       }
+}
+
+function save_and_run()
+{
+   need_hardware_capability_option = true;
+		document.location = "tests_execute.pl?profile=" + current_run_test_plan
+				+ "&need_check_hardware=" + need_hardware_capability_option
+				+ "&content=" + str_hardware_info;
+
+
+}
+
+function pre_on_save()
+{
+     if(document.getElementById('radio1').checked==true || document.getElementById('radio2').checked==true)
+      {
+         save_and_run();
+       }
+     else
+       {
+          alert("Please choose Yes or No!");
+       }
+}
+
+function change_all_status()
+{
+    var elem=document.getElementById('hardwareCapabilityDiv');
+    var arr = elem.getElementsByTagName("*");
+    var all_value = document.getElementById('change_all').checked;
+    
+    for(var i=0;i<arr.length;i++)
+    {
+         if(arr[i].type=="checkbox" && arr[i].id != "change_all" && arr[i].checked != all_value){
+                      arr[i].click();
+          }
+    
+    }
+}
+
+function open_the_hardwarecapabilityDiv()
+{
+ document.getElementById('hardwareCapabilityDiv').style.display = 'block';
+ document.getElementById('popIframe').style.display = 'block';
+
+ document.getElementById('usbHost_checkbox').click();
+ document.getElementById('usbHost_checkbox').disabled="true";
+ document.getElementById('inputKeyboard_checkbox').click();
+ document.getElementById('inputKeyboard_checkbox').disabled="true";
+ document.getElementById('usbAccessory_checkbox').click();
+ document.getElementById('usbAccessory_checkbox').disabled="true";
+}
 function run_test_plan() {
 	var test_plan_name = document.getElementById('test_profile').value;
 	if (change_after_load) {
-		if (confirm("The package selection or filter has changed, is it OK to use 'temp' as the test plan name?")) {
+		if (confirm("The package selection or filter has changed,click 'Ok' to use 'temp' as a plan name to run test ,or click 'Cancel' to create a new plan.")) {
 			current_run_test_plan = "temp";
 			ajax_call_get('action=check_profile_isExist&profile_name=temp&option=save');
 		} else {
+                        old_save_plan_name();
 			return;
 		}
 	} else {
@@ -346,6 +428,7 @@ function update_page_by_load(test_plan_info) {
 	}
 	var select_execution_type = document
 			.getElementById('select_execution_type');
+
 	if (execution_type == "auto") {
 		select_execution_type.options[1].selected = true;
 	} else if (execution_type == "manual") {
@@ -361,13 +444,14 @@ function update_page_by_load(test_plan_info) {
 // define how execution type select work
 function filter_package() {
 	var execution_type = document.getElementById('select_execution_type');
+      
 	var page = document.getElementsByTagName("*");
 	for ( var i = 0; i < page.length; i++) {
 		var temp_id = page[i].id;
 		if (temp_id.indexOf("package_item_") >= 0) {
 			var package_item = document.getElementById(temp_id);
 			package_item.style.display = "";
-			if (execution_type.value == "auto") {
+			if (execution_type.value == "Automated") {
 				var r_auto, re_auto;
 				re_auto = new RegExp("autonumber_0", "g");
 				r_auto = temp_id.match(re_auto);
@@ -378,7 +462,7 @@ function filter_package() {
 					document.getElementById(checkbox_id).checked = false;
 				}
 			}
-			if (execution_type.value == "manual") {
+			if (execution_type.value == "Manual") {
 				var r_manual, re_manual;
 				re_manual = new RegExp("manualnumber_0", "g");
 				r_manual = temp_id.match(re_manual);
@@ -411,7 +495,7 @@ function restore_plan_page_init_state() {
 function load_pre_test_plan() {
 	var select_test_plan = document.getElementById('test_profile');
 	for ( var i = 0; i < select_test_plan.options.length; i++) {
-		if (select_test_plan.options[i].value == "pre_Tizen_TCT") {
+		if (select_test_plan.options[i].value == "Full_test") {
 			select_test_plan.options[i].selected = true;
 		}
 	}
@@ -547,64 +631,54 @@ my $pre_config_content = <<DATA;
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="top_button_bg report_list_inside">&nbsp;Pre Configuration for Bluetooth</td>
+    <td colspan="4" align="left" class="top_button_bg report_list_inside">&nbsp;If bluetooth is selected, please manually set it with below steps:</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="report_list_inside" id="pre_config_desc_xml_text">&nbsp;</td>
+    <td colspan="4" align="left" class="report_list_inside" >&nbsp;1. Enable Bluetooth function</br>&nbsp;2. Install Bluetooth test helper app(Bluetooth-test-helper.wgt) in another Bluetooth device which pairs your test </br>&nbsp;&nbsp;device</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+ <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="4" align="left" class="top_button_bg report_list_inside">&nbsp;If location is selected, please manually set it with below step:</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="4" align="left" class="report_list_inside" >&nbsp;1. Enable GPS function</td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="2" align="left" class="report_list_no_border">&nbsp;<input type="radio" name="hello" value="1" id="radio1" />No, skip to set it.</td>
+    <td colspan="2" align="left" class="report_list_no_border">&nbsp;<input type="radio" name="hello" value="2" id="radio2" />Yes, I have set it.</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
     <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="2" align="right" class="report_list_no_border"><input type="submit" name="close_config_div"  id="close_config_div" value="Close" class="small_button" onclick="javascript:pre_on_save();" /></td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
-  <tr>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="right" class="report_list_no_border"><input type="submit" name="close_config_div" id="close_config_div" value="Close" class="small_button" onclick="javascript:onClosePopup();" /></td>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-  </tr>
+
 </table>
 DATA
 
 $pre_config_content =~ s/\n//g;
 print <<DATA;
 function onPreConfig() {
+        
+        document.getElementById('hardwareCapabilityDiv').style.display = 'none';
+        document.getElementById('popIframe').style.display = 'none';
+        document.getElementById('close_config_div').disabled=true;
+
+   
 	document.getElementById('preConfigDiv').innerHTML = '$pre_config_content';
 	document.getElementById('preConfigDiv').style.display = 'block';
 	document.getElementById('popIframe').style.display = 'block';
 DATA
-my $desc_xml_path = get_config_info("desc_xml");
-my $desc_xml_cmd  = sdb_cmd("shell 'ls $desc_xml_path'");
-my $desc_xml      = `$desc_xml_cmd`;
-if ( $desc_xml !~ /No such file or directory/ ) {
-	system( sdb_cmd("pull $desc_xml_path /tmp/desc_xml") );
-	my $step_number  = 1;
-	my $step_content = "";
-	if ( open( FILE, "/tmp/desc_xml" ) ) {
-		while (<FILE>) {
-			my $line = $_;
-			if ( $line =~ /<step_desc>(.+?)<\/step_desc>/ ) {
-				my $step = $1;
-				$step =~ s/</&lt;/g;
-				$step =~ s/>/&gt;/g;
-				$step_content .= "&nbsp;$step_number. $step<\/br>";
-				$step_number++;
-			}
-		}
-		close(FILE);
-	}
-	system("rm -rf /tmp/desc_xml");
-	print
-"	document.getElementById('pre_config_desc_xml_text').innerHTML = '$step_content';\n";
-}
-else {
-	print
-"	document.getElementById('pre_config_desc_xml_text').innerHTML = '&nbsp;missing file: $desc_xml_path';\n";
-}
 print <<DATA;
 }
 DATA
@@ -618,13 +692,14 @@ function onSkipHardwareCapability() {
 			+ "&need_check_hardware=" + need_hardware_capability_option;
 }
 
+
 function onSaveHardwareCapability() {
 DATA
 print <<DATA;
 	var hardware_list = new Array(
 DATA
 my @hardware_capability_array = ();
-foreach ( keys %hardware_type ) {
+foreach (  keys %hardware_type ) {
 	my $hardware_checkbox_id = $_;
 	push( @hardware_capability_array,
 		    '"'
@@ -635,6 +710,7 @@ foreach ( keys %hardware_type ) {
 print join( ", ", @hardware_capability_array );
 print <<DATA;
 	);
+        
 	var hardware_info = "";
 	var has_blank = false;
 	for ( var i = 0; i < hardware_list.length; i++) {
@@ -664,15 +740,15 @@ print <<DATA;
 			hardware_info += "!::!" + this_hardware_info;
 		}
 	}
-	if (has_blank) {
+	if (has_blank) {  
+                       
 
 	} else {
-		onClosePopup();
-		need_hardware_capability_option = true;
-		document.location = "tests_execute.pl?profile=" + current_run_test_plan
-				+ "&need_check_hardware=" + need_hardware_capability_option
-				+ "&content=" + hardware_info;
+		          str_hardware_info=hardware_info;
+                          onClosePopup();
+                          onPreConfig();
 	}
+
 }
 DATA
 

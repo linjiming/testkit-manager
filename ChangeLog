@@ -226,4 +226,18 @@ testkit-manager 2.3.5:
   - redesign execute page
   - add rerun and export for detailed report page
   - remove home page
-
+* Thu May 10 2013 Jiming,Lin <jimingx.lin@intel.com> 2.3.5-2
+  - default "auto" TCT plan
+  - Capability check improvement
+  - Configuration improvement (map to HW feature)
+* Thu May 13 2013 Jiming,Lin <jimingx.lin@intel.com> 2.3.5-3
+  - change auto into Automated
+  - change manual into Manual
+  - change Tizen_TCT into Full_TCT
+  - modify CONF file to change the value of hardware_capability_package to tct-capability-tests
+  - rename testkit-manager to tct-manager
+  - add rpm2cpio into dependence list
+  - fix bug TCT-96 testkit-manager show install test package passed even disconnect device during installation
+  - make distance shorter between two buttons on plan page
+  - update about for new text
+  - update help document
