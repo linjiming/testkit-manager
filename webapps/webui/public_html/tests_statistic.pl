@@ -103,7 +103,7 @@ if ( $_GET{'case_view'} ) {
 	}
 
 	for ( my $count = 0 ; $count < $package_name_number ; $count++ ) {
-		if ( $package_name[$count] =~ /webapi/ ) {
+		if ( $package_name[$count] =~ /tct/ ) {
 			push( @package_name_webapi, $package_name[$count] );
 			$package_webapi_number++;
 		}

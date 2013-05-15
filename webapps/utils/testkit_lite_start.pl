@@ -937,6 +937,7 @@ sub readProfile {
 		my $isInstalled = `$cmd`;
 		if ( $isInstalled !~ /No such file or directory/ ) {
 			if (   ( $thisTargetPackage =~ /^webapi/ )
+                                or ( $thisTargetPackage =~ /^tct/)
 				or ( $thisTargetPackage =~ /^cts-webapi/ )
 				or ( $thisTargetPackage =~ /^tct-webapi/ )
 				or ( $thisTargetPackage =~ /^wrt/ ) )
