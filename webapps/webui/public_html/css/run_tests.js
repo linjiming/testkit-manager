@@ -1589,17 +1589,17 @@ function onExecute() {
 		var temp = checkbox_package_name.name;
 		if (checkbox_package_name.checked) {
 			if (webapi_flag == "0") {
-				if (temp.indexOf('webapi') > 0) {
+				if (temp.indexOf('tct') > 0) {
 					webapi_flag = "1";
 				} else {
 					webapi_flag = "2";
 				}
 			} else if (webapi_flag == "1") {
-				if (temp.indexOf('webapi') < 0) {
+				if (temp.indexOf('tct') < 0) {
 					webapi_flag = "yes";
 				}
 			} else if (webapi_flag == "2") {
-				if (temp.indexOf('webapi') > 0) {
+				if (temp.indexOf('tct') > 0) {
 					webapi_flag = "yes";
 				}
 			}
