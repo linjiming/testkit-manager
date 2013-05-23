@@ -1579,6 +1579,16 @@ tr.selectable:hover {
 	cursor: default;
 }
 
+.stop_install {
+	color: #FFFFFF;
+	line-height: 20px;
+	width: 80px;
+	height: 23px;
+	font-size: 14px;
+	background-color: #238BD1;
+	cursor: pointer;
+}
+
 .medium_button {
 	color: #FFFFFF;
 	line-height: 20px;

@@ -74,7 +74,8 @@ if (-d $_GET{'file'}) {
 }
 
 if (!-f $_GET{'file'}) {
-	report_error('404 Not Found', 'The file requested is not found.');
+	#report_error('404 Not Found', 'The file requested is not found.');
+         report_error('', 'The file result.xml in /opt/testkit/lite/latest is not found.');
 }
 
 if (open(FILE, $_GET{'file'})) {
