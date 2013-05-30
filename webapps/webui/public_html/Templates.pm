@@ -1606,6 +1606,8 @@ sub syncDefinition_from_local_repo {
 	my $repo_type               = $repo_all[0];
 	my $repo_url                = $repo_all[1];
 	my $GREP_PATH               = $repo_url;
+	my $Not_end_syn             = 1;
+	my $Max_syn                 = 2; 
 	$GREP_PATH =~ s/\:/\\:/g;
 	$GREP_PATH =~ s/\//\\\//g;
 	$GREP_PATH =~ s/\./\\\./g;
@@ -1613,6 +1615,9 @@ sub syncDefinition_from_local_repo {
 
 	if ( $repo_type =~ /local/ ) {
 		@rpm = `find $repo_url | grep $GREP_PATH.*tests.*rpm`;
+		
+		while($Not_end_syn)
+		{
 		system( "rm -rf $test_definition_dir_repo" . "*" );
 		system( "rm -rf $opt_dir_repo" . "*" );
 		system("rm -rf /tmp/usr");
@@ -1725,9 +1730,19 @@ sub syncDefinition_from_local_repo {
 				}
 			}
 		}
-		write_string_as_file( $repo_url . "package_list",
+		
+		$Max_syn--;
+		if((@rpm == @name_number_version_content) or ($Max_syn ==0) )
+		{
+			$Not_end_syn = 0;
+            
+                        write_string_as_file( $repo_url . "package_list",
 			join( "\n", @name_number_version_content ) );
+			
+		}
+			
 	}
+       }
 }
 
 sub remove_package {

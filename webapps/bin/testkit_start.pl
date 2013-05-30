@@ -130,30 +130,30 @@ print "\n    The start page should be opened in a browser shortly.\n    If it do
 my $browser_not_found = 5;
 
 # First, try the Portland's xdg-open util.
-if (system('which xdg-open >/dev/null 2>&1') == 0) {
-	my $err_file = tmpnam();
-	system("xdg-open \"http://127.0.0.1:$port/\" >$err_file 2>&1");
+#if (system('which xdg-open >/dev/null 2>&1') == 0) {
+#	my $err_file = tmpnam();
+#	system("xdg-open \"http://127.0.0.1:$port/\" >$err_file 2>&1");
 	# An exit code of 0 indicates success.
 	# 1 Error in command line syntax. 
 	# 2 One of the files passed on the command line did not exist. 
 	# 3 A required tool could not be found. 
 	# 4 The action failed.
-	$browser_not_found = $?;
-	if ($browser_not_found) {
-		system("cat $err_file");
-	}
-	unlink($err_file);
-}
-else {
+#	$browser_not_found = $?;
+#	if ($browser_not_found) {
+#		system("cat $err_file");
+#	}
+#	unlink($err_file);
+#}
+#else {
 	# Try to find a browser by it's name.
-	foreach my $br_name qw(opera google-chrome chromium /usr/bin/mozilla-firefox firefox konqueror epiphany galeon mozilla) {
+	foreach my $br_name qw(firefox  /usr/bin/mozilla-firefox opera google-chrome chromium  konqueror epiphany galeon mozilla) {
 		if (system("which $br_name >/dev/null 2>&1") == 0) {
 			system("$br_name \"http://127.0.0.1:$port/\" >/dev/null 2>&1 &");
 			$browser_not_found = 0;
 			last;
 		}
 	}
-}
+#}
 
 if ($browser_not_found) {
 	print "\n    Could not find a web-browser.\n    Go to 'http://$machine:$port/' to configure and launch tests.\n";

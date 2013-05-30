@@ -466,6 +466,7 @@ function ajaxProcessResult(responseXML) {
 		var load_test_plan_select = document
 				.getElementById('load_test_plan_select');
 		var load_flag = 1;
+                var get_error = 0;
 
 		packages_isExist_flag_arr = packages_isExist_flag.split(" ");
 		packages_need_arr = packages_need.split("tests");
@@ -486,6 +487,23 @@ function ajaxProcessResult(responseXML) {
 				}
 			}
 		}
+
+                if (responseXML.getElementsByTagName('return_value').length > 0) {
+				var return_value_add = responseXML
+						.getElementsByTagName('return_value')[0].childNodes[0].nodeValue;
+                                     if(return_value_add=="[FAIL]")   
+                                               {
+                                                      load_flag = 2;
+                                                    get_error = 1;
+                                                      loaddiv_string = "<span class='report_list_no_border'>&nbsp;&nbsp;"
+						+ return_value_add + "</span></br>";
+							document.getElementById('loadProgressBarDiv').innerHTML += loaddiv_string;
+                                                            }          
+     
+                                          }
+
+
+
 		if (load_flag == 0) {
 			var loaddiv_string = "";
 			var message_not_load_arr = new Array();
@@ -503,11 +521,11 @@ function ajaxProcessResult(responseXML) {
 				} else {
 					var packages = "packages";
 				}
-				document.getElementById('loadProgressBarDiv').innerHTML = '<tr><table width="450" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="10" width="3%" align="left" class="report_list view_test_plan_edge"></td><td height="10" align="left" class="view_test_plan_edge" width="94%">&nbsp;</td><td height="10" width="3%" class="view_test_plan_edge" align="left"></td></tr><tr><td height="30" width="3%" align="left" class="view_test_plan_edge"></td><td id="loadtitle" height="30" align="left" class="view_test_plan_title" width="94%">&nbsp;Check/Install '
+				document.getElementById('loadProgressBarDiv').innerHTML = '<tr><table width="480" border="1" cellspacing="0" cellpadding="0" frame="void" rules="all"><tr><td height="10" width="3%" align="left" class="report_list view_test_plan_edge"></td><td height="10" align="left" class="view_test_plan_edge" width="94%">&nbsp;</td><td height="10" width="3%" class="view_test_plan_edge" align="left"></td></tr><tr><td height="30" width="3%" align="left" class="view_test_plan_edge"></td><td id="loadtitle" height="30" align="left" class="view_test_plan_title" width="76%">&nbsp;Check/Install '
 						+ packages_need_count
 						+ ' '
 						+ packages
-						+ ' from the test plan</td><td height="30" width="3%" align="left" class="view_test_plan_edge"></td></tr></table></tr>';
+						+ ' from the test plan</td><td  width="16%" height="30" align="left" class="view_test_plan_title" bgcolor="#238BD1" ><input type="button" id="stop_install_packages" onclick="javascript:refresh_plan_page()" class="stop_install" value="Stop Install"></td><td height="30" width="10%"  class="view_test_plan_title">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr></table></tr>';
 				document.getElementById('loadProgressBarDiv').style.display = 'block';
 				document.getElementById('popIframe').style.display = 'block';
 			}
@@ -544,7 +562,7 @@ function ajaxProcessResult(responseXML) {
 			;
 		} else {
 			var text = document.getElementById('loadProgressBarDiv').innerHTML;
-			if (text.indexOf("[FAIL]") > 0) {
+			if (text.indexOf("[FAIL]") > 0 || get_error == 1) {
 				document.getElementById('loadProgressBarDiv').innerHTML += '</br>&nbsp;&nbsp;&nbsp;&nbsp;Fail to install one or more package(s), please try manually.</br>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="javascript:refresh_plan_page()">Click here to go back to the plan page.</a>';
 			} else {
 				document.location = "tests_execute.pl?profile="
@@ -1589,17 +1607,17 @@ function onExecute() {
 		var temp = checkbox_package_name.name;
 		if (checkbox_package_name.checked) {
 			if (webapi_flag == "0") {
-				if (temp.indexOf('tct') > 0) {
+				if ((temp.indexOf('tct') > 0) ||(temp.indexOf('webapi') > 0)) {
 					webapi_flag = "1";
 				} else {
 					webapi_flag = "2";
 				}
 			} else if (webapi_flag == "1") {
-				if (temp.indexOf('tct') < 0) {
+				if ((temp.indexOf('tct') < 0) ||(temp.indexOf('webapi') < 0)) {
 					webapi_flag = "yes";
 				}
 			} else if (webapi_flag == "2") {
-				if (temp.indexOf('tct') > 0) {
+				if ((temp.indexOf('tct') > 0) ||(temp.indexOf('webapi') > 0)){
 					webapi_flag = "yes";
 				}
 			}
