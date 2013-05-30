@@ -253,9 +253,11 @@ print <<DATA;
 <table width="768" border="0" cellspacing="0" cellpadding="0" frame="void" rules="all" class="report_list table_normal">
   <tr class="table_first_row">
     <td width="4%" align="center" class="custom_line_height report_list_outside_left_no_height"><input type="checkbox" name="checkbox_all" id="checkbox_all" value="checkbox_all" onclick="javascript:check_uncheck_all();" /></td>
-    <td width="62%" class="custom_line_height report_list_outside_left_no_height">&nbsp;Package Name</td>
-    <td width="15%" class="custom_line_height report_list_outside_left_no_height">&nbsp;Case Number</td>
-    <td width="19%" class="custom_line_height report_list_outside_left_no_height">&nbsp;Version</td>
+    <td width="56%" class="custom_line_height report_list_outside_left_no_height">&nbsp;Package Name</td>
+    <td width="11%" class="custom_line_height report_list_outside_left_no_height">&nbsp;Automated</td>
+    <td width="8%" class="custom_line_height report_list_outside_left_no_height">&nbsp;Manual</td>
+    <td width="8%" class="custom_line_height report_list_outside_left_no_height">&nbsp;Total</td>
+    <td width="13%" class="custom_line_height report_list_outside_left_no_height">&nbsp;Version</td>
   </tr>
 DATA
 foreach ( sort keys %name_number_version ) {
@@ -276,9 +278,11 @@ foreach ( sort keys %name_number_version ) {
 	print <<DATA;
   <tr id="package_item_$packageName\_$hasAuto\_$hasManual">
     <td width="4%" align="center" class="custom_line_height report_list_outside_left_no_height"><input type="checkbox" name="checkbox_$packageName\_$hasAuto\_$hasManual" id="checkbox_$packageName\_$hasAuto\_$hasManual" onclick="javascript:update_package_select();" /></td>
-    <td width="62%" class="custom_line_height report_list_outside_left_no_height">&nbsp;$packageName</td>
-    <td width="15%" class="custom_line_height report_list_outside_left_no_height">&nbsp;$totalNumber</td>
-    <td width="19%" class="custom_line_height report_list_outside_left_no_height">&nbsp;$packageVersion</td>
+    <td width="56%" class="custom_line_height report_list_outside_left_no_height">&nbsp;$packageName</td>
+    <td width="11%" class="custom_line_height report_list_outside_left_no_height">&nbsp;$autoNumber</td>
+    <td width="8%" class="custom_line_height report_list_outside_left_no_height">&nbsp;$manualNumber</td>
+    <td width="8%" class="custom_line_height report_list_outside_left_no_height">&nbsp;$totalNumber</td>
+    <td width="13%" class="custom_line_height report_list_outside_left_no_height">&nbsp;$packageVersion</td>
   </tr>
 DATA
 }
