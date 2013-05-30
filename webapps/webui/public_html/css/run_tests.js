@@ -450,10 +450,7 @@ function ajaxProcessResult(responseXML) {
 		if (responseXML.getElementsByTagName('need_check_hardware')[0].childNodes[0].nodeValue == 1) {
                         open_the_hardwarecapabilityDiv();
 		} else {
-			need_hardware_capability_option = false;
-			document.location = "tests_execute.pl?profile="
-					+ current_run_test_plan + "&need_check_hardware="
-					+ need_hardware_capability_option;
+			onPreConfig();
 		}
 	}
 	if (responseXML.getElementsByTagName('load_profile').length > 0) {
