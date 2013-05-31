@@ -979,6 +979,9 @@ sub readProfile {
 		my $uninstall = join( ",", @uninstalledPackages );
 		return $uninstall;
 	}
+	if ( $profile_name =~ /plans\/rerun_/ ) {
+		$targetPackages = $targetPackages." --rerun";
+	}
 	return $targetPackages;
 }
 
