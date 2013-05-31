@@ -26,6 +26,7 @@ use Templates;
 use File::Find;
 use Data::Dumper;
 use Digest::SHA qw(sha1_hex);
+use XML::Twig;
 
 # data which is going to be displayed
 my %report_display;
@@ -940,6 +941,82 @@ DATA
 DATA
 }
 
+sub generateSummaryReport{
+    my ( $result_xml, $result_folder ) = @_;
+    my $summary_xml_name = $result_folder."/summary.xml";
+    if (!(-e $summary_xml_name)) {
+        my $twig= new XML::Twig;
+        $twig->parsefile($result_xml);
+        my $total_result_xml = $twig->root;
+        my $summary_root     = new XML::Twig::Elt('result_summary');
+
+        my $test_environment = $total_result_xml->first_child( 'environment' );
+        my $test_summary     = $total_result_xml->first_child( 'summary' );
+        my $plan_name        = $test_summary->att('test_plan_name');
+        $test_environment->cut;
+        $test_summary->cut;
+        $test_environment->paste( 'last_child', $summary_root);
+        $test_summary->paste( 'last_child', $summary_root);
+        $summary_root->set_att(plan_name=>"$plan_name");
+
+        my $location_elt  = new XML::Twig::Elt('location', $result_folder);
+        $location_elt->paste( 'last_child', $summary_root);
+
+        my @suites   = $total_result_xml->children('suite');
+
+        foreach my $this_suite (@suites){
+            my $suite_name    = $this_suite->att('name');
+            my $suite_total   = $this_suite->findnodes('set/testcase');
+            my $suite_pass    = $this_suite->findnodes('set/testcase[@result="PASS"]');
+            my $suite_fail    = $this_suite->findnodes('set/testcase[@result="FAIL"]');
+            my $suite_na      = $this_suite->findnodes('set/testcase[@result="N/A"]');
+            my $suite_block   = $this_suite->findnodes('set/testcase[@result="BLOCK"]');
+
+            my $suite_elt  = new XML::Twig::Elt('suite');
+            $suite_elt->set_att(name => "$suite_name");
+            $suite_elt->paste( 'last_child', $summary_root);
+
+            my $suite_total_elt     = new XML::Twig::Elt('total_case', $suite_total);
+            $suite_total_elt->paste( 'last_child', $suite_elt);
+            my $suite_pass_elt      = new XML::Twig::Elt('pass_case', $suite_pass);
+            $suite_pass_elt->paste( 'last_child', $suite_elt);
+            my $suite_pass_rate_elt = new XML::Twig::Elt('pass_rate', sprintf ("%.0f", $suite_pass * 100 / $suite_total));
+            $suite_pass_rate_elt->paste( 'last_child', $suite_elt);
+            my $suite_fail_elt      = new XML::Twig::Elt('fail_case', $suite_fail);
+            $suite_fail_elt->paste( 'last_child', $suite_elt);
+            my $suite_fail_rate_elt = new XML::Twig::Elt('fail_rate', sprintf ("%.0f", $suite_fail * 100 / $suite_total));
+            $suite_fail_rate_elt->paste( 'last_child', $suite_elt);
+            my $suite_block_elt     = new XML::Twig::Elt('block_case', $suite_block);
+            $suite_block_elt->paste( 'last_child', $suite_elt);
+            my $suite_block_rate_elt = new XML::Twig::Elt('block_rate', sprintf ("%.0f", $suite_block * 100 / $suite_total));
+            $suite_block_rate_elt->paste( 'last_child', $suite_elt);
+            my $suite_na_elt        = new XML::Twig::Elt('na_case', $suite_na);
+            $suite_na_elt->paste( 'last_child', $suite_elt);
+            my $suite_na_rate_elt = new XML::Twig::Elt('na_rate', sprintf ("%.0f", $suite_na * 100 / $suite_total));
+            $suite_na_rate_elt->paste( 'last_child', $suite_elt);
+
+            my $d_suite_elt= $this_suite;
+            $d_suite_elt->cut; 
+            my $definition_elt  = new XML::Twig::Elt('test_definition');
+            $d_suite_elt->paste( 'last_child', $definition_elt);
+
+            my $suite_location_elt  = new XML::Twig::Elt('location', $result_folder);
+            $suite_location_elt->paste( 'last_child', $definition_elt);
+            $definition_elt->set_pretty_print( 'indented');
+            my $d_suite_xml_name =  $result_folder.'/'.$suite_name.'.xml';
+            open my $suit_detail_out, '>:utf8', $d_suite_xml_name or die qq(Cannot create "$d_suite_xml_name": $!);
+            print $suit_detail_out '<?xml version="1.0" encoding="UTF-8"?>'."\n".'<?xml-stylesheet type="text/xsl" href="/reportstyle/testresult.xsl"?>'."\n";
+            $definition_elt->print($suit_detail_out);
+            close($suit_detail_out);
+        }
+        $summary_root->set_pretty_print( 'indented');
+        open my $summary_out, '>:utf8', $summary_xml_name or die qq(Cannot create "$summary_xml_name": $!);
+        print $summary_out '<?xml version="1.0" encoding="UTF-8"?>'."\n".'<?xml-stylesheet type="text/xsl" href="/reportstyle/summary.xsl"?>'."\n";
+        $summary_root->print($summary_out);
+        close($summary_out);
+    }
+}
+
 sub showSummaryReport {
 	my ( $time, $test_plan ) = @_;
 	my $result_dir_tgz = $result_dir_manager . $time . "/" . $time . ".tgz";
@@ -963,8 +1040,13 @@ DATA
 	xml2xsl();
 	my $tmp_xml_file =
 	  $SERVER_PARAM{'APP_DATA'} . "/results/$time/tests.result.xml";
+        my $result_folder = $SERVER_PARAM{'APP_DATA'} . "/results/$time/";
+        generateSummaryReport($tmp_xml_file, $result_folder);
+        my $summary_xml_file =
+	  $SERVER_PARAM{'APP_DATA'} . "/results/$time/summary.xml";
+        
 	print <<DATA;
-	  <iframe frameborder="0" scrolling="yes" width="768" height="700" src="/get.pl?file=$tmp_xml_file"></iframe>
+	  <iframe frameborder="0" scrolling="yes" width="768" height="700" src="/get.pl?file=$summary_xml_file"></iframe>
     </td>
   </tr>
 </table>
