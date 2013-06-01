@@ -79,13 +79,11 @@ print show_error_dlg($testkit_lite_error_message);
 # print hardware capability table
 my %hardware_type              = read_hardware_capability_config();
 my $hardware_dynamic_checklist = "";
-my @keys_hardware_type=qw/usbHost usbAccessory inputKeyboard/;
-foreach ( sort keys %hardware_type )
-{
-    if($_ ne "usbHost" && $_ ne "usbAccessory" && $_ ne "inputKeyboard" )
-     {
-       push(@keys_hardware_type,$_);
-      }
+my @keys_hardware_type         = qw/usbHost usbAccessory inputKeyboard/;
+foreach ( sort keys %hardware_type ) {
+	if ( $_ ne "usbHost" && $_ ne "usbAccessory" && $_ ne "inputKeyboard" ) {
+		push( @keys_hardware_type, $_ );
+	}
 
 }
 
@@ -325,18 +323,6 @@ function save_and_run()
 				+ "&content=" + str_hardware_info;
 
 
-}
-
-function pre_on_save()
-{
-     if(document.getElementById('radio1').checked==true || document.getElementById('radio2').checked==true)
-      {
-         save_and_run();
-       }
-     else
-       {
-          alert("Please choose Yes or No!");
-       }
 }
 
 function change_all_status()
@@ -635,54 +621,102 @@ my $pre_config_content = <<DATA;
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="top_button_bg report_list_inside">&nbsp;If bluetooth is selected, please manually set it with below steps:</td>
+    <td colspan="4" align="left" class="top_button_bg report_list_inside">&nbsp;Pre-configuration steps for TCT testing:</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="report_list_inside" >&nbsp;1. Enable Bluetooth function</br>&nbsp;2. Install Bluetooth test helper app(Bluetooth-test-helper.wgt) in another Bluetooth device which pairs your test </br>&nbsp;&nbsp;device</td>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-  </tr>
- <tr>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="top_button_bg report_list_inside">&nbsp;If location is selected, please manually set it with below step:</td>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-  </tr>
-  <tr>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="4" align="left" class="report_list_inside" >&nbsp;1. Enable GPS function</td>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-  </tr>
-
-  <tr>
-    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="left" class="report_list_no_border">&nbsp;<input type="radio" name="hello" value="1" id="radio1" />No, skip to set it.</td>
-    <td colspan="2" align="left" class="report_list_no_border">&nbsp;<input type="radio" name="hello" value="2" id="radio2" />Yes, I have set it.</td>
+    <td colspan="4" align="left" class="report_list_inside" id="pre_config_desc_xml_text">&nbsp;</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
     <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="right" class="report_list_no_border"><input type="submit" name="close_config_div"  id="close_config_div" value="Close" class="small_button" onclick="javascript:pre_on_save();" /></td>
+    <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
-
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
+    <td colspan="2" align="right" class="report_list_no_border"><input type="submit" name="close_config_div"  id="close_config_div" value="Close" class="small_button" onclick="javascript:save_and_run();" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
 </table>
 DATA
 
 $pre_config_content =~ s/\n//g;
 print <<DATA;
 function onPreConfig() {
-        
-        document.getElementById('hardwareCapabilityDiv').style.display = 'none';
-        document.getElementById('popIframe').style.display = 'none';
-        document.getElementById('close_config_div').disabled=true;
-
-   
 	document.getElementById('preConfigDiv').innerHTML = '$pre_config_content';
 	document.getElementById('preConfigDiv').style.display = 'block';
 	document.getElementById('popIframe').style.display = 'block';
 DATA
+my $desc_xml_path = get_config_info("desc_xml");
+my $desc_xml_cmd  = sdb_cmd("shell 'ls $desc_xml_path'");
+my $desc_xml      = `$desc_xml_cmd`;
+if ( $desc_xml !~ /No such file or directory/ ) {
+	system( sdb_cmd("pull $desc_xml_path /tmp/desc_xml") );
+	my $step_number  = 1;
+	my $step_content = "";
+	my $more_line    = "";
+	if ( open( FILE, "/tmp/desc_xml" ) ) {
+		my $line_start = 0;
+		while (<FILE>) {
+			my $line = $_;
+			if ( $line =~ /<set(.+?)>/ ) {
+				my $set_name = $1;
+				$set_name =~ s/name="//g;
+				$set_name =~ s/"//g;
+				$step_number = 1;
+				$step_content .=
+				    "&nbsp;<span style=font-weight:bold;>"
+				  . $set_name
+				  . "</span>&nbsp;<\/br>";
+			}
+			if ( $line =~ /<step_desc>(.+?)<\/step_desc>/ ) {
+				my $step = $1;
+				$step =~ s/</&lt;/g;
+				$step =~ s/>/&gt;/g;
+				$step =~ s/'/&apos;/g;
+				$step =~ s/"/&quot;/g;
+				$step_content .= "<ol>.$step_number.$step<\/ol>";
+				$step_number++;
+				next;
+			}
+			else {
+				if ( $line =~ /<step_desc>/ ) {
+					$more_line = $line;
+					while (<FILE>) {
+						$more_line .= $_;
+						if ( $_ =~ /<\/step_desc>/ ) {
+
+							last;
+						}
+					}
+				}
+				$line = chomp($more_line);
+				if ( $line =~ /<step_desc>(.+?)<\/step_desc>/ ) {
+					my $step = $1;
+					$step =~ s/</&lt;/g;
+					$step =~ s/>/&gt;/g;
+					$step =~ s/'/&apos;/g;
+					$step =~ s/"/&quot;/g;
+					$step_content .= "<ol>.$step_number.$step<\/ol>";
+					$step_number++;
+					next;
+				}
+			}
+		}
+		close(FILE);
+	}
+	system("rm -rf /tmp/desc_xml");
+	print
+"	document.getElementById('pre_config_desc_xml_text').innerHTML = '$step_content';\n";
+}
+else {
+	print
+"	document.getElementById('pre_config_desc_xml_text').innerHTML = '&nbsp;missing file: $desc_xml_path';\n";
+}
 print <<DATA;
 }
 DATA
@@ -703,7 +737,7 @@ print <<DATA;
 	var hardware_list = new Array(
 DATA
 my @hardware_capability_array = ();
-foreach (  keys %hardware_type ) {
+foreach ( keys %hardware_type ) {
 	my $hardware_checkbox_id = $_;
 	push( @hardware_capability_array,
 		    '"'

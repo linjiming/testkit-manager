@@ -1987,7 +1987,7 @@ function saveManual() {
 
 function finishManual() {
 	var truthBeTold = window
-			.confirm("Unsaved results will be lost. Do you want to continue?");
+			.confirm("Please make sure you've saved result before click on \"OK\", or the result will be lost.");
 	if (truthBeTold) {
 		var time = document.getElementById('time').innerHTML;
 		document.location = 'tests_report.pl?time=' + time + '&summary=1';
