@@ -325,18 +325,6 @@ function save_and_run()
 
 }
 
-function pre_on_save()
-{
-     if(document.getElementById('radio1').checked==true || document.getElementById('radio2').checked==true)
-      {
-         save_and_run();
-       }
-     else
-       {
-          alert("Please choose Yes or No!");
-       }
-}
-
 function change_all_status()
 {
     var elem=document.getElementById('hardwareCapabilityDiv');
@@ -650,7 +638,7 @@ my $pre_config_content = <<DATA;
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
     <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="right" class="report_list_no_border"><input type="submit" name="close_config_div" id="close_config_div" value="Close" class="small_button" onclick="javascript:onClosePopup();" /></td>
+    <td colspan="2" align="right" class="report_list_no_border"><input type="submit" name="close_config_div"  id="close_config_div" value="Close" class="small_button" onclick="javascript:save_and_run();" /></td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
 </table>
