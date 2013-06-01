@@ -974,26 +974,46 @@ sub generateSummaryReport{
 
             my $suite_elt  = new XML::Twig::Elt('suite');
             $suite_elt->set_att(name => "$suite_name");
-            $suite_elt->paste( 'last_child', $summary_root);
 
             my $suite_total_elt     = new XML::Twig::Elt('total_case', $suite_total);
             $suite_total_elt->paste( 'last_child', $suite_elt);
             my $suite_pass_elt      = new XML::Twig::Elt('pass_case', $suite_pass);
             $suite_pass_elt->paste( 'last_child', $suite_elt);
-            my $suite_pass_rate_elt = new XML::Twig::Elt('pass_rate', sprintf ("%.0f", $suite_pass * 100 / $suite_total));
+
+            my $pass_rate_f  = 0;
+            my $fail_rate_f  = 0;
+            my $block_rate_f = 0;
+            my $na_rate_f    = 0;
+
+            if ($suite_total > 0){
+                $pass_rate_f  = $suite_pass * 100 / $suite_total;
+                $fail_rate_f  = $suite_fail * 100 / $suite_total;
+                $block_rate_f = $suite_block * 100 / $suite_total;
+                $na_rate_f    = $suite_na * 100 / $suite_total;
+            }else{
+                $pass_rate_f  = 0;
+                $fail_rate_f  = 0;
+                $block_rate_f = 0;
+                $na_rate_f    = 0;
+            }
+
+            my $suite_pass_rate_elt = new XML::Twig::Elt('pass_rate', sprintf ("%.0f", $pass_rate_f));
             $suite_pass_rate_elt->paste( 'last_child', $suite_elt);
             my $suite_fail_elt      = new XML::Twig::Elt('fail_case', $suite_fail);
             $suite_fail_elt->paste( 'last_child', $suite_elt);
-            my $suite_fail_rate_elt = new XML::Twig::Elt('fail_rate', sprintf ("%.0f", $suite_fail * 100 / $suite_total));
+            my $suite_fail_rate_elt = new XML::Twig::Elt('fail_rate', sprintf ("%.0f", $fail_rate_f));
             $suite_fail_rate_elt->paste( 'last_child', $suite_elt);
             my $suite_block_elt     = new XML::Twig::Elt('block_case', $suite_block);
             $suite_block_elt->paste( 'last_child', $suite_elt);
-            my $suite_block_rate_elt = new XML::Twig::Elt('block_rate', sprintf ("%.0f", $suite_block * 100 / $suite_total));
+            my $suite_block_rate_elt = new XML::Twig::Elt('block_rate', sprintf ("%.0f", $block_rate_f));
             $suite_block_rate_elt->paste( 'last_child', $suite_elt);
             my $suite_na_elt        = new XML::Twig::Elt('na_case', $suite_na);
             $suite_na_elt->paste( 'last_child', $suite_elt);
-            my $suite_na_rate_elt = new XML::Twig::Elt('na_rate', sprintf ("%.0f", $suite_na * 100 / $suite_total));
+            my $suite_na_rate_elt = new XML::Twig::Elt('na_rate', sprintf ("%.0f", $na_rate_f));
             $suite_na_rate_elt->paste( 'last_child', $suite_elt);
+
+            $suite_elt->paste( 'last_child', $summary_root);
+            #$summary_root->print;
 
             my $d_suite_elt= $this_suite;
             $d_suite_elt->cut; 
@@ -1009,7 +1029,9 @@ sub generateSummaryReport{
             $definition_elt->print($suit_detail_out);
             close($suit_detail_out);
         }
+        
         $summary_root->set_pretty_print( 'indented');
+
         open my $summary_out, '>:utf8', $summary_xml_name or die qq(Cannot create "$summary_xml_name": $!);
         print $summary_out '<?xml version="1.0" encoding="UTF-8"?>'."\n".'<?xml-stylesheet type="text/xsl" href="/reportstyle/summary.xsl"?>'."\n";
         $summary_root->print($summary_out);
