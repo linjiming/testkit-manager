@@ -1683,6 +1683,7 @@ tr.selectable:hover {
 	left: 36%;
 	overflow-y: auto;
 	overflow-x: auto;
+        height: 460px;
 	display: none;
 }
 
