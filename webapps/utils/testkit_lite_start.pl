@@ -822,7 +822,7 @@ my @targetFilter;
 
 sub initProfileInfo {
 	my $theEnd = "False";
-
+        my @thisTargetPackages_tmp = ();
 	# change to use our own profile, not the system supplied
 	if ( open( FILE, $profile_name ) ) {
 		while (<FILE>) {
@@ -895,6 +895,18 @@ sub initProfileInfo {
 	else {
 		inform "[Target Package]:Fail to read the profile:$profile_name";
 	}
+        foreach (@thisTargetPackages) {
+		my $temp = $_;
+		if (   ( $temp =~ /^webapi/ )
+			or ( $temp =~ /^tct/ )
+			or ( $temp =~ /^cts-webapi/ )
+			or ( $temp =~ /^tct-webapi/ )
+			or ( $temp =~ /^wrt/ ) )
+		{
+			push(@thisTargetPackages_tmp, $temp);
+		}
+	}
+	@thisTargetPackages = @thisTargetPackages_tmp;
 	inform "[Target Package]:@thisTargetPackages";
 	inform "[Target Filter]:@thisTargetFilter";
 }
