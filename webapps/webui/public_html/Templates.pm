@@ -1632,7 +1632,7 @@ sub syncDefinition_from_local_repo {
 			  . " | cpio -idmv &>/dev/null";
 			system($extract_command);
 		}
-		sleep 6;
+		sleep 3;
 
 		# sync xml definition files
 		my $cmd_definition = "ls /tmp/usr/share/*/tests.xml 2>&1";
