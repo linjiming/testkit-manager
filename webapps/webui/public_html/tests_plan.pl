@@ -259,6 +259,7 @@ print <<DATA;
   </tr>
 DATA
 foreach ( sort keys %name_number_version ) {
+	my $disable_flag = "";
 	my $packageName    = $_;
 	my @package_info   = split( "!:!", $name_number_version{$packageName} );
 	my $autoNumber     = $package_info[0];
@@ -275,7 +276,12 @@ foreach ( sort keys %name_number_version ) {
 	}
 	print <<DATA;
   <tr id="package_item_$packageName\_$hasAuto\_$hasManual">
-    <td width="4%" align="center" class="custom_line_height report_list_outside_left_no_height"><input type="checkbox" name="checkbox_$packageName\_$hasAuto\_$hasManual" id="checkbox_$packageName\_$hasAuto\_$hasManual" onclick="javascript:update_package_select();" /></td>
+DATA
+    if ( ($totalNumber == 0) || ($autoNumber == 0)){
+        $disable_flag = "disabled";
+    }
+print <<DATA;
+    <td width="4%" align="center" class="custom_line_height report_list_outside_left_no_height"><input type="checkbox" $disable_flag name="checkbox_$packageName\_$hasAuto\_$hasManual" id="checkbox_$packageName\_$hasAuto\_$hasManual" onclick="javascript:update_package_select();" /></td>
     <td width="56%" class="custom_line_height report_list_outside_left_no_height">&nbsp;$packageName</td>
     <td width="11%" class="custom_line_height report_list_outside_left_no_height">&nbsp;$autoNumber</td>
     <td width="8%" class="custom_line_height report_list_outside_left_no_height">&nbsp;$manualNumber</td>
@@ -441,14 +447,16 @@ function filter_package() {
 		if (temp_id.indexOf("package_item_") >= 0) {
 			var package_item = document.getElementById(temp_id);
 			package_item.style.display = "";
+            var r_checkbox = new RegExp("package_item_", "g");
+            var checkbox_id = temp_id.replace(r_checkbox, "checkbox_");
+            document.getElementById(checkbox_id).disabled=false;
+
 			if (execution_type.value == "Automated") {
 				var r_auto, re_auto;
 				re_auto = new RegExp("autonumber_0", "g");
 				r_auto = temp_id.match(re_auto);
 				if (r_auto) {
 					package_item.style.display = "none";
-					var r_checkbox = new RegExp("package_item_", "g");
-					var checkbox_id = temp_id.replace(r_checkbox, "checkbox_");
 					document.getElementById(checkbox_id).checked = false;
 				}
 			}
@@ -458,8 +466,6 @@ function filter_package() {
 				r_manual = temp_id.match(re_manual);
 				if (r_manual) {
 					package_item.style.display = "none";
-					var r_checkbox = new RegExp("package_item_", "g");
-					var checkbox_id = temp_id.replace(r_checkbox, "checkbox_");
 					document.getElementById(checkbox_id).checked = false;
 				}
 			}
