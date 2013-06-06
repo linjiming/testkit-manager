@@ -941,6 +941,22 @@ DATA
 DATA
 }
 
+sub loadDeviceCapability{
+    my ( $result_folder ) = @_;
+    my $device_capability_filename = $result_folder."/../../hardware_conf/default_hardware_capability.xml";
+
+    my $twig= new XML::Twig;
+    $twig->parsefile($device_capability_filename);
+    my $capability_xml = $twig->root;
+    my $capability_elt  = new XML::Twig::Elt('capabilities');
+    my @caps = $capability_xml->children('capability');
+    foreach my $cap (@caps){
+        $cap->cut;
+        $cap->paste( 'last_child', $capability_elt);
+    }
+    return $capability_elt;    
+}
+
 sub generateSummaryReport{
     my ( $result_xml, $result_folder ) = @_;
     my $summary_xml_name = $result_folder."/summary.xml";
@@ -958,6 +974,9 @@ sub generateSummaryReport{
         $test_environment->paste( 'last_child', $summary_root);
         $test_summary->paste( 'last_child', $summary_root);
         $summary_root->set_att(plan_name=>"$plan_name");
+
+        my $capability_xml = loadDeviceCapability($result_folder);
+        $capability_xml->paste( 'last_child', $summary_root);
 
         my $location_elt  = new XML::Twig::Elt('location', $result_folder);
         $location_elt->paste( 'last_child', $summary_root);
