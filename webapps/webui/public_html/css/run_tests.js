@@ -447,9 +447,12 @@ function ajaxProcessResult(responseXML) {
 	}
 	// check need hardware capability before run test plan
 	if (responseXML.getElementsByTagName('need_check_hardware').length > 0) {
-		if (responseXML.getElementsByTagName('need_check_hardware')[0].childNodes[0].nodeValue == 1) {
-                        open_the_hardwarecapabilityDiv();
-		} else {
+		if (responseXML.getElementsByTagName('need_check_hardware')[0].childNodes[0].nodeValue == 0) {
+			if(confirm("Missing capability configure file, are you sure to continue?")){
+				onPreConfig();
+			}
+		}
+		else{
 			onPreConfig();
 		}
 	}

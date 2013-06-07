@@ -81,21 +81,6 @@ if ( $_GET{'profile'} ) {
 		}
 		else {
 			if ( defined $_GET{'need_check_hardware'} ) {
-				my $test_plan_name      = $_GET{'profile'};
-				my $need_check_hardware = $_GET{'need_check_hardware'};
-				$global_profile_init =
-				  'var global_profile_name = "' . $test_plan_name . '";';
-				if ( defined $_GET{'content'} ) {
-					my $hardware_info = $_GET{'content'};
-					$js_init =
-"save_hardware_capability_info('$test_plan_name', '$hardware_info');\n";
-				}
-				else {
-					$js_init =
-"load_profile('$test_plan_name', '$need_check_hardware');\n";
-				}
-			}
-			else {
 				$js_init = "startTests('$_GET{'profile'}');\n";
 			}
 		}

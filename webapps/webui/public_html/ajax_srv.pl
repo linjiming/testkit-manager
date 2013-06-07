@@ -1476,9 +1476,25 @@ elsif ( $_GET{'action'} eq 'save_profile' ) {
 	}
 }
 
+elsif ( $_GET{'action'} eq "pull_devcie_capability_xml" ){
+	my $hardware_capability_config_path =
+		  "/opt/testkit/manager/hardware_conf/";
+	my $hardware_capability_config =
+		  "/opt/testkit/manager/hardware_conf/capability.xml";
+	my $device_capability_config =
+		  "/opt/usr/media/Documents/tct/capability.xml";
+	my $need_check_hardware = 0;
+	system("mkdir $hardware_capability_config_path");
+	system( sdb_cmd("pull $device_capability_config $hardware_capability_config_path") );
+	if ( -e $hardware_capability_config ) {
+		$need_check_hardware = 1;
+	}
+	$data .=
+	  "<need_check_hardware>$need_check_hardware</need_check_hardware>\n";
+}
 elsif ( $_GET{'action'} eq "check_need_hardware_capability" ) {
 	my $test_plan_name = $_GET{'test_plan_name'};
-	my @packages_need  = ();
+	my @packages_need  = ();  
 	if ( $test_plan_name eq "temp" ) {
 
 		# wait for saving the temp plan

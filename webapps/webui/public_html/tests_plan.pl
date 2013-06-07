@@ -365,7 +365,7 @@ function run_test_plan() {
 	} else {
 		current_run_test_plan = test_plan_name;
 	}
-	ajax_call_get('action=check_need_hardware_capability&test_plan_name='
+	ajax_call_get('action=pull_devcie_capability_xml&test_plan_name='
 			+ current_run_test_plan);
 }
 

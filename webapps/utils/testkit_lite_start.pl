@@ -39,7 +39,7 @@ if ( ( $device_id ne "Error" ) && ( $device_id ne "none" ) ) {
 
 # get --capability option
 my $hardware_capability_config =
-  "/opt/testkit/manager/hardware_conf/default_hardware_capability.xml";
+  "/opt/testkit/manager/hardware_conf/capability.xml";
 my $hardware_capability_option = "";
 if ( -e $hardware_capability_config ) {
 	$hardware_capability_option = " --capability $hardware_capability_config";
@@ -938,7 +938,7 @@ sub readProfile {
 		}
 	}
 	if ( $need_check_hardware == 0 ) {
-		$hardware_capability_option = "";
+		#$hardware_capability_option = "";
 	}
 
 	foreach (@thisTargetPackages) {
