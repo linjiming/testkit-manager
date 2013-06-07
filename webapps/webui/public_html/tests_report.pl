@@ -943,7 +943,7 @@ DATA
 
 sub loadDeviceCapability{
     my ( $result_folder ) = @_;
-    my $device_capability_filename = $result_folder."/../../hardware_conf/default_hardware_capability.xml";
+    my $device_capability_filename = $result_folder."/../../hardware_conf/capability.xml";
 
     my $twig= new XML::Twig;
     $twig->parsefile($device_capability_filename);
