@@ -467,7 +467,6 @@ function ajaxProcessResult(responseXML) {
 				.getElementById('load_test_plan_select');
 		var load_flag = 1;
                 var get_error = 0;
-
 		packages_isExist_flag_arr = packages_isExist_flag.split(" ");
 		packages_need_arr = packages_need.split("tests");
 
@@ -557,16 +556,13 @@ function ajaxProcessResult(responseXML) {
 			ajax_call_get('action=install_plan_package&packages_need='
 					+ message_not_load);
 		} else if (load_flag == 1) {
-			document.location = "tests_execute.pl?profile="
-					+ responseXML.getElementsByTagName('profile_name')[0].childNodes[0].nodeValue;
-			;
+			run_and_test();
 		} else {
 			var text = document.getElementById('loadProgressBarDiv').innerHTML;
 			if (text.indexOf("[FAIL]") > 0 || get_error == 1) {
 				document.getElementById('loadProgressBarDiv').innerHTML += '</br>&nbsp;&nbsp;&nbsp;&nbsp;Fail to install one or more package(s), please try manually.</br>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="javascript:refresh_plan_page()">Click here to go back to the plan page.</a>';
 			} else {
-				document.location = "tests_execute.pl?profile="
-						+ global_profile_name;
+                                run_and_test();
 			}
 		}
 	}

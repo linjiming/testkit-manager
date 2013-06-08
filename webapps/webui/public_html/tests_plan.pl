@@ -317,12 +317,16 @@ function old_save_plan_name()
 
 function save_and_run()
 {
+    document.getElementById('preConfigDiv').style.display="none"
+    ajax_call_get('action=check_package_isExist&test_plan_name='+ current_run_test_plan
+			 + '&need_check_hardware=true');
+}
+function run_and_test()
+{
    need_hardware_capability_option = true;
-		document.location = "tests_execute.pl?profile=" + current_run_test_plan
+    document.location = "tests_execute.pl?profile=" + current_run_test_plan
 				+ "&need_check_hardware=" + need_hardware_capability_option
 				+ "&content=" + str_hardware_info;
-
-
 }
 
 function change_all_status()
