@@ -1629,10 +1629,9 @@ sub syncDefinition_from_local_repo {
 			my $extract_command =
 			    "cd /tmp; rpm2cpio "
 			  . $package_name
-			  . " | cpio -idmv &>/dev/null";
+			  . " | cpio -idmv >/dev/null";
 			system($extract_command);
 		}
-		sleep 3;
 
 		# sync xml definition files
 		my $cmd_definition = "ls /tmp/usr/share/*/tests.xml 2>&1";
