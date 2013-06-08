@@ -945,14 +945,17 @@ sub loadDeviceCapability{
     my ( $result_folder ) = @_;
     my $device_capability_filename = $result_folder."/../../hardware_conf/capability.xml";
 
-    my $twig= new XML::Twig;
-    $twig->parsefile($device_capability_filename);
-    my $capability_xml = $twig->root;
-    my $capability_elt  = new XML::Twig::Elt('capabilities');
-    my @caps = $capability_xml->children('capability');
-    foreach my $cap (@caps){
-        $cap->cut;
-        $cap->paste( 'last_child', $capability_elt);
+    my $capability_elt  = undef;
+    if (-e $device_capability_filename) {
+        my $twig= new XML::Twig;
+        $twig->parsefile($device_capability_filename);
+        my $capability_xml = $twig->root;
+        $capability_elt  = new XML::Twig::Elt('capabilities');
+        my @caps = $capability_xml->children('capability');
+        foreach my $cap (@caps){
+            $cap->cut;
+            $cap->paste( 'last_child', $capability_elt);
+        }
     }
     return $capability_elt;    
 }
@@ -976,7 +979,9 @@ sub generateSummaryReport{
         $summary_root->set_att(plan_name=>"$plan_name");
 
         my $capability_xml = loadDeviceCapability($result_folder);
-        $capability_xml->paste( 'last_child', $summary_root);
+        if (defined $capability_xml){
+            $capability_xml->paste( 'last_child', $summary_root);
+        }
 
         my $location_elt  = new XML::Twig::Elt('location', $result_folder);
         $location_elt->paste( 'last_child', $summary_root);
