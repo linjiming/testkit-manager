@@ -1485,6 +1485,7 @@ elsif ( $_GET{'action'} eq "pull_devcie_capability_xml" ){
 		  "/opt/usr/media/Documents/tct/capability.xml";
 	my $need_check_hardware = 0;
 	system("mkdir $hardware_capability_config_path");
+	system("rm -rf $hardware_capability_config");
 	system( sdb_cmd("pull $device_capability_config $hardware_capability_config_path") );
 	if ( -e $hardware_capability_config ) {
 		$need_check_hardware = 1;
