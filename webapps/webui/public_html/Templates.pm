@@ -1467,6 +1467,7 @@ sub install_package {
 		  sdb_cmd( "shell 'rpm -qa | grep " . $package_name . "'" );
 		my $check_install = `$check_cmd`;
 		if ( $check_install =~ /$package_name/ ) {
+           system( sdb_cmd("shell 'rm -f /tmp/$package_rpm_name'"));
 			return "OK";
 		}
 		else {
