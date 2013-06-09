@@ -318,7 +318,6 @@
 		<xs:attribute name="resolution" type="xs:string"></xs:attribute>
 		<xs:attribute name="host" type="xs:string"></xs:attribute>
 		<xs:attribute name="cts_version" type="xs:string"></xs:attribute>
-		<xs:attribute name="cts_version" type="xs:string"></xs:attribute>
 		<xs:attribute name="build_id" type="xs:string"></xs:attribute>
 	</xs:complexType>
 
