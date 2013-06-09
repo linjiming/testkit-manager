@@ -1419,12 +1419,10 @@ sub install_package {
 				# remove installed package
 				remove_package($package_name);
 				sleep 2;
-                               
-       
- 
+
 				# download package
 				if ( $repo_type =~ /remote/ ) {
-					system("wget -c $repo_url$package_rpm_name -P /tmp -q -N");                                        
+					system("wget -c $repo_url$package_rpm_name -P /tmp -q -N");
 					system( sdb_cmd("push /tmp/$package_rpm_name /tmp") );
 				}
 				if ( $repo_type =~ /local/ ) {
@@ -1443,16 +1441,13 @@ sub install_package {
 				sleep 2;
 			}
 			else {
-                                
+
 				# download package
-             
 				if ( $repo_type =~ /remote/ ) {
-					system("wget -c $repo_url$package_rpm_name -P /tmp -q -N");                                     
-                  
+					system("wget -c $repo_url$package_rpm_name -P /tmp -q -N");
 					system( sdb_cmd("push /tmp/$package_rpm_name /tmp") );
 				}
 				if ( $repo_type =~ /local/ ) {
-                 
 					system( sdb_cmd("push $repo_url$package_rpm_name /tmp") );
 				}
 				sleep 2;
