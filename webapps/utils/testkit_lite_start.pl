@@ -1052,13 +1052,13 @@ sub syncLiteResult {
 			inform "[CMD]:\n"
 			  . "testkit-lite -f "
 			  . $profile_content
-			  . " --non-active --enable-memory-collection$device_option$hardware_capability_option\n";
+			  . " $device_option$hardware_capability_option\n";
 		}
 		else {
 			inform "[CMD]:\n"
 			  . "testkit-lite -f "
 			  . $profile_content
-			  . " --non-active --enable-memory-collection$device_option$hardware_capability_option\n";
+			  . " $device_option$hardware_capability_option\n";
 		}
 	}
 	if (   ( $profile_content =~ /usr\/share/ )
@@ -1086,7 +1086,7 @@ sub syncLiteResult {
 
 		# start testing
 		write_string_as_file( "$globals->{'temp_dir'}/lite-command",
-"testkit-lite -f $profile_content --non-active --enable-memory-collection$device_option$hardware_capability_option"
+"testkit-lite -f $profile_content $device_option$hardware_capability_option"
 		);
 		system("cp $globals->{'temp_dir'}/lite-command /tmp");
 		system("chmod 755 /tmp/lite-command");
