@@ -955,7 +955,7 @@ sub readProfile {
 				or ( $thisTargetPackage =~ /^wrt/ ) )
 			{
 				$isWebApi = "True";
-				$wrtPackages .= " " . $thisTargetPackage;
+				#$wrtPackages .= " " . $thisTargetPackage;
 			}
 			if ( $profile_name =~ /plans\/rerun_/ ) {
 				$targetPackages .= "/tmp/rerun/$thisTargetPackage/tests.xml ";
