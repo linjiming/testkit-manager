@@ -46,7 +46,7 @@ Step 4: connect device
 
 Configure Repository of Test Packages:
 ========
-Please put test packages to /home/package
+Please put test packages to /opt/tct/packages/ 
   If you have your own place to save the test packages, you also can configure the repository of test packages in configuration file '/opt/testkit/manager/CONF'
     repo_url=<repo address>
   <repo address> can be a remote server address or a local path on the host machine

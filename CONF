@@ -15,13 +15,13 @@ category_key = [Tizen Device API Specifications,Web UI Framework Reference,Tizen
 #repository URL, currently two kinds of repos are supported,
 #remote HTTP repo and local folder repo, and here are two examples:
 #repo_url = http://somewhere/
-#repo_url = /home/package/
+#repo_url = /opt/tct/packages/
 #please note that a remote repo should be started with "http://",
 #and a local repo should be started with "/", otherwise it can't be recognized
 #the following set of characters are supported in the repo URL:
 #a-z, A-Z, 0-9, '-', '_', ':', '/', '.', ' '
 
-repo_url = /home/package/
+repo_url = /opt/tct/packages/
 
 #sdb device serial number
 #if more than one sdb device is connected to the host,
