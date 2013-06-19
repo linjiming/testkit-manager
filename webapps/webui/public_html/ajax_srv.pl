@@ -1477,6 +1477,14 @@ elsif ( $_GET{'action'} eq 'save_profile' ) {
 }
 
 elsif ( $_GET{'action'} eq "pull_devcie_capability_xml" ){
+                  
+        my $healthcheck                 = healthCheck();
+	if ( $healthcheck != 0) {
+                $data.=
+                "<health_check_fail>1</health_check_fail>\n";            
+        }
+        else{
+
 	my $hardware_capability_config_path =
 		  "/opt/testkit/manager/hardware_conf/";
 	my $hardware_capability_config =
@@ -1492,6 +1500,7 @@ elsif ( $_GET{'action'} eq "pull_devcie_capability_xml" ){
 	}
 	$data .=
 	  "<need_check_hardware>$need_check_hardware</need_check_hardware>\n";
+        }
 }
 elsif ( $_GET{'action'} eq "check_need_hardware_capability" ) {
 	my $test_plan_name = $_GET{'test_plan_name'};
@@ -1923,6 +1932,14 @@ elsif ( $_GET{'action'} eq 'set_device' ) {
 }
 
 elsif ( $_GET{'action'} eq 'rerun_test_plan' ) {
+        
+        my $healthcheck                 = healthCheck();
+        write_string_as_file("/opt/health","$healthcheck");
+	if ( $healthcheck != 0) {
+                $data.=
+                "<health_check_fail>1</health_check_fail>\n";            
+        }
+        else{
 	my $time         = $_GET{'time'};
 	my $plan_name    = "rerun_" . $time;
 	my $plan_content = "";
@@ -2041,6 +2058,7 @@ elsif ( $_GET{'action'} eq 'rerun_test_plan' ) {
 		$data .=
 		  "<rerun_test_plan_error>$error_message</rerun_test_plan_error>\n";
 	}
+ }
 }
 
 elsif ( $_GET{'action'} eq 'read_result_xml' ) {

@@ -41,7 +41,7 @@ $Common::debug_inform_sub = sub { };
 	  $cert_sys_host $cert_sys_base
 	  &print_header &print_footer
 	  &autoflush_on &escape &unescape &show_error_dlg &show_not_implemented &show_message_dlg &get_category_key &check_existing_test_plan &read_hardware_capability_config
-	  &updatePackageList &updateCaseInfo &printShortCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &remove_package &syncDefinition &syncDefinition_from_local_repo &compare_version &check_network &get_repo &xml2xsl &xml2xsl_case &check_testkit_sdb
+	  &healthCheck &updatePackageList &updateCaseInfo &printShortCaseInfo &printDetailedCaseInfo &updateManualCaseResult &printManualCaseInfo &printDetailedCaseInfoWithComment &callSystem &install_package &remove_package &syncDefinition &syncDefinition_from_local_repo &compare_version &check_network &get_repo &xml2xsl &xml2xsl_case &check_testkit_sdb
 	  ),
 	@Common::EXPORT,
 	@Manifest::EXPORT
@@ -339,6 +339,14 @@ my $result_xsl_dir =
   "/opt/testkit/manager/webapps/webui/public_html/css/xsd/testresult.xsl";
 my $case_xsl_dir =
   "/opt/testkit/manager/webapps/webui/public_html/css/xsd/testcase.xsl";
+
+
+sub healthCheck{
+     my $systemCommand = "/opt/tct/scripts/tct-config-device --check" ;
+ 
+     print LOG "$0: Executing [$systemCommand] \n";
+     my $returnCode = system( $systemCommand );
+}
 
 sub updatePackageList {
 	my @package_list = ();

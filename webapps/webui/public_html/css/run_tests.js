@@ -421,17 +421,17 @@ function ajaxProcessResult(responseXML) {
 		if (if_it_is_new == "yes") {
 			var select_test_plan = document.getElementById("test_profile");
 			select_test_plan.add(new Option(test_plan_name, test_plan_name));
-                         
-		}
-         var option_handle = document.getElementsByTagName('option');
-         var str = "";   
-         for(var i=0;i<option_handle.length;i++){        
-               	if(option_handle[i].value == test_plan_name) {
-                     	 option_handle[i].selected=true;
-                     }
-         }
 
-         load_test_plan();
+		}
+		var option_handle = document.getElementsByTagName('option');
+		var str = "";
+		for ( var i = 0; i < option_handle.length; i++) {
+			if (option_handle[i].value == test_plan_name) {
+				option_handle[i].selected = true;
+			}
+		}
+
+		load_test_plan();
 
 	}
 	// load test plan by select test plan name
@@ -448,13 +448,15 @@ function ajaxProcessResult(responseXML) {
 	// check need hardware capability before run test plan
 	if (responseXML.getElementsByTagName('need_check_hardware').length > 0) {
 		if (responseXML.getElementsByTagName('need_check_hardware')[0].childNodes[0].nodeValue == 0) {
-			if(confirm("Missing capability configure file, are you sure to continue?")){
+			if (confirm("Missing capability configure file, are you sure to continue?")) {
 				onPreConfig();
 			}
-		}
-		else{
+		} else {
 			onPreConfig();
 		}
+	}
+	if (responseXML.getElementsByTagName('health_check_fail').length > 0) {
+		alert(" Fail to deploy the necessary module/component on devices! ");
 	}
 	if (responseXML.getElementsByTagName('load_profile').length > 0) {
 		var packages_isExist_flag_arr = new Array();
@@ -466,7 +468,7 @@ function ajaxProcessResult(responseXML) {
 		var load_test_plan_select = document
 				.getElementById('load_test_plan_select');
 		var load_flag = 1;
-                var get_error = 0;
+		var get_error = 0;
 		packages_isExist_flag_arr = packages_isExist_flag.split(" ");
 		packages_need_arr = packages_need.split("tests");
 
@@ -487,21 +489,18 @@ function ajaxProcessResult(responseXML) {
 			}
 		}
 
-                if (responseXML.getElementsByTagName('return_value').length > 0) {
-				var return_value_add = responseXML
-						.getElementsByTagName('return_value')[0].childNodes[0].nodeValue;
-                                     if(return_value_add=="[FAIL]")   
-                                               {
-                                                      load_flag = 2;
-                                                    get_error = 1;
-                                                      loaddiv_string = "<span class='report_list_no_border'>&nbsp;&nbsp;"
+		if (responseXML.getElementsByTagName('return_value').length > 0) {
+			var return_value_add = responseXML
+					.getElementsByTagName('return_value')[0].childNodes[0].nodeValue;
+			if (return_value_add == "[FAIL]") {
+				load_flag = 2;
+				get_error = 1;
+				loaddiv_string = "<span class='report_list_no_border'>&nbsp;&nbsp;"
 						+ return_value_add + "</span></br>";
-							document.getElementById('loadProgressBarDiv').innerHTML += loaddiv_string;
-                                                            }          
-     
-                                          }
+				document.getElementById('loadProgressBarDiv').innerHTML += loaddiv_string;
+			}
 
-
+		}
 
 		if (load_flag == 0) {
 			var loaddiv_string = "";
@@ -562,7 +561,7 @@ function ajaxProcessResult(responseXML) {
 			if (text.indexOf("[FAIL]") > 0 || get_error == 1) {
 				document.getElementById('loadProgressBarDiv').innerHTML += '</br>&nbsp;&nbsp;&nbsp;&nbsp;Fail to install one or more package(s), please try manually.</br>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="javascript:refresh_plan_page()">Click here to go back to the plan page.</a>';
 			} else {
-                                run_and_test();
+				run_and_test();
 			}
 		}
 	}
@@ -649,16 +648,13 @@ function ajaxProcessResult(responseXML) {
 		tid = responseXML.getElementsByTagName('check_profile_name')[0].childNodes[0].nodeValue;
 		var select_execution_type = document
 				.getElementById("select_execution_type").value;
-                    
-                if  (select_execution_type == "Automated")
-                   	{
-                       		select_execution_type = "auto";
-                         	}
-                else if(select_execution_type == "Manual")
-               		{
-				select_execution_type = "manual";
-                                }
-                
+
+		if (select_execution_type == "Automated") {
+			select_execution_type = "auto";
+		} else if (select_execution_type == "Manual") {
+			select_execution_type = "manual";
+		}
+
 		var page = document.getElementsByTagName("*");
 		var package_number = 0;
 		var package_selected = new Array();
@@ -666,8 +662,12 @@ function ajaxProcessResult(responseXML) {
 			var temp_id = page[i].id;
 			if ((temp_id.indexOf("checkbox_") >= 0)
 					&& !((temp_id.indexOf("checkbox_all") >= 0))) {
-				if (document.getElementById(temp_id).checked) {
-					package_selected[package_number] = temp_id;
+				if ((document.getElementById(temp_id).checked)) {
+					if ((temp_id.indexOf("autonumber_0") >= 0 && select_execution_type == "auto")
+							|| (temp_id.indexOf("manualnumber_0") >= 0 && select_execution_type == "manual")) {
+					} else {
+						package_selected[package_number] = temp_id;
+					}
 					++package_number;
 				}
 			}
@@ -1603,17 +1603,17 @@ function onExecute() {
 		var temp = checkbox_package_name.name;
 		if (checkbox_package_name.checked) {
 			if (webapi_flag == "0") {
-				if ((temp.indexOf('tct') > 0) ||(temp.indexOf('webapi') > 0)) {
+				if ((temp.indexOf('tct') > 0) || (temp.indexOf('webapi') > 0)) {
 					webapi_flag = "1";
 				} else {
 					webapi_flag = "2";
 				}
 			} else if (webapi_flag == "1") {
-				if ((temp.indexOf('tct') < 0) ||(temp.indexOf('webapi') < 0)) {
+				if ((temp.indexOf('tct') < 0) || (temp.indexOf('webapi') < 0)) {
 					webapi_flag = "yes";
 				}
 			} else if (webapi_flag == "2") {
-				if ((temp.indexOf('tct') > 0) ||(temp.indexOf('webapi') > 0)){
+				if ((temp.indexOf('tct') > 0) || (temp.indexOf('webapi') > 0)) {
 					webapi_flag = "yes";
 				}
 			}
@@ -1631,44 +1631,42 @@ function onExecute() {
 	}
 }
 
-function check_new_plan_name(new_name)
-{
-                var reg = /^[a-zA-Z]{1}\w{0,19}$/;
-		var str = new_name;
-		var result = reg.exec(str);
-		if (!result) {
-			alert('Test plan name should start with a letter and follow by letters, numbers or "_", and maximum length is 20 characters');
-			return false;
-		}
-		reg = /^pre_template/;
-		result = reg.exec(str);
-		if (result) {
-			alert("'pre_template' is a reserved test plan name, please change another one");
-			return false;
-		}
-		reg = /^rerun/;
-		result = reg.exec(str);
-		if (result) {
-			alert("'rerun' is a reserved test plan name, please change another one");
-			return false;
-		}
-		reg = /^temp/;
-		result = reg.exec(str);
-		if (result) {
-			alert("'temp' is a reserved test plan name, please change another one");
-			return false;
-		}
+function check_new_plan_name(new_name) {
+	var reg = /^[a-zA-Z]{1}\w{0,19}$/;
+	var str = new_name;
+	var result = reg.exec(str);
+	if (!result) {
+		alert('Test plan name should start with a letter and follow by letters, numbers or "_", and maximum length is 20 characters');
+		return false;
+	}
+	reg = /^pre_template/;
+	result = reg.exec(str);
+	if (result) {
+		alert("'pre_template' is a reserved test plan name, please change another one");
+		return false;
+	}
+	reg = /^rerun/;
+	result = reg.exec(str);
+	if (result) {
+		alert("'rerun' is a reserved test plan name, please change another one");
+		return false;
+	}
+	reg = /^temp/;
+	result = reg.exec(str);
+	if (result) {
+		alert("'temp' is a reserved test plan name, please change another one");
+		return false;
+	}
 
-                return true;
+	return true;
 
 }
-
 
 function save_profile(type) {
 	var save_test_plan;
 	if (type == 'text') {
 		save_test_plan = document.getElementById("save_test_plan_text");
-                
+
 		var reg = /^[a-zA-Z]{1}\w{0,19}$/;
 		var str = save_test_plan.value;
 		var result = reg.exec(str);
