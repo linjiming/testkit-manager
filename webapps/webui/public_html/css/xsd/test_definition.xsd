@@ -24,9 +24,11 @@
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element name="capabilities" type="CapabilitiesType"
-					minOccurs="0" maxOccurs="1"></xs:element>
+					minOccurs="0" maxOccurs="1">
+				</xs:element>
 				<xs:sequence minOccurs="1" maxOccurs="unbounded">
-					<xs:element ref="testcase" minOccurs="0" maxOccurs="unbounded">
+					<xs:element ref="testcase" minOccurs="0"
+						maxOccurs="unbounded">
 					</xs:element>
 				</xs:sequence>
 			</xs:sequence>
@@ -34,6 +36,7 @@
 
 
 			<xs:attributeGroup ref="set_attribute_group"></xs:attributeGroup>
+			<xs:attribute name="launcher" type="xs:string"></xs:attribute>
 		</xs:complexType>
 		<xs:unique name="uniqueCaseName">
 			<xs:selector xpath=".//testcase" />
@@ -301,6 +304,10 @@
 				</xs:element>
 			</xs:sequence>
 		</xs:complexType>
+		<xs:unique name="uniqueSuiteName">
+			<xs:selector xpath=".//suite" />
+			<xs:field xpath="@name" />
+		</xs:unique>
 	</xs:element>
 
 
