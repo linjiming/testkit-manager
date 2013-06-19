@@ -309,7 +309,6 @@ function old_save_plan_name()
     }
     else
        {
-
 	       save_profile('text');
 	       return;
        }
@@ -364,7 +363,7 @@ function run_test_plan() {
 			ajax_call_get('action=check_profile_isExist&profile_name=temp&option=save');
 		} else {
                         old_save_plan_name();
-			return;
+			                                  return;
 		}
 	} else {
 		current_run_test_plan = test_plan_name;
@@ -451,9 +450,9 @@ function filter_package() {
 				r_auto = temp_id.match(re_auto);
 				if (r_auto) {
 					package_item.style.display = "none";
-					var r_checkbox = new RegExp("package_item_", "g");
-					var checkbox_id = temp_id.replace(r_checkbox, "checkbox_");
-					document.getElementById(checkbox_id).checked = false;
+					//var r_checkbox = new RegExp("package_item_", "g");
+					//var checkbox_id = temp_id.replace(r_checkbox, "checkbox_");
+					//document.getElementById(checkbox_id).checked = false;
 				}
 			}
 			if (execution_type.value == "Manual") {
@@ -462,14 +461,15 @@ function filter_package() {
 				r_manual = temp_id.match(re_manual);
 				if (r_manual) {
 					package_item.style.display = "none";
-					var r_checkbox = new RegExp("package_item_", "g");
-					var checkbox_id = temp_id.replace(r_checkbox, "checkbox_");
-					document.getElementById(checkbox_id).checked = false;
+					//var r_checkbox = new RegExp("package_item_", "g");
+					//var checkbox_id = temp_id.replace(r_checkbox, "checkbox_");
+					//document.getElementById(checkbox_id).checked = false;
 				}
 			}
 		}
 	}
 	// update global variables
+        update_page_status();
 	change_after_load = true;
 }
 
@@ -497,13 +497,22 @@ function load_pre_test_plan() {
 
 function count_checked_checkbox_number() {
 	var num = 0;
+        var style =document.getElementById('select_execution_type').value;
 	var page = document.getElementsByTagName("*");
 	for ( var i = 0; i < page.length; i++) {
 		var temp_id = page[i].id;
 		if ((temp_id.indexOf("checkbox_") >= 0)
 				&& !((temp_id.indexOf("checkbox_all") >= 0))
 				&& (document.getElementById(temp_id).checked)) {
-			++num;
+
+			if(style == "Automated" && temp_id.indexOf("autonumber_0") >=0  )
+                  	 {}
+               		  else if( style == "Manual" && temp_id.indexOf("manualnumber_0") >=0)
+                 	    {}
+               		  else{
+				++num;
+                   		   } 
+
 		}
 	}
 	return num;
@@ -511,12 +520,22 @@ function count_checked_checkbox_number() {
 
 function count_checkbox_number() {
 	var num = 0;
+ 	var style =document.getElementById('select_execution_type').value;
 	var page = document.getElementsByTagName("*");
 	for ( var i = 0; i < page.length; i++) {
 		var temp_id = page[i].id;
 		if ((temp_id.indexOf("checkbox_") >= 0)
 				&& !((temp_id.indexOf("checkbox_all") >= 0))) {
-			++num;
+
+
+			if(style == "Automated" && temp_id.indexOf("autonumber_0") >=0  )
+                  	 {}
+               		  else if( style == "Manual" && temp_id.indexOf("manualnumber_0") >=0)
+                 	    {}
+               		  else{
+				++num;
+                   		   } 
+                                      
 		}
 	}
 	return num;

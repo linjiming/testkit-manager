@@ -2136,3 +2136,4 @@ function check_hardware_checklist(hardware_id, checkbox_id) {
 		}
 	}
 }
+
