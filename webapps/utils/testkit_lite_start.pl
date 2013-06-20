@@ -911,6 +911,20 @@ sub initProfileInfo {
 	inform "[Target Filter]:@thisTargetFilter";
 }
 
+sub uninstall_Commands{
+    &initProfileInfo();
+    my $uninstall_cmd = "";
+    foreach (@thisTargetPackages){
+        my $this_pkg = $_;
+        my $echo_cmd = "echo Uninstalling the package $this_pkg;\n";
+        my $cmd = sdb_cmd("shell rpm -e --nodeps $this_pkg;\n");
+        
+        $uninstall_cmd = $uninstall_cmd."$echo_cmd$cmd";
+    }
+
+    return $uninstall_cmd;
+}
+
 sub readProfile {
 	my $targetPackages      = "";
 	my $wrtPackages         = "-e \"WRTLauncher";
@@ -1085,8 +1099,9 @@ sub syncLiteResult {
 		}
 
 		# start testing
+                my $uninstall_cmd = &uninstall_Commands();
 		write_string_as_file( "$globals->{'temp_dir'}/lite-command",
-"testkit-lite -f $profile_content $device_option$hardware_capability_option"
+"testkit-lite -f $profile_content $device_option$hardware_capability_option \n$uninstall_cmd"
 		);
 		system("cp $globals->{'temp_dir'}/lite-command /tmp");
 		system("chmod 755 /tmp/lite-command");
