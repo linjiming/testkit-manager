@@ -19,4 +19,4 @@
 #              Wendong,Sui  <weidongx.sun@intel.com>
 
 testkitplansdir = /opt/testkit/manager/plans
-#dist_testkitplans_DATA = Full_*
+dist_testkitplans_DATA = empty_plan
