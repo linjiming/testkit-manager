@@ -342,10 +342,9 @@ my $case_xsl_dir =
 
 
 sub healthCheck{
-     my $systemCommand = "/opt/tct/scripts/tct-config-device --check" ;
- 
-     print LOG "$0: Executing [$systemCommand] \n";
-     my $returnCode = system( $systemCommand );
+        
+ 	my $output   =  qx(/opt/tct/scripts/tct-config-device.sh --check);
+    my $exitcode =  $?>>8;    
 }
 
 sub updatePackageList {
