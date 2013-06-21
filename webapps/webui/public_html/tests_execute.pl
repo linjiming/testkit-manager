@@ -140,7 +140,45 @@ if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 				$selected_profile = $profile_name;
 				$profiles_list .=
 "    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
-                          open FILE, $SERVER_PARAM{'APP_DATA'} . '/plans/' . $profile_name
+			}
+			else {
+
+				# when a test plan is running, then display rerun plan
+				my $status = read_status();
+				if ( $status->{'IS_RUNNING'} ) {
+					if ( ( $have_selected eq "FALSE" ) and !$_GET{'profile'} ) {
+						$profiles_list .=
+"    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
+						$selected_profile = $profile_name;
+						$have_selected    = "TRUE";
+					}
+					else {
+						$profiles_list .=
+"    <option value=\"$profile_name\">$profile_name</option>\n";
+					}
+				}
+
+				# when no test plan is running, then don't display rerun plan
+				else {
+					if ( $profile_name !~ /^rerun_/ ) {
+						if ( ( $have_selected eq "FALSE" )
+							and !$_GET{'profile'} )
+						{
+							$profiles_list .=
+"    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
+
+							# hide all plans when normal in
+							#$selected_profile = $profile_name;
+							$have_selected = "TRUE";
+						}
+						else {
+							$profiles_list .=
+"    <option value=\"$profile_name\">$profile_name</option>\n";
+						}
+					}
+				}
+			}
+			open FILE, $SERVER_PARAM{'APP_DATA'} . '/plans/' . $profile_name
 			  or die "can't open " . $profile_name;
 			my $theEnd = "False";
 			my $package_name;
@@ -195,46 +233,6 @@ if ( opendir( DIR, $SERVER_PARAM{'APP_DATA'} . '/plans' ) ) {
 					}
 				}
 			}
-
-}
-			else {
-
-				# when a test plan is running, then display rerun plan
-				my $status = read_status();
-				if ( $status->{'IS_RUNNING'} ) {
-					if ( ( $have_selected eq "FALSE" ) and !$_GET{'profile'} ) {
-						$profiles_list .=
-"    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
-						$selected_profile = $profile_name;
-						$have_selected    = "TRUE";
-					}
-					else {
-						$profiles_list .=
-"    <option value=\"$profile_name\">$profile_name</option>\n";
-					}
-				}
-
-				# when no test plan is running, then don't display rerun plan
-				else {
-					if ( $profile_name !~ /^rerun_/ ) {
-						if ( ( $have_selected eq "FALSE" )
-							and !$_GET{'profile'} )
-						{
-							$profiles_list .=
-"    <option value=\"$profile_name\" selected=\"selected\">$profile_name</option>\n";
-
-							# hide all plans when normal in
-							#$selected_profile = $profile_name;
-							$have_selected = "TRUE";
-						}
-						else {
-							$profiles_list .=
-"    <option value=\"$profile_name\">$profile_name</option>\n";
-						}
-					}
-				}
-			}
-			
 		}
 	}
 	my $app_data = $SERVER_PARAM{'APP_DATA'};
