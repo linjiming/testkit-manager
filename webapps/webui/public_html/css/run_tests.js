@@ -226,6 +226,16 @@ function updateCmdLog(txt) {
 	}
 }
 
+function clean_all_packages(){
+    var page = document.getElementsByTagName("input");
+    for ( var k = 0; k < page.length; k++) {
+        var temp_id = page[k].id;
+        if (temp_id.indexOf("checkbox_") >= 0) {
+            document.getElementById(temp_id).checked = false;
+        }
+    }
+}
+
 function ajaxProcessResult(responseXML) {
 
 	var tid;
@@ -439,8 +449,12 @@ function ajaxProcessResult(responseXML) {
 		var test_plan_info = responseXML
 				.getElementsByTagName('analyse_test_plan_result')[0].childNodes[0].nodeValue;
 		if (test_plan_info.indexOf("!::!") >= 0) {
-			update_page_by_load(test_plan_info);
-		} else {
+                    update_page_by_load(test_plan_info);
+		} 
+                else if (test_plan_info == "None"){
+                    clean_all_packages();
+                }
+                else {
 			document.getElementById('msg_area_error').style.display = "";
 			document.getElementById('msg_text_error').innerHTML = test_plan_info;
 		}

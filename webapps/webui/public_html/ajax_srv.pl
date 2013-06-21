@@ -1611,8 +1611,17 @@ elsif ( $_GET{'action'} eq "analyse_test_plan" ) {
 				}
 			}
 		}
-		my $test_plan_info = join( "!:!", @package_list );
-		$test_plan_info = "$execution_type!::!" . $test_plan_info;
+		
+		my $test_plan_info = "";
+                if (@package_list){
+                    $test_plan_info = join( "!:!", @package_list );
+                }
+                
+                if (length $test_plan_info > 0){
+	            $test_plan_info = "$execution_type!::!" . $test_plan_info;
+                }else{
+                    $test_plan_info = "None";
+                }
 		$data .=
 "<analyse_test_plan_result>$test_plan_info</analyse_test_plan_result>\n";
 	}
