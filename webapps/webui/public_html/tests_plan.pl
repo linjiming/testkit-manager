@@ -295,65 +295,57 @@ print <<DATA;
 var need_hardware_capability_option = false;
 var change_after_load = false;
 var current_run_test_plan = "temp";
-var str_hardware_info="";
+var str_hardware_info = "";
 
-function old_save_plan_name()
-{  
-  
-    var new_name = prompt("Please input the new plan name");
-    document.getElementById('save_test_plan_text').value = new_name;
-   
-    if( new_name == null || !check_new_plan_name(new_name) )
-    {  
-	       return ;
-    }
-    else
-       {
-	       save_profile('text');
-	       return;
-       }
+function old_save_plan_name() {
+
+	var new_name = prompt("Please input the new plan name");
+	document.getElementById('save_test_plan_text').value = new_name;
+
+	if (new_name == null || !check_new_plan_name(new_name)) {
+		return;
+	} else {
+		save_profile('text');
+		return;
+	}
 }
 
-function save_and_run()
-{
-    document.getElementById('preConfigDiv').style.display="none"
-    ajax_call_get('action=check_package_isExist&test_plan_name='+ current_run_test_plan
-			 + '&need_check_hardware=true');
+function save_and_run() {
+	document.getElementById('preConfigDiv').style.display = "none"
+	ajax_call_get('action=check_package_isExist&test_plan_name='
+			+ current_run_test_plan + '&need_check_hardware=true');
 }
-function run_and_test()
-{
-   need_hardware_capability_option = true;
-    document.location = "tests_execute.pl?profile=" + current_run_test_plan
-				+ "&need_check_hardware=" + need_hardware_capability_option
-				+ "&content=" + str_hardware_info;
+function run_and_test() {
+	need_hardware_capability_option = true;
+	document.location = "tests_execute.pl?profile=" + current_run_test_plan
+			+ "&need_check_hardware=" + need_hardware_capability_option
+			+ "&content=" + str_hardware_info;
 }
 
-function change_all_status()
-{
-    var elem=document.getElementById('hardwareCapabilityDiv');
-    var arr = elem.getElementsByTagName("*");
-    var all_value = document.getElementById('change_all').checked;
-    
-    for(var i=0;i<arr.length;i++)
-    {
-         if(arr[i].type=="checkbox" && arr[i].id != "change_all" && arr[i].checked != all_value){
-                      arr[i].click();
-          }
-    
-    }
+function change_all_status() {
+	var elem = document.getElementById('hardwareCapabilityDiv');
+	var arr = elem.getElementsByTagName("*");
+	var all_value = document.getElementById('change_all').checked;
+
+	for ( var i = 0; i < arr.length; i++) {
+		if (arr[i].type == "checkbox" && arr[i].id != "change_all"
+				&& arr[i].checked != all_value) {
+			arr[i].click();
+		}
+
+	}
 }
 
-function open_the_hardwarecapabilityDiv()
-{
- document.getElementById('hardwareCapabilityDiv').style.display = 'block';
- document.getElementById('popIframe').style.display = 'block';
+function open_the_hardwarecapabilityDiv() {
+	document.getElementById('hardwareCapabilityDiv').style.display = 'block';
+	document.getElementById('popIframe').style.display = 'block';
 
- document.getElementById('usbHost_checkbox').click();
- document.getElementById('usbHost_checkbox').disabled="true";
- document.getElementById('inputKeyboard_checkbox').click();
- document.getElementById('inputKeyboard_checkbox').disabled="true";
- document.getElementById('usbAccessory_checkbox').click();
- document.getElementById('usbAccessory_checkbox').disabled="true";
+	document.getElementById('usbHost_checkbox').click();
+	document.getElementById('usbHost_checkbox').disabled = "true";
+	document.getElementById('inputKeyboard_checkbox').click();
+	document.getElementById('inputKeyboard_checkbox').disabled = "true";
+	document.getElementById('usbAccessory_checkbox').click();
+	document.getElementById('usbAccessory_checkbox').disabled = "true";
 }
 function run_test_plan() {
 	var test_plan_name = document.getElementById('test_profile').value;
@@ -362,8 +354,8 @@ function run_test_plan() {
 			current_run_test_plan = "temp";
 			ajax_call_get('action=check_profile_isExist&profile_name=temp&option=save');
 		} else {
-                        old_save_plan_name();
-			                                  return;
+			old_save_plan_name();
+			return;
 		}
 	} else {
 		current_run_test_plan = test_plan_name;
@@ -391,7 +383,7 @@ function load_test_plan() {
 			}
 		}
 		var select_execution_type = document
-			.getElementById('select_execution_type');
+				.getElementById('select_execution_type');
 		select_execution_type.options[0].selected = true;
 		update_page_status();
 	}
@@ -437,7 +429,7 @@ function update_page_by_load(test_plan_info) {
 // define how execution type select work
 function filter_package() {
 	var execution_type = document.getElementById('select_execution_type');
-      
+
 	var page = document.getElementsByTagName("*");
 	for ( var i = 0; i < page.length; i++) {
 		var temp_id = page[i].id;
@@ -450,9 +442,10 @@ function filter_package() {
 				r_auto = temp_id.match(re_auto);
 				if (r_auto) {
 					package_item.style.display = "none";
-					//var r_checkbox = new RegExp("package_item_", "g");
-					//var checkbox_id = temp_id.replace(r_checkbox, "checkbox_");
-					//document.getElementById(checkbox_id).checked = false;
+					// var r_checkbox = new RegExp("package_item_", "g");
+					// var checkbox_id = temp_id.replace(r_checkbox,
+					// "checkbox_");
+					// document.getElementById(checkbox_id).checked = false;
 				}
 			}
 			if (execution_type.value == "Manual") {
@@ -461,15 +454,16 @@ function filter_package() {
 				r_manual = temp_id.match(re_manual);
 				if (r_manual) {
 					package_item.style.display = "none";
-					//var r_checkbox = new RegExp("package_item_", "g");
-					//var checkbox_id = temp_id.replace(r_checkbox, "checkbox_");
-					//document.getElementById(checkbox_id).checked = false;
+					// var r_checkbox = new RegExp("package_item_", "g");
+					// var checkbox_id = temp_id.replace(r_checkbox,
+					// "checkbox_");
+					// document.getElementById(checkbox_id).checked = false;
 				}
 			}
 		}
 	}
 	// update global variables
-        update_page_status();
+	update_page_status();
 	change_after_load = true;
 }
 
@@ -497,7 +491,7 @@ function load_pre_test_plan() {
 
 function count_checked_checkbox_number() {
 	var num = 0;
-        var style =document.getElementById('select_execution_type').value;
+	var style = document.getElementById('select_execution_type').value;
 	var page = document.getElementsByTagName("*");
 	for ( var i = 0; i < page.length; i++) {
 		var temp_id = page[i].id;
@@ -505,13 +499,12 @@ function count_checked_checkbox_number() {
 				&& !((temp_id.indexOf("checkbox_all") >= 0))
 				&& (document.getElementById(temp_id).checked)) {
 
-			if(style == "Automated" && temp_id.indexOf("autonumber_0") >=0  )
-                  	 {}
-               		  else if( style == "Manual" && temp_id.indexOf("manualnumber_0") >=0)
-                 	    {}
-               		  else{
+			if (style == "Automated" && temp_id.indexOf("autonumber_0") >= 0) {
+			} else if (style == "Manual"
+					&& temp_id.indexOf("manualnumber_0") >= 0) {
+			} else {
 				++num;
-                   		   } 
+			}
 
 		}
 	}
@@ -520,22 +513,19 @@ function count_checked_checkbox_number() {
 
 function count_checkbox_number() {
 	var num = 0;
- 	var style =document.getElementById('select_execution_type').value;
+	var style = document.getElementById('select_execution_type').value;
 	var page = document.getElementsByTagName("*");
 	for ( var i = 0; i < page.length; i++) {
 		var temp_id = page[i].id;
 		if ((temp_id.indexOf("checkbox_") >= 0)
 				&& !((temp_id.indexOf("checkbox_all") >= 0))) {
 
-
-			if(style == "Automated" && temp_id.indexOf("autonumber_0") >=0  )
-                  	 {}
-               		  else if( style == "Manual" && temp_id.indexOf("manualnumber_0") >=0)
-                 	    {}
-               		  else{
+			if (style == "Automated" && temp_id.indexOf("autonumber_0") >= 0) {
+			} else if (style == "Manual"
+					&& temp_id.indexOf("manualnumber_0") >= 0) {
+			} else {
 				++num;
-                   		   } 
-                                      
+			}
 		}
 	}
 	return num;

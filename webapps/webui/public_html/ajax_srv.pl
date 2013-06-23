@@ -1476,35 +1476,38 @@ elsif ( $_GET{'action'} eq 'save_profile' ) {
 	}
 }
 
-elsif ( $_GET{'action'} eq "pull_devcie_capability_xml" ){
-                  
-        my $healthcheck                 = healthCheck();
-	if ( $healthcheck != 0) {
-                $data.=
-                "<health_check_fail>1</health_check_fail>\n";            
-        }
-        else{
+elsif ( $_GET{'action'} eq "pull_devcie_capability_xml" ) {
 
-	my $hardware_capability_config_path =
-		  "/opt/testkit/manager/hardware_conf/";
-	my $hardware_capability_config =
-		  "/opt/testkit/manager/hardware_conf/capability.xml";
-	my $device_capability_config =
-		  "/opt/usr/media/Documents/tct/capability.xml";
-	my $need_check_hardware = 0;
-	system("mkdir $hardware_capability_config_path");
-	system("rm -rf $hardware_capability_config");
-	system( sdb_cmd("pull $device_capability_config $hardware_capability_config_path") );
-	if ( -e $hardware_capability_config ) {
-		$need_check_hardware = 1;
+	my $healthcheck = healthCheck();
+	if ( $healthcheck != 0 ) {
+		$data .= "<health_check_fail>1</health_check_fail>\n";
 	}
-	$data .=
-	  "<need_check_hardware>$need_check_hardware</need_check_hardware>\n";
-        }
+	else {
+
+		my $hardware_capability_config_path =
+		  "/opt/testkit/manager/hardware_conf/";
+		my $hardware_capability_config =
+		  "/opt/testkit/manager/hardware_conf/capability.xml";
+		my $device_capability_config =
+		  "/opt/usr/media/Documents/tct/capability.xml";
+		my $need_check_hardware = 0;
+		system("mkdir $hardware_capability_config_path");
+		system("rm -rf $hardware_capability_config");
+		system(
+			sdb_cmd(
+"pull $device_capability_config $hardware_capability_config_path"
+			)
+		);
+		if ( -e $hardware_capability_config ) {
+			$need_check_hardware = 1;
+		}
+		$data .=
+		  "<need_check_hardware>$need_check_hardware</need_check_hardware>\n";
+	}
 }
 elsif ( $_GET{'action'} eq "check_need_hardware_capability" ) {
 	my $test_plan_name = $_GET{'test_plan_name'};
-	my @packages_need  = ();  
+	my @packages_need  = ();
 	if ( $test_plan_name eq "temp" ) {
 
 		# wait for saving the temp plan
@@ -1611,17 +1614,18 @@ elsif ( $_GET{'action'} eq "analyse_test_plan" ) {
 				}
 			}
 		}
-		
+
 		my $test_plan_info = "";
-                if (@package_list){
-                    $test_plan_info = join( "!:!", @package_list );
-                }
-                
-                if (length $test_plan_info > 0){
-	            $test_plan_info = "$execution_type!::!" . $test_plan_info;
-                }else{
-                    $test_plan_info = "None";
-                }
+		if (@package_list) {
+			$test_plan_info = join( "!:!", @package_list );
+		}
+
+		if ( length $test_plan_info > 0 ) {
+			$test_plan_info = "$execution_type!::!" . $test_plan_info;
+		}
+		else {
+			$test_plan_info = "None";
+		}
 		$data .=
 "<analyse_test_plan_result>$test_plan_info</analyse_test_plan_result>\n";
 	}
@@ -1640,7 +1644,7 @@ elsif ( $_GET{'action'} eq "install_plan_package" ) {
 	my $cmd          = sdb_cmd("shell ls /usr/share/$package/tests.xml");
 	my $temp         = `$cmd`;
 	my $return_value = "none";
-	if ($temp =~ /^\/usr\/share/) {
+	if ( $temp =~ /^\/usr\/share/ ) {
 		$return_value = "[PASS]";
 	}
 	else {
@@ -1941,133 +1945,137 @@ elsif ( $_GET{'action'} eq 'set_device' ) {
 }
 
 elsif ( $_GET{'action'} eq 'rerun_test_plan' ) {
-        
-        my $healthcheck                 = healthCheck();
-        write_string_as_file("/opt/health","$healthcheck");
-	if ( $healthcheck != 0) {
-                $data.=
-                "<health_check_fail>1</health_check_fail>\n";            
-        }
-        else{
-	my $time         = $_GET{'time'};
-	my $plan_name    = "rerun_" . $time;
-	my $plan_content = "";
-	my %package_xml_file;
-	my $has_not_passed_case = "FALSE";
 
-	# write package name and case number to a new test plan
-	opendir( DIR, $result_dir_manager . $time );
-	$plan_content .= "[Auto]\n";
-	foreach ( sort( grep( /_tests.xml$/, readdir(DIR) ) ) ) {
-		my $package_name  = "none";
-		my $auto_number   = 0;
-		my $manual_number = 0;
-		if ( $_ =~ /(.*)_tests.xml$/ ) {
-			$package_name = $1;
+	my $healthcheck = healthCheck();
+	write_string_as_file( "/opt/health", "$healthcheck" );
+	if ( $healthcheck != 0 ) {
+		$data .= "<health_check_fail>1</health_check_fail>\n";
+	}
+	else {
+		my $time         = $_GET{'time'};
+		my $plan_name    = "rerun_" . $time;
+		my $plan_content = "";
+		my %package_xml_file;
+		my $has_not_passed_case = "FALSE";
 
-			# separate test xml with cases which are not passed
-			my %pass_case;
-			my $case_name = "";
-			my $case_type = "";
+		# write package name and case number to a new test plan
+		opendir( DIR, $result_dir_manager . $time );
+		$plan_content .= "[Auto]\n";
+		foreach ( sort( grep( /_tests.xml$/, readdir(DIR) ) ) ) {
+			my $package_name  = "none";
+			my $auto_number   = 0;
+			my $manual_number = 0;
+			if ( $_ =~ /(.*)_tests.xml$/ ) {
+				$package_name = $1;
 
-			# get a list with all passed cases
-			open FILE, $result_dir_manager . $time . '/' . $_;
-			while (<FILE>) {
-				if ( $_ =~ /testcase.*id="(.*?)".*/ ) {
-					$case_name = $1;
-					if ( $_ =~ /.*result="PASS".*/ ) {
-						$pass_case{$case_name} = 1;
-					}
-					else {
-						$pass_case{$case_name} = 0;
-						$has_not_passed_case = "TRUE";
+				# separate test xml with cases which are not passed
+				my %pass_case;
+				my $case_name = "";
+				my $case_type = "";
+
+				# get a list with all passed cases
+				open FILE, $result_dir_manager . $time . '/' . $_;
+				while (<FILE>) {
+					if ( $_ =~ /testcase.*id="(.*?)".*/ ) {
+						$case_name = $1;
+						if ( $_ =~ /.*result="PASS".*/ ) {
+							$pass_case{$case_name} = 1;
+						}
+						else {
+							$pass_case{$case_name} = 0;
+							$has_not_passed_case = "TRUE";
+						}
 					}
 				}
-			}
 
-			# filter definition and write cases to a xml file
-			open FILE,
-			    $result_dir_manager 
-			  . $time . '/'
-			  . $package_name
-			  . '_definition.xml';
-			open $file,
-			    ">"
-			  . $result_dir_manager
-			  . $time . '/'
-			  . $package_name
-			  . '_rerun.xml';
-			$package_xml_file{$package_name} =
-			  $result_dir_manager . $time . '/' . $package_name . '_rerun.xml';
-			my $isCase       = "FALSE";
-			my $isPassedCase = "FALSE";
-			while (<FILE>) {
-				if ( $_ =~ /testcase.*id="(.*?)".*/ ) {
-					$isCase = "TRUE";
-					if (    ( defined $pass_case{$1} )
-						and ( $pass_case{$1} == 0 ) )
+				# filter definition and write cases to a xml file
+				open FILE,
+				    $result_dir_manager 
+				  . $time . '/'
+				  . $package_name
+				  . '_definition.xml';
+				open $file,
+				    ">"
+				  . $result_dir_manager
+				  . $time . '/'
+				  . $package_name
+				  . '_rerun.xml';
+				$package_xml_file{$package_name} =
+				    $result_dir_manager 
+				  . $time . '/'
+				  . $package_name
+				  . '_rerun.xml';
+				my $isCase       = "FALSE";
+				my $isPassedCase = "FALSE";
+				while (<FILE>) {
+					if ( $_ =~ /testcase.*id="(.*?)".*/ ) {
+						$isCase = "TRUE";
+						if (    ( defined $pass_case{$1} )
+							and ( $pass_case{$1} == 0 ) )
+						{
+							print {$file} $_;
+							$isPassedCase = "FALSE";
+							if ( $_ =~ /execution_type="auto"/ ) {
+								$auto_number += 1;
+							}
+							if ( $_ =~ /execution_type="manual"/ ) {
+								$manual_number += 1;
+							}
+						}
+						else {
+							$isPassedCase = "TRUE";
+						}
+						next;
+					}
+					if ( ( $_ =~ /.*<\/testcase>.*/ ) ) {
+						if ( $isPassedCase eq "FALSE" ) {
+							print {$file} $_;
+						}
+						$isCase = "FALSE";
+						next;
+					}
+					if (   ( $isCase eq "FALSE" )
+						or ( $isPassedCase eq "FALSE" ) )
 					{
 						print {$file} $_;
-						$isPassedCase = "FALSE";
-						if ( $_ =~ /execution_type="auto"/ ) {
-							$auto_number += 1;
-						}
-						if ( $_ =~ /execution_type="manual"/ ) {
-							$manual_number += 1;
-						}
 					}
-					else {
-						$isPassedCase = "TRUE";
-					}
-					next;
 				}
-				if ( ( $_ =~ /.*<\/testcase>.*/ ) ) {
-					if ( $isPassedCase eq "FALSE" ) {
-						print {$file} $_;
-					}
-					$isCase = "FALSE";
-					next;
-				}
-				if ( ( $isCase eq "FALSE" ) or ( $isPassedCase eq "FALSE" ) ) {
-					print {$file} $_;
-				}
+				close $file;
 			}
-			close $file;
+			if ( $package_name ne "none" ) {
+				$plan_content .= "$package_name($auto_number $manual_number)\n";
+			}
 		}
-		if ( $package_name ne "none" ) {
-			$plan_content .= "$package_name($auto_number $manual_number)\n";
-		}
-	}
-	$plan_content .= "[/Auto]\n";
-	closedir(DIR);
-	my $error_message = check_testkit_sdb();
-	if ( $error_message eq "" ) {
-		if ( $has_not_passed_case eq "TRUE" ) {
-			write_string_as_file(
-				$SERVER_PARAM{'APP_DATA'} . '/plans/' . $plan_name,
-				$plan_content );
-			system("rm -rf /tmp/rerun");
-			system("mkdir /tmp/rerun");
-			foreach my $package_name ( keys %package_xml_file ) {
-				system("mkdir /tmp/rerun/$package_name");
-				system(
+		$plan_content .= "[/Auto]\n";
+		closedir(DIR);
+		my $error_message = check_testkit_sdb();
+		if ( $error_message eq "" ) {
+			if ( $has_not_passed_case eq "TRUE" ) {
+				write_string_as_file(
+					$SERVER_PARAM{'APP_DATA'} . '/plans/' . $plan_name,
+					$plan_content );
+				system("rm -rf /tmp/rerun");
+				system("mkdir /tmp/rerun");
+				foreach my $package_name ( keys %package_xml_file ) {
+					system("mkdir /tmp/rerun/$package_name");
+					system(
 "cp $package_xml_file{$package_name} /tmp/rerun/$package_name/tests.xml"
-				);
+					);
+				}
+				$data .= "<rerun_test_plan>$plan_name</rerun_test_plan>\n";
 			}
-			$data .= "<rerun_test_plan>$plan_name</rerun_test_plan>\n";
+			else {
+				$error_message =
+				  "The results of all cases are PASS, rerun is not available";
+				$data .=
+"<rerun_test_plan_error>$error_message</rerun_test_plan_error>\n";
+			}
 		}
 		else {
-			$error_message =
-			  "The results of all cases are PASS, rerun is not available";
 			$data .=
 			  "<rerun_test_plan_error>$error_message</rerun_test_plan_error>\n";
 		}
 	}
-	else {
-		$data .=
-		  "<rerun_test_plan_error>$error_message</rerun_test_plan_error>\n";
-	}
- }
 }
 
 elsif ( $_GET{'action'} eq 'read_result_xml' ) {
