@@ -1066,13 +1066,13 @@ sub syncLiteResult {
 			inform "[CMD]:\n"
 			  . "testkit-lite -f "
 			  . $profile_content
-			  . " $device_option$hardware_capability_option\n";
+			  . " --non-active $device_option$hardware_capability_option\n";
 		}
 		else {
 			inform "[CMD]:\n"
 			  . "testkit-lite -f "
 			  . $profile_content
-			  . " $device_option$hardware_capability_option\n";
+			  . " --non-active $device_option$hardware_capability_option\n";
 		}
 	}
 	if (   ( $profile_content =~ /usr\/share/ )
@@ -1101,7 +1101,7 @@ sub syncLiteResult {
 		# start testing
                 my $uninstall_cmd = &uninstall_Commands();
 		write_string_as_file( "$globals->{'temp_dir'}/lite-command",
-"testkit-lite -f $profile_content $device_option$hardware_capability_option \n$uninstall_cmd"
+"testkit-lite -f $profile_content --non-active $device_option$hardware_capability_option \n$uninstall_cmd"
 		);
 		system("cp $globals->{'temp_dir'}/lite-command /tmp");
 		system("chmod 755 /tmp/lite-command");

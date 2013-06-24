@@ -340,10 +340,9 @@ my $result_xsl_dir =
 my $case_xsl_dir =
   "/opt/testkit/manager/webapps/webui/public_html/css/xsd/testcase.xsl";
 
-
-sub healthCheck{
-    qx(/opt/tct/scripts/tct-config-device.sh --check);
-    return  $?>>8;    
+sub healthCheck {
+	qx(/opt/tct/scripts/tct-config-device.sh --check);
+	return $? >> 8;
 }
 
 sub updatePackageList {
@@ -1473,7 +1472,7 @@ sub install_package {
 		  sdb_cmd( "shell 'rpm -qa | grep " . $package_name . "'" );
 		my $check_install = `$check_cmd`;
 		if ( $check_install =~ /$package_name/ ) {
-           system( sdb_cmd("shell 'rm -f /tmp/$package_rpm_name'"));
+			system( sdb_cmd("shell 'rm -f /tmp/$package_rpm_name'") );
 			return "OK";
 		}
 		else {
@@ -1614,7 +1613,7 @@ sub syncDefinition_from_local_repo {
 	my $repo_url                = $repo_all[1];
 	my $GREP_PATH               = $repo_url;
 	my $Not_end_syn             = 1;
-	my $Max_syn                 = 2; 
+	my $Max_syn                 = 2;
 	$GREP_PATH =~ s/\:/\\:/g;
 	$GREP_PATH =~ s/\//\\\//g;
 	$GREP_PATH =~ s/\./\\\./g;
@@ -1622,133 +1621,137 @@ sub syncDefinition_from_local_repo {
 
 	if ( $repo_type =~ /local/ ) {
 		@rpm = `find $repo_url | grep $GREP_PATH.*tests.*rpm`;
-		
-		while($Not_end_syn)
-		{
-		system( "rm -rf $test_definition_dir_repo" . "*" );
-		system( "rm -rf $opt_dir_repo" . "*" );
-		system("rm -rf /tmp/usr");
-		system("rm -rf /tmp/opt");
-		foreach (@rpm) {
-			my $package_name = $_;
-			$package_name =~ s/^\s//;
-			$package_name =~ s/\s*$//;
-			my $extract_command =
-			    "cd /tmp; rpm2cpio "
-			  . $package_name
-			  . " | cpio -idmv >/dev/null";
-			system($extract_command);
-		}
 
-		# sync xml definition files
-		my $cmd_definition = "ls /tmp/usr/share/*/tests.xml 2>&1";
-		my $definition     = `$cmd_definition`;
-		my @definitions = $definition =~ /(\/tmp\/usr\/share\/.*?\/tests.xml)/g;
-		if (   ( @definitions >= 1 )
-			&& ( $definition !~ /No such file or directory/ ) )
-		{
-			foreach (@definitions) {
-				my $definition = "";
-				if ( $_ =~ /(\/tmp\/usr\/share\/.*\/tests.xml)/ ) {
-					$definition = $1;
-				}
-				$definition =~ s/^\s//;
-				$definition =~ s/\s*$//;
-				if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
-					my $package_name = $1;
-					push( @local_repo_package_name, $package_name );
-					system("mkdir $test_definition_dir_repo$package_name");
-					system(
-						"cp $definition $test_definition_dir_repo$package_name"
-					);
-					system("mkdir $opt_dir_repo$package_name");
-					system(
-"echo 'No readme info' > $opt_dir_repo$package_name/README"
-					);
-					system(
-"echo 'No license info' > $opt_dir_repo$package_name/LICENSE"
-					);
-				}
+		while ($Not_end_syn) {
+			system( "rm -rf $test_definition_dir_repo" . "*" );
+			system( "rm -rf $opt_dir_repo" . "*" );
+			system("rm -rf /tmp/usr");
+			system("rm -rf /tmp/opt");
+			foreach (@rpm) {
+				my $package_name = $_;
+				$package_name =~ s/^\s//;
+				$package_name =~ s/\s*$//;
+				my $extract_command =
+				    "cd /tmp; rpm2cpio "
+				  . $package_name
+				  . " | cpio -idmv >/dev/null";
+				system($extract_command);
 			}
-		}
 
-		# sync readme files and license files
-		my $cmd_readme = "ls /tmp/opt/*/README 2>&1";
-		my $readme     = `$cmd_readme`;
-		my @readmes    = $readme =~ /(\/tmp\/opt\/.*?\/README)/g;
-		if ( ( @readmes >= 1 ) && ( $readme !~ /No such file or directory/ ) ) {
-			foreach (@readmes) {
-				my $readme = "";
-				if ( $_ =~ /(\/tmp\/opt\/.*\/README)/ ) {
-					$readme = $1;
-				}
-				$readme =~ s/^\s//;
-				$readme =~ s/\s$//;
-				if ( $readme =~ /opt\/(.*)\/README/ ) {
-					my $package_name = $1;
-					system("cp $readme $opt_dir_repo$package_name");
-					my $license_cmd_tmp =
-					  "ls /tmp/opt/$package_name/LICENSE 2>&1";
-					my $license_cmd = `$license_cmd_tmp`;
-					if ( $license_cmd !~ /No such file or directory/ ) {
-						my $license = $readme;
-						$license =~ s/README/LICENSE/;
-						system("cp $license $opt_dir_repo$package_name");
+			# sync xml definition files
+			my $cmd_definition = "ls /tmp/usr/share/*/tests.xml 2>&1";
+			my $definition     = `$cmd_definition`;
+			my @definitions =
+			  $definition =~ /(\/tmp\/usr\/share\/.*?\/tests.xml)/g;
+			if (   ( @definitions >= 1 )
+				&& ( $definition !~ /No such file or directory/ ) )
+			{
+				foreach (@definitions) {
+					my $definition = "";
+					if ( $_ =~ /(\/tmp\/usr\/share\/.*\/tests.xml)/ ) {
+						$definition = $1;
+					}
+					$definition =~ s/^\s//;
+					$definition =~ s/\s*$//;
+					if ( $definition =~ /share\/(.*)\/tests.xml/ ) {
+						my $package_name = $1;
+						push( @local_repo_package_name, $package_name );
+						system("mkdir $test_definition_dir_repo$package_name");
+						system(
+"cp $definition $test_definition_dir_repo$package_name"
+						);
+						system("mkdir $opt_dir_repo$package_name");
+						system(
+"echo 'No readme info' > $opt_dir_repo$package_name/README"
+						);
+						system(
+"echo 'No license info' > $opt_dir_repo$package_name/LICENSE"
+						);
 					}
 				}
 			}
-		}
 
-		# extract name number and version
-		my @name_number_version_content = ();
-		foreach (@rpm) {
-			my $package_name_full = $_;
-			foreach (@local_repo_package_name) {
-				my $package_name = $_;
-				if (
-					( defined $package_name )
-					&& ( $package_name_full =~
-						/$package_name.*-(\d+\.\d+\.\d+-\d+).*/ )
-				  )
-				{
-					my $version       = $1;
-					my $auto_number   = 0;
-					my $manual_number = 0;
-					if (
-						open FILE,
-						$test_definition_dir_repo . $package_name . "/tests.xml"
-					  )
-					{
-						while (<FILE>) {
-							if ( $_ =~ /execution_type="manual"/ ) {
-								$manual_number += 1;
-							}
-							if ( $_ =~ /execution_type="auto"/ ) {
-								$auto_number += 1;
-							}
+			# sync readme files and license files
+			my $cmd_readme = "ls /tmp/opt/*/README 2>&1";
+			my $readme     = `$cmd_readme`;
+			my @readmes    = $readme =~ /(\/tmp\/opt\/.*?\/README)/g;
+			if (   ( @readmes >= 1 )
+				&& ( $readme !~ /No such file or directory/ ) )
+			{
+				foreach (@readmes) {
+					my $readme = "";
+					if ( $_ =~ /(\/tmp\/opt\/.*\/README)/ ) {
+						$readme = $1;
+					}
+					$readme =~ s/^\s//;
+					$readme =~ s/\s$//;
+					if ( $readme =~ /opt\/(.*)\/README/ ) {
+						my $package_name = $1;
+						system("cp $readme $opt_dir_repo$package_name");
+						my $license_cmd_tmp =
+						  "ls /tmp/opt/$package_name/LICENSE 2>&1";
+						my $license_cmd = `$license_cmd_tmp`;
+						if ( $license_cmd !~ /No such file or directory/ ) {
+							my $license = $readme;
+							$license =~ s/README/LICENSE/;
+							system("cp $license $opt_dir_repo$package_name");
 						}
 					}
-					push( @name_number_version_content,
-						    $package_name . "!::!"
-						  . $auto_number . "!:!"
-						  . $manual_number . "!:!"
-						  . $version );
 				}
 			}
+
+			# extract name number and version
+			my @name_number_version_content = ();
+			foreach (@rpm) {
+				my $package_name_full = $_;
+				foreach (@local_repo_package_name) {
+					my $package_name = $_;
+					if (
+						( defined $package_name )
+						&& ( $package_name_full =~
+							/$package_name.*-(\d+\.\d+\.\d+-\d+).*/ )
+					  )
+					{
+						my $version       = $1;
+						my $auto_number   = 0;
+						my $manual_number = 0;
+						if (
+							open FILE,
+							$test_definition_dir_repo
+							. $package_name
+							. "/tests.xml"
+						  )
+						{
+							while (<FILE>) {
+								if ( $_ =~ /execution_type="manual"/ ) {
+									$manual_number += 1;
+								}
+								if ( $_ =~ /execution_type="auto"/ ) {
+									$auto_number += 1;
+								}
+							}
+						}
+						push( @name_number_version_content,
+							    $package_name . "!::!"
+							  . $auto_number . "!:!"
+							  . $manual_number . "!:!"
+							  . $version );
+					}
+				}
+			}
+
+			$Max_syn--;
+			if ( ( @rpm == @name_number_version_content ) or ( $Max_syn == 0 ) )
+			{
+				$Not_end_syn = 0;
+
+				write_string_as_file( $repo_url . "package_list",
+					join( "\n", @name_number_version_content ) );
+
+			}
+
 		}
-		
-		$Max_syn--;
-		if((@rpm == @name_number_version_content) or ($Max_syn ==0) )
-		{
-			$Not_end_syn = 0;
-            
-                        write_string_as_file( $repo_url . "package_list",
-			join( "\n", @name_number_version_content ) );
-			
-		}
-			
 	}
-       }
 }
 
 sub remove_package {
