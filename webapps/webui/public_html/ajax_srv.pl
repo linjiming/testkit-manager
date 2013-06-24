@@ -2167,10 +2167,12 @@ elsif ( $_GET{'action'} eq 'pre_config_device' ) {
 	my $parameter           = $_GET{'parameter'};
 	my @parameters          = split( '!::!', $parameter );
 	my $config_file_content = <<DATA;
-server1_name=$parameters[0]
-server1_port=$parameters[1]
-server2_name=$parameters[2]
-server2_port=$parameters[3]
+BT_REMOTE_DEVICE_ADDRESS=$parameters[0]
+BT_REMOTE_DEVICE_NAME=$parameters[1]
+BT_REMOTE_DEVICE_NAME=$parameters[2]
+SMS_RECIPIENT_1=$parameters[3]
+EMAIL_RECIPIENT_1=$parameters[4]
+EMAIL_RECIPIENT_2=$parameters[5]
 DATA
 	write_string_as_file( "/tmp/pre_config", $config_file_content );
 	system( sdb_cmd("push /tmp/pre_config /tmp") );

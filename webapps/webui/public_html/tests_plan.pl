@@ -295,6 +295,67 @@ print <<DATA;
 var need_hardware_capability_option = false;
 var change_after_load = false;
 var current_run_test_plan = "temp";
+function save_preconfig() {
+
+	var have_all_info = true;
+	var BT_REMOTE_DEVICE_ADDRESS = document
+			.getElementById('pre_config_BT_REMOTE_DEVICE_ADDRESS_text').value;
+	if (BT_REMOTE_DEVICE_ADDRESS == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_BT_REMOTE_DEVICE_ADDRESS_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_BT_REMOTE_DEVICE_ADDRESS_text').style.borderColor = "green";
+	}
+	var BT_REMOTE_DEVICE_NAME = document
+			.getElementById('pre_config_BT_REMOTE_DEVICE_NAME_text').value;
+	if (BT_REMOTE_DEVICE_NAME == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_BT_REMOTE_DEVICE_NAME_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_BT_REMOTE_DEVICE_NAME_text').style.borderColor = "green";
+	}
+	var SMS_RECIPIENT_1 = document
+			.getElementById('pre_config_SMS_RECIPIENT_1_text').value;
+	if (SMS_RECIPIENT_1 == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_SMS_RECIPIENT_1_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_SMS_RECIPIENT_1_text').style.borderColor = "green";
+	}
+	var SMS_RECIPIENT_2 = document
+			.getElementById('pre_config_SMS_RECIPIENT_2_text').value;
+	if (SMS_RECIPIENT_2 == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_SMS_RECIPIENT_2_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_SMS_RECIPIENT_2_text').style.borderColor = "green";
+	}
+	var EMAIL_RECIPIENT_1 = document
+			.getElementById('pre_config_EMAIL_RECIPIENT_1_text').value;
+	if (EMAIL_RECIPIENT_1 == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_EMAIL_RECIPIENT_1_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_EMAIL_RECIPIENT_1_text').style.borderColor = "green";
+	}
+	var EMAIL_RECIPIENT_2 = document
+			.getElementById('pre_config_EMAIL_RECIPIENT_2_text').value;
+	if (EMAIL_RECIPIENT_2 == "") {
+		have_all_info = false;
+		document.getElementById('pre_config_EMAIL_RECIPIENT_2_text').style.borderColor = "red";
+	} else {
+		document.getElementById('pre_config_EMAIL_RECIPIENT_2_text').style.borderColor = "green";
+	}
+
+	if (have_all_info) {
+		document.getElementById('preConfigDiv').innerHTML = '<table width="660" border="1" cellspacing="0" cellpadding="0" class="table_normal" rules="all" frame="void"><tr><td height="200" class="report_list_no_border">&nbsp;</td></tr><tr><td align="center" class="report_list_no_border"><img src="images/ajax_progress_large.gif" width="40" height="40" alt="execution progress gif"/></td></tr><tr><td align="center" class="report_list_no_border">Configuring, please wait&hellip;</td></tr></table>';
+		ajax_call_get('action=pre_config_device&parameter='
+				+ BT_REMOTE_DEVICE_ADDRESS + '!::!' + BT_REMOTE_DEVICE_NAME
+				+ '!::!' + SMS_RECIPIENT_1 + '!::!' + SMS_RECIPIENT_2 + '!::!'
+				+ EMAIL_RECIPIENT_1 + '!::!' + EMAIL_RECIPIENT_2);
+	}
+}
+
 var str_hardware_info = "";
 
 function old_save_plan_name() {
@@ -639,6 +700,54 @@ my $pre_config_content = <<DATA;
   </tr>
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;BT_REMOTE_DEVICE_ADDRESS:</td>
+    <td width="40%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;
+      <input type="text" name="pre_config_BT_REMOTE_DEVICE_ADDRESS_text" id="pre_config_BT_REMOTE_DEVICE_ADDRESS_text" class="pre_config_text" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;BT_REMOTE_DEVICE_NAME:</td>
+    <td width="40%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;
+      <input type="text" name="pre_config_BT_REMOTE_DEVICE_NAME_text" id="pre_config_BT_REMOTE_DEVICE_NAME_text" class="pre_config_text" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;SMS_RECIPIENT_1:</td>
+    <td width="40%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;
+      <input type="text" name="pre_config_SMS_RECIPIENT_1_text" id="pre_config_SMS_RECIPIENT_1_text" class="pre_config_text" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+   <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;SMS_RECIPIENT_2:</td>
+    <td width="40%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;
+      <input type="text" name="pre_config_SMS_RECIPIENT_2_text" id="pre_config_SMS_RECIPIENT_2_text" class="pre_config_text" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+   <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;EMAIL_RECIPIENT_1:</td>
+    <td width="40%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;
+      <input type="text" name="pre_config_EMAIL_RECIPIENT_1_text" id="pre_config_EMAIL_RECIPIENT_1_text" class="pre_config_text" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+   <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;EMAIL_RECIPIENT_2:</td>
+    <td width="40%" align="left" class="report_list_no_border">&nbsp;</td>
+    <td width="23%" align="left" class="report_list_no_border">&nbsp;
+      <input type="text" name="pre_config_EMAIL_RECIPIENT_2_text" id="pre_config_EMAIL_RECIPIENT_2_text" class="pre_config_text" /></td>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
     <td colspan="4" align="left" class="report_list_inside" id="pre_config_desc_xml_text">&nbsp;</td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
@@ -651,7 +760,8 @@ my $pre_config_content = <<DATA;
   <tr>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
     <td colspan="2" align="left" class="report_list_no_border">&nbsp;</td>
-    <td colspan="2" align="right" class="report_list_no_border"><input type="submit" name="close_config_div"  id="close_config_div" value="Close" class="small_button" onclick="javascript:save_and_run();" /></td>
+    <td colspan="2" align="right" class="report_list_no_border"><input type="submit" name="close_config_div"  id="close_config_div" value="Close"  style="display:none;" class="small_button" onclick="javascript:save_and_run();" />
+     <input type="submit" name="save_config_div"   id="save_config_div" value="Save" class="small_button" onclick="javascript:save_preconfig();" /></td>
     <td width="4%" align="left" class="report_list_no_border">&nbsp;</td>
   </tr>
 </table>
@@ -660,6 +770,7 @@ DATA
 $pre_config_content =~ s/\n//g;
 print <<DATA;
 function onPreConfig() {
+    document.getElementById('loadProgressBarDiv').style.display = 'none';
 	document.getElementById('preConfigDiv').innerHTML = '$pre_config_content';
 	document.getElementById('preConfigDiv').style.display = 'block';
 	document.getElementById('popIframe').style.display = 'block';

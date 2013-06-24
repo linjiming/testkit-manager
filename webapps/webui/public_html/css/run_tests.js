@@ -461,10 +461,10 @@ function ajaxProcessResult(responseXML) {
 	if (responseXML.getElementsByTagName('need_check_hardware').length > 0) {
 		if (responseXML.getElementsByTagName('need_check_hardware')[0].childNodes[0].nodeValue == 0) {
 			if (confirm("Missing capability configure file, are you sure to continue?")) {
-				onPreConfig();
+				save_and_run();
 			}
 		} else {
-			onPreConfig();
+			save_and_run();
 		}
 	}
 	if (responseXML.getElementsByTagName('health_check_fail').length > 0) {
@@ -567,13 +567,13 @@ function ajaxProcessResult(responseXML) {
 			ajax_call_get('action=install_plan_package&packages_need='
 					+ message_not_load);
 		} else if (load_flag == 1) {
-			run_and_test();
+			onPreConfig();
 		} else {
 			var text = document.getElementById('loadProgressBarDiv').innerHTML;
 			if (text.indexOf("[FAIL]") > 0 || get_error == 1) {
 				document.getElementById('loadProgressBarDiv').innerHTML += '</br>&nbsp;&nbsp;&nbsp;&nbsp;Fail to install one or more package(s), please try manually.</br>&nbsp;&nbsp;&nbsp;&nbsp;<a onclick="javascript:refresh_plan_page()">Click here to go back to the plan page.</a>';
 			} else {
-				run_and_test();
+				onPreConfig();
 			}
 		}
 	}
@@ -937,7 +937,8 @@ function ajaxProcessResult(responseXML) {
 		document.getElementById('msg_text_error').innerHTML = error_message;
 	}
 	if (responseXML.getElementsByTagName('pre_config_success').length > 0) {
-		document.getElementById('preConfigDiv').innerHTML = '<table width="660" border="1" cellspacing="0" cellpadding="0" class="table_normal" rules="all" frame="void"><tr><td height="200" class="report_list_no_border">&nbsp;</td></tr><tr><td align="center" class="report_list_no_border">Configuration is successful !</td></tr><tr><td align="center" class="report_list_no_border"><input type="submit" name="close_config_div" id="close_config_div" value="Close" class="small_button" onclick="javascript:onClosePopup();" /></td></tr></table>';
+		onClosePopup();
+		run_and_test();
 	}
 	if (responseXML.getElementsByTagName('pre_config_error').length > 0) {
 		var error_message = responseXML
@@ -950,9 +951,12 @@ function ajaxProcessResult(responseXML) {
 				display_message += "&nbsp;" + error_messages[i] + "<br/>";
 			}
 		}
+		display_message += "&nbsp;"
+				+ "Click Continue to go on executing and click Exit to go back."
+				+ "<br/>";
 		document.getElementById('preConfigDiv').innerHTML = '<table width="660" border="1" cellspacing="0" cellpadding="0" class="table_normal" rules="all" frame="void"><tr align="left"><td width="10%" class="report_list_no_border">&nbsp;</td><td width="80%" height="65" class="report_list_no_border">&nbsp;</td><td width="10%" class="report_list_no_border">&nbsp;</td></tr><tr align="left"><td width="10%" class="report_list_no_border">&nbsp;</td><td width="80%" class="top_button_bg report_list_inside"><p>&nbsp;Configuration is failed !</p><p>&nbsp;Please finish the remanining configurations according to the document</p><p>&nbsp;</p><p>&nbsp;Error log:</p></td><td width="10%" class="report_list_no_border">&nbsp;</td></tr><tr align="left"><td width="10%" class="report_list_no_border">&nbsp;</td><td width="80%" class="report_list_inside">'
 				+ display_message
-				+ '</td><td width="10%" class="report_list_no_border">&nbsp;</td></tr><tr><td width="10%" align="left" class="report_list_no_border">&nbsp;</td><td width="80%" align="right" class="report_list_no_border"><input type="submit" name="close_config_div" id="close_config_div" value="Close" class="small_button" onclick="javascript:onClosePopup();" /></td><td width="10%" align="left" class="report_list_no_border">&nbsp;</td></tr></table>';
+				+ '</td><td width="10%" class="report_list_no_border">&nbsp;</td></tr><te><tr><td width="10%" align="left" class="report_list_no_border">&nbsp;</td><td width="80%" align="right" class="report_list_no_border"><input type="submit" name="close_config_div" id="close_config_div" value="Exit" class="small_button" onclick="javascript:onClosePopup();" />&nbsp;<input type="submit" name="Save_and_run" id="Save_and_run" value="Continue" class="small_button" onclick="javascript:run_and_test();" /></td><td width="10%" align="left" class="report_list_no_border">&nbsp;</td></tr></table>';
 	}
 	if (responseXML.getElementsByTagName('started').length > 0) {
 		var profile_name = responseXML.getElementsByTagName('started')[0].childNodes[0].nodeValue;
